@@ -29,10 +29,9 @@ import java.time.LocalDateTime
  */
 @Entity
 @Table(
-    name = "group_members",
-    uniqueConstraints = [
-        UniqueConstraint(name = "uk_group_user", columnNames = ["groupId", "userId"])
-    ]
+    name = "group_members"
+    // TODO [사용자 미션 1-3]: groupId와 userId의 복합 유니크 제약조건(UniqueConstraint)을 직접 추가해 보세요!
+    // 힌트: uniqueConstraints = [UniqueConstraint(name = "uk_group_user", columnNames = ["groupId", "userId"])]
 )
 class GroupMember(
     @Id

@@ -41,34 +41,22 @@ class InviteService(
     }
 
     /**
-     * [사용자 미션 3 관련 모임 중복 가입 방어 로직]
-     * 초대 코드로 모임원(MEMBER) 가입
-     * 애플리케이션 레벨 exists 검사와 DB uk_group_user 복합 유니크 제약조건을 통한 이중 방어
+     * [사용자 미션 3] 모임 중복 가입 방어 로직 구현 과제
+     *
+     * 🎓 핵심 질문:
+     * - 애플리케이션 레벨의 existsByGroupIdAndUserId 검사만으로 충분할까요?
+     *   동시에 2개의 가입 요청이 들어올 때 DB 레벨의 uk_group_user 복합 유니크 제약조건과 예외 처리가 왜 필요한가요?
+     *
+     * TODO: 아래 중복 가입 방어 로직을 직접 구현해 보세요!
      */
     @Transactional
     fun joinGroupByInviteCode(inviteCode: String, userId: Long): JoinGroupResponse {
         val group = groupRepository.findByInviteCode(inviteCode)
             ?: throw ResourceNotFoundException("유효하지 않거나 만료된 초대 코드입니다.")
 
-        // 1차: 애플리케이션 레벨 중복 가입 체크
-        if (groupMemberRepository.existsByGroupIdAndUserId(group.id, userId)) {
-            return JoinGroupResponse(groupId = group.id, message = "이미 참여 중인 모임입니다.")
-        }
-
-        // 2차: DB 레벨 복합 유니크 인덱스로 동시 요청 레이스 컨디션 방어
-        try {
-            groupMemberRepository.save(
-                GroupMember(
-                    groupId = group.id,
-                    userId = userId,
-                    role = GroupRole.MEMBER
-                )
-            )
-        } catch (e: DataIntegrityViolationException) {
-            // 동시 요청으로 인한 중복 키 위반 시 정상 처리로 흡수
-            return JoinGroupResponse(groupId = group.id, message = "이미 참여 중인 모임입니다.")
-        }
-
-        return JoinGroupResponse(groupId = group.id, message = "모임에 성공적으로 가입하였습니다.")
+        // TODO [사용자 미션 3]:
+        // 1) 1차: 애플리케이션 레벨 중복 가입 검사 (existsByGroupIdAndUserId)
+        // 2) 2차: 동시성 레이스 컨디션을 방어하는 DB 복합 유니크 제약조건 위반(DataIntegrityViolationException) 예외 처리
+        TODO("[사용자 미션 3] 모임 중복 가입 방어 및 예외 처리 로직을 직접 구현해 보세요!")
     }
 }
