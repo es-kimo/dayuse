@@ -22,7 +22,7 @@ import java.time.LocalDateTime
  * - 초대 코드 재발급 메서드 (refreshInviteCode)
  */
 @Entity
-@Table(name = "groups")
+@Table(name = "`groups`")
 class Group(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
