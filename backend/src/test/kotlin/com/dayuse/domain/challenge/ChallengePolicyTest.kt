@@ -127,49 +127,14 @@ class ChallengePolicyTest {
 
     @Test
     fun `시작 후 인증 기준, 시작일, 종료일을 변경하려고 하면 BadRequestException이 발생한다`() {
-        val challenge = Challenge(
-            groupId = 1L,
-            creatorUserId = 10L,
-            title = "시작된 챌린지",
-            verificationCriteria = "고정 기준",
-            startDate = baseToday,
-            endDate = baseToday.plusDays(13)
-        )
-
-        // 인증 기준 변경 시도
-        assertThrows(BadRequestException::class.java) {
-            challenge.updateConditions(
-                newTitle = "제목",
-                newDescription = null,
-                newVerificationCriteria = "새로운 기준 시도",
-                newStartDate = null,
-                newEndDate = null,
-                today = baseToday
-            )
-        }
-
-        // 시작일 변경 시도
-        assertThrows(BadRequestException::class.java) {
-            challenge.updateConditions(
-                newTitle = null,
-                newDescription = null,
-                newVerificationCriteria = null,
-                newStartDate = baseToday.plusDays(1),
-                newEndDate = null,
-                today = baseToday
-            )
-        }
-
-        // 종료일 변경 시도
-        assertThrows(BadRequestException::class.java) {
-            challenge.updateConditions(
-                newTitle = null,
-                newDescription = null,
-                newVerificationCriteria = null,
-                newStartDate = null,
-                newEndDate = baseToday.plusDays(20),
-                today = baseToday
-            )
-        }
+        // TODO [사용자 미션 3]: 시작된 챌린지에서 verificationCriteria, startDate, endDate 변경 시
+        // BadRequestException이 발생하는지 assertThrows를 사용하여 검증하는 테스트 코드를 작성하세요.
+        //
+        // 힌트:
+        // val challenge = Challenge(groupId = 1L, creatorUserId = 10L, startDate = baseToday, verificationCriteria = "기준")
+        // assertThrows(BadRequestException::class.java) {
+        //     challenge.updateConditions(..., today = baseToday)
+        // }
+        throw NotImplementedError("사용자 미션 3: 시작 후 조건 변경 차단 정책 검증 단위 테스트를 직접 작성해 보세요!")
     }
 }

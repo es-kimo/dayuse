@@ -70,25 +70,16 @@ class ChallengeService(
             )
         )
 
-        // 생성자 자동 참여 처리 (원자적 단일 트랜잭션)
-        val creatorParticipant = challengeParticipantRepository.save(
-            ChallengeParticipant(
-                challengeId = challenge.id,
-                userId = userId,
-                penaltyAmount = request.myPenaltyAmount
-            )
-        )
-
+        // TODO [사용자 미션 2]: 챌린지 생성 시 생성자 자동 참여(ChallengeParticipant)를 원자적으로 저장하세요.
+        // 요구사항:
+        // 1. ChallengeParticipant(challengeId = challenge.id, userId = userId, penaltyAmount = request.myPenaltyAmount) 생성
+        // 2. challengeParticipantRepository.save(...)로 DB에 저장
+        // 3. ChallengeParticipantResponse 객체를 생성하여 참가자 목록(participants)에 포함
+        //
+        // 🎓 생각해보기:
+        // - 챌린지 엔티티 생성과 생성자 참여자 엔티티 생성을 단일 @Transactional 안에서 묶어야 하는 이유는 무엇일까요?
         val creatorUser = userRepository.findById(userId).orElse(null)
-        val participantResponse = ChallengeParticipantResponse(
-            id = creatorParticipant.id,
-            userId = userId,
-            nickname = creatorUser?.nickname ?: "참여자",
-            profileImageUrl = creatorUser?.profileImageUrl,
-            penaltyAmount = creatorParticipant.penaltyAmount,
-            joinedAt = creatorParticipant.joinedAt,
-            isCreator = true
-        )
+        val participantResponseList = emptyList<ChallengeParticipantResponse>()
 
         return ChallengeDetailResponse(
             id = challenge.id,
@@ -103,13 +94,13 @@ class ChallengeService(
             endDate = challenge.endDate,
             status = challenge.status(today),
             isCreator = true,
-            isParticipating = true,
-            myPenaltyAmount = creatorParticipant.penaltyAmount,
+            isParticipating = participantResponseList.isNotEmpty(),
+            myPenaltyAmount = null,
             canJoin = false,
             canCancel = false,
             canDelete = challenge.canDelete(today),
             canModifyFull = challenge.canModifyFullConditions(today),
-            participants = listOf(participantResponse)
+            participants = participantResponseList
         )
     }
 
