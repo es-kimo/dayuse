@@ -1,0 +1,62 @@
+spring:
+  profiles:
+    default: local
+  application:
+    name: dayuse-backend
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/dayuse?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:dayuse}
+    password: ${DB_PASSWORD:dayuse}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+
+jwt:
+  secret: ${JWT_SECRET:dayuse-jwt-secret-key-must-be-very-long-and-secure-at-least-256-bits-for-hmac-sha!}
+  access-token-expiration-ms: 3600000 # 1 hour
+  refresh-token-expiration-ms: 1209600000 # 14 days
+
+kakao:
+  client-id: ${KAKAO_CLIENT_ID:dummy-kakao-client-id}
+  client-secret: ${KAKAO_CLIENT_SECRET:dummy-kakao-client-secret}
+  redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:5173/oauth/callback/kakao}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:dayuse-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: dayuse-test-jwt-secret-key-must-be-very-long-and-secure-at-least-256-bits-for-hmac-sha!
+  access-token-expiration-ms: 3600000
+  refresh-token-expiration-ms: 1209600000
+
+kakao:
+  client-id: test-kakao-client-id
+  client-secret: test-kakao-client-secret
+  redirect-uri: http://localhost:5173/oauth/callback/kakao
