@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
-import type { GroupDetail } from '../types';
+import { challengesApi } from '../api/challenges';
+import type { GroupDetail, ChallengeSummary } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import {
   ArrowLeft,
@@ -12,39 +13,73 @@ import {
   Crown,
   User as UserIcon,
   Loader2,
+  Trophy,
+  Plus,
+  Calendar,
+  Clock,
+  ChevronRight,
 } from 'lucide-react';
 
 export const GroupDetailPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [activeTab, setActiveTab] = useState<'members' | 'challenges'>(
+    location.pathname.endsWith('/challenges') ? 'challenges' : 'challenges'
+  );
+  const [challengeFilter, setChallengeFilter] = useState<string>('ALL');
+
   const [group, setGroup] = useState<GroupDetail | null>(null);
+  const [challenges, setChallenges] = useState<ChallengeSummary[]>([]);
+  const [challengesLoading, setChallengesLoading] = useState<boolean>(false);
+
   const [loading, setLoading] = useState<boolean>(true);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
-  useEffect(() => {
-    const fetchGroup = async () => {
-      if (!groupId) return;
-      try {
-        const data = await groupsApi.getGroupDetail(Number(groupId));
-        setGroup(data);
-      } catch (err: any) {
-        console.error('Failed to fetch group detail:', err);
-        if (err.response?.status === 403) {
-          setErrorStatus(403);
-        } else if (err.response?.status === 404) {
-          setErrorStatus(404);
-        } else {
-          setErrorStatus(500);
-        }
-      } finally {
-        setLoading(false);
+  const fetchGroup = async () => {
+    if (!groupId) return;
+    try {
+      const data = await groupsApi.getGroupDetail(Number(groupId));
+      setGroup(data);
+    } catch (err: any) {
+      console.error('Failed to fetch group detail:', err);
+      if (err.response?.status === 403) {
+        setErrorStatus(403);
+      } else if (err.response?.status === 404) {
+        setErrorStatus(404);
+      } else {
+        setErrorStatus(500);
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const fetchChallenges = async () => {
+    if (!groupId) return;
+    setChallengesLoading(true);
+    try {
+      const list = await challengesApi.getGroupChallenges(Number(groupId), challengeFilter);
+      setChallenges(list);
+    } catch (err) {
+      console.error('Failed to fetch challenges:', err);
+    } finally {
+      setChallengesLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchGroup();
   }, [groupId]);
+
+  useEffect(() => {
+    if (groupId) {
+      fetchChallenges();
+    }
+  }, [groupId, challengeFilter]);
 
   const inviteUrl = group ? `${window.location.origin}/invite/${group.inviteCode}` : '';
 
@@ -143,81 +178,231 @@ export const GroupDetailPage: React.FC = () => {
         )}
       </div>
 
-      {/* 초대 링크 관리 카드 */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4 shadow-xs">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-slate-700">모임 초대 링크</span>
-          {group.isHost && (
+      {/* 탭 네비게이션 */}
+      <div className="flex border-b border-slate-200 mb-4">
+        <button
+          onClick={() => setActiveTab('challenges')}
+          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
+            activeTab === 'challenges'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Trophy className="w-3.5 h-3.5" />
+          <span>챌린지 ({challenges.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('members')}
+          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
+            activeTab === 'members'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <UserIcon className="w-3.5 h-3.5" />
+          <span>모임 멤버 ({group.members.length})</span>
+        </button>
+      </div>
+
+      {activeTab === 'challenges' && (
+        <div className="space-y-4 flex-1 flex flex-col">
+          {/* 챌린지 상단 바: 새 챌린지 버튼 & 필터 */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex gap-1 overflow-x-auto">
+              {[
+                { label: '전체', value: 'ALL' },
+                { label: '진행 중', value: 'IN_PROGRESS' },
+                { label: '시작 전', value: 'NOT_STARTED' },
+                { label: '종료', value: 'ENDED' },
+              ].map((f) => (
+                <button
+                  key={f.value}
+                  onClick={() => setChallengeFilter(f.value)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition ${
+                    challengeFilter === f.value
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
             <button
-              onClick={handleRefreshInviteCode}
-              disabled={isRefreshing}
-              className="text-[11px] text-slate-400 hover:text-blue-600 flex items-center gap-1 transition"
+              onClick={() => navigate(`/groups/${group.id}/challenges/new`)}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg flex items-center gap-1 shadow-xs shrink-0 transition"
             >
-              <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-              코드 재발급
+              <Plus className="w-3.5 h-3.5" />
+              <span>챌린지 만들기</span>
             </button>
+          </div>
+
+          {/* 챌린지 목록 */}
+          {challengesLoading ? (
+            <div className="flex-1 flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+            </div>
+          ) : challenges.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-2xl text-center my-4">
+              <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-3">
+                <Trophy className="w-6 h-6" />
+              </div>
+              <h3 className="text-xs font-bold text-slate-700 mb-1">등록된 챌린지가 없습니다</h3>
+              <p className="text-[11px] text-slate-400 mb-4 max-w-xs">
+                모임원들과 함께 매일 실천할 첫 번째 챌린지를 만들어 보세요.
+              </p>
+              <button
+                onClick={() => navigate(`/groups/${group.id}/challenges/new`)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-medium transition shadow-xs"
+              >
+                첫 챌린지 시작하기
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3 pb-6">
+              {challenges.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => navigate(`/challenges/${c.id}`)}
+                  className="bg-white border border-slate-200 hover:border-blue-300 rounded-2xl p-4 shadow-xs transition cursor-pointer active:scale-[0.99] space-y-2.5"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        {c.status === 'IN_PROGRESS' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            진행 중
+                          </span>
+                        )}
+                        {c.status === 'NOT_STARTED' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            시작 전
+                          </span>
+                        )}
+                        {c.status === 'ENDED' && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                            종료
+                          </span>
+                        )}
+
+                        {c.isParticipating && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                            참여 중
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-800 line-clamp-1">{c.title}</h3>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-300 shrink-0 mt-1" />
+                  </div>
+
+                  {c.description && (
+                    <p className="text-xs text-slate-500 line-clamp-2">{c.description}</p>
+                  )}
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{c.startDate} ~ {c.endDate}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>참여자 {c.participantCount}명</span>
+                      {c.myPenaltyAmount && (
+                        <span className="text-amber-600 font-medium">
+                          {c.myPenaltyAmount.toLocaleString()}원/일
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
-        <p className="text-[11px] text-slate-400 mb-2">
-          비공개 모임입니다. 초대 링크를 받은 사람만 가입할 수 있습니다.
-        </p>
+      )}
 
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
-            readOnly
-            value={inviteUrl}
-            className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-600 truncate outline-none select-all"
-          />
-          <button
-            onClick={handleCopyLink}
-            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg flex items-center gap-1 shadow-xs transition active:scale-95"
-          >
-            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? '복사됨' : '복사'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 모임 멤버 목록 */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 flex-1">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-semibold text-slate-700">모임 멤버 ({group.members.length}명)</h2>
-        </div>
-
-        <div className="flex flex-col divide-y divide-slate-100">
-          {group.members.map((member) => (
-            <div key={member.id} className="py-2.5 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                {member.profileImageUrl ? (
-                  <img
-                    src={member.profileImageUrl}
-                    alt={member.nickname}
-                    className="w-8 h-8 rounded-full object-cover border border-slate-100"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
-                    <UserIcon className="w-4 h-4" />
-                  </div>
-                )}
-                <div>
-                  <div className="text-xs font-medium text-slate-800 flex items-center gap-1">
-                    {member.nickname}
-                    {member.role === 'HOST' && (
-                      <span className="text-[9px] bg-amber-50 text-amber-700 px-1 py-0.2 rounded font-semibold">
-                        모임장
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[10px] text-slate-400">
-                    {new Date(member.joinedAt).toLocaleDateString()} 가입
-                  </span>
-                </div>
-              </div>
+      {activeTab === 'members' && (
+        <div className="space-y-4 flex-1">
+          {/* 초대 링크 관리 카드 */}
+          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-700">모임 초대 링크</span>
+              {group.isHost && (
+                <button
+                  onClick={handleRefreshInviteCode}
+                  disabled={isRefreshing}
+                  className="text-[11px] text-slate-400 hover:text-blue-600 flex items-center gap-1 transition"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  코드 재발급
+                </button>
+              )}
             </div>
-          ))}
+            <p className="text-[11px] text-slate-400 mb-2">
+              비공개 모임입니다. 초대 링크를 받은 사람만 가입할 수 있습니다.
+            </p>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={inviteUrl}
+                className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-600 truncate outline-none select-all"
+              />
+              <button
+                onClick={handleCopyLink}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg flex items-center gap-1 shadow-xs transition active:scale-95"
+              >
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copied ? '복사됨' : '복사'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 모임 멤버 목록 */}
+          <div className="bg-white border border-slate-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xs font-semibold text-slate-700">모임 멤버 ({group.members.length}명)</h2>
+            </div>
+
+            <div className="flex flex-col divide-y divide-slate-100">
+              {group.members.map((member) => (
+                <div key={member.id} className="py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    {member.profileImageUrl ? (
+                      <img
+                        src={member.profileImageUrl}
+                        alt={member.nickname}
+                        className="w-8 h-8 rounded-full object-cover border border-slate-100"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+                        <UserIcon className="w-4 h-4" />
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-xs font-medium text-slate-800 flex items-center gap-1">
+                        {member.nickname}
+                        {member.role === 'HOST' && (
+                          <span className="text-[9px] bg-amber-50 text-amber-700 px-1 py-0.2 rounded font-semibold">
+                            모임장
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-slate-400">
+                        {new Date(member.joinedAt).toLocaleDateString()} 가입
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </MobileLayout>
   );
 };

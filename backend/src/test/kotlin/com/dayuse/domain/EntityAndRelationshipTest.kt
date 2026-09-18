@@ -1,5 +1,9 @@
 package com.dayuse.domain
 
+import com.dayuse.domain.challenge.Challenge
+import com.dayuse.domain.challenge.ChallengeParticipant
+import com.dayuse.domain.challenge.ChallengeParticipantRepository
+import com.dayuse.domain.challenge.ChallengeRepository
 import com.dayuse.domain.group.Group
 import com.dayuse.domain.group.GroupMember
 import com.dayuse.domain.group.GroupMemberRepository
@@ -17,6 +21,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.test.context.ActiveProfiles
+import java.time.LocalDate
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -30,6 +35,12 @@ class EntityAndRelationshipTest {
 
     @Autowired
     private lateinit var groupMemberRepository: GroupMemberRepository
+
+    @Autowired
+    private lateinit var challengeRepository: ChallengeRepository
+
+    @Autowired
+    private lateinit var challengeParticipantRepository: ChallengeParticipantRepository
 
     @Autowired
     private lateinit var entityManager: TestEntityManager
@@ -84,6 +95,40 @@ class EntityAndRelationshipTest {
         assertThrows(DataIntegrityViolationException::class.java) {
             val member2 = GroupMember(groupId = 100L, userId = 200L, role = GroupRole.MEMBER)
             groupMemberRepository.save(member2)
+            entityManager.flush()
+        }
+    }
+
+    @Test
+    fun `Challenge 엔티티 저장 및 기본 필드 확인`() {
+        val challenge = Challenge(
+            groupId = 1L,
+            creatorUserId = 2L,
+            title = "14일 챌린지",
+            description = "매일 운동",
+            verificationCriteria = "운동 사진",
+            startDate = LocalDate.of(2026, 10, 1),
+            endDate = LocalDate.of(2026, 10, 14)
+        )
+        val saved = challengeRepository.save(challenge)
+        entityManager.flush()
+
+        assertNotNull(saved.id)
+        assertEquals("14일 챌린지", saved.title)
+        assertEquals(LocalDate.of(2026, 10, 1), saved.startDate)
+        assertEquals(LocalDate.of(2026, 10, 14), saved.endDate)
+        assertNotNull(saved.createdAt)
+    }
+
+    @Test
+    fun `ChallengeParticipant (challengeId, userId) 복합 유니크 제약조건 위반 시 DataIntegrityViolationException 발생`() {
+        val participant1 = ChallengeParticipant(challengeId = 50L, userId = 60L, penaltyAmount = 5000)
+        challengeParticipantRepository.save(participant1)
+        entityManager.flush()
+
+        assertThrows(DataIntegrityViolationException::class.java) {
+            val participant2 = ChallengeParticipant(challengeId = 50L, userId = 60L, penaltyAmount = 10000)
+            challengeParticipantRepository.save(participant2)
             entityManager.flush()
         }
     }

@@ -49,3 +49,78 @@ export interface AuthResponse {
   refreshToken: string;
   user: User;
 }
+
+export type ChallengeStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED';
+
+export interface ChallengeSummary {
+  id: number;
+  groupId: number;
+  title: string;
+  description?: string | null;
+  verificationCriteria: string;
+  startDate: string;
+  endDate: string;
+  status: ChallengeStatus;
+  participantCount: number;
+  isParticipating: boolean;
+  isCreator: boolean;
+  myPenaltyAmount?: number | null;
+  createdAt: string;
+}
+
+export interface ChallengeParticipant {
+  id: number;
+  userId: number;
+  nickname: string;
+  profileImageUrl?: string | null;
+  penaltyAmount: number;
+  joinedAt: string;
+  isCreator: boolean;
+}
+
+export interface ChallengeDetail {
+  id: number;
+  groupId: number;
+  groupName: string;
+  creatorUserId: number;
+  creatorNickname: string;
+  title: string;
+  description?: string | null;
+  verificationCriteria: string;
+  startDate: string;
+  endDate: string;
+  status: ChallengeStatus;
+  isCreator: boolean;
+  isParticipating: boolean;
+  myPenaltyAmount?: number | null;
+  canJoin: boolean;
+  canCancel: boolean;
+  canDelete: boolean;
+  canModifyFull: boolean;
+  participants: ChallengeParticipant[];
+}
+
+export interface CreateChallengePayload {
+  title: string;
+  description?: string;
+  verificationCriteria: string;
+  startDate: string;
+  endDate?: string;
+  myPenaltyAmount: number;
+}
+
+export interface UpdateChallengePayload {
+  title?: string;
+  description?: string;
+  verificationCriteria?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface JoinChallengePayload {
+  penaltyAmount: number;
+}
+
+export interface UpdatePenaltyPayload {
+  penaltyAmount: number;
+}
