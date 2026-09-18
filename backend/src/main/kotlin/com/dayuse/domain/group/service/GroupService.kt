@@ -86,20 +86,9 @@ class GroupService(
         }
     }
 
-    /**
-     * [사용자 미션 2] 모임 멤버십 인가 검증 가드 구현 과제
-     *
-     * 🎓 핵심 질문:
-     * - 비회원 또는 해당 모임의 GroupMember가 아닌 사용자가 모임 데이터(GET /api/v1/groups/{groupId})에 접근할 때,
-     *   어디서 어떻게 403 Forbidden으로 차단해야 안전한가요?
-     *
-     * TODO: 아래 membership 검증 가드를 직접 작성해 보세요!
-     * 힌트: groupMemberRepository.findByGroupIdAndUserId(groupId, userId)가 null이면 ForbiddenException을 던집니다.
-     */
     fun getGroupDetail(groupId: Long, userId: Long): GroupDetailResponse {
-        // TODO [사용자 미션 2]: 요청자(userId)가 모임(groupId)의 멤버인지 검증하고, 비회원이면 ForbiddenException을 던지도록 작성하세요.
         val membership = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
-            ?: TODO("[사용자 미션 2] 비회원 접근 시 ForbiddenException을 던지도록 가드를 완성해 보세요!")
+            ?: throw ForbiddenException("비회원 접근")
 
         val group = groupRepository.findById(groupId).orElseThrow {
             ResourceNotFoundException("모임을 찾을 수 없습니다. (ID: $groupId)")

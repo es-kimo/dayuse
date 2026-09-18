@@ -7,7 +7,9 @@ import com.dayuse.domain.group.GroupRole
 import com.dayuse.domain.group.dto.InviteInfoResponse
 import com.dayuse.domain.group.dto.JoinGroupResponse
 import com.dayuse.domain.user.UserRepository
+import com.dayuse.global.exception.DuplicateResourceException
 import com.dayuse.global.exception.ResourceNotFoundException
+import org.hibernate.exception.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -54,9 +56,33 @@ class InviteService(
         val group = groupRepository.findByInviteCode(inviteCode)
             ?: throw ResourceNotFoundException("유효하지 않거나 만료된 초대 코드입니다.")
 
-        // TODO [사용자 미션 3]:
         // 1) 1차: 애플리케이션 레벨 중복 가입 검사 (existsByGroupIdAndUserId)
+        if (groupMemberRepository.existsByGroupIdAndUserId(group.id, userId))
+            throw DuplicateResourceException("이미 가입된 모임입니다.")
+
         // 2) 2차: 동시성 레이스 컨디션을 방어하는 DB 복합 유니크 제약조건 위반(DataIntegrityViolationException) 예외 처리
-        TODO("[사용자 미션 3] 모임 중복 가입 방어 및 예외 처리 로직을 직접 구현해 보세요!")
+        try {
+            groupMemberRepository.saveAndFlush(
+                GroupMember(
+                    groupId = group.id,
+                    userId = userId,
+                    role = GroupRole.MEMBER
+                )
+            )
+        } catch (e: DataIntegrityViolationException) {
+            val constraintViolation = generateSequence<Throwable>(e) { it.cause }
+                .filterIsInstance<ConstraintViolationException>()
+                .firstOrNull()
+
+            if (constraintViolation?.constraintName == "uk_group_member") {
+                throw DuplicateResourceException("이미 가입된 모임입니다.")
+            }
+
+            throw e
+        }
+
+        return JoinGroupResponse(
+            groupId = group.id, message = "모임에 성공적으로 가입하였습니다."
+        )
     }
 }
