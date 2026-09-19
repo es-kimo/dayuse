@@ -124,3 +124,79 @@ export interface JoinChallengePayload {
 export interface UpdatePenaltyPayload {
   penaltyAmount: number;
 }
+
+export interface TodayVerificationSummary {
+  id: number;
+  imageUrl: string;
+  comment?: string | null;
+  isLate: boolean;
+  createdAt: string;
+}
+
+export interface TodayAction {
+  challengeId: number;
+  challengeTitle: string;
+  verificationCriteria: string;
+  startDate: string;
+  endDate: string;
+  isCompletedToday: boolean;
+  canVerify: boolean;
+  myVerification?: TodayVerificationSummary | null;
+}
+
+export interface PresignedUrlResponse {
+  presignedUrl: string;
+  imageKey: string;
+  expiresAt: string;
+}
+
+export interface VerificationDetail {
+  id: number;
+  groupId: number;
+  challengeId: number;
+  userId: number;
+  targetDate: string;
+  imageUrl: string;
+  comment?: string | null;
+  isLate: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FeedItem {
+  id: number;
+  groupId: number;
+  challengeId: number;
+  challengeTitle: string;
+  userId: number;
+  authorNickname: string;
+  authorProfileImageUrl?: string | null;
+  targetDate: string;
+  imageUrl: string;
+  comment?: string | null;
+  isLate: boolean;
+  commentCount: number;
+  isMine: boolean;
+  createdAt: string;
+}
+
+export interface FeedPageResponse {
+  items: FeedItem[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+}
+
+export interface CommentItem {
+  id: number;
+  verificationId: number;
+  userId: number;
+  authorNickname: string;
+  authorProfileImageUrl?: string | null;
+  content: string;
+  isMine: boolean;
+  createdAt: string;
+}
+

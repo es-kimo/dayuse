@@ -14,9 +14,15 @@ import com.dayuse.domain.group.GroupRepository
 import com.dayuse.domain.group.GroupRole
 import com.dayuse.domain.user.User
 import com.dayuse.domain.user.UserRepository
+import com.dayuse.domain.verification.Verification
+import com.dayuse.domain.verification.VerificationComment
+import com.dayuse.domain.verification.VerificationCommentRepository
+import com.dayuse.domain.verification.VerificationRepository
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
@@ -43,6 +49,12 @@ class EntityAndRelationshipTest {
 
     @Autowired
     private lateinit var challengeParticipantRepository: ChallengeParticipantRepository
+
+    @Autowired
+    private lateinit var verificationRepository: VerificationRepository
+
+    @Autowired
+    private lateinit var verificationCommentRepository: VerificationCommentRepository
 
     @Autowired
     private lateinit var entityManager: TestEntityManager
@@ -133,5 +145,67 @@ class EntityAndRelationshipTest {
             challengeParticipantRepository.save(participant2)
             entityManager.flush()
         }
+    }
+
+    @Test
+    fun `Verification (challengeId, userId, targetDate) 복합 유니크 제약조건 위반 시 DataIntegrityViolationException 발생`() {
+        val date = LocalDate.of(2026, 9, 19)
+        val v1 = Verification(
+            groupId = 1L,
+            challengeId = 10L,
+            userId = 20L,
+            targetDate = date,
+            imageUrl = "https://s3.example.com/v1.jpg",
+            comment = "1차 인증"
+        )
+        verificationRepository.save(v1)
+        entityManager.flush()
+
+        assertThrows(DataIntegrityViolationException::class.java) {
+            val v2 = Verification(
+                groupId = 1L,
+                challengeId = 10L,
+                userId = 20L,
+                targetDate = date,
+                imageUrl = "https://s3.example.com/v2.jpg",
+                comment = "동일 날짜 중복 인증 시도"
+            )
+            verificationRepository.save(v2)
+            entityManager.flush()
+        }
+    }
+
+    @Test
+    fun `Verification과 VerificationComment 간의 지연 로딩(FetchType LAZY) 확인`() {
+        val verification = Verification(
+            groupId = 1L,
+            challengeId = 10L,
+            userId = 20L,
+            targetDate = LocalDate.of(2026, 9, 19),
+            imageUrl = "https://s3.example.com/test.jpg",
+            comment = "오늘 인증"
+        )
+        val savedVerification = verificationRepository.save(verification)
+
+        val comment = VerificationComment(
+            verification = savedVerification,
+            userId = 30L,
+            content = "멋집니다 파이팅!"
+        )
+        verificationCommentRepository.save(comment)
+        entityManager.flush()
+        entityManager.clear()
+
+        // 1차 캐시를 비운 뒤 지연 로딩 검증
+        val loadedVerification = verificationRepository.findById(savedVerification.id).get()
+        assertNotNull(loadedVerification)
+
+        // comments 컬렉션이 즉시 초기화되지 않고 프록시 상태(LAZY)인지 확인
+        val persistenceUnitUtil = entityManager.entityManager.entityManagerFactory.persistenceUnitUtil
+        assertFalse(persistenceUnitUtil.isLoaded(loadedVerification, "comments"), "comments는 LAZY로 설정되어 즉시 로딩되지 않아야 합니다.")
+
+        // 실제로 접근 시 초기화(지연 로딩 발생)
+        assertEquals(1, loadedVerification.comments.size)
+        assertTrue(persistenceUnitUtil.isLoaded(loadedVerification, "comments"), "comments 접근 시점에 로딩되어야 합니다.")
     }
 }
