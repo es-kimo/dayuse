@@ -22,9 +22,7 @@ import jakarta.persistence.Table
 @Entity
 @Table(name = "users")
 class User(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    id: Long = 0L,
 
     @Column(nullable = false, unique = true)
     var kakaoId: String = "",
@@ -35,6 +33,11 @@ class User(
     @Column(nullable = true)
     var profileImageUrl: String? = null
 ) : BaseTimeEntity() {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = id
+        private set
+
 
     // TODO: 필요시 추가 비즈니스 로직(예: 닉네임 유효성 검사, 업데이트 메서드)을 구현해 보세요.
     fun updateNickname(newNickname: String) {

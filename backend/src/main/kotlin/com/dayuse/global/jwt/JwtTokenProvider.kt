@@ -13,8 +13,8 @@ import javax.crypto.SecretKey
 @Component
 class JwtTokenProvider(
     @Value("\${jwt.secret}") secret: String,
-    @Value("\${jwt.access-token-expiration-ms:3600000}") private val accessTokenExpirationMs: Long,
-    @Value("\${jwt.refresh-token-expiration-ms:1209600000}") private val refreshTokenExpirationMs: Long
+    @param:Value("\${jwt.access-token-expiration-ms:3600000}") private val accessTokenExpirationMs: Long,
+    @param:Value("\${jwt.refresh-token-expiration-ms:1209600000}") private val refreshTokenExpirationMs: Long
 ) {
     private val key: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray(StandardCharsets.UTF_8))
 
@@ -48,9 +48,9 @@ class JwtTokenProvider(
         return try {
             parseClaims(token)
             true
-        } catch (e: JwtException) {
+        } catch (_: JwtException) {
             false
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             false
         }
     }

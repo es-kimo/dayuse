@@ -38,20 +38,32 @@ import java.time.LocalDateTime
     ]
 )
 class GroupMember(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    id: Long = 0L,
 
-    @Column(nullable = false)
-    val groupId: Long = 0L,
+    groupId: Long = 0L,
 
-    @Column(nullable = false)
-    val userId: Long = 0L,
+    userId: Long = 0L,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     var role: GroupRole = GroupRole.MEMBER,
 
+    joinedAt: LocalDateTime = LocalDateTime.now()
+) : BaseTimeEntity() {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = id
+        private set
+
     @Column(nullable = false)
-    val joinedAt: LocalDateTime = LocalDateTime.now()
-) : BaseTimeEntity()
+    var groupId: Long = groupId
+        private set
+
+    @Column(nullable = false)
+    var userId: Long = userId
+        private set
+
+    @Column(nullable = false)
+    var joinedAt: LocalDateTime = joinedAt
+        private set
+}

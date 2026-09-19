@@ -8,6 +8,8 @@ import { NewGroupPage } from './pages/NewGroupPage';
 import { GroupDetailPage } from './pages/GroupDetailPage';
 import { InviteLandingPage } from './pages/InviteLandingPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { NewChallengePage } from './pages/NewChallengePage';
+import { ChallengeDetailPage } from './pages/ChallengeDetailPage';
 
 export const App: React.FC = () => {
   return (
@@ -20,6 +22,9 @@ export const App: React.FC = () => {
           <Route path="/groups" element={<GroupsPage />} />
           <Route path="/groups/new" element={<NewGroupPage />} />
           <Route path="/groups/:groupId" element={<GroupDetailPage />} />
+          <Route path="/groups/:groupId/challenges" element={<GroupDetailPage />} />
+          <Route path="/groups/:groupId/challenges/new" element={<NewChallengePage />} />
+          <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
           <Route path="/invite/:inviteCode" element={<InviteLandingPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/groups" replace />} />
