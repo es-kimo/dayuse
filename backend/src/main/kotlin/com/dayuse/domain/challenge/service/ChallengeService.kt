@@ -24,6 +24,8 @@ import com.dayuse.global.util.DateTimeUtils
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.time.LocalDateTime
+import kotlin.Long
 
 @Service
 @Transactional(readOnly = true)
@@ -42,7 +44,10 @@ class ChallengeService(
         request: CreateChallengeRequest,
         today: LocalDate = DateTimeUtils.todayKst()
     ): ChallengeDetailResponse {
-        groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+        groupMemberRepository.findByGroupIdAndUserId(
+            groupId,
+            userId
+        )
             ?: throw ForbiddenException("해당 모임의 멤버만 챌린지를 생성할 수 있습니다.")
 
         val group = groupRepository.findById(groupId).orElseThrow {
@@ -70,16 +75,25 @@ class ChallengeService(
             )
         )
 
-        // TODO [사용자 미션 2]: 챌린지 생성 시 생성자 자동 참여(ChallengeParticipant)를 원자적으로 저장하세요.
-        // 요구사항:
-        // 1. ChallengeParticipant(challengeId = challenge.id, userId = userId, penaltyAmount = request.myPenaltyAmount) 생성
-        // 2. challengeParticipantRepository.save(...)로 DB에 저장
-        // 3. ChallengeParticipantResponse 객체를 생성하여 참가자 목록(participants)에 포함
-        //
         // 🎓 생각해보기:
         // - 챌린지 엔티티 생성과 생성자 참여자 엔티티 생성을 단일 @Transactional 안에서 묶어야 하는 이유는 무엇일까요?
+        val creatorParticipant = challengeParticipantRepository.save(
+            ChallengeParticipant(
+                challengeId = challenge.id,
+                userId = userId,
+                penaltyAmount = request.myPenaltyAmount
+            )
+        )
         val creatorUser = userRepository.findById(userId).orElse(null)
-        val participantResponseList = emptyList<ChallengeParticipantResponse>()
+        val participantResponse = ChallengeParticipantResponse(
+            id = creatorParticipant.id,
+            userId = userId,
+            nickname = creatorUser?.nickname ?: "참여자",
+            profileImageUrl = creatorUser?.profileImageUrl,
+            penaltyAmount = creatorParticipant.penaltyAmount,
+            joinedAt = creatorParticipant.joinedAt,
+            isCreator = true
+        )
 
         return ChallengeDetailResponse(
             id = challenge.id,
@@ -94,13 +108,13 @@ class ChallengeService(
             endDate = challenge.endDate,
             status = challenge.status(today),
             isCreator = true,
-            isParticipating = participantResponseList.isNotEmpty(),
-            myPenaltyAmount = null,
+            isParticipating = true,
+            myPenaltyAmount = creatorParticipant.penaltyAmount,
             canJoin = false,
             canCancel = false,
             canDelete = challenge.canDelete(today),
             canModifyFull = challenge.canModifyFullConditions(today),
-            participants = participantResponseList
+            participants = listOf(participantResponse)
         )
     }
 
@@ -110,21 +124,35 @@ class ChallengeService(
         statusFilter: String? = null,
         today: LocalDate = DateTimeUtils.todayKst()
     ): List<ChallengeSummaryResponse> {
-        groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+        groupMemberRepository.findByGroupIdAndUserId(
+            groupId,
+            userId
+        )
             ?: throw ForbiddenException("해당 모임의 멤버만 챌린지를 조회할 수 있습니다.")
 
         val challenges = challengeRepository.findAllByGroupIdOrderByStartDateAscCreatedAtDesc(groupId)
 
         return challenges.mapNotNull { challenge ->
             val status = challenge.status(today)
-            if (statusFilter != null && !statusFilter.equals("ALL", ignoreCase = true)) {
-                if (!status.name.equals(statusFilter, ignoreCase = true)) {
+            if (statusFilter != null && !statusFilter.equals(
+                    "ALL",
+                    ignoreCase = true
+                )
+            ) {
+                if (!status.name.equals(
+                        statusFilter,
+                        ignoreCase = true
+                    )
+                ) {
                     return@mapNotNull null
                 }
             }
 
             val participantCount = challengeParticipantRepository.countByChallengeId(challenge.id).toInt()
-            val myParticipant = challengeParticipantRepository.findByChallengeIdAndUserId(challenge.id, userId)
+            val myParticipant = challengeParticipantRepository.findByChallengeIdAndUserId(
+                challenge.id,
+                userId
+            )
 
             ChallengeSummaryResponse(
                 id = challenge.id,
@@ -153,7 +181,10 @@ class ChallengeService(
             ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
         }
 
-        groupMemberRepository.findByGroupIdAndUserId(challenge.groupId, userId)
+        groupMemberRepository.findByGroupIdAndUserId(
+            challenge.groupId,
+            userId
+        )
             ?: throw ForbiddenException("해당 모임의 멤버만 챌린지를 조회할 수 있습니다.")
 
         val group = groupRepository.findById(challenge.groupId).orElseThrow {
@@ -215,14 +246,21 @@ class ChallengeService(
             ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
         }
 
-        groupMemberRepository.findByGroupIdAndUserId(challenge.groupId, userId)
+        groupMemberRepository.findByGroupIdAndUserId(
+            challenge.groupId,
+            userId
+        )
             ?: throw ForbiddenException("해당 모임의 멤버만 챌린지에 참여할 수 있습니다.")
 
         if (!challenge.canJoin(today)) {
             throw ChallengeAlreadyStartedException("이미 시작된 챌린지에는 참여할 수 없습니다.")
         }
 
-        if (challengeParticipantRepository.existsByChallengeIdAndUserId(challengeId, userId)) {
+        if (challengeParticipantRepository.existsByChallengeIdAndUserId(
+                challengeId,
+                userId
+            )
+        ) {
             throw DuplicateResourceException("이미 참여 중인 챌린지입니다.")
         }
 
@@ -256,7 +294,10 @@ class ChallengeService(
             ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
         }
 
-        groupMemberRepository.findByGroupIdAndUserId(challenge.groupId, userId)
+        groupMemberRepository.findByGroupIdAndUserId(
+            challenge.groupId,
+            userId
+        )
             ?: throw ForbiddenException("해당 모임의 멤버만 챌린지 참여를 취소할 수 있습니다.")
 
         if (!challenge.canCancel(today)) {
@@ -267,7 +308,10 @@ class ChallengeService(
             throw BadRequestException("챌린지 생성자는 참여를 취소할 수 없습니다. 대신 챌린지를 삭제해주세요.")
         }
 
-        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(challengeId, userId)
+        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(
+            challengeId,
+            userId
+        )
             ?: throw ResourceNotFoundException("참여 중인 챌린지가 아닙니다.")
 
         challengeParticipantRepository.delete(participant)
@@ -288,7 +332,10 @@ class ChallengeService(
             throw ChallengeAlreadyStartedException("이미 시작된 챌린지는 약정 금액을 변경할 수 없습니다.")
         }
 
-        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(challengeId, userId)
+        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(
+            challengeId,
+            userId
+        )
             ?: throw ResourceNotFoundException("참여 중인 챌린지가 아닙니다.")
 
         participant.penaltyAmount = request.penaltyAmount
@@ -329,7 +376,11 @@ class ChallengeService(
             today = today
         )
 
-        return getChallengeDetail(challengeId, userId, today)
+        return getChallengeDetail(
+            challengeId,
+            userId,
+            today
+        )
     }
 
     @Transactional
