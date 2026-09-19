@@ -53,7 +53,7 @@ class TodayService(
             val summary = verification?.let {
                 TodayVerificationSummary(
                     id = it.id,
-                    imageUrl = presignedUrlService.generatePresignedGetUrl(it.imageUrl),
+                    imageUrl = presignedUrlService.generatePresignedGetUrl(it.imageUrl, it.challengeId, it.userId),
                     comment = it.comment,
                     isLate = it.isLate,
                     createdAt = it.createdAt

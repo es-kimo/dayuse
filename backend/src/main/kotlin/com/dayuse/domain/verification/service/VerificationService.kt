@@ -78,6 +78,8 @@ class VerificationService(
             throw DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")
         }
 
+        presignedUrlService.validateImageOwnership(request.imageUrl, challenge.id, userId)
+
         try {
             val verification = Verification(
                 groupId = challenge.groupId,
@@ -122,6 +124,8 @@ class VerificationService(
             throw BadRequestException("과거 대상 날짜의 인증은 수정할 수 없습니다.")
         }
 
+        presignedUrlService.validateImageOwnership(request.imageUrl, verification.challengeId, verification.userId)
+
         verification.update(
             request.imageUrl,
             request.comment
@@ -157,7 +161,7 @@ class VerificationService(
             challengeId = v.challengeId,
             userId = v.userId,
             targetDate = v.targetDate,
-            imageUrl = presignedUrlService.generatePresignedGetUrl(v.imageUrl),
+            imageUrl = presignedUrlService.generatePresignedGetUrl(v.imageUrl, v.challengeId, v.userId),
             comment = v.comment,
             isLate = v.isLate,
             createdAt = v.createdAt,

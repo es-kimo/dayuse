@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest
+import java.net.URI
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
@@ -20,7 +21,8 @@ import java.util.UUID
 class PresignedUrlService(
     private val s3Presigner: S3Presigner,
     private val challengeParticipantRepository: ChallengeParticipantRepository,
-    @Value("\${aws.s3.bucket:dayuse-local-bucket}") private val bucket: String
+    @Value("\${aws.s3.bucket:dayuse-local-bucket}") private val bucket: String,
+    @Value("\${aws.s3.region:ap-northeast-2}") private val region: String = "ap-northeast-2"
 ) {
 
     companion object {
@@ -78,42 +80,46 @@ class PresignedUrlService(
         )
     }
 
-    fun generatePresignedGetUrl(imagePathOrUrl: String?): String {
-        if (imagePathOrUrl.isNullOrBlank()) {
-            return ""
+    /** 외부 URL은 서명하지 않고, 우리 버킷의 키만 소유 범위를 검증한다. */
+    fun validateImageOwnership(imagePathOrUrl: String?, challengeId: Long, ownerUserId: Long) {
+        val key = extractOwnedBucketKey(imagePathOrUrl) ?: return
+        val expectedPrefix = "verifications/$challengeId/$ownerUserId/"
+        // 경로 정규화/인코딩으로 소유 범위를 우회하지 못하도록 업로드 키 형식만 허용한다.
+        val validKey = Regex("verifications/[0-9]+/[0-9]+/[A-Za-z0-9_-]+\\.(jpg|jpeg|png|webp)")
+        if (!key.startsWith(expectedPrefix) || !validKey.matches(key)) {
+            throw ForbiddenException("해당 인증에 사용할 수 없는 이미지입니다.")
         }
+    }
 
-        // 로컬 Mock S3 URL인 경우 원본 반환
-        if (imagePathOrUrl.startsWith("http://localhost:8080/api/v1/mock-s3") ||
-            imagePathOrUrl.startsWith("/api/v1/mock-s3")
-        ) {
-            return imagePathOrUrl
-        }
-
-        // S3 verifications 경로 키 추출
-        val key = when {
-            imagePathOrUrl.contains("/verifications/") -> "verifications/" + imagePathOrUrl.substringAfter("/verifications/")
-            imagePathOrUrl.startsWith("verifications/") -> imagePathOrUrl
-            else -> null
-        }
-
-        // verifications 경로가 아닌 외부 URL 또는 테스트 더미인 경우 원본 반환
-        if (key == null) {
-            return imagePathOrUrl
-        }
-
-        val cleanKey = key.substringBefore('?')
-
+    fun generatePresignedGetUrl(imagePathOrUrl: String?, challengeId: Long, ownerUserId: Long): String {
+        val key = extractOwnedBucketKey(imagePathOrUrl) ?: return imagePathOrUrl.orEmpty()
+        // 과거에 잘못 저장된 키도 읽기 경로에서 서명하지 않는다.
+        validateImageOwnership(imagePathOrUrl, challengeId, ownerUserId)
         val getObjectRequest = GetObjectRequest.builder()
             .bucket(bucket)
-            .key(cleanKey)
+            .key(key)
             .build()
-
         val presignRequest = GetObjectPresignRequest.builder()
-            .signatureDuration(Duration.ofMinutes(60)) // 조회용 서명 60분 유효
+            .signatureDuration(Duration.ofMinutes(60))
             .getObjectRequest(getObjectRequest)
             .build()
-
         return s3Presigner.presignGetObject(presignRequest).url().toString()
+    }
+
+    private fun extractOwnedBucketKey(imagePathOrUrl: String?): String? {
+        if (imagePathOrUrl.isNullOrBlank()) return null
+        if (imagePathOrUrl.startsWith("verifications/")) return imagePathOrUrl
+
+        val uri = try {
+            URI(imagePathOrUrl)
+        } catch (_: java.net.URISyntaxException) {
+            return null
+        }
+        // 이전 프론트가 저장한 자체 버킷의 URL만 키로 변환한다.
+        val allowedHosts = setOf("$bucket.s3.$region.amazonaws.com", "$bucket.s3.amazonaws.com")
+        if (uri.scheme != "https" || uri.host !in allowedHosts || uri.userInfo != null || uri.port != -1) {
+            return null
+        }
+        return uri.rawPath.removePrefix("/")
     }
 }

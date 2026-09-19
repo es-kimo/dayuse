@@ -575,4 +575,42 @@ class VerificationIntegrationTest {
         )
     )
 
+    @Test
+    fun `다른 사용자 또는 챌린지의 이미지 키로 인증을 생성할 수 없다`() {
+        val beforeCount = verificationRepository.count()
+        val foreignKeys = listOf(
+            "verifications/${challenge.id}/${otherMemberUser.id}/private.png",
+            "verifications/999999/${participantUser.id}/private.png"
+        )
+        for (key in foreignKeys) {
+            mockMvc.post("/api/v1/verifications") {
+                header("Authorization", "Bearer $participantToken")
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(CreateVerificationRequest(challenge.id, key))
+            }.andExpect {
+                status { isForbidden() }
+            }
+        }
+        assertEquals(beforeCount, verificationRepository.count())
+    }
+
+    @Test
+    fun `다른 사용자 이미지로 수정을 거절하고 기존 인증을 유지한다`() {
+        val verification = saveVerificationForUrlValidation()
+        val originalUrl = verification.imageUrl
+        mockMvc.patch("/api/v1/verifications/${verification.id}") {
+            header("Authorization", "Bearer $participantToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(UpdateVerificationRequest(
+                imageUrl = "verifications/${challenge.id}/${otherMemberUser.id}/private.png",
+                comment = "반영되면 안 되는 문구"
+            ))
+        }.andExpect {
+            status { isForbidden() }
+        }
+        val unchanged = verificationRepository.findById(verification.id).orElseThrow()
+        assertEquals(originalUrl, unchanged.imageUrl)
+        assertEquals(null, unchanged.comment)
+    }
+
 }

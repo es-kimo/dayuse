@@ -64,7 +64,7 @@ class FeedService(
                 authorNickname = user?.nickname ?: "알 수 없음",
                 authorProfileImageUrl = user?.profileImageUrl,
                 targetDate = verification.targetDate,
-                imageUrl = presignedUrlService.generatePresignedGetUrl(verification.imageUrl),
+                imageUrl = presignedUrlService.generatePresignedGetUrl(verification.imageUrl, verification.challengeId, verification.userId),
                 comment = verification.comment,
                 isLate = verification.isLate,
                 commentCount = verification.comments.size,
