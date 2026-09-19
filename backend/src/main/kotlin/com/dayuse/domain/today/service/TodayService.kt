@@ -6,6 +6,7 @@ import com.dayuse.domain.group.GroupMemberRepository
 import com.dayuse.domain.today.dto.TodayActionResponse
 import com.dayuse.domain.today.dto.TodayVerificationSummary
 import com.dayuse.domain.verification.VerificationRepository
+import com.dayuse.domain.verification.service.PresignedUrlService
 import com.dayuse.global.exception.ForbiddenException
 import com.dayuse.global.util.DateTimeUtils
 import org.springframework.stereotype.Service
@@ -17,7 +18,8 @@ class TodayService(
     private val groupMemberRepository: GroupMemberRepository,
     private val challengeRepository: ChallengeRepository,
     private val challengeParticipantRepository: ChallengeParticipantRepository,
-    private val verificationRepository: VerificationRepository
+    private val verificationRepository: VerificationRepository,
+    private val presignedUrlService: PresignedUrlService
 ) {
 
     fun getTodayActions(groupId: Long, userId: Long): List<TodayActionResponse> {
@@ -51,7 +53,7 @@ class TodayService(
             val summary = verification?.let {
                 TodayVerificationSummary(
                     id = it.id,
-                    imageUrl = it.imageUrl,
+                    imageUrl = presignedUrlService.generatePresignedGetUrl(it.imageUrl),
                     comment = it.comment,
                     isLate = it.isLate,
                     createdAt = it.createdAt

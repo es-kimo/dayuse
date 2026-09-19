@@ -282,6 +282,33 @@ class VerificationIntegrationTest {
     }
 
     @Test
+    fun `S3 verifications 경로로 사진 인증을 등록하면 조회 응답에 서명된 Presigned GET URL이 반환된다`() {
+        val request = CreateVerificationRequest(
+            challengeId = challenge.id,
+            imageUrl = "verifications/" + challenge.id + "/" + participantUser.id + "/test-image.png",
+            comment = "Presigned GET URL 검증"
+        )
+
+        val result = mockMvc.post("/api/v1/verifications") {
+            header(
+                "Authorization",
+                "Bearer " + participantToken
+            )
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(request)
+        }.andExpect {
+            status { isCreated() }
+        }.andReturn()
+
+        val json = objectMapper.readTree(result.response.contentAsString)
+        val responseImageUrl = json.get("imageUrl").asText()
+        org.junit.jupiter.api.Assertions.assertTrue(
+            responseImageUrl.contains("X-Amz-Signature") || responseImageUrl.contains("X-Amz-Algorithm"),
+            "조회용 이미지 URL에 AWS S3 Presigned 서명 파라미터가 포함되어야 합니다."
+        )
+    }
+
+    @Test
     fun `DoD 2 동일 챌린지, 동일 참여자, 동일 날짜에 2회 이상 인증 시도 시 409 Conflict로 방어된다`() {
         val today = DateTimeUtils.todayKst()
         val request = CreateVerificationRequest(

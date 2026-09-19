@@ -6,6 +6,7 @@ import com.dayuse.domain.feed.dto.FeedPageResponse
 import com.dayuse.domain.group.GroupMemberRepository
 import com.dayuse.domain.user.UserRepository
 import com.dayuse.domain.verification.VerificationRepository
+import com.dayuse.domain.verification.service.PresignedUrlService
 import com.dayuse.global.exception.ForbiddenException
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -17,7 +18,8 @@ class FeedService(
     private val verificationRepository: VerificationRepository,
     private val groupMemberRepository: GroupMemberRepository,
     private val challengeRepository: ChallengeRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val presignedUrlService: PresignedUrlService
 ) {
 
     fun getGroupFeed(groupId: Long, userId: Long, pageable: Pageable): FeedPageResponse {
@@ -62,7 +64,7 @@ class FeedService(
                 authorNickname = user?.nickname ?: "알 수 없음",
                 authorProfileImageUrl = user?.profileImageUrl,
                 targetDate = verification.targetDate,
-                imageUrl = verification.imageUrl,
+                imageUrl = presignedUrlService.generatePresignedGetUrl(verification.imageUrl),
                 comment = verification.comment,
                 isLate = verification.isLate,
                 commentCount = verification.comments.size,

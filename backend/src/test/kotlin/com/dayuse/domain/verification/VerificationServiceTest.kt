@@ -7,6 +7,7 @@ import com.dayuse.domain.challenge.ChallengeParticipantRepository
 import com.dayuse.domain.challenge.ChallengeRepository
 import com.dayuse.domain.group.GroupMemberRepository
 import com.dayuse.domain.verification.dto.CreateVerificationRequest
+import com.dayuse.domain.verification.service.PresignedUrlService
 import com.dayuse.domain.verification.service.VerificationService
 import com.dayuse.global.exception.DuplicateResourceException
 import org.hibernate.exception.ConstraintViolationException
@@ -24,7 +25,8 @@ class VerificationServiceTest {
     private val challenges = mock(ChallengeRepository::class.java)
     private val participants = mock(ChallengeParticipantRepository::class.java)
     private val members = mock(GroupMemberRepository::class.java)
-    private val service = VerificationService(verifications, challenges, participants, members)
+    private val presignedUrlService = mock(PresignedUrlService::class.java)
+    private val service = VerificationService(verifications, challenges, participants, members, presignedUrlService)
     private val date = LocalDate.of(2020, 1, 2)
     private val request = CreateVerificationRequest(10L, "https://s3.example.com/test.jpg", targetDate = date)
 

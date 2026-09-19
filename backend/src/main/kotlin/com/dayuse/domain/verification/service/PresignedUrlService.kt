@@ -7,8 +7,10 @@ import com.dayuse.global.exception.BadRequestException
 import com.dayuse.global.exception.ForbiddenException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest
 import java.time.Duration
 import java.time.LocalDateTime
@@ -74,5 +76,44 @@ class PresignedUrlService(
             imageKey = uniqueKey,
             expiresAt = expiresAt
         )
+    }
+
+    fun generatePresignedGetUrl(imagePathOrUrl: String?): String {
+        if (imagePathOrUrl.isNullOrBlank()) {
+            return ""
+        }
+
+        // 로컬 Mock S3 URL인 경우 원본 반환
+        if (imagePathOrUrl.startsWith("http://localhost:8080/api/v1/mock-s3") ||
+            imagePathOrUrl.startsWith("/api/v1/mock-s3")
+        ) {
+            return imagePathOrUrl
+        }
+
+        // S3 verifications 경로 키 추출
+        val key = when {
+            imagePathOrUrl.contains("/verifications/") -> "verifications/" + imagePathOrUrl.substringAfter("/verifications/")
+            imagePathOrUrl.startsWith("verifications/") -> imagePathOrUrl
+            else -> null
+        }
+
+        // verifications 경로가 아닌 외부 URL 또는 테스트 더미인 경우 원본 반환
+        if (key == null) {
+            return imagePathOrUrl
+        }
+
+        val cleanKey = key.substringBefore('?')
+
+        val getObjectRequest = GetObjectRequest.builder()
+            .bucket(bucket)
+            .key(cleanKey)
+            .build()
+
+        val presignRequest = GetObjectPresignRequest.builder()
+            .signatureDuration(Duration.ofMinutes(60)) // 조회용 서명 60분 유효
+            .getObjectRequest(getObjectRequest)
+            .build()
+
+        return s3Presigner.presignGetObject(presignRequest).url().toString()
     }
 }

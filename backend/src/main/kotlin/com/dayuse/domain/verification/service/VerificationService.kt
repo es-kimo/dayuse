@@ -24,7 +24,8 @@ class VerificationService(
     private val verificationRepository: VerificationRepository,
     private val challengeRepository: ChallengeRepository,
     private val challengeParticipantRepository: ChallengeParticipantRepository,
-    private val groupMemberRepository: GroupMemberRepository
+    private val groupMemberRepository: GroupMemberRepository,
+    private val presignedUrlService: PresignedUrlService
 ) {
 
     fun createVerification(
@@ -156,7 +157,7 @@ class VerificationService(
             challengeId = v.challengeId,
             userId = v.userId,
             targetDate = v.targetDate,
-            imageUrl = v.imageUrl,
+            imageUrl = presignedUrlService.generatePresignedGetUrl(v.imageUrl),
             comment = v.comment,
             isLate = v.isLate,
             createdAt = v.createdAt,

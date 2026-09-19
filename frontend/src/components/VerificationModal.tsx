@@ -82,7 +82,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       // 3. 인증 등록 (POST /verifications)
       await verificationsApi.createVerification({
         challengeId: action.challengeId,
-        imageUrl: presignedData.presignedUrl.split('?')[0], // 쿼리 파라미터 제외 URL 또는 imageKey
+        imageUrl: presignedData.imageKey || presignedData.presignedUrl.split('?')[0],
         comment: comment.trim() || undefined,
       });
 
