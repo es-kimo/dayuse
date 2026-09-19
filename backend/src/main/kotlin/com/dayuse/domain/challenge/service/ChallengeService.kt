@@ -4,7 +4,6 @@ import com.dayuse.domain.challenge.Challenge
 import com.dayuse.domain.challenge.ChallengeParticipant
 import com.dayuse.domain.challenge.ChallengeParticipantRepository
 import com.dayuse.domain.challenge.ChallengeRepository
-import com.dayuse.domain.challenge.ChallengeStatus
 import com.dayuse.domain.challenge.dto.ChallengeDetailResponse
 import com.dayuse.domain.challenge.dto.ChallengeParticipantResponse
 import com.dayuse.domain.challenge.dto.ChallengeSummaryResponse
@@ -24,7 +23,6 @@ import com.dayuse.global.util.DateTimeUtils
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
-import java.time.LocalDateTime
 import kotlin.Long
 
 @Service

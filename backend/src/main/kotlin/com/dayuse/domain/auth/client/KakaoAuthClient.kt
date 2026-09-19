@@ -14,9 +14,9 @@ interface KakaoAuthClient {
 
 @Component
 class KakaoAuthClientImpl(
-    @Value("\${kakao.client-id}") private val clientId: String,
-    @Value("\${kakao.client-secret:}") private val clientSecret: String,
-    @Value("\${kakao.redirect-uri}") private val defaultRedirectUri: String
+    @param:Value("\${kakao.client-id}") private val clientId: String,
+    @param:Value("\${kakao.client-secret:}") private val clientSecret: String,
+    @param:Value("\${kakao.redirect-uri}") private val defaultRedirectUri: String
 ) : KakaoAuthClient {
 
     private val log = LoggerFactory.getLogger(javaClass)

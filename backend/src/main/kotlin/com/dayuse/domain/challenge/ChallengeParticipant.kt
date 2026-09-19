@@ -21,19 +21,33 @@ import java.time.LocalDateTime
     ]
 )
 class ChallengeParticipant(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    id: Long = 0L,
 
-    @Column(nullable = false)
-    val challengeId: Long = 0L,
+    challengeId: Long = 0L,
 
-    @Column(nullable = false)
-    val userId: Long = 0L,
+    userId: Long = 0L,
 
     @Column(nullable = false)
     var penaltyAmount: Int = 5000,
 
+    joinedAt: LocalDateTime = LocalDateTime.now()
+) : BaseTimeEntity() {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = id
+        private set
+
+    // Spring Data 파생 쿼리와 JPA 필드 접근에서 사용합니다.
+    @Suppress("unused")
     @Column(nullable = false)
-    val joinedAt: LocalDateTime = LocalDateTime.now()
-) : BaseTimeEntity()
+    var challengeId: Long = challengeId
+        private set
+
+    @Column(nullable = false)
+    var userId: Long = userId
+        private set
+
+    @Column(nullable = false)
+    var joinedAt: LocalDateTime = joinedAt
+        private set
+}

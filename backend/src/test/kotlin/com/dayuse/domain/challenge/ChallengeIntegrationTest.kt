@@ -1,3 +1,6 @@
+// 테스트 시나리오를 한글 이름으로 표현합니다.
+@file:Suppress("NonAsciiCharacters")
+
 package com.dayuse.domain.challenge
 
 import com.dayuse.domain.challenge.dto.CreateChallengeRequest
@@ -16,9 +19,6 @@ import com.dayuse.global.jwt.JwtTokenProvider
 import com.dayuse.global.util.DateTimeUtils
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,7 +32,6 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDate
 
 @SpringBootTest
 @AutoConfigureMockMvc

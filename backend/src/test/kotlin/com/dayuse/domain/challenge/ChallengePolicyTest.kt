@@ -1,3 +1,6 @@
+// 테스트 시나리오를 한글 이름으로 표현합니다.
+@file:Suppress("NonAsciiCharacters")
+
 package com.dayuse.domain.challenge
 
 import com.dayuse.global.exception.BadRequestException

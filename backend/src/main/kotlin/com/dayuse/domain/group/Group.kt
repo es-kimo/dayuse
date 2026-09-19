@@ -24,9 +24,7 @@ import java.time.LocalDateTime
 @Entity
 @Table(name = "`groups`")
 class Group(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    id: Long = 0L,
 
     @Column(nullable = false, length = 50)
     var name: String = "",
@@ -40,6 +38,11 @@ class Group(
     @Column(nullable = false)
     var inviteCodeIssuedAt: LocalDateTime = LocalDateTime.now()
 ) : BaseTimeEntity() {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = id
+        private set
+
 
     // TODO: 초대 코드 재발급 시 inviteCode와 발급 시간을 갱신하는 비즈니스 메서드를 완성해 보세요.
     fun refreshInviteCode(newInviteCode: String) {

@@ -23,15 +23,11 @@ import java.time.LocalDate
     ]
 )
 class Challenge(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    id: Long = 0L,
 
-    @Column(nullable = false)
-    val groupId: Long = 0L,
+    groupId: Long = 0L,
 
-    @Column(nullable = false)
-    val creatorUserId: Long = 0L,
+    creatorUserId: Long = 0L,
 
     @Column(
         nullable = false,
@@ -54,6 +50,19 @@ class Challenge(
     @Column(nullable = false)
     var endDate: LocalDate = LocalDate.now().plusDays(13)
 ) : BaseTimeEntity() {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = id
+        private set
+
+    @Column(nullable = false)
+    var groupId: Long = groupId
+        private set
+
+    @Column(nullable = false)
+    var creatorUserId: Long = creatorUserId
+        private set
+
 
     fun isStarted(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
         return today >= startDate

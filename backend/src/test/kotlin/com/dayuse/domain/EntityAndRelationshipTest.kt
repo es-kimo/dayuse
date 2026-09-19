@@ -1,3 +1,6 @@
+// 테스트 시나리오를 한글 이름으로 표현합니다.
+@file:Suppress("NonAsciiCharacters")
+
 package com.dayuse.domain
 
 import com.dayuse.domain.challenge.Challenge
@@ -14,7 +17,6 @@ import com.dayuse.domain.user.UserRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest

@@ -7,6 +7,5 @@ interface ChallengeParticipantRepository : JpaRepository<ChallengeParticipant, L
     fun findByChallengeIdAndUserId(challengeId: Long, userId: Long): ChallengeParticipant?
     fun existsByChallengeIdAndUserId(challengeId: Long, userId: Long): Boolean
     fun countByChallengeId(challengeId: Long): Long
-    fun deleteByChallengeIdAndUserId(challengeId: Long, userId: Long)
     fun deleteAllByChallengeId(challengeId: Long)
 }
