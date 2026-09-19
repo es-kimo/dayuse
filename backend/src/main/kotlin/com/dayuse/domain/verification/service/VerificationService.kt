@@ -62,28 +62,21 @@ class VerificationService(
             throw DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")
         }
 
-        // TODO [사용자 미션 3-1]: 동시성 요청이나 레이스 컨디션 상황에서 애플리케이션 레벨 1차 검사(existsBy...)를 통과하더라도,
-        // DB 복합 유니크 제약조건(challengeId, userId, targetDate) 위반으로 인해 save() 시점에 발생하는 DataIntegrityViolationException을 catch하여
-        // 명확한 비즈니스 예외인 DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")으로 변환해 처리하세요.
-        // 힌트:
-        // try {
-        //     val verification = ...
-        //     val saved = verificationRepository.save(verification)
-        //     return toDetailResponse(saved)
-        // } catch (e: DataIntegrityViolationException) {
-        //     throw DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")
-        // }
-        val verification = Verification(
-            groupId = challenge.groupId,
-            challengeId = challenge.id,
-            userId = userId,
-            targetDate = targetDate,
-            imageUrl = request.imageUrl,
-            comment = request.comment,
-            isLate = isLate
-        )
-        val saved = verificationRepository.save(verification)
-        return toDetailResponse(saved)
+        try {
+            val verification = Verification(
+                groupId = challenge.groupId,
+                challengeId = challenge.id,
+                userId = userId,
+                targetDate = targetDate,
+                isLate = isLate,
+                imageUrl = request.imageUrl,
+                comment = request.comment
+            )
+            val saved = verificationRepository.save(verification)
+            return toDetailResponse(saved)
+        } catch (e: DataIntegrityViolationException) {
+            throw DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")
+        }
     }
 
     fun updateVerification(

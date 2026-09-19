@@ -69,12 +69,8 @@ class Verification(
     var userId: Long = userId
         private set
 
-    // TODO [사용자 미션 1-1]: Verification과 VerificationComment 간의 1:N 양방향 연관관계를 지연 로딩(FetchType.LAZY)으로 매핑하세요.
-    // TODO [사용자 미션 2]: 피드 목록 조회 시 각 인증의 comments에 접근할 때 발생하는 N+1 쿼리 문제를 방지하기 위해 @BatchSize(size = 100)를 설정하세요.
-    // 힌트:
-    // @BatchSize(size = 100)
-    // @OneToMany(mappedBy = "verification", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
-    @OneToMany(mappedBy = "verification", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @BatchSize(size = 100)
+    @OneToMany(mappedBy = "verification", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
     var comments: MutableList<VerificationComment> = mutableListOf()
 
     fun addComment(comment: VerificationComment) {
