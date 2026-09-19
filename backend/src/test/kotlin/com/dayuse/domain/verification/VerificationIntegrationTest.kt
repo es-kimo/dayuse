@@ -230,40 +230,13 @@ class VerificationIntegrationTest {
 
     @Test
     fun `DoD 2 동일 챌린지, 동일 참여자, 동일 날짜에 2회 이상 인증 시도 시 409 Conflict로 방어된다`() {
-        val today = DateTimeUtils.todayKst()
-        val request = CreateVerificationRequest(
-            challengeId = challenge.id,
-            imageUrl = "https://s3.example.com/first.jpg",
-            comment = "1차 인증",
-            targetDate = today
-        )
-
-        // 1차 인증 성공
-        mockMvc.post("/api/v1/verifications") {
-            header("Authorization", "Bearer $participantToken")
-            contentType = MediaType.APPLICATION_JSON
-            content = objectMapper.writeValueAsString(request)
-        }.andExpect {
-            status { isCreated() }
-        }
-
-        // 2차 동일 조건 인증 시도 -> 409 Conflict
-        val duplicateRequest = CreateVerificationRequest(
-            challengeId = challenge.id,
-            imageUrl = "https://s3.example.com/second.jpg",
-            comment = "2차 중복 시도",
-            targetDate = today
-        )
-
-        mockMvc.post("/api/v1/verifications") {
-            header("Authorization", "Bearer $participantToken")
-            contentType = MediaType.APPLICATION_JSON
-            content = objectMapper.writeValueAsString(duplicateRequest)
-        }.andExpect {
-            status { isConflict() }
-            jsonPath("$.error") { value("CONFLICT") }
-            jsonPath("$.message") { value("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.") }
-        }
+        // TODO [사용자 미션 3-2]: 동일 챌린지, 동일 참여자, 동일 날짜에 대해 중복 인증 요청을 보냈을 때
+        // 1차 인증은 201 Created로 성공하고, 2차 인증 시도는 409 CONFLICT(DuplicateResourceException) 상태 코드와
+        // 적절한 에러 메시지가 반환되는지 검증하는 통합 테스트를 완성하세요.
+        // 힌트:
+        // 1. 1차 CreateVerificationRequest를 POST /api/v1/verifications 로 요청하여 isCreated() 검증
+        // 2. 동일한 조건(challengeId, targetDate)의 2차 요청을 POST로 보내서 isConflict(), jsonPath("$.error").value("CONFLICT") 검증
+        TODO("사용자 미션 3-2: 중복 인증 시 409 Conflict 및 DuplicateResourceException 응답을 검증하는 테스트를 완성하세요.")
     }
 
     @Test

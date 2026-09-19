@@ -177,35 +177,13 @@ class EntityAndRelationshipTest {
 
     @Test
     fun `Verification과 VerificationComment 간의 지연 로딩(FetchType LAZY) 확인`() {
-        val verification = Verification(
-            groupId = 1L,
-            challengeId = 10L,
-            userId = 20L,
-            targetDate = LocalDate.of(2026, 9, 19),
-            imageUrl = "https://s3.example.com/test.jpg",
-            comment = "오늘 인증"
-        )
-        val savedVerification = verificationRepository.save(verification)
-
-        val comment = VerificationComment(
-            verification = savedVerification,
-            userId = 30L,
-            content = "멋집니다 파이팅!"
-        )
-        verificationCommentRepository.save(comment)
-        entityManager.flush()
-        entityManager.clear()
-
-        // 1차 캐시를 비운 뒤 지연 로딩 검증
-        val loadedVerification = verificationRepository.findById(savedVerification.id).get()
-        assertNotNull(loadedVerification)
-
-        // comments 컬렉션이 즉시 초기화되지 않고 프록시 상태(LAZY)인지 확인
-        val persistenceUnitUtil = entityManager.entityManager.entityManagerFactory.persistenceUnitUtil
-        assertFalse(persistenceUnitUtil.isLoaded(loadedVerification, "comments"), "comments는 LAZY로 설정되어 즉시 로딩되지 않아야 합니다.")
-
-        // 실제로 접근 시 초기화(지연 로딩 발생)
-        assertEquals(1, loadedVerification.comments.size)
-        assertTrue(persistenceUnitUtil.isLoaded(loadedVerification, "comments"), "comments 접근 시점에 로딩되어야 합니다.")
+        // TODO [사용자 미션 1-3]: Verification의 comments 컬렉션이 즉시 로딩(EAGER)되지 않고
+        // 지연 로딩(LAZY) 프록시 상태로 유지되는지 persistenceUnitUtil을 활용해 검증하는 단위 테스트를 작성하세요.
+        // 힌트:
+        // 1. verification과 comment를 저장한 뒤 entityManager.flush() 및 entityManager.clear()를 호출합니다.
+        // 2. verificationRepository.findById()로 다시 조회한 객체의 comments 컬렉션에 대해
+        //    entityManager.entityManager.entityManagerFactory.persistenceUnitUtil.isLoaded(loadedVerification, "comments") 가 false인지 단언합니다.
+        // 3. loadedVerification.comments.size 접근 시점에 isLoaded가 true로 변환되는지 단언합니다.
+        TODO("사용자 미션 1-3: 지연 로딩 검증 테스트를 완성하세요.")
     }
 }

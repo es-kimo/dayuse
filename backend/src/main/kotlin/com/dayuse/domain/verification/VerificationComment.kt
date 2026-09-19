@@ -23,7 +23,10 @@ import jakarta.persistence.Table
 class VerificationComment(
     id: Long = 0L,
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // TODO [사용자 미션 1-2]: VerificationComment에서 Verification을 참조하는 N:1 연관관계를 지연 로딩(FetchType.LAZY)으로 매핑하세요.
+    // ⚠️ 주의: JPA의 @ManyToOne 기본 페치 전략은 EAGER(즉시 로딩)입니다! 불필요한 N+1 즉시 조인을 방지하려면 반드시 fetch = FetchType.LAZY를 명시해야 합니다.
+    // 힌트: @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "verification_id", nullable = false)
+    @ManyToOne
     @JoinColumn(name = "verification_id", nullable = false)
     var verification: Verification,
 

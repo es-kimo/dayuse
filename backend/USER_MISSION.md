@@ -1,4 +1,4 @@
-# 🎯 사용자 핵심 학습 미션 가이드 (Issue #2)
+# 🎯 사용자 핵심 학습 미션 가이드 (Issue #3)
 
 이 문서는 사용자가 직접 구현하고 고민해 보아야 하는 **3가지 핵심 학습 미션** 안내서입니다.
 구현 후 `cd backend && ./gradlew test`를 실행하면 본인의 코드가 올바르게 동작하는지 즉시 검증할 수 있습니다.
@@ -9,45 +9,60 @@
 ---
 
 ## 🎓 이 이슈를 끝내고 답할 수 있게 될 핵심 질문
-1. **"비즈니스 규칙(시작일 전/후 수정·참여 잠금 조건)을 DB 컬럼 제약조건이 아닌 도메인 엔티티와 Service 계층에서 어떻게 방어했나요?"**
-2. **"챌린지 생성과 생성자 자동 참여를 `@Transactional`을 통해 단일 원자적 단위로 묶어야 하는 이유는 무엇인가요?"**
-3. **"한국 시간(KST) 기준 날짜 계산 시 서버의 시스템 타임존에 의존하지 않고 안전하게 처리하려면 어떻게 해야 하나요?"**
+1. **"대용량 이미지 파일을 WAS(Spring Boot)로 받지 않고 S3 Presigned URL로 직접 업로드하게 설계한 이유는 무엇인가요?"**
+2. **"피드 목록을 조회할 때 작성자 정보와 댓글을 함께 가져올 때 발생하는 N+1 문제는 무엇이고 어떻게 방지(Fetch Join / Batch Size)했나요?"**
+3. **"하루 1인증 원칙을 애플리케이션 코드뿐 아니라 DB 복합 유니크 인덱스(`challengeId + userId + targetDate`)로 이중 방어하는 이유는 무엇인가요?"**
 
 ---
 
-## 📌 미션 1: `Challenge` 엔티티 도메인 비즈니스 메서드 작성
-- **파일**: `backend/src/main/kotlin/com/dayuse/domain/challenge/Challenge.kt`
-- **목표**: 서비스 레이어가 비즈니스 규칙을 일일이 조작하는 '빈약한 도메인 모델(Anemic Domain Model)' 대신, 엔티티 객체가 스스로 규칙을 검증하고 데이터를 갱신하도록 도메인 로직을 응집화합니다.
+## 📌 미션 1: `Verification` & `VerificationComment` 지연 로딩(`FetchType.LAZY`) 설정 및 검증 테스트
+- **관련 파일**:
+  - `backend/src/main/kotlin/com/dayuse/domain/verification/Verification.kt`
+  - `backend/src/main/kotlin/com/dayuse/domain/verification/VerificationComment.kt`
+  - `backend/src/test/kotlin/com/dayuse/domain/EntityAndRelationshipTest.kt`
+- **목표**:
+  JPA의 연관관계 매핑 시 불필요한 즉시 조인(EAGER Loading)을 방지하고 성능을 최적화하기 위해, 엔티티 간 참조를 지연 로딩(`FetchType.LAZY`)으로 설정하고 실제 런타임에 프록시 객체로 로딩되는지 테스트로 확인합니다.
 - **작업 내용**:
-  1. `isStarted(today)`: 오늘 날짜(`today`)가 시작일(`startDate`) 이상인지 검사 (`today >= startDate`)
-  2. `canJoin(today)`: 시작 전(`!isStarted(today)`) 여부 반환
-  3. `canModifyFullConditions(today)`: 시작 전(`!isStarted(today)`) 여부 반환
-  4. `updateConditions(...)`:
-     - **시작 후(`isStarted`)**: `verificationCriteria`, `startDate`, `endDate`가 기존 값과 다르면 `BadRequestException("챌린지 시작 후에는 제목과 설명만 수정할 수 있습니다.")` 예외를 던집니다.
-     - **시작 전**: `newStartDate < today`이면 `BadRequestException("시작일은 오늘 이후 날짜여야 합니다.")`, `newEndDate < startDate`이면 `BadRequestException("종료일은 시작일 이후여야 합니다.")` 등을 검증하고 각 필드를 갱신합니다.
-     - **공통**: `newTitle` 유효성 검사 (1~50자)
-- **검증 테스트**: `ChallengePolicyTest` 및 `ChallengeIntegrationTest`의 시작 전/후 정책 테스트
+  1. `VerificationComment.kt`: `verification` 필드에 `fetch = FetchType.LAZY`를 명시합니다.
+     - ⚠️ **주의**: JPA에서 `@ManyToOne`의 기본 fetch 전략은 `EAGER`(즉시 로딩)입니다! 이를 `LAZY`로 바꾸지 않으면 단일 댓글 조회 시에도 부모 인증 엔티티를 항상 즉시 조인해 가져옵니다.
+  2. `Verification.kt`: `comments` 컬렉션에 `@OneToMany(mappedBy = "verification", fetch = FetchType.LAZY, ...)`를 확인 및 설정합니다.
+  3. `EntityAndRelationshipTest.kt`의 `Verification과 VerificationComment 간의 지연 로딩(FetchType LAZY) 확인` 테스트:
+     - 던져진 `TODO`를 제거하고, `entityManager.flush()` 및 `entityManager.clear()`로 1차 캐시를 비운 뒤
+     - `entityManager.entityManager.entityManagerFactory.persistenceUnitUtil.isLoaded(loadedVerification, "comments")`가 처음에는 `false`이고,
+     - `loadedVerification.comments.size`를 호출하여 실제로 접근한 이후에는 `true`로 초기화되는지 단언(assert)합니다.
+- **검증 테스트**: `EntityAndRelationshipTest`
 
 ---
 
-## 📌 미션 2: 챌린지 생성 시 생성자 자동 참여 트랜잭션 원자성 구현
-- **파일**: `backend/src/main/kotlin/com/dayuse/domain/challenge/service/ChallengeService.kt`의 `createChallenge` 메서드
-- **목표**: 챌린지를 생성한 사람은 별도의 참여 신청 과정 없이 즉시 해당 챌린지의 참여자(Participant)로 등록되어야 합니다. 또한, 챌린지 엔티티만 생성되고 참여자 생성이 실패하는 데이터 불일치를 방지하기 위해 단일 `@Transactional` 안에서 원자적으로 처리합니다.
+## 📌 미션 2: 피드 목록 조회 쿼리 N+1 문제 해결을 위한 `@BatchSize` 설정
+- **관련 파일**:
+  - `backend/src/main/kotlin/com/dayuse/domain/verification/Verification.kt`
+- **목표**:
+  모임 피드 목록에서 10개의 인증글을 가져온 뒤 각 글의 댓글 수(`verification.comments.size`)를 계산할 때, 지연 로딩으로 인해 10번의 추가 SELECT 쿼리(1 + N 쿼리)가 발생하는 병목을 체감하고, Hibernate의 `@BatchSize` 애노테이션으로 이를 1번의 `IN (?, ?, ...)` 쿼리로 최적화합니다.
 - **작업 내용**:
-  `createChallenge` 메서드 내부에서:
-  1. `ChallengeParticipant(challengeId = challenge.id, userId = userId, penaltyAmount = request.myPenaltyAmount)` 엔티티를 생성합니다.
-  2. `challengeParticipantRepository.save(...)`를 호출하여 DB에 저장합니다.
-  3. 생성된 참여자 정보로 `ChallengeParticipantResponse`를 생성하여 `ChallengeDetailResponse`의 `participants` 리스트에 포함합니다.
-- **검증 테스트**: `ChallengeIntegrationTest`의 `DoD 1 모임원이 14일 기본 기간과 5000원 기본 금액으로 챌린지를 정상 생성하고 생성자가 자동 참여된다`
+  `Verification.kt`의 `comments` 필드 상단에 `@BatchSize(size = 100)`를 추가하세요.
+  ```kotlin
+  @BatchSize(size = 100)
+  @OneToMany(mappedBy = "verification", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
+  var comments: MutableList<VerificationComment> = mutableListOf()
+  ```
+- **검증 방법**:
+  `FeedAndCommentIntegrationTest` 실행 시 콘솔에 출력되는 Hibernate SQL 로그에서 `select ... from verification_comments where verification_id in (?, ?, ...)` 형태의 배치 쿼리가 나가는지 확인합니다.
 
 ---
 
-## 📌 미션 3: 시작 후 조건 변경 차단 단위 테스트 (JUnit5) 작성
-- **파일**: `backend/src/test/kotlin/com/dayuse/domain/challenge/ChallengePolicyTest.kt`
-- **목표**: 이미 시작된 챌린지에서 인증 기준(`verificationCriteria`), 시작일(`startDate`), 종료일(`endDate`) 변경을 시도했을 때 `BadRequestException`이 발생하는지 검증하는 단위 테스트를 작성합니다.
+## 📌 미션 3: 복합 유니크 제약조건 위반 예외 변환 및 중복 방어 통합 테스트
+- **관련 파일**:
+  - `backend/src/main/kotlin/com/dayuse/domain/verification/service/VerificationService.kt`
+  - `backend/src/test/kotlin/com/dayuse/domain/verification/VerificationIntegrationTest.kt`
+- **목표**:
+  하루 1인증 원칙을 지키기 위해 애플리케이션 레벨의 1차 검사(`existsBy...`)뿐 아니라, 동시성 요청(Race Condition) 상황에서도 완벽히 방어할 수 있도록 DB의 `(challengeId, userId, targetDate)` 복합 유니크 인덱스를 활용합니다. 이때 DB 레벨에서 발생하는 `DataIntegrityViolationException`을 catch하여 클라이언트에게 명확한 비즈니스 에러(`DuplicateResourceException`)로 변환합니다.
 - **작업 내용**:
-  `ChallengePolicyTest`의 `시작 후 인증 기준, 시작일, 종료일을 변경하려고 하면 BadRequestException이 발생한다` 테스트 메서드에 던져진 `NotImplementedError`를 제거하고, `assertThrows(BadRequestException::class.java)`를 활용하여 예외가 발생하는지 검증하는 테스트 코드를 완성하세요.
-- **검증 테스트**: `ChallengePolicyTest` 단위 테스트
+  1. `VerificationService.kt`의 `createVerification` 메서드 내부:
+     `verificationRepository.save(verification)` 호출부를 `try-catch`로 감싸고, `DataIntegrityViolationException`이 발생하면 `DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")`를 던지도록 작성합니다.
+  2. `VerificationIntegrationTest.kt`의 `DoD 2 동일 챌린지, 동일 참여자, 동일 날짜에 2회 이상 인증 시도 시 409 Conflict로 방어된다` 테스트:
+     던져진 `TODO`를 제거하고, 동일한 대상 날짜로 2번 연속 `POST /api/v1/verifications` 요청을 보냈을 때 2차 요청이 `409 Conflict`와 에러 메시지를 반환하는지 검증하는 테스트 코드를 완성합니다.
+- **검증 테스트**: `VerificationIntegrationTest`
 
 ---
 
@@ -56,6 +71,9 @@
 cd backend
 ./gradlew test
 ```
-현재 빈칸 스텁 상태에서는 테스트가 **FAILED (RED)** 상태입니다.
-3가지 미션을 순서대로 채워 넣으면 모든 테스트가 **BUILD SUCCESSFUL (GREEN)**으로 전환됩니다!
+현재 빈칸 스텁 상태에서는 해당 미션 관련 테스트 2개가 **FAILED (RED)** 상태입니다:
+- `EntityAndRelationshipTest > Verification과 VerificationComment 간의 지연 로딩(FetchType LAZY) 확인()`
+- `VerificationIntegrationTest > DoD 2 동일 챌린지, 동일 참여자, 동일 날짜에 2회 이상 인증 시도 시 409 Conflict로 방어된다()`
 
+위 3가지 미션을 순서대로 채워 넣으면 모든 테스트(54개)가 **BUILD SUCCESSFUL (GREEN)**으로 전환됩니다!
+미션을 완료한 뒤 `git diff HEAD~1`로 이전 완성본과 본인의 구현을 비교해 보세요.
