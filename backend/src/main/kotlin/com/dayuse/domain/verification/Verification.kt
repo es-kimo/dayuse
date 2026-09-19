@@ -55,19 +55,19 @@ class Verification(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = id
-        private set
+        protected set
 
     @Column(nullable = false)
     var groupId: Long = groupId
-        private set
+        protected set
 
     @Column(nullable = false)
     var challengeId: Long = challengeId
-        private set
+        protected set
 
     @Column(nullable = false)
     var userId: Long = userId
-        private set
+        protected set
 
     @BatchSize(size = 100)
     @OneToMany(mappedBy = "verification", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)

@@ -13,6 +13,7 @@ import com.dayuse.global.exception.DuplicateResourceException
 import com.dayuse.global.exception.ForbiddenException
 import com.dayuse.global.exception.ResourceNotFoundException
 import com.dayuse.global.util.DateTimeUtils
+import org.hibernate.exception.ConstraintViolationException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -26,18 +27,27 @@ class VerificationService(
     private val groupMemberRepository: GroupMemberRepository
 ) {
 
-    fun createVerification(userId: Long, request: CreateVerificationRequest): VerificationDetailResponse {
+    fun createVerification(
+        userId: Long,
+        request: CreateVerificationRequest
+    ): VerificationDetailResponse {
         val challenge = challengeRepository.findById(request.challengeId)
             .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
 
         // 1. 모임원 권한 검증
-        val isMember = groupMemberRepository.existsByGroupIdAndUserId(challenge.groupId, userId)
+        val isMember = groupMemberRepository.existsByGroupIdAndUserId(
+            challenge.groupId,
+            userId
+        )
         if (!isMember) {
             throw ForbiddenException("해당 모임의 멤버만 인증할 수 있습니다.")
         }
 
         // 2. 챌린지 참여자 여부 검증
-        val isParticipant = challengeParticipantRepository.existsByChallengeIdAndUserId(challenge.id, userId)
+        val isParticipant = challengeParticipantRepository.existsByChallengeIdAndUserId(
+            challenge.id,
+            userId
+        )
         if (!isParticipant) {
             throw ForbiddenException("해당 챌린지의 참여자만 인증할 수 있습니다.")
         }
@@ -58,7 +68,12 @@ class VerificationService(
         val isLate = targetDate < today
 
         // 5. 중복 인증 애플리케이션 레벨 1차 체크
-        if (verificationRepository.existsByChallengeIdAndUserIdAndTargetDate(challenge.id, userId, targetDate)) {
+        if (verificationRepository.existsByChallengeIdAndUserIdAndTargetDate(
+                challenge.id,
+                userId,
+                targetDate
+            )
+        ) {
             throw DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")
         }
 
@@ -75,7 +90,15 @@ class VerificationService(
             val saved = verificationRepository.save(verification)
             return toDetailResponse(saved)
         } catch (e: DataIntegrityViolationException) {
-            throw DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")
+            val constraintViolation = generateSequence<Throwable>(e) { it.cause }
+                .filterIsInstance<ConstraintViolationException>()
+                .firstOrNull()
+
+            if (constraintViolation?.constraintName == "uk_verification_challenge_user_date") {
+                throw DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")
+            }
+
+            throw e
         }
     }
 
@@ -98,11 +121,17 @@ class VerificationService(
             throw BadRequestException("과거 대상 날짜의 인증은 수정할 수 없습니다.")
         }
 
-        verification.update(request.imageUrl, request.comment)
+        verification.update(
+            request.imageUrl,
+            request.comment
+        )
         return toDetailResponse(verification)
     }
 
-    fun deleteVerification(verificationId: Long, userId: Long) {
+    fun deleteVerification(
+        verificationId: Long,
+        userId: Long
+    ) {
         val verification = verificationRepository.findById(verificationId)
             .orElseThrow { ResourceNotFoundException("인증 내역을 찾을 수 없습니다.") }
 

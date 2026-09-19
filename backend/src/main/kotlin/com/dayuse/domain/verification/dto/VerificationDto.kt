@@ -11,18 +11,32 @@ data class CreateVerificationRequest(
     val challengeId: Long,
 
     @field:NotBlank(message = "이미지 URL은 필수입니다.")
+    @field:Size(
+        max = 1000,
+        message = "이미지 URL은 1000자 이하여야 합니다."
+    )
     val imageUrl: String,
 
-    @field:Size(max = 200, message = "인증 한마디는 200자 이하여야 합니다.")
+    @field:Size(
+        max = 200,
+        message = "인증 한마디는 200자 이하여야 합니다."
+    )
     val comment: String? = null,
 
     val targetDate: LocalDate? = null
 )
 
 data class UpdateVerificationRequest(
+    @field:Size(
+        max = 1000,
+        message = "이미지 URL은 1000자 이하여야 합니다."
+    )
     val imageUrl: String? = null,
 
-    @field:Size(max = 200, message = "인증 한마디는 200자 이하여야 합니다.")
+    @field:Size(
+        max = 200,
+        message = "인증 한마디는 200자 이하여야 합니다."
+    )
     val comment: String? = null
 )
 

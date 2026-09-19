@@ -35,9 +35,9 @@ class VerificationComment(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = id
-        private set
+        protected set
 
     @Column(nullable = false)
     var userId: Long = userId
-        private set
+        protected set
 }

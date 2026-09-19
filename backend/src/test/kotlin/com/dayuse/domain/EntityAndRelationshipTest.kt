@@ -176,6 +176,43 @@ class EntityAndRelationshipTest {
     }
 
     @Test
+    fun `댓글만 조회하면 인증은 지연 로딩되고 이미지 URL에 접근할 때 초기화된다`() {
+        val imageUrl = "https://s3.example.com/lazy-verification.jpg"
+        val verification = verificationRepository.save(
+            Verification(
+                groupId = 1L,
+                challengeId = 10L,
+                userId = 20L,
+                targetDate = LocalDate.of(2026, 9, 19),
+                imageUrl = imageUrl
+            )
+        )
+        val comment = verificationCommentRepository.save(
+            VerificationComment(verification = verification, userId = 30L, content = "응원합니다")
+        )
+        val commentId = comment.id
+
+        entityManager.flush()
+        // 저장할 때 관리하던 인증 객체가 조회 결과에 재사용되지 않도록 비운다.
+        entityManager.clear()
+
+        val loadedComment = verificationCommentRepository.findById(commentId).orElseThrow()
+        val persistenceUnitUtil = entityManager.entityManager.entityManagerFactory.persistenceUnitUtil
+
+        assertFalse(
+            persistenceUnitUtil.isLoaded(loadedComment, "verification"),
+            "댓글만 조회했으므로 인증은 아직 로딩되지 않아야 합니다."
+        )
+
+        // ID는 프록시 초기화 없이 읽힐 수 있으므로 일반 프로퍼티로 검증한다.
+        assertEquals(imageUrl, loadedComment.verification.imageUrl)
+        assertTrue(
+            persistenceUnitUtil.isLoaded(loadedComment, "verification"),
+            "인증의 이미지 URL에 접근한 뒤에는 인증이 로딩되어야 합니다."
+        )
+    }
+
+    @Test
     fun `Verification과 VerificationComment 간의 지연 로딩(FetchType LAZY) 확인`() {
         val verification = Verification(
             groupId = 1L,

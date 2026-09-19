@@ -35,19 +35,19 @@ class ChallengeParticipant(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = id
-        private set
+        protected set
 
     // Spring Data 파생 쿼리와 JPA 필드 접근에서 사용합니다.
     @Suppress("unused")
     @Column(nullable = false)
     var challengeId: Long = challengeId
-        private set
+        protected set
 
     @Column(nullable = false)
     var userId: Long = userId
-        private set
+        protected set
 
     @Column(nullable = false)
     var joinedAt: LocalDateTime = joinedAt
-        private set
+        protected set
 }

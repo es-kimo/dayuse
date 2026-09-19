@@ -53,15 +53,15 @@ class Challenge(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = id
-        private set
+        protected set
 
     @Column(nullable = false)
     var groupId: Long = groupId
-        private set
+        protected set
 
     @Column(nullable = false)
     var creatorUserId: Long = creatorUserId
-        private set
+        protected set
 
 
     fun isStarted(today: LocalDate = DateTimeUtils.todayKst()): Boolean {

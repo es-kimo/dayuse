@@ -80,19 +80,50 @@ class VerificationIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        participantUser = userRepository.save(User(kakaoId = "part_1", nickname = "참여자"))
-        otherMemberUser = userRepository.save(User(kakaoId = "other_1", nickname = "다른멤버"))
-        strangerUser = userRepository.save(User(kakaoId = "stranger_1", nickname = "외부인"))
+        participantUser = userRepository.save(
+            User(
+                kakaoId = "part_1",
+                nickname = "참여자"
+            )
+        )
+        otherMemberUser = userRepository.save(
+            User(
+                kakaoId = "other_1",
+                nickname = "다른멤버"
+            )
+        )
+        strangerUser = userRepository.save(
+            User(
+                kakaoId = "stranger_1",
+                nickname = "외부인"
+            )
+        )
 
         participantToken = jwtTokenProvider.generateAccessToken(participantUser.id)
         otherMemberToken = jwtTokenProvider.generateAccessToken(otherMemberUser.id)
         strangerToken = jwtTokenProvider.generateAccessToken(strangerUser.id)
 
         group = groupRepository.save(
-            Group(name = "테스트 모임", hostUserId = participantUser.id, inviteCode = "INVITE-VERIFY")
+            Group(
+                name = "테스트 모임",
+                hostUserId = participantUser.id,
+                inviteCode = "INVITE-VERIFY"
+            )
         )
-        groupMemberRepository.save(GroupMember(groupId = group.id, userId = participantUser.id, role = GroupRole.HOST))
-        groupMemberRepository.save(GroupMember(groupId = group.id, userId = otherMemberUser.id, role = GroupRole.MEMBER))
+        groupMemberRepository.save(
+            GroupMember(
+                groupId = group.id,
+                userId = participantUser.id,
+                role = GroupRole.HOST
+            )
+        )
+        groupMemberRepository.save(
+            GroupMember(
+                groupId = group.id,
+                userId = otherMemberUser.id,
+                role = GroupRole.MEMBER
+            )
+        )
 
         val today = DateTimeUtils.todayKst()
         challenge = challengeRepository.save(
@@ -107,7 +138,11 @@ class VerificationIntegrationTest {
             )
         )
         challengeParticipantRepository.save(
-            ChallengeParticipant(challengeId = challenge.id, userId = participantUser.id, penaltyAmount = 5000)
+            ChallengeParticipant(
+                challengeId = challenge.id,
+                userId = participantUser.id,
+                penaltyAmount = 5000
+            )
         )
     }
 
@@ -121,7 +156,10 @@ class VerificationIntegrationTest {
         )
 
         mockMvc.post("/api/v1/verifications/presigned-url") {
-            header("Authorization", "Bearer $participantToken")
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(request)
         }.andExpect {
@@ -143,7 +181,10 @@ class VerificationIntegrationTest {
         )
 
         mockMvc.post("/api/v1/verifications/presigned-url") {
-            header("Authorization", "Bearer $participantToken")
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(overSizeRequest)
         }.andExpect {
@@ -159,7 +200,10 @@ class VerificationIntegrationTest {
         )
 
         mockMvc.post("/api/v1/verifications/presigned-url") {
-            header("Authorization", "Bearer $participantToken")
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(invalidFormatRequest)
         }.andExpect {
@@ -177,7 +221,10 @@ class VerificationIntegrationTest {
         )
 
         mockMvc.post("/api/v1/verifications/presigned-url") {
-            header("Authorization", "Bearer $otherMemberToken") // 모임원이지만 챌린지 미참여자
+            header(
+                "Authorization",
+                "Bearer $otherMemberToken"
+            ) // 모임원이지만 챌린지 미참여자
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(request)
         }.andExpect {
@@ -194,7 +241,10 @@ class VerificationIntegrationTest {
         )
 
         mockMvc.post("/api/v1/verifications") {
-            header("Authorization", "Bearer $participantToken")
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(request)
         }.andExpect {
@@ -218,7 +268,10 @@ class VerificationIntegrationTest {
         )
 
         mockMvc.post("/api/v1/verifications") {
-            header("Authorization", "Bearer $participantToken")
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(request)
         }.andExpect {
@@ -230,13 +283,44 @@ class VerificationIntegrationTest {
 
     @Test
     fun `DoD 2 동일 챌린지, 동일 참여자, 동일 날짜에 2회 이상 인증 시도 시 409 Conflict로 방어된다`() {
-        // TODO [사용자 미션 3-2]: 동일 챌린지, 동일 참여자, 동일 날짜에 대해 중복 인증 요청을 보냈을 때
-        // 1차 인증은 201 Created로 성공하고, 2차 인증 시도는 409 CONFLICT(DuplicateResourceException) 상태 코드와
-        // 적절한 에러 메시지가 반환되는지 검증하는 통합 테스트를 완성하세요.
-        // 힌트:
-        // 1. 1차 CreateVerificationRequest를 POST /api/v1/verifications 로 요청하여 isCreated() 검증
-        // 2. 동일한 조건(challengeId, targetDate)의 2차 요청을 POST로 보내서 isConflict(), jsonPath("$.error").value("CONFLICT") 검증
-        TODO("사용자 미션 3-2: 중복 인증 시 409 Conflict 및 DuplicateResourceException 응답을 검증하는 테스트를 완성하세요.")
+        val today = DateTimeUtils.todayKst()
+        val request = CreateVerificationRequest(
+            challengeId = challenge.id,
+            imageUrl = "https://s3.example.com/first.jpg",
+            comment = "1차 인증",
+            targetDate = today
+        )
+
+        mockMvc.post("/api/v1/verifications") {
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(request)
+        }.andExpect {
+            status { isCreated() }
+        }
+
+        val duplicateRequest = CreateVerificationRequest(
+            challengeId = challenge.id,
+            imageUrl = "https://s3.example.com/second.jpg",
+            comment = "2차 중복 시도",
+            targetDate = today
+        )
+
+        mockMvc.post("/api/v1/verifications") {
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(duplicateRequest)
+        }.andExpect {
+            status { isConflict() }
+            jsonPath("$.error") { value("CONFLICT") }
+            jsonPath("$.message") { value("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.") }
+        }
     }
 
     @Test
@@ -259,7 +343,10 @@ class VerificationIntegrationTest {
         )
 
         mockMvc.patch("/api/v1/verifications/${verification.id}") {
-            header("Authorization", "Bearer $participantToken")
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(updateRequest)
         }.andExpect {
@@ -287,7 +374,10 @@ class VerificationIntegrationTest {
 
         // 타인 수정 시도
         mockMvc.patch("/api/v1/verifications/${verification.id}") {
-            header("Authorization", "Bearer $otherMemberToken")
+            header(
+                "Authorization",
+                "Bearer $otherMemberToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(updateRequest)
         }.andExpect {
@@ -296,7 +386,10 @@ class VerificationIntegrationTest {
 
         // 타인 삭제 시도
         mockMvc.delete("/api/v1/verifications/${verification.id}") {
-            header("Authorization", "Bearer $otherMemberToken")
+            header(
+                "Authorization",
+                "Bearer $otherMemberToken"
+            )
         }.andExpect {
             status { isForbidden() }
         }
@@ -316,7 +409,10 @@ class VerificationIntegrationTest {
         )
 
         mockMvc.delete("/api/v1/verifications/${verification.id}") {
-            header("Authorization", "Bearer $participantToken")
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
         }.andExpect {
             status { isNoContent() }
         }
@@ -341,7 +437,10 @@ class VerificationIntegrationTest {
 
         // 과거 인증 수정 시도 -> 400 Bad Request
         mockMvc.patch("/api/v1/verifications/${verification.id}") {
-            header("Authorization", "Bearer $participantToken")
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(UpdateVerificationRequest(comment = "과거 인증 수정"))
         }.andExpect {
@@ -350,9 +449,103 @@ class VerificationIntegrationTest {
 
         // 과거 인증 삭제 시도 -> 400 Bad Request
         mockMvc.delete("/api/v1/verifications/${verification.id}") {
-            header("Authorization", "Bearer $participantToken")
+            header(
+                "Authorization",
+                "Bearer $participantToken"
+            )
         }.andExpect {
             status { isBadRequest() }
         }
     }
+
+    @Test
+    fun `1001자 이미지 URL로 인증을 생성하면 400과 길이 오류를 반환한다`() {
+        val beforeCount = verificationRepository.count()
+        val request = CreateVerificationRequest(challengeId = challenge.id, imageUrl = imageUrlOfLength(1001))
+
+        mockMvc.post("/api/v1/verifications") {
+            header("Authorization", "Bearer $participantToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(request)
+        }.andExpect {
+            status { isBadRequest() }
+            jsonPath("$.message") { value("이미지 URL은 1000자 이하여야 합니다.") }
+        }
+        assertEquals(beforeCount, verificationRepository.count())
+    }
+
+    @Test
+    fun `1000자 이미지 URL로 인증을 생성할 수 있다`() {
+        val imageUrl = imageUrlOfLength(1000) // DB 컬럼과 요청 검증의 최대 허용 길이
+        mockMvc.post("/api/v1/verifications") {
+            header("Authorization", "Bearer $participantToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(CreateVerificationRequest(challenge.id, imageUrl))
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.imageUrl") { value(imageUrl) }
+        }
+        assertEquals(imageUrl, verificationRepository.findAll().single().imageUrl)
+    }
+
+    @Test
+    fun `1001자 이미지 URL로 인증을 수정하면 400이고 기존 값이 유지된다`() {
+        val verification = saveVerificationForUrlValidation()
+        val originalUrl = verification.imageUrl
+        mockMvc.patch("/api/v1/verifications/${verification.id}") {
+            header("Authorization", "Bearer $participantToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(UpdateVerificationRequest(imageUrlOfLength(1001)))
+        }.andExpect {
+            status { isBadRequest() }
+            jsonPath("$.message") { value("이미지 URL은 1000자 이하여야 합니다.") }
+        }
+        assertEquals(originalUrl, verificationRepository.findById(verification.id).orElseThrow().imageUrl)
+    }
+
+    @Test
+    fun `1000자 이미지 URL로 인증을 수정할 수 있다`() {
+        val verification = saveVerificationForUrlValidation()
+        val imageUrl = imageUrlOfLength(1000)
+        mockMvc.patch("/api/v1/verifications/${verification.id}") {
+            header("Authorization", "Bearer $participantToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(UpdateVerificationRequest(imageUrl))
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.imageUrl") { value(imageUrl) }
+        }
+        assertEquals(imageUrl, verificationRepository.findById(verification.id).orElseThrow().imageUrl)
+    }
+
+    @Test
+    fun `이미지 URL을 생략하고 한마디만 수정하면 기존 이미지가 유지된다`() {
+        val verification = saveVerificationForUrlValidation()
+        val originalUrl = verification.imageUrl
+        mockMvc.patch("/api/v1/verifications/${verification.id}") {
+            header("Authorization", "Bearer $participantToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"comment":"한마디만 수정"}"""
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.imageUrl") { value(originalUrl) }
+            jsonPath("$.comment") { value("한마디만 수정") }
+        }
+    }
+
+    private fun imageUrlOfLength(length: Int): String {
+        val prefix = "https://s3.example.com/"
+        return prefix + "a".repeat(length - prefix.length)
+    }
+
+    private fun saveVerificationForUrlValidation(): Verification = verificationRepository.save(
+        Verification(
+            groupId = group.id,
+            challengeId = challenge.id,
+            userId = participantUser.id,
+            targetDate = DateTimeUtils.todayKst(),
+            imageUrl = "https://s3.example.com/original.jpg"
+        )
+    )
+
 }

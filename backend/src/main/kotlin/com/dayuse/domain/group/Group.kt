@@ -41,7 +41,7 @@ class Group(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = id
-        private set
+        protected set
 
 
     // TODO: 초대 코드 재발급 시 inviteCode와 발급 시간을 갱신하는 비즈니스 메서드를 완성해 보세요.
