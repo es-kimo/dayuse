@@ -200,3 +200,70 @@ export interface CommentItem {
   createdAt: string;
 }
 
+export type DailyRecordStatus = 'PLANNED' | 'WAITING' | 'COMPLETED' | 'UNCHECKED' | 'FAILED';
+export type DepositStatus = 'UNPAID' | 'WAITING_CONFIRMATION' | 'CONFIRMED';
+
+export interface StatusSummaryResponse {
+  groupId: number;
+  uncheckedCount: number;
+  unpaidPenaltyAmount: number;
+}
+
+export interface UncheckedRecordItem {
+  id: number;
+  challengeId: number;
+  challengeTitle: string;
+  date: string;
+  status: DailyRecordStatus;
+  penaltyAmount: number;
+  verificationCriteria: string;
+}
+
+export interface LateVerificationPayload {
+  imageUrl: string;
+  comment?: string;
+}
+
+export interface DailyRecordDetail {
+  id: number;
+  groupId: number;
+  challengeId: number;
+  challengeParticipantId: number;
+  userId: number;
+  date: string;
+  status: DailyRecordStatus;
+  penaltyAmount: number;
+  depositStatus: DepositStatus;
+  verificationId?: number | null;
+  isLate: boolean;
+  failedAt?: string | null;
+}
+
+export interface CalendarDailyRecordItem {
+  id: number;
+  date: string;
+  status: DailyRecordStatus;
+  penaltyAmount: number;
+  depositStatus: DepositStatus;
+  isLate: boolean;
+  verificationId?: number | null;
+  imageUrl?: string | null;
+  comment?: string | null;
+}
+
+export interface ParticipantCalendarItem {
+  userId: number;
+  nickname: string;
+  profileImageUrl?: string | null;
+  records: CalendarDailyRecordItem[];
+}
+
+export interface ChallengeCalendarResponse {
+  challengeId: number;
+  title: string;
+  startDate: string;
+  endDate: string;
+  participants: ParticipantCalendarItem[];
+}
+
+

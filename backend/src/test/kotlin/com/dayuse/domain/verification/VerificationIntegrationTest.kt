@@ -6,6 +6,10 @@ import com.dayuse.domain.challenge.Challenge
 import com.dayuse.domain.challenge.ChallengeParticipant
 import com.dayuse.domain.challenge.ChallengeParticipantRepository
 import com.dayuse.domain.challenge.ChallengeRepository
+import com.dayuse.domain.dailyrecord.DailyRecord
+import com.dayuse.domain.dailyrecord.DailyRecordRepository
+import com.dayuse.domain.dailyrecord.DailyRecordStatus
+import com.dayuse.domain.dailyrecord.DepositStatus
 import com.dayuse.domain.group.Group
 import com.dayuse.domain.group.GroupMember
 import com.dayuse.domain.group.GroupMemberRepository
@@ -63,6 +67,9 @@ class VerificationIntegrationTest {
 
     @Autowired
     private lateinit var verificationRepository: VerificationRepository
+
+    @Autowired
+    private lateinit var dailyRecordRepository: DailyRecordRepository
 
     @Autowired
     private lateinit var jwtTokenProvider: JwtTokenProvider
@@ -474,7 +481,24 @@ class VerificationIntegrationTest {
             status { isBadRequest() }
         }
 
-        // 과거 인증 삭제 시도 -> 400 Bad Request
+        // 정산 락 상태에서 과거 인증 삭제 시도 -> 400 Bad Request
+        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(challenge.id, participantUser.id)!!
+        val record = dailyRecordRepository.findByChallengeParticipantIdAndDate(participant.id, pastDate)
+            ?: dailyRecordRepository.save(
+                DailyRecord(
+                    groupId = group.id,
+                    challengeId = challenge.id,
+                    challengeParticipantId = participant.id,
+                    userId = participantUser.id,
+                    date = pastDate,
+                    status = DailyRecordStatus.COMPLETED,
+                    verificationId = verification.id,
+                    depositStatus = DepositStatus.WAITING_CONFIRMATION
+                )
+            )
+        record.depositStatus = DepositStatus.WAITING_CONFIRMATION
+        dailyRecordRepository.save(record)
+
         mockMvc.delete("/api/v1/verifications/${verification.id}") {
             header(
                 "Authorization",

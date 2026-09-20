@@ -11,6 +11,7 @@ import com.dayuse.domain.challenge.dto.CreateChallengeRequest
 import com.dayuse.domain.challenge.dto.JoinChallengeRequest
 import com.dayuse.domain.challenge.dto.UpdateChallengeRequest
 import com.dayuse.domain.challenge.dto.UpdatePenaltyAmountRequest
+import com.dayuse.domain.dailyrecord.service.DailyRecordService
 import com.dayuse.domain.group.GroupMemberRepository
 import com.dayuse.domain.group.GroupRepository
 import com.dayuse.domain.user.UserRepository
@@ -32,7 +33,8 @@ class ChallengeService(
     private val challengeParticipantRepository: ChallengeParticipantRepository,
     private val groupRepository: GroupRepository,
     private val groupMemberRepository: GroupMemberRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val dailyRecordService: DailyRecordService? = null
 ) {
 
     @Transactional
@@ -82,6 +84,7 @@ class ChallengeService(
                 penaltyAmount = request.myPenaltyAmount
             )
         )
+        dailyRecordService?.ensureDailyRecordsForParticipant(creatorParticipant, challenge, today)
         val creatorUser = userRepository.findById(userId).orElse(null)
         val participantResponse = ChallengeParticipantResponse(
             id = creatorParticipant.id,
@@ -269,6 +272,7 @@ class ChallengeService(
                 penaltyAmount = request.penaltyAmount
             )
         )
+        dailyRecordService?.ensureDailyRecordsForParticipant(participant, challenge, today)
 
         val user = userRepository.findById(userId).orElse(null)
         return ChallengeParticipantResponse(

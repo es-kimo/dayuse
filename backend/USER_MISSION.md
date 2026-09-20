@@ -1,4 +1,4 @@
-# 🎯 사용자 핵심 학습 미션 가이드 (Issue #3)
+# 🎯 사용자 핵심 학습 미션 가이드 (Issue #4)
 
 이 문서는 사용자가 직접 구현하고 고민해 보아야 하는 **3가지 핵심 학습 미션** 안내서입니다.
 구현 후 `cd backend && ./gradlew test`를 실행하면 본인의 코드가 올바르게 동작하는지 즉시 검증할 수 있습니다.
@@ -9,60 +9,69 @@
 ---
 
 ## 🎓 이 이슈를 끝내고 답할 수 있게 될 핵심 질문
-1. **"대용량 이미지 파일을 WAS(Spring Boot)로 받지 않고 S3 Presigned URL로 직접 업로드하게 설계한 이유는 무엇인가요?"**
-2. **"피드 목록을 조회할 때 작성자 정보와 댓글을 함께 가져올 때 발생하는 N+1 문제는 무엇이고 어떻게 방지(Fetch Join / Batch Size)했나요?"**
-3. **"하루 1인증 원칙을 애플리케이션 코드뿐 아니라 DB 복합 유니크 인덱스(`challengeId + userId + targetDate`)로 이중 방어하는 이유는 무엇인가요?"**
+1. **"상태가 5가지(`예정`, `인증대기`, `완료`, `미확인`, `미수행`)로 변화하는 복잡한 상태 머신을 DB에 어떻게 영속화하고 전이시켰나요?"**
+2. **"자정이 지났을 때 대량의 데이터를 매일 배치로 일괄 업데이트하지 않고도 실시간 쿼리로 성능 저하 없이 상태를 판별하는 방법은?"**
+3. **"사용자별 미수행 벌금을 집계할 때 복잡한 조건(미확인 제외, 다중 챌린지 합산)을 SQL 집계 함수(`SUM`, `GROUP BY`)로 어떻게 안전하게 작성하나요?"**
 
 ---
 
-## 📌 미션 1: `Verification` & `VerificationComment` 지연 로딩(`FetchType.LAZY`) 설정 및 검증 테스트
+## 📌 미션 1: `DailyRecord` 엔티티 상태 전이 메서드 (`markFailed()`, `verifyLate()`) 직접 구현
 - **관련 파일**:
-  - `backend/src/main/kotlin/com/dayuse/domain/verification/Verification.kt`
-  - `backend/src/main/kotlin/com/dayuse/domain/verification/VerificationComment.kt`
-  - `backend/src/test/kotlin/com/dayuse/domain/EntityAndRelationshipTest.kt`
+  - `backend/src/main/kotlin/com/dayuse/domain/dailyrecord/DailyRecord.kt`
 - **목표**:
-  JPA의 연관관계 매핑 시 불필요한 즉시 조인(EAGER Loading)을 방지하고 성능을 최적화하기 위해, 엔티티 간 참조를 지연 로딩(`FetchType.LAZY`)으로 설정하고 실제 런타임에 프록시 객체로 로딩되는지 테스트로 확인합니다.
+  도메인 엔티티 내에 날짜별 5대 상태 머신의 전이 규칙과 정산 락(`depositStatus != UNPAID`) 가드 로직을 응집도 높게 캡슐화합니다.
 - **작업 내용**:
-  1. `VerificationComment.kt`: `verification` 필드에 `fetch = FetchType.LAZY`를 명시합니다.
-     - ⚠️ **주의**: JPA에서 `@ManyToOne`의 기본 fetch 전략은 `EAGER`(즉시 로딩)입니다! 이를 `LAZY`로 바꾸지 않으면 단일 댓글 조회 시에도 부모 인증 엔티티를 항상 즉시 조인해 가져옵니다.
-  2. `Verification.kt`: `comments` 컬렉션에 `@OneToMany(mappedBy = "verification", fetch = FetchType.LAZY, ...)`를 확인 및 설정합니다.
-  3. `EntityAndRelationshipTest.kt`의 `Verification과 VerificationComment 간의 지연 로딩(FetchType LAZY) 확인` 테스트:
-     - 던져진 `TODO`를 제거하고, `entityManager.flush()` 및 `entityManager.clear()`로 1차 캐시를 비운 뒤
-     - `entityManager.entityManager.entityManagerFactory.persistenceUnitUtil.isLoaded(loadedVerification, "comments")`가 처음에는 `false`이고,
-     - `loadedVerification.comments.size`를 호출하여 실제로 접근한 이후에는 `true`로 초기화되는지 단언(assert)합니다.
-- **검증 테스트**: `EntityAndRelationshipTest`
+  1. `markFailed(penalty: Int)`:
+     - 락 검사: `isLocked()`가 `true`이면 `BadRequestException("정산 진행 중이거나 완료된 기록은 상태를 변경할 수 없습니다.")`를 던집니다.
+     - 전이 조건 검사: 현재 상태가 `DailyRecordStatus.UNCHECKED`가 아니라면 `BadRequestException("미확인 상태의 기록만 미수행으로 확정할 수 있습니다.")`를 던집니다.
+     - 상태 변경: `status`를 `FAILED`로 변경하고, `penaltyAmount`에 전달받은 약정 금액(`penalty`)을 설정하며, `failedAt`에 현재 시각(`LocalDateTime.now()`)을 기록합니다.
+  2. `verifyLate(verificationId: Long)`:
+     - 락 검사: `isLocked()`가 `true`이면 `BadRequestException("정산 진행 중이거나 완료된 기록은 인증을 등록할 수 없습니다.")`를 던집니다.
+     - 전이 조건 검사: 현재 상태가 `UNCHECKED` 또는 `FAILED`가 아니라면 `BadRequestException("미확인 또는 미수행 상태의 기록만 늦은 인증을 등록할 수 있습니다.")`를 던집니다.
+     - 상태 변경: `status`를 `COMPLETED`로 변경하고, `verificationId`를 연결하며, `penaltyAmount`를 `0`으로 즉시 복구(차감)하고, `isLate`를 `true`로 설정합니다.
+- **검증 테스트**: `DailyRecordIntegrationTest`, `DailyRecordTransactionTest`
 
 ---
 
-## 📌 미션 2: 피드 목록 조회 쿼리 N+1 문제 해결을 위한 `@BatchSize` 설정
+## 📌 미션 2: `DailyRecordRepository` 미수행 미납 벌금(`SUM`) 집계 쿼리 직접 작성
 - **관련 파일**:
-  - `backend/src/main/kotlin/com/dayuse/domain/verification/Verification.kt`
+  - `backend/src/main/kotlin/com/dayuse/domain/dailyrecord/DailyRecordRepository.kt`
 - **목표**:
-  모임 피드 목록에서 10개의 인증글을 가져온 뒤 각 글의 댓글 수(`verification.comments.size`)를 계산할 때, 지연 로딩으로 인해 10번의 추가 SELECT 쿼리(1 + N 쿼리)가 발생하는 병목을 체감하고, Hibernate의 `@BatchSize` 애노테이션으로 이를 1번의 `IN (?, ?, ...)` 쿼리로 최적화합니다.
+  미확인(`UNCHECKED`) 날짜는 벌금에 절대 산입되지 않고, 오직 사용자가 명시적으로 확정한 미수행(`FAILED`)이면서 아직 정산되지 않은(`UNPAID`) 약정 벌금만을 안전하게 합산하는 JPQL 집계 쿼리를 작성합니다.
 - **작업 내용**:
-  `Verification.kt`의 `comments` 필드 상단에 `@BatchSize(size = 100)`를 추가하세요.
+  `calculateUnpaidPenaltyAmount` 메서드의 `@Query`에 JPQL을 작성합니다.
+  - ⚠️ **주의**: 집계 조건에 일치하는 행이 0건일 때 SQL의 `SUM` 함수는 `null`을 반환하므로, Kotlin의 Non-null 타입인 `Int`로 안전하게 매핑되도록 `COALESCE(SUM(r.penaltyAmount), 0)` 함수를 사용해야 합니다!
   ```kotlin
-  @BatchSize(size = 100)
-  @OneToMany(mappedBy = "verification", fetch = FetchType.LAZY, cascade = [CascadeType.ALL], orphanRemoval = true)
-  var comments: MutableList<VerificationComment> = mutableListOf()
+  @Query("""
+      SELECT COALESCE(SUM(r.penaltyAmount), 0)
+      FROM DailyRecord r
+      WHERE r.userId = :userId
+        AND r.groupId = :groupId
+        AND r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.FAILED
+        AND r.depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID
+  """)
+  fun calculateUnpaidPenaltyAmount(
+      @Param("userId") userId: Long,
+      @Param("groupId") groupId: Long
+  ): Int
   ```
-- **검증 방법**:
-  `FeedAndCommentIntegrationTest` 실행 시 콘솔에 출력되는 Hibernate SQL 로그에서 `select ... from verification_comments where verification_id in (?, ?, ...)` 형태의 배치 쿼리가 나가는지 확인합니다.
+- **검증 테스트**: `DailyRecordIntegrationTest`, `DailyRecordTransactionTest`
 
 ---
 
-## 📌 미션 3: 복합 유니크 제약조건 위반 예외 변환 및 중복 방어 통합 테스트
+## 📌 미션 3: 늦은 인증 등록 시 벌금 차감 트랜잭션 무결성 검증 테스트 작성
 - **관련 파일**:
-  - `backend/src/main/kotlin/com/dayuse/domain/verification/service/VerificationService.kt`
-  - `backend/src/test/kotlin/com/dayuse/domain/verification/VerificationIntegrationTest.kt`
+  - `backend/src/test/kotlin/com/dayuse/domain/dailyrecord/DailyRecordTransactionTest.kt`
 - **목표**:
-  하루 1인증 원칙을 지키기 위해 애플리케이션 레벨의 1차 검사(`existsBy...`)뿐 아니라, 동시성 요청(Race Condition) 상황에서도 완벽히 방어할 수 있도록 DB의 `(challengeId, userId, targetDate)` 복합 유니크 인덱스를 활용합니다. 이때 DB 레벨에서 발생하는 `DataIntegrityViolationException`을 catch하여 클라이언트에게 명확한 비즈니스 에러(`DuplicateResourceException`)로 변환합니다.
+  미수행 확정으로 부과되었던 약정 벌금(10,000원)이 늦은 사진 인증 등록 시 즉시 0원으로 복구되고, 미납 벌금 집계에서도 정확히 차감되는지 트랜잭션 무결성을 직접 테스트 코드로 검증합니다.
 - **작업 내용**:
-  1. `VerificationService.kt`의 `createVerification` 메서드 내부:
-     `verificationRepository.save(verification)` 호출부를 `try-catch`로 감싸고, `DataIntegrityViolationException`이 발생하면 `DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")`를 던지도록 작성합니다.
-  2. `VerificationIntegrationTest.kt`의 `DoD 2 동일 챌린지, 동일 참여자, 동일 날짜에 2회 이상 인증 시도 시 409 Conflict로 방어된다` 테스트:
-     던져진 `TODO`를 제거하고, 동일한 대상 날짜로 2번 연속 `POST /api/v1/verifications` 요청을 보냈을 때 2차 요청이 `409 Conflict`와 에러 메시지를 반환하는지 검증하는 테스트 코드를 완성합니다.
-- **검증 테스트**: `VerificationIntegrationTest`
+  `DailyRecordTransactionTest.kt`의 `미수행 확정 후 늦은 인증 등록 시 벌금이 차감되는 트랜잭션 무결성 검증` 테스트 메서드 내부의 `TODO`를 구현합니다:
+  1. `val failedDetail = dailyRecordService.markFailed(targetRecord.id, user.id)` 호출 후 `assertEquals(DailyRecordStatus.FAILED, failedDetail.status)`, `assertEquals(10000, failedDetail.penaltyAmount)` 검증
+  2. `dailyRecordRepository.calculateUnpaidPenaltyAmount(user.id, group.id)`가 `10000`원인지 검증
+  3. `LateVerificationRequest(imageUrl = "...", comment = "...")`를 생성하여 `dailyRecordService.verifyLate(targetRecord.id, user.id, lateRequest)` 호출
+  4. DB에서 레코드를 다시 조회(`dailyRecordRepository.findById(targetRecord.id).get()`)하여 `COMPLETED`, `penaltyAmount == 0`, `isLate == true`인지 검증
+  5. `dailyRecordRepository.calculateUnpaidPenaltyAmount(user.id, group.id)`가 `0`원으로 차감 복구되었는지 검증
+- **검증 테스트**: `DailyRecordTransactionTest`
 
 ---
 
@@ -71,9 +80,12 @@
 cd backend
 ./gradlew test
 ```
-현재 빈칸 스텁 상태에서는 해당 미션 관련 테스트 2개가 **FAILED (RED)** 상태입니다:
-- `EntityAndRelationshipTest > Verification과 VerificationComment 간의 지연 로딩(FetchType LAZY) 확인()`
-- `VerificationIntegrationTest > DoD 2 동일 챌린지, 동일 참여자, 동일 날짜에 2회 이상 인증 시도 시 409 Conflict로 방어된다()`
+현재 빈칸 스텁 상태에서는 해당 미션 관련 테스트들이 **FAILED (RED)** 상태입니다:
+- `DailyRecordTransactionTest > 미수행 확정 후 늦은 인증 등록 시 벌금이 차감되는 트랜잭션 무결성 검증()`
+- `DailyRecordIntegrationTest > DoD 2 사용자가 미수행을 확정했을 때만 정확히 약정 금액이 미납금에 산입된다()`
+- `DailyRecordIntegrationTest > DoD 3 과거 미확인 또는 미수행 날짜에 늦은 인증을 올리면 완료로 변경되고 미납 벌금이 즉시 제외된다()`
+- `DailyRecordIntegrationTest > DoD 4 여러 챌린지를 미수행한 경우 각 챌린지의 약정 벌금이 정확히 누적 합산된다()`
 
-위 3가지 미션을 순서대로 채워 넣으면 모든 테스트(54개)가 **BUILD SUCCESSFUL (GREEN)**으로 전환됩니다!
-미션을 완료한 뒤 `git diff HEAD~1`로 이전 완성본과 본인의 구현을 비교해 보세요.
+위 3가지 미션을 순서대로 채워 넣으면 모든 테스트(90개)가 **BUILD SUCCESSFUL (GREEN)**으로 전환됩니다!
+미션을 완료한 뒤 언제든지 `git diff HEAD~1`로 이전 완성본과 본인의 구현을 비교해 보세요.
+
