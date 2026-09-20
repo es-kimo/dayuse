@@ -17,5 +17,22 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dayuse-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      DB_URL: jdbc:mysql://mysql:3306/dayuse?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      DB_USERNAME: dayuse
+      DB_PASSWORD: dayuse
+      JWT_SECRET: dayuse-jwt-secret-key-must-be-very-long-and-secure-at-least-256-bits-for-hmac-sha!
+    depends_on:
+      - mysql
+
 volumes:
   mysql_data:

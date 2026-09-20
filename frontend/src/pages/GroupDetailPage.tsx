@@ -512,15 +512,16 @@ export const GroupDetailPage: React.FC = () => {
               <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-3">
                 <Trophy className="w-6 h-6" />
               </div>
-              <h3 className="text-xs font-bold text-slate-700 mb-1">등록된 챌린지가 없습니다</h3>
-              <p className="text-[11px] text-slate-400 mb-4 max-w-xs">
+              <h3 className="text-sm font-bold text-slate-800 mb-1">아직 등록된 챌린지가 없습니다.</h3>
+              <p className="text-xs text-slate-500 mb-5 max-w-xs leading-relaxed">
                 모임원들과 함께 매일 실천할 첫 번째 챌린지를 만들어 보세요.
               </p>
               <button
                 onClick={() => navigate(`/groups/${group.id}/challenges/new`)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-medium transition shadow-xs"
+                className="min-h-[44px] px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition shadow-xs active:scale-95 flex items-center gap-1.5"
               >
-                첫 챌린지 시작하기
+                <Plus className="w-4 h-4" />
+                <span>새 챌린지 만들기</span>
               </button>
             </div>
           ) : filteredChallenges.length === 0 ? (

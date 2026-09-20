@@ -211,7 +211,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
       <button
         onClick={onOpenDepositModal}
         disabled={!summary?.accountRegistered}
-        className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+        className={`w-full min-h-[44px] py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition ${
           summary?.accountRegistered
             ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs active:scale-[0.99]'
             : 'bg-slate-100 text-slate-400 cursor-not-allowed'
