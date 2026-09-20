@@ -4,12 +4,22 @@ import { groupsApi } from '../api/groups';
 import { challengesApi } from '../api/challenges';
 import { todayApi } from '../api/today';
 import { verificationsApi } from '../api/verifications';
-import type { GroupDetail, ChallengeSummary, TodayAction, FeedItem } from '../types';
+import { recordsApi } from '../api/records';
+import type {
+  GroupDetail,
+  ChallengeSummary,
+  TodayAction,
+  FeedItem,
+  StatusSummaryResponse,
+  UncheckedRecordItem,
+} from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import { TodayActionSection } from '../components/TodayActionSection';
 import { VerificationModal } from '../components/VerificationModal';
 import { GroupFeedSection } from '../components/GroupFeedSection';
 import { CommentsBottomSheet } from '../components/CommentsBottomSheet';
+import { GroupStatusSummaryBanner } from '../components/GroupStatusSummaryBanner';
+import { UncheckedRecordsBottomSheet } from '../components/UncheckedRecordsBottomSheet';
 import {
   ArrowLeft,
   Copy,
@@ -44,6 +54,17 @@ export const GroupDetailPage: React.FC = () => {
   // 오늘 할 일 상태
   const [todayActions, setTodayActions] = useState<TodayAction[]>([]);
   const [todayLoading, setTodayLoading] = useState<boolean>(false);
+
+  // 미확인/미수행 상태 요약
+  const [statusSummary, setStatusSummary] = useState<StatusSummaryResponse | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState<boolean>(false);
+  const [uncheckedRecords, setUncheckedRecords] = useState<UncheckedRecordItem[]>([]);
+  const [uncheckedLoading, setUncheckedLoading] = useState<boolean>(false);
+  const [showUncheckedSheet, setShowUncheckedSheet] = useState<boolean>(false);
+  const [lateVerificationTarget, setLateVerificationTarget] = useState<{
+    recordId: number;
+    action: { challengeId: number; challengeTitle: string; verificationCriteria?: string };
+  } | null>(null);
 
   // 모임 피드 상태
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -118,6 +139,67 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
+  const fetchStatusSummary = async () => {
+    if (!groupId) return;
+    setSummaryLoading(true);
+    try {
+      const data = await recordsApi.getStatusSummary(Number(groupId));
+      setStatusSummary(data);
+    } catch (err) {
+      console.error('Failed to fetch status summary:', err);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const fetchUncheckedRecords = async () => {
+    if (!groupId) return;
+    setUncheckedLoading(true);
+    try {
+      const data = await recordsApi.getUncheckedRecords(Number(groupId));
+      setUncheckedRecords(data);
+    } catch (err) {
+      console.error('Failed to fetch unchecked records:', err);
+    } finally {
+      setUncheckedLoading(false);
+    }
+  };
+
+  const handleOpenUncheckedSheet = () => {
+    setShowUncheckedSheet(true);
+    fetchUncheckedRecords();
+  };
+
+  const handleMarkFailed = async (recordId: number) => {
+    try {
+      await recordsApi.markFailed(recordId);
+      await fetchStatusSummary();
+      await fetchUncheckedRecords();
+    } catch (err: any) {
+      console.error('Failed to mark failed:', err);
+      alert(err.response?.data?.message || '미수행 확정에 실패했습니다.');
+    }
+  };
+
+  const handleStartVerifyLate = (record: UncheckedRecordItem) => {
+    setLateVerificationTarget({
+      recordId: record.id,
+      action: {
+        challengeId: record.challengeId,
+        challengeTitle: record.challengeTitle,
+        verificationCriteria: record.verificationCriteria,
+      },
+    });
+  };
+
+  const handleLateVerificationSuccess = () => {
+    setLateVerificationTarget(null);
+    fetchStatusSummary();
+    fetchUncheckedRecords();
+    fetchTodayActions();
+    fetchFeed(0);
+  };
+
   const fetchChallenges = async () => {
     if (!groupId) return;
     setChallengesLoading(true);
@@ -138,6 +220,7 @@ export const GroupDetailPage: React.FC = () => {
   useEffect(() => {
     if (groupId) {
       if (activeTab === 'home') {
+        fetchStatusSummary();
         fetchTodayActions();
         fetchFeed(0);
       } else if (activeTab === 'challenges') {
@@ -154,6 +237,7 @@ export const GroupDetailPage: React.FC = () => {
 
   const handleVerificationSuccess = () => {
     setActiveVerificationAction(null);
+    fetchStatusSummary();
     fetchTodayActions();
     fetchFeed(0);
   };
@@ -162,6 +246,7 @@ export const GroupDetailPage: React.FC = () => {
     try {
       await verificationsApi.deleteVerification(verificationId);
       setFeedItems((prev) => prev.filter((item) => item.id !== verificationId));
+      fetchStatusSummary();
       fetchTodayActions();
     } catch (err) {
       console.error('Failed to delete verification:', err);
@@ -316,7 +401,14 @@ export const GroupDetailPage: React.FC = () => {
 
       {activeTab === 'home' && (
         <div className="space-y-6 flex-1 flex flex-col">
-          {/* 상단: 오늘 할 일 */}
+          {/* 상단: 미확인 기록 및 미납 벌금 요약 배너 */}
+          <GroupStatusSummaryBanner
+            summary={statusSummary}
+            loading={summaryLoading}
+            onOpenUncheckedSheet={handleOpenUncheckedSheet}
+          />
+
+          {/* 오늘 할 일 */}
           <TodayActionSection
             todayActions={todayActions}
             loading={todayLoading}
@@ -538,7 +630,7 @@ export const GroupDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* 사진 인증 모달 */}
+      {/* 사진 인증 모달 (오늘 인증) */}
       {activeVerificationAction && (
         <VerificationModal
           action={activeVerificationAction}
@@ -546,6 +638,26 @@ export const GroupDetailPage: React.FC = () => {
           onSuccess={handleVerificationSuccess}
         />
       )}
+
+      {/* 사진 인증 모달 (늦은 인증) */}
+      {lateVerificationTarget && (
+        <VerificationModal
+          action={lateVerificationTarget.action}
+          recordId={lateVerificationTarget.recordId}
+          onClose={() => setLateVerificationTarget(null)}
+          onSuccess={handleLateVerificationSuccess}
+        />
+      )}
+
+      {/* 미확인 기록 정리 바텀시트 */}
+      <UncheckedRecordsBottomSheet
+        isOpen={showUncheckedSheet}
+        onClose={() => setShowUncheckedSheet(false)}
+        records={uncheckedRecords}
+        loading={uncheckedLoading}
+        onMarkFailed={handleMarkFailed}
+        onStartVerifyLate={handleStartVerifyLate}
+      />
 
       {/* 댓글 바텀시트 */}
       {activeCommentVerificationId !== null && (

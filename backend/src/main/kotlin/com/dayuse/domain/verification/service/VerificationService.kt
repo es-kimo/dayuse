@@ -2,6 +2,8 @@ package com.dayuse.domain.verification.service
 
 import com.dayuse.domain.challenge.ChallengeParticipantRepository
 import com.dayuse.domain.challenge.ChallengeRepository
+import com.dayuse.domain.dailyrecord.DailyRecordRepository
+import com.dayuse.domain.dailyrecord.service.DailyRecordService
 import com.dayuse.domain.group.GroupMemberRepository
 import com.dayuse.domain.verification.Verification
 import com.dayuse.domain.verification.VerificationRepository
@@ -25,7 +27,9 @@ class VerificationService(
     private val challengeRepository: ChallengeRepository,
     private val challengeParticipantRepository: ChallengeParticipantRepository,
     private val groupMemberRepository: GroupMemberRepository,
-    private val presignedUrlService: PresignedUrlService
+    private val presignedUrlService: PresignedUrlService,
+    private val dailyRecordService: DailyRecordService? = null,
+    private val dailyRecordRepository: DailyRecordRepository? = null
 ) {
 
     fun createVerification(
@@ -91,6 +95,7 @@ class VerificationService(
                 comment = request.comment
             )
             val saved = verificationRepository.save(verification)
+            dailyRecordService?.onVerificationCreated(saved)
             return toDetailResponse(saved)
         } catch (e: DataIntegrityViolationException) {
             val constraintViolation = generateSequence<Throwable>(e) { it.cause }
@@ -145,13 +150,14 @@ class VerificationService(
             throw ForbiddenException("본인이 작성한 인증만 삭제할 수 있습니다.")
         }
 
-        // 과거 인증 정산 락 확인
-        val today = DateTimeUtils.todayKst()
-        if (verification.targetDate < today) {
-            throw BadRequestException("과거 대상 날짜의 인증은 삭제할 수 없습니다.")
+        // 정산 락 확인
+        val records = dailyRecordRepository?.findAllByVerificationId(verificationId).orEmpty()
+        if (records.any { it.isLocked() }) {
+            throw BadRequestException("정산 진행 중이거나 완료된 기록의 인증은 삭제할 수 없습니다.")
         }
 
         verificationRepository.delete(verification)
+        dailyRecordService?.onVerificationDeleted(verification)
     }
 
     private fun toDetailResponse(v: Verification): VerificationDetailResponse {

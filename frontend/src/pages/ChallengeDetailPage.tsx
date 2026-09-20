@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
-import type { ChallengeDetail } from '../types';
+import { recordsApi } from '../api/records';
+import type { ChallengeDetail, ChallengeCalendarResponse } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
+import { ChallengeCalendarSection } from '../components/ChallengeCalendarSection';
 import {
   ArrowLeft,
   Calendar,
@@ -40,8 +42,25 @@ export const ChallengeDetailPage: React.FC = () => {
   const [editStartDate, setEditStartDate] = useState('');
   const [editEndDate, setEditEndDate] = useState('');
 
+  // 캘린더 히스토리 상태
+  const [calendarData, setCalendarData] = useState<ChallengeCalendarResponse | null>(null);
+  const [calendarLoading, setCalendarLoading] = useState<boolean>(false);
+
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const fetchCalendar = async () => {
+    if (!challengeId) return;
+    setCalendarLoading(true);
+    try {
+      const data = await recordsApi.getChallengeCalendar(Number(challengeId));
+      setCalendarData(data);
+    } catch (err) {
+      console.error('Failed to fetch challenge calendar:', err);
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
 
   const fetchChallenge = async () => {
     if (!challengeId) return;
@@ -70,6 +89,7 @@ export const ChallengeDetailPage: React.FC = () => {
 
   useEffect(() => {
     fetchChallenge();
+    fetchCalendar();
   }, [challengeId]);
 
   const handleJoin = async () => {
@@ -309,6 +329,12 @@ export const ChallengeDetailPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* 날짜별 수행 히스토리 달력 */}
+      <ChallengeCalendarSection
+        calendarData={calendarData}
+        loading={calendarLoading}
+      />
 
       {/* 참여자 카드 목록 */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 flex-1 shadow-xs mb-20">

@@ -1,16 +1,19 @@
 import React, { useState, useRef } from 'react';
 import { verificationsApi } from '../api/verifications';
+import { recordsApi } from '../api/records';
 import type { TodayAction } from '../types';
 import { X, Camera, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface VerificationModalProps {
-  action: TodayAction;
+  action: TodayAction | { challengeId: number; challengeTitle: string; verificationCriteria?: string };
+  recordId?: number;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 export const VerificationModal: React.FC<VerificationModalProps> = ({
   action,
+  recordId,
   onClose,
   onSuccess,
 }) => {
@@ -79,12 +82,20 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       // 2. S3 직업로드 (PUT)
       await verificationsApi.uploadToS3(presignedData.presignedUrl, file);
 
-      // 3. 인증 등록 (POST /verifications)
-      await verificationsApi.createVerification({
-        challengeId: action.challengeId,
-        imageUrl: presignedData.imageKey || presignedData.presignedUrl.split('?')[0],
-        comment: comment.trim() || undefined,
-      });
+      // 3. 인증 등록 (늦은 인증 vs 일반 인증)
+      const uploadedKey = presignedData.imageKey || presignedData.presignedUrl.split('?')[0];
+      if (recordId) {
+        await recordsApi.verifyLate(recordId, {
+          imageUrl: uploadedKey,
+          comment: comment.trim() || undefined,
+        });
+      } else {
+        await verificationsApi.createVerification({
+          challengeId: action.challengeId,
+          imageUrl: uploadedKey,
+          comment: comment.trim() || undefined,
+        });
+      }
 
       onSuccess();
     } catch (err: any) {
@@ -108,7 +119,9 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         {/* 상단 헤더 */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
-            <h2 className="text-sm font-bold text-slate-800">오늘 사진 인증</h2>
+            <h2 className="text-sm font-bold text-slate-800">
+              {recordId ? '늦은 사진 인증' : '오늘 사진 인증'}
+            </h2>
             <p className="text-[11px] text-blue-600 font-medium truncate">{action.challengeTitle}</p>
           </div>
           <button
