@@ -24,11 +24,11 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
 
   if (todayActions.length === 0) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs text-center py-6">
-        <ShieldCheck className="w-8 h-8 text-blue-500 mx-auto mb-2 opacity-80" />
-        <h3 className="text-xs font-bold text-slate-700 mb-1">오늘 진행 중인 챌린지가 없습니다</h3>
-        <p className="text-[11px] text-slate-400">
-          모임의 챌린지에 참여하고 매일 사진으로 인증해 보세요.
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs text-center py-7">
+        <ShieldCheck className="w-9 h-9 text-blue-500 mx-auto mb-2 opacity-80" />
+        <h3 className="text-sm font-bold text-slate-800 mb-1">오늘 수행할 챌린지가 없습니다.</h3>
+        <p className="text-xs text-slate-500">
+          새로운 챌린지에 참여해보세요!
         </p>
       </div>
     );

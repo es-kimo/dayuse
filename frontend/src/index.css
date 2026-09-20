@@ -10,5 +10,28 @@ body {
   margin: 0;
   background-color: #f8fafc;
   color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Safe area insets for mobile Safari and Android navigation bar */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.pb-safe-nav {
+  padding-bottom: max(3rem, calc(2.5rem + env(safe-area-inset-bottom)));
+}
+
+.pt-safe {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+/* Minimum 44x44px touch target utility */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 

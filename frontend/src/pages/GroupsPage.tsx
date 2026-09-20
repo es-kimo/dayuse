@@ -73,6 +73,7 @@ export const GroupsPage: React.FC = () => {
         <div className="relative flex-1">
           <LinkIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
+            id="invite-input"
             type="text"
             placeholder="초대 코드 또는 링크 입력"
             value={inviteInput}
@@ -82,7 +83,7 @@ export const GroupsPage: React.FC = () => {
         </div>
         <button
           type="submit"
-          className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium rounded-lg active:scale-95 transition"
+          className="min-h-[38px] px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg active:scale-95 transition"
         >
           가입
         </button>
@@ -91,10 +92,15 @@ export const GroupsPage: React.FC = () => {
       {groups.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="참여 중인 모임이 없습니다"
+          title="아직 참여 중인 모임이 없습니다."
           description="새로운 비공개 모임을 만들거나 전달받은 초대 코드로 가입해 보세요."
-          actionText="새 모임 만들기"
+          actionText="모임 만들기"
           onAction={() => navigate('/groups/new')}
+          secondaryActionText="초대 코드로 가입"
+          onSecondaryAction={() => {
+            const input = document.getElementById('invite-input');
+            input?.focus();
+          }}
         />
       ) : (
         <div className="flex flex-col gap-2.5">

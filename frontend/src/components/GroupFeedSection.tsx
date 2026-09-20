@@ -62,9 +62,9 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
     return (
       <div className="bg-white border border-dashed border-slate-200 rounded-2xl p-8 text-center my-4">
         <MessageCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-        <h3 className="text-xs font-bold text-slate-700 mb-1">아직 등록된 인증 피드가 없습니다</h3>
-        <p className="text-[11px] text-slate-400">
-          오늘 할 일을 실천하고 첫 번째 사진 인증을 등록해 보세요!
+        <h3 className="text-sm font-bold text-slate-800 mb-1">아직 등록된 인증이 없습니다.</h3>
+        <p className="text-xs text-slate-500">
+          첫 번째 인증의 주인공이 되어보세요!
         </p>
       </div>
     );
@@ -123,8 +123,9 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
                 <button
                   onClick={() => handleDelete(item.id)}
                   disabled={deletingId === item.id}
-                  className="p-1.5 text-slate-300 hover:text-red-500 transition rounded-lg"
+                  className="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-red-500 transition rounded-xl active:scale-95"
                   title="인증 삭제"
+                  aria-label="인증 삭제"
                 >
                   {deletingId === item.id ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -157,10 +158,10 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
             )}
 
             {/* 하단 소통 바 (댓글 버튼) */}
-            <div className="px-3.5 py-2.5 border-t border-slate-100 flex items-center justify-between">
+            <div className="px-3.5 py-1.5 border-t border-slate-100 flex items-center justify-between">
               <button
                 onClick={() => onOpenComments(item.id)}
-                className="text-xs font-medium text-slate-600 hover:text-blue-600 flex items-center gap-1.5 transition active:scale-95 py-0.5"
+                className="min-h-[44px] text-xs font-semibold text-slate-600 hover:text-blue-600 flex items-center gap-1.5 transition active:scale-95 py-1 px-1 -ml-1 rounded-lg"
               >
                 <MessageCircle className="w-4 h-4 text-slate-400 hover:text-blue-500" />
                 <span>댓글 {item.commentCount}개</span>

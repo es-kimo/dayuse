@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { triggerGlobalToast } from '../context/ToastContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
@@ -50,6 +51,30 @@ apiClient.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+
+    // 2. 네트워크 에러 및 연결 실패 처리 (토스트 및 재시도 제공)
+    if (!error.response || error.code === 'ERR_NETWORK') {
+      triggerGlobalToast({
+        message: '서버와 연결이 불안정합니다. 네트워크를 확인해 주세요.',
+        type: 'error',
+        action: originalRequest
+          ? {
+              label: '다시 시도',
+              onClick: () => {
+                apiClient(originalRequest).catch(() => {});
+              },
+            }
+          : undefined,
+      });
+    } else if (error.response.status >= 500) {
+      // 3. 서버 500 내부 오류 공통 토스트 안내
+      triggerGlobalToast({
+        message:
+          error.response.data?.message || '서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+        type: 'error',
+      });
+    }
+
     return Promise.reject(error);
   }
 );

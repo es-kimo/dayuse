@@ -141,7 +141,8 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-xl transition"
+            aria-label="닫기"
           >
             <X className="w-5 h-5" />
           </button>
@@ -208,9 +209,9 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
               </div>
             ) : records.length === 0 ? (
               <div className="p-6 text-center border border-dashed border-slate-200 rounded-xl">
-                <Coins className="w-6 h-6 text-slate-300 mx-auto mb-1" />
-                <p className="text-xs text-slate-500 font-medium">정산할 미수행 기록이 없습니다.</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">미납된 벌금이 없거나 이미 모두 확인 대기 중입니다.</p>
+                <Coins className="w-7 h-7 text-emerald-500 mx-auto mb-1.5" />
+                <p className="text-xs font-bold text-slate-800">미납된 벌금이 없습니다.</p>
+                <p className="text-[11px] text-slate-500 mt-1">성실하게 챌린지를 완주하고 계시네요! 🎉</p>
               </div>
             ) : (
               <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
@@ -220,7 +221,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
                     <div
                       key={record.id}
                       onClick={() => handleToggleRecord(record.id)}
-                      className={`p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition select-none ${
+                      className={`min-h-[44px] p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition select-none ${
                         isChecked
                           ? 'bg-blue-50/50 border-blue-300 text-slate-800'
                           : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
@@ -297,7 +298,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition"
+            className="flex-1 min-h-[44px] py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition"
           >
             취소
           </button>
@@ -305,7 +306,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !account || selectedRecordIds.length === 0}
-            className={`flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition ${
+            className={`flex-1 min-h-[44px] py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition ${
               account && selectedRecordIds.length > 0 && !submitting
                 ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
