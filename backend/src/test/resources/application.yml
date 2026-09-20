@@ -21,3 +21,10 @@ kakao:
   client-id: test-kakao-client-id
   client-secret: test-kakao-client-secret
   redirect-uri: http://localhost:5173/oauth/callback/kakao
+
+aws:
+  s3:
+    bucket: dayuse-test-bucket
+    region: ap-northeast-2
+    access-key: test-access-key
+    secret-key: test-secret-key

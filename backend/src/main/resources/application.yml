@@ -33,6 +33,14 @@ kakao:
   client-secret: ${KAKAO_CLIENT_SECRET:dummy-kakao-client-secret}
   redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:5173/oauth/callback/kakao}
 
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET:dayuse-local-bucket}
+    region: ${AWS_REGION:ap-northeast-2}
+    access-key: ${AWS_ACCESS_KEY:dummy-access-key}
+    secret-key: ${AWS_SECRET_KEY:dummy-secret-key}
+    endpoint: ${AWS_S3_ENDPOINT:}
+
 ---
 spring:
   config:

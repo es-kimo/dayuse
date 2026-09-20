@@ -53,17 +53,17 @@ class GroupMember(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = id
-        private set
+        protected set
 
     @Column(nullable = false)
     var groupId: Long = groupId
-        private set
+        protected set
 
     @Column(nullable = false)
     var userId: Long = userId
-        private set
+        protected set
 
     @Column(nullable = false)
     var joinedAt: LocalDateTime = joinedAt
-        private set
+        protected set
 }

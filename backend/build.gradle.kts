@@ -4,6 +4,14 @@ plugins {
     kotlin("jvm") version "1.9.24"
     kotlin("plugin.spring") version "1.9.24"
     kotlin("plugin.jpa") version "1.9.24"
+    kotlin("plugin.allopen") version "1.9.24"
+}
+
+// Hibernate가 엔티티를 상속한 지연 로딩 프록시를 생성할 수 있도록 한다.
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
 }
 
 group = "com.dayuse"
@@ -35,6 +43,10 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
+    // AWS SDK S3
+    implementation(platform("software.amazon.awssdk:bom:2.25.16"))
+    implementation("software.amazon.awssdk:s3")
 
     // Database
     runtimeOnly("com.mysql:mysql-connector-j")

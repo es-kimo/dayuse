@@ -2,8 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
 import { challengesApi } from '../api/challenges';
-import type { GroupDetail, ChallengeSummary } from '../types';
+import { todayApi } from '../api/today';
+import { verificationsApi } from '../api/verifications';
+import type { GroupDetail, ChallengeSummary, TodayAction, FeedItem } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
+import { TodayActionSection } from '../components/TodayActionSection';
+import { VerificationModal } from '../components/VerificationModal';
+import { GroupFeedSection } from '../components/GroupFeedSection';
+import { CommentsBottomSheet } from '../components/CommentsBottomSheet';
 import {
   ArrowLeft,
   Copy,
@@ -18,6 +24,7 @@ import {
   Calendar,
   Clock,
   ChevronRight,
+  Home,
 } from 'lucide-react';
 
 export const GroupDetailPage: React.FC = () => {
@@ -25,14 +32,29 @@ export const GroupDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState<'members' | 'challenges'>(
-    location.pathname.endsWith('/challenges') ? 'challenges' : 'challenges'
+  const [activeTab, setActiveTab] = useState<'home' | 'challenges' | 'members'>(
+    location.pathname.endsWith('/challenges') ? 'challenges' : 'home'
   );
   const [challengeFilter, setChallengeFilter] = useState<string>('ALL');
 
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [challenges, setChallenges] = useState<ChallengeSummary[]>([]);
   const [challengesLoading, setChallengesLoading] = useState<boolean>(false);
+
+  // 오늘 할 일 상태
+  const [todayActions, setTodayActions] = useState<TodayAction[]>([]);
+  const [todayLoading, setTodayLoading] = useState<boolean>(false);
+
+  // 모임 피드 상태
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [feedLoading, setFeedLoading] = useState<boolean>(false);
+  const [feedPage, setFeedPage] = useState<number>(0);
+  const [hasMoreFeed, setHasMoreFeed] = useState<boolean>(false);
+  const [loadingMoreFeed, setLoadingMoreFeed] = useState<boolean>(false);
+
+  // 모달 및 바텀시트 상태
+  const [activeVerificationAction, setActiveVerificationAction] = useState<TodayAction | null>(null);
+  const [activeCommentVerificationId, setActiveCommentVerificationId] = useState<number | null>(null);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
@@ -58,6 +80,44 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
+  const fetchTodayActions = async () => {
+    if (!groupId) return;
+    setTodayLoading(true);
+    try {
+      const actions = await todayApi.getTodayActions(Number(groupId));
+      setTodayActions(actions);
+    } catch (err) {
+      console.error('Failed to fetch today actions:', err);
+    } finally {
+      setTodayLoading(false);
+    }
+  };
+
+  const fetchFeed = async (page = 0) => {
+    if (!groupId) return;
+    if (page === 0) {
+      setFeedLoading(true);
+    } else {
+      setLoadingMoreFeed(true);
+    }
+
+    try {
+      const data = await verificationsApi.getGroupFeed(Number(groupId), page, 10);
+      if (page === 0) {
+        setFeedItems(data.items);
+      } else {
+        setFeedItems((prev) => [...prev, ...data.items]);
+      }
+      setFeedPage(data.pageNumber);
+      setHasMoreFeed(data.hasNext);
+    } catch (err) {
+      console.error('Failed to fetch group feed:', err);
+    } finally {
+      setFeedLoading(false);
+      setLoadingMoreFeed(false);
+    }
+  };
+
   const fetchChallenges = async () => {
     if (!groupId) return;
     setChallengesLoading(true);
@@ -77,9 +137,48 @@ export const GroupDetailPage: React.FC = () => {
 
   useEffect(() => {
     if (groupId) {
+      if (activeTab === 'home') {
+        fetchTodayActions();
+        fetchFeed(0);
+      } else if (activeTab === 'challenges') {
+        fetchChallenges();
+      }
+    }
+  }, [groupId, activeTab]);
+
+  useEffect(() => {
+    if (groupId && activeTab === 'challenges') {
       fetchChallenges();
     }
   }, [groupId, challengeFilter]);
+
+  const handleVerificationSuccess = () => {
+    setActiveVerificationAction(null);
+    fetchTodayActions();
+    fetchFeed(0);
+  };
+
+  const handleDeleteVerification = async (verificationId: number) => {
+    try {
+      await verificationsApi.deleteVerification(verificationId);
+      setFeedItems((prev) => prev.filter((item) => item.id !== verificationId));
+      fetchTodayActions();
+    } catch (err) {
+      console.error('Failed to delete verification:', err);
+      alert('인증 삭제에 실패했습니다.');
+    }
+  };
+
+  const handleCommentCountChange = (delta: number) => {
+    if (!activeCommentVerificationId) return;
+    setFeedItems((prev) =>
+      prev.map((item) =>
+        item.id === activeCommentVerificationId
+          ? { ...item, commentCount: Math.max(0, item.commentCount + delta) }
+          : item
+      )
+    );
+  };
 
   const inviteUrl = group ? `${window.location.origin}/invite/${group.inviteCode}` : '';
 
@@ -181,6 +280,17 @@ export const GroupDetailPage: React.FC = () => {
       {/* 탭 네비게이션 */}
       <div className="flex border-b border-slate-200 mb-4">
         <button
+          onClick={() => setActiveTab('home')}
+          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
+            activeTab === 'home'
+              ? 'border-blue-600 text-blue-600'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Home className="w-3.5 h-3.5" />
+          <span>홈</span>
+        </button>
+        <button
           onClick={() => setActiveTab('challenges')}
           className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
             activeTab === 'challenges'
@@ -200,9 +310,33 @@ export const GroupDetailPage: React.FC = () => {
           }`}
         >
           <UserIcon className="w-3.5 h-3.5" />
-          <span>모임 멤버 ({group.members.length})</span>
+          <span>멤버 ({group.members.length})</span>
         </button>
       </div>
+
+      {activeTab === 'home' && (
+        <div className="space-y-6 flex-1 flex flex-col">
+          {/* 상단: 오늘 할 일 */}
+          <TodayActionSection
+            todayActions={todayActions}
+            loading={todayLoading}
+            onOpenVerificationModal={(action) => setActiveVerificationAction(action)}
+          />
+
+          <hr className="border-slate-200/80 -mx-4" />
+
+          {/* 하단: 모임 피드 */}
+          <GroupFeedSection
+            feedItems={feedItems}
+            loading={feedLoading}
+            hasMore={hasMoreFeed}
+            onLoadMore={() => fetchFeed(feedPage + 1)}
+            loadingMore={loadingMoreFeed}
+            onOpenComments={(verificationId) => setActiveCommentVerificationId(verificationId)}
+            onDeleteVerification={handleDeleteVerification}
+          />
+        </div>
+      )}
 
       {activeTab === 'challenges' && (
         <div className="space-y-4 flex-1 flex flex-col">
@@ -402,6 +536,24 @@ export const GroupDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 사진 인증 모달 */}
+      {activeVerificationAction && (
+        <VerificationModal
+          action={activeVerificationAction}
+          onClose={() => setActiveVerificationAction(null)}
+          onSuccess={handleVerificationSuccess}
+        />
+      )}
+
+      {/* 댓글 바텀시트 */}
+      {activeCommentVerificationId !== null && (
+        <CommentsBottomSheet
+          verificationId={activeCommentVerificationId}
+          onClose={() => setActiveCommentVerificationId(null)}
+          onCommentCountChange={handleCommentCountChange}
+        />
       )}
     </MobileLayout>
   );

@@ -1,0 +1,243 @@
+import React, { useState, useRef } from 'react';
+import { verificationsApi } from '../api/verifications';
+import type { TodayAction } from '../types';
+import { X, Camera, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+
+interface VerificationModalProps {
+  action: TodayAction;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export const VerificationModal: React.FC<VerificationModalProps> = ({
+  action,
+  onClose,
+  onSuccess,
+}) => {
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [comment, setComment] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [canRetry, setCanRetry] = useState<boolean>(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    // 10MB 검증
+    if (selected.size > 10 * 1024 * 1024) {
+      setErrorMessage('파일 크기는 최대 10MB 이하만 가능합니다.');
+      return;
+    }
+
+    // 포맷 검증 (JPG, PNG, WebP)
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(selected.type)) {
+      setErrorMessage('JPG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.');
+      return;
+    }
+
+    setErrorMessage(null);
+    setCanRetry(false);
+    setFile(selected);
+
+    const url = URL.createObjectURL(selected);
+    setPreviewUrl(url);
+  };
+
+  const handleRemovePhoto = () => {
+    setFile(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    setCanRetry(false);
+
+    try {
+      // 1. S3 Presigned URL 발급
+      const presignedData = await verificationsApi.getPresignedUrl({
+        challengeId: action.challengeId,
+        filename: file.name,
+        contentType: file.type || 'image/jpeg',
+        fileSize: file.size,
+      });
+
+      // 2. S3 직업로드 (PUT)
+      await verificationsApi.uploadToS3(presignedData.presignedUrl, file);
+
+      // 3. 인증 등록 (POST /verifications)
+      await verificationsApi.createVerification({
+        challengeId: action.challengeId,
+        imageUrl: presignedData.imageKey || presignedData.presignedUrl.split('?')[0],
+        comment: comment.trim() || undefined,
+      });
+
+      onSuccess();
+    } catch (err: any) {
+      console.error('인증 등록 실패:', err);
+      const msg =
+        err.response?.data?.message ||
+        (err.message?.includes('Network')
+          ? '이미지 업로드 중 네트워크 오류가 발생했습니다.'
+          : '인증 등록 중 오류가 발생했습니다.');
+      setErrorMessage(msg);
+      // 업로드 실패 시 입력값 유지 및 재시도 활성화
+      setCanRetry(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-5 shadow-2xl flex flex-col">
+        {/* 상단 헤더 */}
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 className="text-sm font-bold text-slate-800">오늘 사진 인증</h2>
+            <p className="text-[11px] text-blue-600 font-medium truncate">{action.challengeTitle}</p>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* 폼 */}
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          {/* 인증 기준 안내 */}
+          <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3 text-[11px] text-blue-900 leading-relaxed">
+            <span className="font-bold">인증 기준:</span> {action.verificationCriteria}
+          </div>
+
+          {/* 사진 선택 / 미리보기 영역 */}
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              capture="environment"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {previewUrl ? (
+              <div className="relative rounded-2xl overflow-hidden border border-slate-200 aspect-4/3 bg-slate-900 group">
+                <img
+                  src={previewUrl}
+                  alt="인증 사진 미리보기"
+                  className="w-full h-full object-cover"
+                />
+                {!isSubmitting && (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="absolute top-3 right-3 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition shadow-md"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div
+                onClick={() => !isSubmitting && fileInputRef.current?.click()}
+                className="border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition bg-slate-50 hover:bg-blue-50/30"
+              >
+                <div className="w-12 h-12 rounded-full bg-blue-100/80 text-blue-600 flex items-center justify-center">
+                  <Camera className="w-6 h-6" />
+                </div>
+                <div className="text-center">
+                  <span className="text-xs font-bold text-slate-700 block">
+                    카메라 촬영 또는 갤러리 사진 선택
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                    JPG, PNG, WebP (최대 10MB)
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 인증 한마디 문구 입력 */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-slate-700">인증 한마디 (선택)</label>
+              <span className="text-[10px] text-slate-400">{comment.length} / 200자</span>
+            </div>
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value.slice(0, 200))}
+              disabled={isSubmitting}
+              placeholder="오늘 실천한 소감이나 인증 한마디를 남겨보세요."
+              rows={2}
+              className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-blue-500 transition resize-none text-slate-800 placeholder:text-slate-400"
+            />
+          </div>
+
+          {/* 에러 메시지 */}
+          {errorMessage && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-red-600 text-[11px]">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <span>{errorMessage}</span>
+                {canRetry && (
+                  <p className="text-[10px] text-red-500 mt-1 font-medium">
+                    작성한 내용이 유지되어 있으니 다시 시도해 보세요.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 하단 액션 버튼 */}
+          <div className="flex items-center gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-xl text-xs font-medium hover:bg-slate-50 transition"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              disabled={!file || isSubmitting}
+              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition active:scale-98"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>인증 업로드 중...</span>
+                </>
+              ) : canRetry ? (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  <span>다시 시도하기</span>
+                </>
+              ) : (
+                <span>인증 완료하기</span>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};

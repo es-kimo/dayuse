@@ -36,7 +36,7 @@ class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = id
-        private set
+        protected set
 
 
     // TODO: 필요시 추가 비즈니스 로직(예: 닉네임 유효성 검사, 업데이트 메서드)을 구현해 보세요.
