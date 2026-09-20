@@ -5,6 +5,7 @@ import { challengesApi } from '../api/challenges';
 import { todayApi } from '../api/today';
 import { verificationsApi } from '../api/verifications';
 import { recordsApi } from '../api/records';
+import { settlementApi } from '../api/settlement';
 import type {
   GroupDetail,
   ChallengeSummary,
@@ -12,6 +13,7 @@ import type {
   FeedItem,
   StatusSummaryResponse,
   UncheckedRecordItem,
+  SettlementSummary,
 } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import { TodayActionSection } from '../components/TodayActionSection';
@@ -20,6 +22,8 @@ import { GroupFeedSection } from '../components/GroupFeedSection';
 import { CommentsBottomSheet } from '../components/CommentsBottomSheet';
 import { GroupStatusSummaryBanner } from '../components/GroupStatusSummaryBanner';
 import { UncheckedRecordsBottomSheet } from '../components/UncheckedRecordsBottomSheet';
+import { GroupSettlementCard } from '../components/GroupSettlementCard';
+import { DepositReportModal } from '../components/DepositReportModal';
 import {
   ArrowLeft,
   Copy,
@@ -65,6 +69,11 @@ export const GroupDetailPage: React.FC = () => {
     recordId: number;
     action: { challengeId: number; challengeTitle: string; verificationCriteria?: string };
   } | null>(null);
+
+  // 정산 및 계좌 상태 (F07)
+  const [settlementSummary, setSettlementSummary] = useState<SettlementSummary | null>(null);
+  const [settlementLoading, setSettlementLoading] = useState<boolean>(false);
+  const [showDepositModal, setShowDepositModal] = useState<boolean>(false);
 
   // 모임 피드 상태
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -139,6 +148,19 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
+  const fetchSettlementSummary = async () => {
+    if (!groupId) return;
+    setSettlementLoading(true);
+    try {
+      const data = await settlementApi.getSettlementSummary(Number(groupId));
+      setSettlementSummary(data);
+    } catch (err) {
+      console.error('Failed to fetch settlement summary:', err);
+    } finally {
+      setSettlementLoading(false);
+    }
+  };
+
   const fetchStatusSummary = async () => {
     if (!groupId) return;
     setSummaryLoading(true);
@@ -174,6 +196,7 @@ export const GroupDetailPage: React.FC = () => {
     try {
       await recordsApi.markFailed(recordId);
       await fetchStatusSummary();
+      await fetchSettlementSummary();
       await fetchUncheckedRecords();
     } catch (err: any) {
       console.error('Failed to mark failed:', err);
@@ -195,6 +218,7 @@ export const GroupDetailPage: React.FC = () => {
   const handleLateVerificationSuccess = () => {
     setLateVerificationTarget(null);
     fetchStatusSummary();
+    fetchSettlementSummary();
     fetchUncheckedRecords();
     fetchTodayActions();
     fetchFeed(0);
@@ -221,6 +245,7 @@ export const GroupDetailPage: React.FC = () => {
     if (groupId) {
       if (activeTab === 'home') {
         fetchStatusSummary();
+        fetchSettlementSummary();
         fetchTodayActions();
         fetchFeed(0);
       } else if (activeTab === 'challenges') {
@@ -238,6 +263,7 @@ export const GroupDetailPage: React.FC = () => {
   const handleVerificationSuccess = () => {
     setActiveVerificationAction(null);
     fetchStatusSummary();
+    fetchSettlementSummary();
     fetchTodayActions();
     fetchFeed(0);
   };
@@ -406,6 +432,19 @@ export const GroupDetailPage: React.FC = () => {
             summary={statusSummary}
             loading={summaryLoading}
             onOpenUncheckedSheet={handleOpenUncheckedSheet}
+          />
+
+          {/* 모임 정산 & 계좌 카드 (F07) */}
+          <GroupSettlementCard
+            groupId={Number(groupId)}
+            isHost={!!group?.isHost}
+            summary={settlementSummary}
+            loading={settlementLoading}
+            onRefresh={() => {
+              fetchSettlementSummary();
+              fetchStatusSummary();
+            }}
+            onOpenDepositModal={() => setShowDepositModal(true)}
           />
 
           {/* 오늘 할 일 */}
@@ -667,6 +706,19 @@ export const GroupDetailPage: React.FC = () => {
           onCommentCountChange={handleCommentCountChange}
         />
       )}
+
+      {/* 미수행 입금 신고 모달 */}
+      <DepositReportModal
+        groupId={Number(groupId)}
+        isOpen={showDepositModal}
+        account={settlementSummary?.account}
+        onClose={() => setShowDepositModal(false)}
+        onSuccess={() => {
+          fetchSettlementSummary();
+          fetchStatusSummary();
+          fetchUncheckedRecords();
+        }}
+      />
     </MobileLayout>
   );
 };

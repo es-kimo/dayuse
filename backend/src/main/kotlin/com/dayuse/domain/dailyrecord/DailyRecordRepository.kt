@@ -1,11 +1,17 @@
 package com.dayuse.domain.dailyrecord
 
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.LocalDate
 
 interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM DailyRecord r WHERE r.id IN :ids")
+    fun findAllByIdInWithLock(@Param("ids") ids: Collection<Long>): List<DailyRecord>
 
     fun findByChallengeParticipantIdAndDate(
         challengeParticipantId: Long,
@@ -48,6 +54,36 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
         @Param("userId") userId: Long,
         @Param("groupId") groupId: Long
     ): Int
+
+    @Query(
+        """
+        SELECT COALESCE(SUM(r.penaltyAmount), 0)
+        FROM DailyRecord r
+        WHERE r.groupId = :groupId
+          AND r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.FAILED
+          AND r.depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID
+    """
+    )
+    fun calculateGroupUnpaidPenaltyAmount(
+        @Param("groupId") groupId: Long
+    ): Int
+
+    @Query(
+        """
+        SELECT r
+        FROM DailyRecord r
+        WHERE r.userId = :userId
+          AND r.groupId = :groupId
+          AND r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.FAILED
+          AND r.depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID
+          AND r.penaltyAmount > 0
+        ORDER BY r.date ASC
+    """
+    )
+    fun findUnpaidRecordsForDeposit(
+        @Param("userId") userId: Long,
+        @Param("groupId") groupId: Long
+    ): List<DailyRecord>
 
     @Query(
         """

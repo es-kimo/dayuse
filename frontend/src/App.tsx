@@ -10,6 +10,7 @@ import { InviteLandingPage } from './pages/InviteLandingPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { NewChallengePage } from './pages/NewChallengePage';
 import { ChallengeDetailPage } from './pages/ChallengeDetailPage';
+import { SettlementManagePage } from './pages/SettlementManagePage';
 
 export const App: React.FC = () => {
   return (
@@ -24,6 +25,7 @@ export const App: React.FC = () => {
           <Route path="/groups/:groupId" element={<GroupDetailPage />} />
           <Route path="/groups/:groupId/challenges" element={<GroupDetailPage />} />
           <Route path="/groups/:groupId/challenges/new" element={<NewChallengePage />} />
+          <Route path="/groups/:groupId/settlements" element={<SettlementManagePage />} />
           <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
           <Route path="/invite/:inviteCode" element={<InviteLandingPage />} />
           <Route path="/profile" element={<ProfilePage />} />
