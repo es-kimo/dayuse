@@ -19,8 +19,10 @@ import com.dayuse.domain.settlement.dto.CreateDepositReportRequest
 import com.dayuse.domain.settlement.service.SettlementService
 import com.dayuse.domain.user.User
 import com.dayuse.domain.user.UserRepository
+import com.dayuse.global.exception.BadRequestException
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,6 +31,7 @@ import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDate
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -203,35 +206,52 @@ class SettlementConcurrencyTest {
             )
         )
 
-        repeat(threadCount) {
-            executor.submit {
-                readyLatch.countDown()
-                try {
-                    startLatch.await()
-                    settlementService.createDepositReport(
-                        group.id,
-                        memberUser.id,
-                        request
-                    )
-                    successCount.incrementAndGet()
-                } catch (e: Exception) {
-                    failCount.incrementAndGet()
-                } finally {
-                    doneLatch.countDown()
+        val tasks = mutableListOf<Future<*>>()
+        try {
+            repeat(threadCount) {
+                tasks += executor.submit {
+                    readyLatch.countDown()
+                    try {
+                        startLatch.await()
+                        settlementService.createDepositReport(
+                            group.id,
+                            memberUser.id,
+                            request
+                        )
+                        successCount.incrementAndGet()
+                    } catch (e: BadRequestException) {
+                        assertEquals(
+                            "이미 입금 확인 대기 중이거나 완료된 기록이 포함되어 있습니다.",
+                            e.message,
+                            "실패한 요청은 중복 입금 신고로 거절되어야 합니다."
+                        )
+                        failCount.incrementAndGet()
+                    } finally {
+                        doneLatch.countDown()
+                    }
                 }
             }
-        }
 
-        readyLatch.await(
-            5,
-            TimeUnit.SECONDS
-        )
-        startLatch.countDown()
-        doneLatch.await(
-            10,
-            TimeUnit.SECONDS
-        )
-        executor.shutdown()
+            assertTrue(
+                readyLatch.await(5, TimeUnit.SECONDS),
+                "두 작업이 제한 시간 안에 준비되지 않았습니다."
+            )
+            startLatch.countDown()
+            assertTrue(
+                doneLatch.await(10, TimeUnit.SECONDS),
+                "두 입금 신고 작업이 제한 시간 안에 끝나지 않았습니다."
+            )
+            // 작업 스레드의 예상 밖 예외와 assertion 실패도 테스트 실패로 전달한다.
+            tasks.forEach { it.get(1, TimeUnit.SECONDS) }
+        } finally {
+            // 준비/완료 대기나 검증이 실패해도 남은 작업을 취소하고 종료를 기다린다.
+            tasks.forEach { it.cancel(true) }
+            executor.shutdownNow()
+            assertTrue(
+                executor.awaitTermination(10, TimeUnit.SECONDS),
+                "작업 취소 후에도 Executor가 종료되지 않았습니다."
+            )
+        }
 
         // 검증 1: 1개만 성공하고 1개는 차단됨
         assertEquals(
