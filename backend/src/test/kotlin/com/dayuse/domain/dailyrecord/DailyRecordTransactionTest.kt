@@ -61,12 +61,25 @@ class DailyRecordTransactionTest {
 
     @BeforeEach
     fun setUp() {
-        user = userRepository.save(User(kakaoId = "tx_user", nickname = "트랜잭션테스터"))
+        user = userRepository.save(
+            User(
+                kakaoId = "tx_user",
+                nickname = "트랜잭션테스터"
+            )
+        )
         group = groupRepository.save(
-            Group(name = "트랜잭션 모임", hostUserId = user.id, inviteCode = "INVITE-TX")
+            Group(
+                name = "트랜잭션 모임",
+                hostUserId = user.id,
+                inviteCode = "INVITE-TX"
+            )
         )
         groupMemberRepository.save(
-            GroupMember(groupId = group.id, userId = user.id, role = GroupRole.HOST)
+            GroupMember(
+                groupId = group.id,
+                userId = user.id,
+                role = GroupRole.HOST
+            )
         )
 
         challenge = challengeRepository.save(
@@ -86,21 +99,73 @@ class DailyRecordTransactionTest {
                 penaltyAmount = 10000
             )
         )
-        dailyRecordService.ensureDailyRecordsForParticipant(participant, challenge, today)
+        dailyRecordService.ensureDailyRecordsForParticipant(
+            participant,
+            challenge,
+            today
+        )
     }
 
     @Test
     @Suppress("UNUSED_VARIABLE")
     fun `미수행 확정 후 늦은 인증 등록 시 벌금이 차감되는 트랜잭션 무결성 검증`() {
-        val uncheckedRecords = dailyRecordRepository.findUncheckedRecords(user.id, group.id, today)
+        val uncheckedRecords = dailyRecordRepository.findUncheckedRecords(
+            user.id,
+            group.id,
+            today
+        )
         val targetRecord = uncheckedRecords.first()
 
-        // TODO [사용자 미션 3]: 미수행 확정 -> 늦은 인증 등록 시 벌금이 차감되고 상태가 정상 복구되는 트랜잭션 무결성을 검증하는 테스트 코드를 직접 작성하세요.
-        // 1. dailyRecordService.markFailed(targetRecord.id, user.id)를 호출하고 반환된 결과의 status가 FAILED, penaltyAmount가 10000원인지 단언(assert)하세요.
-        // 2. dailyRecordRepository.calculateUnpaidPenaltyAmount(user.id, group.id)가 10000원인지 단언하세요.
-        // 3. LateVerificationRequest(imageUrl = "...", comment = "...")를 생성하여 dailyRecordService.verifyLate(targetRecord.id, user.id, lateRequest)를 호출하세요.
-        // 4. 레코드를 DB에서 다시 조회(dailyRecordRepository.findById(targetRecord.id).get())하여 status == COMPLETED, penaltyAmount == 0, isLate == true인지 단언하세요.
-        // 5. dailyRecordRepository.calculateUnpaidPenaltyAmount(user.id, group.id)가 0원으로 차감 복구되었는지 단언하세요.
-        throw NotImplementedError("미션 3: 늦은 인증 벌금 차감 트랜잭션 무결성 검증 테스트를 직접 작성해보세요.")
+        val failedDetail = dailyRecordService.markFailed(
+            targetRecord.id,
+            user.id
+        )
+        assertEquals(
+            DailyRecordStatus.FAILED,
+            failedDetail.status
+        )
+        assertEquals(
+            10000,
+            failedDetail.penaltyAmount
+        )
+
+        val unpaidAfterFailed = dailyRecordRepository.calculateUnpaidPenaltyAmount(
+            user.id,
+            group.id
+        )
+        assertEquals(
+            10000,
+            unpaidAfterFailed
+        )
+
+        val lateRequest = LateVerificationRequest(
+            imageUrl = "verifications/${challenge.id}/${user.id}/tx_late.jpg",
+            comment = "늦은 인증 완료"
+        )
+        dailyRecordService.verifyLate(
+            targetRecord.id,
+            user.id,
+            lateRequest
+        )
+
+        val completedRecord = dailyRecordRepository.findById(targetRecord.id).get()
+        assertEquals(
+            DailyRecordStatus.COMPLETED,
+            completedRecord.status
+        )
+        assertEquals(
+            0,
+            completedRecord.penaltyAmount
+        )
+        assertTrue(completedRecord.isLate)
+
+        val unpaidAfterLate = dailyRecordRepository.calculateUnpaidPenaltyAmount(
+            user.id,
+            group.id
+        )
+        assertEquals(
+            0,
+            unpaidAfterLate
+        )
     }
 }
