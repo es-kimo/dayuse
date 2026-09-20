@@ -355,44 +355,21 @@ class SettlementService(
         return getReportDetail(report.id, hostUserId)
     }
 
+    // TODO [사용자 미션 5-2]: 모임장의 입금 승인 확인 취소(cancelConfirmation) 비즈니스 로직을 완성해 보세요.
+    // 🎓 핵심 질문: 모임장의 승인 취소 시 연결된 N개의 미납 기록을 다시 원복하고 누적액을 차감하는 복잡한 롤백을 @Transactional로 어떻게 일관성 있게 보장했나요?
+    // 
+    // 요구사항:
+    // 1. 입금 신고 조회 및 모임장 권한(HOST) 검증, 상태가 CONFIRMED인지 검증, 취소 사유(request.reason)가 비어있지 않은지 검증
+    // 2. DepositReport 엔티티 상태를 CANCELLED로 변경하고 취소 사유(cancelReason), 처리자(hostUserId), 처리시각을 기록 (report.cancelConfirmationByHost 사용)
+    // 3. DepositReportItemRepository로 해당 신고에 연결된 아이템들을 조회하고, 연관된 DailyRecord N건의 depositStatus를 UNPAID로 일괄 원복 (누적액 자동 차감)
+    // 4. DepositAuditLogRepository에 action = CONFIRMATION_CANCELLED_BY_HOST 감사 로그 생성 및 저장
+    // 5. getReportDetail(report.id, hostUserId) 반환
     fun cancelConfirmation(
         reportId: Long,
         hostUserId: Long,
         request: CancelConfirmationRequest
     ): DepositReportDetailResponse {
-        val report = depositReportRepository.findById(reportId)
-            .orElseThrow { ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)") }
-
-        validateHost(report.groupId, hostUserId)
-
-        if (report.status != DepositReportStatus.CONFIRMED) {
-            throw BadRequestException("확인 완료(CONFIRMED) 상태의 입금 건만 확인을 취소할 수 있습니다.")
-        }
-
-        val reason = request.reason.trim()
-        if (reason.isBlank()) {
-            throw BadRequestException("확인 취소 사유를 입력해 주세요.")
-        }
-
-        // 1. 신고 상태 확인 취소(CANCELLED) 및 사유 기록
-        report.cancelConfirmationByHost(hostUserId, reason)
-
-        // 2. 연관된 DailyRecord N건 depositStatus를 UNPAID로 일괄 원복 (누적액 자동 차감)
-        val items = depositReportItemRepository.findAllByDepositReportId(report.id)
-        val records = dailyRecordRepository.findAllById(items.map { it.dailyRecordId })
-        records.forEach { it.depositStatus = DepositStatus.UNPAID }
-
-        // 3. 감사 로그 저장
-        depositAuditLogRepository.save(
-            DepositAuditLog(
-                depositReportId = report.id,
-                action = DepositAuditAction.CONFIRMATION_CANCELLED_BY_HOST,
-                actorUserId = hostUserId,
-                reason = reason
-            )
-        )
-
-        return getReportDetail(report.id, hostUserId)
+        throw NotImplementedError("사용자 미션 5-2를 구현해 주세요.")
     }
 
     @Transactional(readOnly = true)

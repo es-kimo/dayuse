@@ -9,7 +9,9 @@ import java.time.LocalDate
 
 interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    // TODO [사용자 미션 5-1]: 입금 신고 시 동시성 충돌(이중 신고)을 방지하기 위해 비관적 락(SELECT ... FOR UPDATE)을 거는 쿼리 메서드를 완성해 보세요.
+    // 🎓 핵심 질문: 돈과 정산이 오가는 도메인에서 동시성 문제(이중 입금 신고, 동시 승인)를 InnoDB 비관적 락(SELECT ... FOR UPDATE)으로 어떻게 해결할 수 있을까요?
+    // 힌트: @Lock(LockModeType.PESSIMISTIC_WRITE) 어노테이션을 부착하여 조회 시점에 쓰기 락을 획득하도록 설정합니다.
     @Query("SELECT r FROM DailyRecord r WHERE r.id IN :ids")
     fun findAllByIdInWithLock(@Param("ids") ids: Collection<Long>): List<DailyRecord>
 
