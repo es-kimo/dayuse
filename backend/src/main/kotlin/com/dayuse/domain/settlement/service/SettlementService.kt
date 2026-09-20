@@ -415,8 +415,8 @@ class SettlementService(
         hostUserId: Long,
         request: CancelConfirmationRequest
     ): DepositReportDetailResponse {
-        val report = depositReportRepository.findById(reportId)
-            .orElseThrow { ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)") }
+        val report = depositReportRepository.findByIdWithLock(reportId)
+            ?: throw ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)")
 
         validateHost(
             report.groupId,

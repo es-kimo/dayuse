@@ -15,6 +15,7 @@ import com.dayuse.domain.group.GroupMember
 import com.dayuse.domain.group.GroupMemberRepository
 import com.dayuse.domain.group.GroupRepository
 import com.dayuse.domain.group.GroupRole
+import com.dayuse.domain.settlement.dto.CancelConfirmationRequest
 import com.dayuse.domain.settlement.dto.CreateDepositReportRequest
 import com.dayuse.domain.settlement.service.SettlementService
 import com.dayuse.domain.user.User
@@ -299,4 +300,67 @@ class SettlementConcurrencyTest {
             auditLogs[0].action
         )
     }
+    @Test
+    fun `동일한 신고의 승인 취소는 한 번만 성공하고 감사 로그도 한 건만 남는다`() {
+        val report = settlementService.createDepositReport(
+            group.id, memberUser.id,
+            CreateDepositReportRequest(
+                depositorName = "동시취소입금자",
+                depositDate = today,
+                totalAmount = 10000,
+                dailyRecordIds = listOf(record1.id, record2.id)
+            )
+        )
+        settlementService.confirmDepositReport(report.id, hostUser.id)
+
+        val executor = Executors.newFixedThreadPool(2)
+        val ready = CountDownLatch(2)
+        val start = CountDownLatch(1)
+        val tasks = mutableListOf<Future<Boolean>>()
+        val outcomes: List<Boolean>
+        try {
+            repeat(2) {
+                tasks += executor.submit<Boolean> {
+                    ready.countDown()
+                    start.await()
+                    try {
+                        settlementService.cancelConfirmation(
+                            report.id, hostUser.id,
+                            CancelConfirmationRequest(reason = "입금 오확인")
+                        )
+                        true
+                    } catch (e: BadRequestException) {
+                        assertEquals(
+                            "확인 완료(CONFIRMED) 상태의 입금 건만 확인을 취소할 수 있습니다.",
+                            e.message
+                        )
+                        false
+                    }
+                }
+            }
+            assertTrue(ready.await(5, TimeUnit.SECONDS), "취소 작업 준비 시간 초과")
+            start.countDown()
+            outcomes = tasks.map { it.get(10, TimeUnit.SECONDS) }
+        } finally {
+            tasks.forEach { it.cancel(true) }
+            executor.shutdownNow()
+            assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS), "취소 작업 종료 시간 초과")
+        }
+
+        assertEquals(1, outcomes.count { it }, "승인 취소는 한 번만 성공해야 합니다.")
+        assertEquals(1, outcomes.count { !it }, "중복 취소는 상태 검사로 거절해야 합니다.")
+        assertEquals(DepositReportStatus.CANCELLED, depositReportRepository.findById(report.id).get().status)
+        listOf(record1.id, record2.id).forEach {
+            assertEquals(DepositStatus.UNPAID, dailyRecordRepository.findById(it).get().depositStatus)
+        }
+        val logs = depositAuditLogRepository.findAllByDepositReportIdOrderByCreatedAtAsc(report.id)
+            .filter { it.action == DepositAuditAction.CONFIRMATION_CANCELLED_BY_HOST }
+        assertEquals(1, logs.size)
+        assertEquals(hostUser.id, logs.single().actorUserId)
+        assertEquals("입금 오확인", logs.single().reason)
+        val summary = settlementService.getSettlementSummary(group.id, hostUser.id)
+        assertEquals(0, summary.confirmedAmount)
+        assertEquals(10000, summary.unpaidAmount)
+    }
+
 }

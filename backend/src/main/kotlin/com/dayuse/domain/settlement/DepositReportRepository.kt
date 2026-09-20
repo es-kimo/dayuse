@@ -1,10 +1,16 @@
 package com.dayuse.domain.settlement
 
+import jakarta.persistence.LockModeType
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
 interface DepositReportRepository : JpaRepository<DepositReport, Long> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM DepositReport r WHERE r.id = :id")
+    fun findByIdWithLock(@Param("id") id: Long): DepositReport?
+
     fun findAllByGroupIdOrderByCreatedAtDesc(groupId: Long): List<DepositReport>
 
     fun findAllByGroupIdAndStatusOrderByCreatedAtDesc(
