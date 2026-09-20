@@ -228,7 +228,7 @@ export const GroupDetailPage: React.FC = () => {
     if (!groupId) return;
     setChallengesLoading(true);
     try {
-      const list = await challengesApi.getGroupChallenges(Number(groupId), challengeFilter);
+      const list = await challengesApi.getGroupChallenges(Number(groupId));
       setChallenges(list);
     } catch (err) {
       console.error('Failed to fetch challenges:', err);
@@ -237,8 +237,13 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
+  const filteredChallenges = challengeFilter === 'ALL'
+    ? challenges
+    : challenges.filter((c) => c.status === challengeFilter);
+
   useEffect(() => {
     fetchGroup();
+    fetchChallenges();
   }, [groupId]);
 
   useEffect(() => {
@@ -253,12 +258,6 @@ export const GroupDetailPage: React.FC = () => {
       }
     }
   }, [groupId, activeTab]);
-
-  useEffect(() => {
-    if (groupId && activeTab === 'challenges') {
-      fetchChallenges();
-    }
-  }, [groupId, challengeFilter]);
 
   const handleVerificationSuccess = () => {
     setActiveVerificationAction(null);
@@ -524,9 +523,13 @@ export const GroupDetailPage: React.FC = () => {
                 첫 챌린지 시작하기
               </button>
             </div>
+          ) : filteredChallenges.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-2xl text-center my-4">
+              <p className="text-xs text-slate-400">해당 상태의 챌린지가 없습니다.</p>
+            </div>
           ) : (
             <div className="space-y-3 pb-6">
-              {challenges.map((c) => (
+              {filteredChallenges.map((c) => (
                 <div
                   key={c.id}
                   onClick={() => navigate(`/challenges/${c.id}`)}
