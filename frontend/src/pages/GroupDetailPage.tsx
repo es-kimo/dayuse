@@ -5,6 +5,7 @@ import { challengesApi } from '../api/challenges';
 import { todayApi } from '../api/today';
 import { verificationsApi } from '../api/verifications';
 import { recordsApi } from '../api/records';
+import { settlementApi } from '../api/settlement';
 import type {
   GroupDetail,
   ChallengeSummary,
@@ -12,6 +13,7 @@ import type {
   FeedItem,
   StatusSummaryResponse,
   UncheckedRecordItem,
+  SettlementSummary,
 } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import { TodayActionSection } from '../components/TodayActionSection';
@@ -20,6 +22,8 @@ import { GroupFeedSection } from '../components/GroupFeedSection';
 import { CommentsBottomSheet } from '../components/CommentsBottomSheet';
 import { GroupStatusSummaryBanner } from '../components/GroupStatusSummaryBanner';
 import { UncheckedRecordsBottomSheet } from '../components/UncheckedRecordsBottomSheet';
+import { GroupSettlementCard } from '../components/GroupSettlementCard';
+import { DepositReportModal } from '../components/DepositReportModal';
 import {
   ArrowLeft,
   Copy,
@@ -65,6 +69,11 @@ export const GroupDetailPage: React.FC = () => {
     recordId: number;
     action: { challengeId: number; challengeTitle: string; verificationCriteria?: string };
   } | null>(null);
+
+  // 정산 및 계좌 상태 (F07)
+  const [settlementSummary, setSettlementSummary] = useState<SettlementSummary | null>(null);
+  const [settlementLoading, setSettlementLoading] = useState<boolean>(false);
+  const [showDepositModal, setShowDepositModal] = useState<boolean>(false);
 
   // 모임 피드 상태
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -139,6 +148,19 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
+  const fetchSettlementSummary = async () => {
+    if (!groupId) return;
+    setSettlementLoading(true);
+    try {
+      const data = await settlementApi.getSettlementSummary(Number(groupId));
+      setSettlementSummary(data);
+    } catch (err) {
+      console.error('Failed to fetch settlement summary:', err);
+    } finally {
+      setSettlementLoading(false);
+    }
+  };
+
   const fetchStatusSummary = async () => {
     if (!groupId) return;
     setSummaryLoading(true);
@@ -174,6 +196,7 @@ export const GroupDetailPage: React.FC = () => {
     try {
       await recordsApi.markFailed(recordId);
       await fetchStatusSummary();
+      await fetchSettlementSummary();
       await fetchUncheckedRecords();
     } catch (err: any) {
       console.error('Failed to mark failed:', err);
@@ -195,6 +218,7 @@ export const GroupDetailPage: React.FC = () => {
   const handleLateVerificationSuccess = () => {
     setLateVerificationTarget(null);
     fetchStatusSummary();
+    fetchSettlementSummary();
     fetchUncheckedRecords();
     fetchTodayActions();
     fetchFeed(0);
@@ -204,7 +228,7 @@ export const GroupDetailPage: React.FC = () => {
     if (!groupId) return;
     setChallengesLoading(true);
     try {
-      const list = await challengesApi.getGroupChallenges(Number(groupId), challengeFilter);
+      const list = await challengesApi.getGroupChallenges(Number(groupId));
       setChallenges(list);
     } catch (err) {
       console.error('Failed to fetch challenges:', err);
@@ -213,14 +237,20 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
+  const filteredChallenges = challengeFilter === 'ALL'
+    ? challenges
+    : challenges.filter((c) => c.status === challengeFilter);
+
   useEffect(() => {
     fetchGroup();
+    fetchChallenges();
   }, [groupId]);
 
   useEffect(() => {
     if (groupId) {
       if (activeTab === 'home') {
         fetchStatusSummary();
+        fetchSettlementSummary();
         fetchTodayActions();
         fetchFeed(0);
       } else if (activeTab === 'challenges') {
@@ -229,15 +259,10 @@ export const GroupDetailPage: React.FC = () => {
     }
   }, [groupId, activeTab]);
 
-  useEffect(() => {
-    if (groupId && activeTab === 'challenges') {
-      fetchChallenges();
-    }
-  }, [groupId, challengeFilter]);
-
   const handleVerificationSuccess = () => {
     setActiveVerificationAction(null);
     fetchStatusSummary();
+    fetchSettlementSummary();
     fetchTodayActions();
     fetchFeed(0);
   };
@@ -408,6 +433,19 @@ export const GroupDetailPage: React.FC = () => {
             onOpenUncheckedSheet={handleOpenUncheckedSheet}
           />
 
+          {/* 모임 정산 & 계좌 카드 (F07) */}
+          <GroupSettlementCard
+            groupId={Number(groupId)}
+            isHost={!!group?.isHost}
+            summary={settlementSummary}
+            loading={settlementLoading}
+            onRefresh={() => {
+              fetchSettlementSummary();
+              fetchStatusSummary();
+            }}
+            onOpenDepositModal={() => setShowDepositModal(true)}
+          />
+
           {/* 오늘 할 일 */}
           <TodayActionSection
             todayActions={todayActions}
@@ -485,9 +523,13 @@ export const GroupDetailPage: React.FC = () => {
                 첫 챌린지 시작하기
               </button>
             </div>
+          ) : filteredChallenges.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-2xl text-center my-4">
+              <p className="text-xs text-slate-400">해당 상태의 챌린지가 없습니다.</p>
+            </div>
           ) : (
             <div className="space-y-3 pb-6">
-              {challenges.map((c) => (
+              {filteredChallenges.map((c) => (
                 <div
                   key={c.id}
                   onClick={() => navigate(`/challenges/${c.id}`)}
@@ -667,6 +709,19 @@ export const GroupDetailPage: React.FC = () => {
           onCommentCountChange={handleCommentCountChange}
         />
       )}
+
+      {/* 미수행 입금 신고 모달 */}
+      <DepositReportModal
+        groupId={Number(groupId)}
+        isOpen={showDepositModal}
+        account={settlementSummary?.account}
+        onClose={() => setShowDepositModal(false)}
+        onSuccess={() => {
+          fetchSettlementSummary();
+          fetchStatusSummary();
+          fetchUncheckedRecords();
+        }}
+      />
     </MobileLayout>
   );
 };

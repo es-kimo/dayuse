@@ -1,4 +1,4 @@
-# 🎯 사용자 핵심 학습 미션 가이드 (Issue #4)
+# 🎯 사용자 핵심 학습 미션 가이드 (Issue #5)
 
 이 문서는 사용자가 직접 구현하고 고민해 보아야 하는 **3가지 핵심 학습 미션** 안내서입니다.
 구현 후 `cd backend && ./gradlew test`를 실행하면 본인의 코드가 올바르게 동작하는지 즉시 검증할 수 있습니다.
@@ -9,69 +9,67 @@
 ---
 
 ## 🎓 이 이슈를 끝내고 답할 수 있게 될 핵심 질문
-1. **"상태가 5가지(`예정`, `인증대기`, `완료`, `미확인`, `미수행`)로 변화하는 복잡한 상태 머신을 DB에 어떻게 영속화하고 전이시켰나요?"**
-2. **"자정이 지났을 때 대량의 데이터를 매일 배치로 일괄 업데이트하지 않고도 실시간 쿼리로 성능 저하 없이 상태를 판별하는 방법은?"**
-3. **"사용자별 미수행 벌금을 집계할 때 복잡한 조건(미확인 제외, 다중 챌린지 합산)을 SQL 집계 함수(`SUM`, `GROUP BY`)로 어떻게 안전하게 작성하나요?"**
+1. **"돈과 정산이 오가는 도메인에서 동시성 문제(이중 입금 신고, 동시 승인)를 InnoDB 비관적 락(`SELECT ... FOR UPDATE`)으로 어떻게 해결했나요?"**
+2. **"모임장의 승인 취소 시 연결된 N개의 미납 기록을 다시 원복하고 누적액을 차감하는 복잡한 롤백을 `@Transactional`로 어떻게 일관성 있게 보장했나요?"**
+3. **"정산 상태의 모든 변경 이력을 추적하기 위해 별도의 감사 로그(Audit Log) 테이블을 설계한 이유는 무엇인가요?"**
 
 ---
 
-## 📌 미션 1: `DailyRecord` 엔티티 상태 전이 메서드 (`markFailed()`, `verifyLate()`) 직접 구현
-- **관련 파일**:
-  - `backend/src/main/kotlin/com/dayuse/domain/dailyrecord/DailyRecord.kt`
-- **목표**:
-  도메인 엔티티 내에 날짜별 5대 상태 머신의 전이 규칙과 정산 락(`depositStatus != UNPAID`) 가드 로직을 응집도 높게 캡슐화합니다.
-- **작업 내용**:
-  1. `markFailed(penalty: Int)`:
-     - 락 검사: `isLocked()`가 `true`이면 `BadRequestException("정산 진행 중이거나 완료된 기록은 상태를 변경할 수 없습니다.")`를 던집니다.
-     - 전이 조건 검사: 현재 상태가 `DailyRecordStatus.UNCHECKED`가 아니라면 `BadRequestException("미확인 상태의 기록만 미수행으로 확정할 수 있습니다.")`를 던집니다.
-     - 상태 변경: `status`를 `FAILED`로 변경하고, `penaltyAmount`에 전달받은 약정 금액(`penalty`)을 설정하며, `failedAt`에 현재 시각(`LocalDateTime.now()`)을 기록합니다.
-  2. `verifyLate(verificationId: Long)`:
-     - 락 검사: `isLocked()`가 `true`이면 `BadRequestException("정산 진행 중이거나 완료된 기록은 인증을 등록할 수 없습니다.")`를 던집니다.
-     - 전이 조건 검사: 현재 상태가 `UNCHECKED` 또는 `FAILED`가 아니라면 `BadRequestException("미확인 또는 미수행 상태의 기록만 늦은 인증을 등록할 수 있습니다.")`를 던집니다.
-     - 상태 변경: `status`를 `COMPLETED`로 변경하고, `verificationId`를 연결하며, `penaltyAmount`를 `0`으로 즉시 복구(차감)하고, `isLate`를 `true`로 설정합니다.
-- **검증 테스트**: `DailyRecordIntegrationTest`, `DailyRecordTransactionTest`
-
----
-
-## 📌 미션 2: `DailyRecordRepository` 미수행 미납 벌금(`SUM`) 집계 쿼리 직접 작성
+## 📌 미션 1: `DailyRecordRepository` 비관적 락(`SELECT ... FOR UPDATE`) 쿼리 완성
 - **관련 파일**:
   - `backend/src/main/kotlin/com/dayuse/domain/dailyrecord/DailyRecordRepository.kt`
 - **목표**:
-  미확인(`UNCHECKED`) 날짜는 벌금에 절대 산입되지 않고, 오직 사용자가 명시적으로 확정한 미수행(`FAILED`)이면서 아직 정산되지 않은(`UNPAID`) 약정 벌금만을 안전하게 합산하는 JPQL 집계 쿼리를 작성합니다.
+  모임원이 미납 기록들을 선택해 입금을 신고할 때, 동일한 일일 기록에 대해 동시에 중복 입금 신고가 발생하는 것을 DB 레벨에서 원천 차단하기 위해 `SELECT ... FOR UPDATE` 비관적 쓰기 락(`PESSIMISTIC_WRITE`)을 적용합니다.
 - **작업 내용**:
-  `calculateUnpaidPenaltyAmount` 메서드의 `@Query`에 JPQL을 작성합니다.
-  - ⚠️ **주의**: 집계 조건에 일치하는 행이 0건일 때 SQL의 `SUM` 함수는 `null`을 반환하므로, Kotlin의 Non-null 타입인 `Int`로 안전하게 매핑되도록 `COALESCE(SUM(r.penaltyAmount), 0)` 함수를 사용해야 합니다!
+  `DailyRecordRepository`의 `findAllByIdInWithLock` 메서드 위에 Spring Data JPA의 `@Lock(LockModeType.PESSIMISTIC_WRITE)` 어노테이션을 부여합니다.
   ```kotlin
-  @Query("""
-      SELECT COALESCE(SUM(r.penaltyAmount), 0)
-      FROM DailyRecord r
-      WHERE r.userId = :userId
-        AND r.groupId = :groupId
-        AND r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.FAILED
-        AND r.depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID
-  """)
-  fun calculateUnpaidPenaltyAmount(
-      @Param("userId") userId: Long,
-      @Param("groupId") groupId: Long
-  ): Int
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("SELECT r FROM DailyRecord r WHERE r.id IN :ids")
+  fun findAllByIdInWithLock(@Param("ids") ids: Collection<Long>): List<DailyRecord>
   ```
-- **검증 테스트**: `DailyRecordIntegrationTest`, `DailyRecordTransactionTest`
+  - **작동 원리**: 트랜잭션이 시작되고 해당 메서드로 레코드들을 조회할 때 InnoDB가 해당 레코드 행들에 X-Lock(배타 락)을 겁니다. 동일 레코드에 대해 동시에 실행된 다른 트랜잭션은 락이 해제될 때까지 대기하다가, 먼저 실행된 트랜잭션이 상태를 `WAITING_CONFIRMATION`으로 전이한 뒤 커밋하면 이후에 락을 얻게 됩니다. 이때 상태 검사(`depositStatus == UNPAID`)에 걸려 `BadRequestException`이 발생하며 중복 신고가 안전하게 방어됩니다.
+- **검증 테스트**: `SettlementConcurrencyTest`
 
 ---
 
-## 📌 미션 3: 늦은 인증 등록 시 벌금 차감 트랜잭션 무결성 검증 테스트 작성
+## 📌 미션 2: `SettlementService` 모임장 승인 확인 취소(롤백) 비즈니스 로직 구현
 - **관련 파일**:
-  - `backend/src/test/kotlin/com/dayuse/domain/dailyrecord/DailyRecordTransactionTest.kt`
+  - `backend/src/main/kotlin/com/dayuse/domain/settlement/service/SettlementService.kt`
 - **목표**:
-  미수행 확정으로 부과되었던 약정 벌금(10,000원)이 늦은 사진 인증 등록 시 즉시 0원으로 복구되고, 미납 벌금 집계에서도 정확히 차감되는지 트랜잭션 무결성을 직접 테스트 코드로 검증합니다.
+  모임장이 실수로 입금을 잘못 승인했을 때, 한 번의 트랜잭션(`@Transactional`) 안에서 승인 상태를 취소(`CANCELLED`)하고 연결된 N개의 일일 미수행 기록을 다시 `UNPAID`로 원복하며, 감사 로그를 안전하게 남기는 복합 롤백 로직을 구현합니다.
 - **작업 내용**:
-  `DailyRecordTransactionTest.kt`의 `미수행 확정 후 늦은 인증 등록 시 벌금이 차감되는 트랜잭션 무결성 검증` 테스트 메서드 내부의 `TODO`를 구현합니다:
-  1. `val failedDetail = dailyRecordService.markFailed(targetRecord.id, user.id)` 호출 후 `assertEquals(DailyRecordStatus.FAILED, failedDetail.status)`, `assertEquals(10000, failedDetail.penaltyAmount)` 검증
-  2. `dailyRecordRepository.calculateUnpaidPenaltyAmount(user.id, group.id)`가 `10000`원인지 검증
-  3. `LateVerificationRequest(imageUrl = "...", comment = "...")`를 생성하여 `dailyRecordService.verifyLate(targetRecord.id, user.id, lateRequest)` 호출
-  4. DB에서 레코드를 다시 조회(`dailyRecordRepository.findById(targetRecord.id).get()`)하여 `COMPLETED`, `penaltyAmount == 0`, `isLate == true`인지 검증
-  5. `dailyRecordRepository.calculateUnpaidPenaltyAmount(user.id, group.id)`가 `0`원으로 차감 복구되었는지 검증
-- **검증 테스트**: `DailyRecordTransactionTest`
+  `SettlementService.kt`의 `cancelConfirmation` 메서드 내부를 구현합니다:
+  1. `reportId`로 `DepositReport` 조회 (미존재 시 `ResourceNotFoundException`)
+  2. 모임장 권한 검증: `validateHost(report.groupId, hostUserId)`
+  3. 상태 검증: 현재 신고 상태가 `DepositReportStatus.CONFIRMED`가 아니면 `BadRequestException("확인 완료(CONFIRMED) 상태의 입금 건만 확인을 취소할 수 있습니다.")`
+  4. 취소 사유 검증: `request.reason.trim().isBlank()`이면 `BadRequestException("확인 취소 사유를 입력해 주세요.")`
+  5. 신고 상태 갱신: `report.cancelConfirmationByHost(hostUserId, reason)` 호출
+  6. 연관 기록 원복: `depositReportItemRepository.findAllByDepositReportId(report.id)`로 아이템들을 찾고, 연관된 `DailyRecord` N건을 조회하여 `record.depositStatus = DepositStatus.UNPAID`로 일괄 원복
+  7. 감사 로그 생성 및 저장: `DepositAuditLog`(`depositReportId = report.id`, `action = DepositAuditAction.CONFIRMATION_CANCELLED_BY_HOST`, `actorUserId = hostUserId`, `reason = reason`)를 생성해 `depositAuditLogRepository.save()`
+  8. `return getReportDetail(report.id, hostUserId)` 반환
+- **검증 테스트**: `SettlementIntegrationTest > 모임장이 승인을 취소하면 누적액에서 차감되고 연결 기록들이 다시 미납으로 안전하게 원복된다()`
+
+---
+
+## 📌 미션 3: `SettlementConcurrencyTest` 멀티스레드 동시성 테스트 코드 작성
+- **관련 파일**:
+  - `backend/src/test/kotlin/com/dayuse/domain/settlement/SettlementConcurrencyTest.kt`
+- **목표**:
+  멀티스레드(`ExecutorService`, `CountDownLatch`) 환경을 구성하여 2개의 스레드가 동일한 미납 기록들에 대해 동시에 `createDepositReport`를 호출할 때, 비관적 락으로 인해 1건만 성공하고 1건은 차단되는지 검증하는 테스트 코드를 작성합니다.
+- **작업 내용**:
+  `SettlementConcurrencyTest.kt`의 테스트 메서드 내부를 구현합니다:
+  1. `threadCount = 2`, `Executors.newFixedThreadPool(threadCount)`, `readyLatch = CountDownLatch(threadCount)`, `startLatch = CountDownLatch(1)`, `doneLatch = CountDownLatch(threadCount)` 준비
+  2. `successCount = AtomicInteger(0)`, `failCount = AtomicInteger(0)` 카운터 생성
+  3. `request = CreateDepositReportRequest(depositorName = "동시성입금자", depositDate = today, totalAmount = 10000, dailyRecordIds = listOf(record1.id, record2.id))` 생성
+  4. 두 스레드가 `readyLatch.countDown()` 후 `startLatch.await()`로 신호를 기다렸다가, 동시에 `settlementService.createDepositReport(group.id, memberUser.id, request)`를 호출하도록 실행
+  5. `readyLatch.await()`, `startLatch.countDown()`, `doneLatch.await()`로 동시 실행 및 종료 대기
+  6. 검증:
+     - `assertEquals(1, successCount.get())`
+     - `assertEquals(1, failCount.get())`
+     - `depositReportRepository.findAllByGroupIdOrderByCreatedAtDesc(group.id).size == 1`
+     - `DailyRecord`들의 `depositStatus == DepositStatus.WAITING_CONFIRMATION`
+     - `DepositAuditLog`의 `REPORTED` 액션이 1건 존재
+- **검증 테스트**: `SettlementConcurrencyTest`
 
 ---
 
@@ -81,11 +79,9 @@ cd backend
 ./gradlew test
 ```
 현재 빈칸 스텁 상태에서는 해당 미션 관련 테스트들이 **FAILED (RED)** 상태입니다:
-- `DailyRecordTransactionTest > 미수행 확정 후 늦은 인증 등록 시 벌금이 차감되는 트랜잭션 무결성 검증()`
-- `DailyRecordIntegrationTest > DoD 2 사용자가 미수행을 확정했을 때만 정확히 약정 금액이 미납금에 산입된다()`
-- `DailyRecordIntegrationTest > DoD 3 과거 미확인 또는 미수행 날짜에 늦은 인증을 올리면 완료로 변경되고 미납 벌금이 즉시 제외된다()`
-- `DailyRecordIntegrationTest > DoD 4 여러 챌린지를 미수행한 경우 각 챌린지의 약정 벌금이 정확히 누적 합산된다()`
+- `SettlementConcurrencyTest > 동일한 미납 기록들에 대해 2개의 스레드가 동시에 입금 신고를 시도할 때 비관적 락으로 1건만 성공하고 중복 처리가 방어된다()`
+- `SettlementIntegrationTest > 모임장이 승인을 취소하면 누적액에서 차감되고 연결 기록들이 다시 미납으로 안전하게 원복된다()`
 
-위 3가지 미션을 순서대로 채워 넣으면 모든 테스트(90개)가 **BUILD SUCCESSFUL (GREEN)**으로 전환됩니다!
+위 3가지 미션을 순서대로 채워 넣으면 모든 테스트(101개)가 **BUILD SUCCESSFUL (GREEN)**으로 전환됩니다!
 미션을 완료한 뒤 언제든지 `git diff HEAD~1`로 이전 완성본과 본인의 구현을 비교해 보세요.
 

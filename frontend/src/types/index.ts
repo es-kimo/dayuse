@@ -266,4 +266,100 @@ export interface ChallengeCalendarResponse {
   participants: ParticipantCalendarItem[];
 }
 
+export type DepositReportStatus = 'WAITING_CONFIRMATION' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED';
+export type DepositAuditAction =
+  | 'REPORTED'
+  | 'CANCELLED_BY_USER'
+  | 'CONFIRMED_BY_HOST'
+  | 'REJECTED_BY_HOST'
+  | 'CONFIRMATION_CANCELLED_BY_HOST';
+
+export interface GroupAccount {
+  id: number;
+  groupId: number;
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+  updatedAt?: string | null;
+}
+
+export interface GroupAccountPayload {
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+}
+
+export interface UnpaidRecordItem {
+  id: number;
+  challengeId: number;
+  challengeTitle: string;
+  date: string;
+  penaltyAmount: number;
+  status: DailyRecordStatus;
+}
+
+export interface CreateDepositReportPayload {
+  depositorName: string;
+  depositDate: string;
+  totalAmount: number;
+  dailyRecordIds: number[];
+}
+
+export interface RejectDepositReportPayload {
+  reason: string;
+}
+
+export interface CancelConfirmationPayload {
+  reason: string;
+}
+
+export interface DepositReportItemDetail {
+  id: number;
+  dailyRecordId: number;
+  date: string;
+  challengeId: number;
+  challengeTitle: string;
+  penaltyAmount: number;
+}
+
+export interface DepositAuditLogItem {
+  id: number;
+  action: DepositAuditAction;
+  actorUserId: number;
+  actorNickname?: string | null;
+  reason?: string | null;
+  createdAt: string;
+}
+
+export interface DepositReportDetail {
+  id: number;
+  groupId: number;
+  userId: number;
+  userNickname: string;
+  userProfileImageUrl?: string | null;
+  depositorName: string;
+  depositDate: string;
+  totalAmount: number;
+  status: DepositReportStatus;
+  rejectReason?: string | null;
+  cancelReason?: string | null;
+  processedByUserId?: number | null;
+  processedByNickname?: string | null;
+  processedAt?: string | null;
+  createdAt: string;
+  items: DepositReportItemDetail[];
+  auditLogs: DepositAuditLogItem[];
+}
+
+export interface SettlementSummary {
+  groupId: number;
+  unpaidAmount: number;
+  waitingAmount: number;
+  confirmedAmount: number;
+  myUnpaidAmount: number;
+  accountRegistered: boolean;
+  account?: GroupAccount | null;
+}
+
+
 
