@@ -50,14 +50,27 @@ class SettlementService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getGroupAccount(groupId: Long, userId: Long): GroupAccountResponse? {
-        validateMember(groupId, userId)
+    fun getGroupAccount(
+        groupId: Long,
+        userId: Long
+    ): GroupAccountResponse? {
+        validateMember(
+            groupId,
+            userId
+        )
         val account = groupAccountRepository.findByGroupId(groupId) ?: return null
         return toAccountResponse(account)
     }
 
-    fun updateGroupAccount(groupId: Long, userId: Long, request: GroupAccountRequest): GroupAccountResponse {
-        validateHost(groupId, userId)
+    fun updateGroupAccount(
+        groupId: Long,
+        userId: Long,
+        request: GroupAccountRequest
+    ): GroupAccountResponse {
+        validateHost(
+            groupId,
+            userId
+        )
         if (!groupRepository.existsById(groupId)) {
             throw ResourceNotFoundException("모임을 찾을 수 없습니다. (ID: $groupId)")
         }
@@ -76,9 +89,18 @@ class SettlementService(
     }
 
     @Transactional(readOnly = true)
-    fun getUnpaidRecords(groupId: Long, userId: Long): List<UnpaidRecordItemResponse> {
-        validateMember(groupId, userId)
-        val records = dailyRecordRepository.findUnpaidRecordsForDeposit(userId, groupId)
+    fun getUnpaidRecords(
+        groupId: Long,
+        userId: Long
+    ): List<UnpaidRecordItemResponse> {
+        validateMember(
+            groupId,
+            userId
+        )
+        val records = dailyRecordRepository.findUnpaidRecordsForDeposit(
+            userId,
+            groupId
+        )
         if (records.isEmpty()) return emptyList()
 
         val challengeIds = records.map { it.challengeId }.distinct()
@@ -101,7 +123,10 @@ class SettlementService(
         userId: Long,
         request: CreateDepositReportRequest
     ): DepositReportDetailResponse {
-        validateMember(groupId, userId)
+        validateMember(
+            groupId,
+            userId
+        )
 
         if (!groupAccountRepository.existsByGroupId(groupId)) {
             throw BadRequestException("모임 계좌가 등록되지 않아 입금 신고를 진행할 수 없습니다. (ACCOUNT_NOT_REGISTERED)")
@@ -185,7 +210,10 @@ class SettlementService(
         )
     }
 
-    fun cancelDepositReport(reportId: Long, userId: Long): DepositReportDetailResponse {
+    fun cancelDepositReport(
+        reportId: Long,
+        userId: Long
+    ): DepositReportDetailResponse {
         val report = depositReportRepository.findById(reportId)
             .orElseThrow { ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)") }
 
@@ -214,7 +242,10 @@ class SettlementService(
             )
         )
 
-        return getReportDetail(report.id, userId)
+        return getReportDetail(
+            report.id,
+            userId
+        )
     }
 
     @Transactional(readOnly = true)
@@ -223,10 +254,16 @@ class SettlementService(
         userId: Long,
         status: DepositReportStatus?
     ): List<DepositReportDetailResponse> {
-        validateMember(groupId, userId)
+        validateMember(
+            groupId,
+            userId
+        )
 
         val reports = if (status != null) {
-            depositReportRepository.findAllByGroupIdAndStatusOrderByCreatedAtDesc(groupId, status)
+            depositReportRepository.findAllByGroupIdAndStatusOrderByCreatedAtDesc(
+                groupId,
+                status
+            )
         } else {
             depositReportRepository.findAllByGroupIdOrderByCreatedAtDesc(groupId)
         }
@@ -285,11 +322,17 @@ class SettlementService(
         }
     }
 
-    fun confirmDepositReport(reportId: Long, hostUserId: Long): DepositReportDetailResponse {
+    fun confirmDepositReport(
+        reportId: Long,
+        hostUserId: Long
+    ): DepositReportDetailResponse {
         val report = depositReportRepository.findById(reportId)
             .orElseThrow { ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)") }
 
-        validateHost(report.groupId, hostUserId)
+        validateHost(
+            report.groupId,
+            hostUserId
+        )
 
         if (report.status != DepositReportStatus.WAITING_CONFIRMATION) {
             throw BadRequestException("확인 대기(WAITING_CONFIRMATION) 상태의 입금 신고만 승인할 수 있습니다.")
@@ -312,7 +355,10 @@ class SettlementService(
             )
         )
 
-        return getReportDetail(report.id, hostUserId)
+        return getReportDetail(
+            report.id,
+            hostUserId
+        )
     }
 
     fun rejectDepositReport(
@@ -323,7 +369,10 @@ class SettlementService(
         val report = depositReportRepository.findById(reportId)
             .orElseThrow { ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)") }
 
-        validateHost(report.groupId, hostUserId)
+        validateHost(
+            report.groupId,
+            hostUserId
+        )
 
         if (report.status != DepositReportStatus.WAITING_CONFIRMATION) {
             throw BadRequestException("확인 대기(WAITING_CONFIRMATION) 상태의 입금 신고만 반려할 수 있습니다.")
@@ -335,7 +384,10 @@ class SettlementService(
         }
 
         // 1. 신고 반려 처리
-        report.rejectByHost(hostUserId, reason)
+        report.rejectByHost(
+            hostUserId,
+            reason
+        )
 
         // 2. 연관된 DailyRecord depositStatus를 UNPAID로 원복
         val items = depositReportItemRepository.findAllByDepositReportId(report.id)
@@ -352,39 +404,79 @@ class SettlementService(
             )
         )
 
-        return getReportDetail(report.id, hostUserId)
+        return getReportDetail(
+            report.id,
+            hostUserId
+        )
     }
 
-    // TODO [사용자 미션 5-2]: 모임장의 입금 승인 확인 취소(cancelConfirmation) 비즈니스 로직을 완성해 보세요.
-    // 🎓 핵심 질문: 모임장의 승인 취소 시 연결된 N개의 미납 기록을 다시 원복하고 누적액을 차감하는 복잡한 롤백을 @Transactional로 어떻게 일관성 있게 보장했나요?
-    // 
-    // 요구사항:
-    // 1. 입금 신고 조회 및 모임장 권한(HOST) 검증, 상태가 CONFIRMED인지 검증, 취소 사유(request.reason)가 비어있지 않은지 검증
-    // 2. DepositReport 엔티티 상태를 CANCELLED로 변경하고 취소 사유(cancelReason), 처리자(hostUserId), 처리시각을 기록 (report.cancelConfirmationByHost 사용)
-    // 3. DepositReportItemRepository로 해당 신고에 연결된 아이템들을 조회하고, 연관된 DailyRecord N건의 depositStatus를 UNPAID로 일괄 원복 (누적액 자동 차감)
-    // 4. DepositAuditLogRepository에 action = CONFIRMATION_CANCELLED_BY_HOST 감사 로그 생성 및 저장
-    // 5. getReportDetail(report.id, hostUserId) 반환
     fun cancelConfirmation(
         reportId: Long,
         hostUserId: Long,
         request: CancelConfirmationRequest
     ): DepositReportDetailResponse {
-        throw NotImplementedError("사용자 미션 5-2를 구현해 주세요.")
-    }
-
-    @Transactional(readOnly = true)
-    fun getReportDetail(reportId: Long, userId: Long): DepositReportDetailResponse {
         val report = depositReportRepository.findById(reportId)
             .orElseThrow { ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)") }
 
-        validateMember(report.groupId, userId)
+        validateHost(
+            report.groupId,
+            hostUserId
+        )
+
+        if (report.status != DepositReportStatus.CONFIRMED) {
+            throw BadRequestException("확인 완료(CONFIRMED) 상태의 입금 건만 확인을 취소할 수 있습니다.")
+        }
+
+        val reason = request.reason.trim()
+        if (reason.isBlank()) {
+            throw BadRequestException("확인 취소 사유를 입력해 주세요.")
+        }
+
+        report.cancelConfirmationByHost(
+            hostUserId,
+            reason
+        )
 
         val items = depositReportItemRepository.findAllByDepositReportId(report.id)
         val records = dailyRecordRepository.findAllById(items.map { it.dailyRecordId })
-        val challenges = challengeRepository.findAllById(records.map { it.challengeId }.distinct()).associateBy { it.id }
+        records.forEach { it.depositStatus = DepositStatus.UNPAID }
+
+        depositAuditLogRepository.save(
+            DepositAuditLog(
+                depositReportId = report.id,
+                action = DepositAuditAction.CONFIRMATION_CANCELLED_BY_HOST,
+                actorUserId = hostUserId,
+                reason = reason
+            )
+        )
+
+        return getReportDetail(
+            report.id,
+            hostUserId
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun getReportDetail(
+        reportId: Long,
+        userId: Long
+    ): DepositReportDetailResponse {
+        val report = depositReportRepository.findById(reportId)
+            .orElseThrow { ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)") }
+
+        validateMember(
+            report.groupId,
+            userId
+        )
+
+        val items = depositReportItemRepository.findAllByDepositReportId(report.id)
+        val records = dailyRecordRepository.findAllById(items.map { it.dailyRecordId })
+        val challenges =
+            challengeRepository.findAllById(records.map { it.challengeId }.distinct()).associateBy { it.id }
 
         val auditLogs = depositAuditLogRepository.findAllByDepositReportIdOrderByCreatedAtAsc(report.id)
-        val userIds = (listOf(report.userId) + listOfNotNull(report.processedByUserId) + auditLogs.map { it.actorUserId }).distinct()
+        val userIds =
+            (listOf(report.userId) + listOfNotNull(report.processedByUserId) + auditLogs.map { it.actorUserId }).distinct()
         val userMap = userRepository.findAllById(userIds).associateBy { it.id }
 
         return toDetailResponse(
@@ -398,13 +490,22 @@ class SettlementService(
     }
 
     @Transactional(readOnly = true)
-    fun getSettlementSummary(groupId: Long, userId: Long): SettlementSummaryResponse {
-        validateMember(groupId, userId)
+    fun getSettlementSummary(
+        groupId: Long,
+        userId: Long
+    ): SettlementSummaryResponse {
+        validateMember(
+            groupId,
+            userId
+        )
 
         val unpaidAmount = dailyRecordRepository.calculateGroupUnpaidPenaltyAmount(groupId)
         val waitingAmount = depositReportRepository.calculateWaitingAmount(groupId)
         val confirmedAmount = depositReportRepository.calculateConfirmedAmount(groupId)
-        val myUnpaidAmount = dailyRecordRepository.calculateUnpaidPenaltyAmount(userId, groupId)
+        val myUnpaidAmount = dailyRecordRepository.calculateUnpaidPenaltyAmount(
+            userId,
+            groupId
+        )
 
         val account = groupAccountRepository.findByGroupId(groupId)
 
@@ -419,15 +520,27 @@ class SettlementService(
         )
     }
 
-    private fun validateMember(groupId: Long, userId: Long) {
-        val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
+    private fun validateMember(
+        groupId: Long,
+        userId: Long
+    ) {
+        val isMember = groupMemberRepository.existsByGroupIdAndUserId(
+            groupId,
+            userId
+        )
         if (!isMember) {
             throw ForbiddenException("해당 모임의 멤버만 정산 정보를 조회하거나 처리할 수 있습니다.")
         }
     }
 
-    private fun validateHost(groupId: Long, userId: Long) {
-        val membership = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+    private fun validateHost(
+        groupId: Long,
+        userId: Long
+    ) {
+        val membership = groupMemberRepository.findByGroupIdAndUserId(
+            groupId,
+            userId
+        )
             ?: throw ForbiddenException("해당 모임의 멤버가 아닙니다.")
         if (membership.role != GroupRole.HOST) {
             throw ForbiddenException("모임장(HOST)만 정산 관리 작업을 수행할 수 있습니다.")

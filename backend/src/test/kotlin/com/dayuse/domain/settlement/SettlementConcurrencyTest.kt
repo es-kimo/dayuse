@@ -80,12 +80,40 @@ class SettlementConcurrencyTest {
 
     @BeforeEach
     fun setUp() {
-        hostUser = userRepository.save(User(kakaoId = "concur_host", nickname = "동시성모임장"))
-        memberUser = userRepository.save(User(kakaoId = "concur_member", nickname = "동시성모임원"))
+        hostUser = userRepository.save(
+            User(
+                kakaoId = "concur_host",
+                nickname = "동시성모임장"
+            )
+        )
+        memberUser = userRepository.save(
+            User(
+                kakaoId = "concur_member",
+                nickname = "동시성모임원"
+            )
+        )
 
-        group = groupRepository.save(Group(name = "동시성 정산 모임", hostUserId = hostUser.id, inviteCode = "INVITE-CONCUR"))
-        groupMemberRepository.save(GroupMember(groupId = group.id, userId = hostUser.id, role = GroupRole.HOST))
-        groupMemberRepository.save(GroupMember(groupId = group.id, userId = memberUser.id, role = GroupRole.MEMBER))
+        group = groupRepository.save(
+            Group(
+                name = "동시성 정산 모임",
+                hostUserId = hostUser.id,
+                inviteCode = "INVITE-CONCUR"
+            )
+        )
+        groupMemberRepository.save(
+            GroupMember(
+                groupId = group.id,
+                userId = hostUser.id,
+                role = GroupRole.HOST
+            )
+        )
+        groupMemberRepository.save(
+            GroupMember(
+                groupId = group.id,
+                userId = memberUser.id,
+                role = GroupRole.MEMBER
+            )
+        )
 
         groupAccountRepository.save(
             GroupAccount(
@@ -107,7 +135,11 @@ class SettlementConcurrencyTest {
             )
         )
         val participant = challengeParticipantRepository.save(
-            ChallengeParticipant(challengeId = challenge.id, userId = memberUser.id, penaltyAmount = 5000)
+            ChallengeParticipant(
+                challengeId = challenge.id,
+                userId = memberUser.id,
+                penaltyAmount = 5000
+            )
         )
 
         record1 = dailyRecordRepository.save(
@@ -152,17 +184,99 @@ class SettlementConcurrencyTest {
 
     @Test
     fun `동일한 미납 기록들에 대해 2개의 스레드가 동시에 입금 신고를 시도할 때 비관적 락으로 1건만 성공하고 중복 처리가 방어된다`() {
-        // TODO [사용자 미션 5-3]: 멀티스레드 환경에서 동일한 미납 기록들에 대한 동시 입금 신고 충돌을 방어하는 동시성 테스트를 작성해 보세요.
-        // 🎓 핵심 질문: 멀티스레드(ExecutorService, CountDownLatch) 테스트를 어떻게 구성해야 두 트랜잭션이 정확히 동시에 경합하도록 만들 수 있을까요?
-        // 
-        // 요구사항:
-        // 1. threadCount = 2, ExecutorService, readyLatch, startLatch, doneLatch를 준비합니다.
-        // 2. AtomicInteger로 successCount와 failCount를 측정합니다.
-        // 3. 두 스레드가 동일한 미납 기록(record1.id, record2.id)에 대해 동시에 settlementService.createDepositReport()를 호출하도록 스케줄링합니다.
-        // 4. startLatch.countDown()으로 두 스레드를 동시에 출발시키고 doneLatch.await()로 완료를 대기합니다.
-        // 5. 비관적 락에 의해 1개 요청만 성공(successCount == 1), 1개 요청은 예외 발생 차단(failCount == 1)되었는지 검증합니다.
-        // 6. DB에 생성된 DepositReport가 1건(WAITING_CONFIRMATION)이고, DailyRecord의 depositStatus가 WAITING_CONFIRMATION인지 검증합니다.
-        // 7. 감사 로그(DepositAuditLog)도 REPORTED 액션으로 1건만 존재하는지 검증합니다.
-        org.junit.jupiter.api.Assertions.fail<Unit>("사용자 미션 5-3을 구현해 보세요.")
+        val threadCount = 2
+        val executor = Executors.newFixedThreadPool(threadCount)
+        val readyLatch = CountDownLatch(threadCount)
+        val startLatch = CountDownLatch(1)
+        val doneLatch = CountDownLatch(threadCount)
+
+        val successCount = AtomicInteger(0)
+        val failCount = AtomicInteger(0)
+
+        val request = CreateDepositReportRequest(
+            depositorName = "동시성입금자",
+            depositDate = today,
+            totalAmount = 10000,
+            dailyRecordIds = listOf(
+                record1.id,
+                record2.id
+            )
+        )
+
+        repeat(threadCount) {
+            executor.submit {
+                readyLatch.countDown()
+                try {
+                    startLatch.await()
+                    settlementService.createDepositReport(
+                        group.id,
+                        memberUser.id,
+                        request
+                    )
+                    successCount.incrementAndGet()
+                } catch (e: Exception) {
+                    failCount.incrementAndGet()
+                } finally {
+                    doneLatch.countDown()
+                }
+            }
+        }
+
+        readyLatch.await(
+            5,
+            TimeUnit.SECONDS
+        )
+        startLatch.countDown()
+        doneLatch.await(
+            10,
+            TimeUnit.SECONDS
+        )
+        executor.shutdown()
+
+        // 검증 1: 1개만 성공하고 1개는 차단됨
+        assertEquals(
+            1,
+            successCount.get(),
+            "동시 입금 신고 시 정확히 1개의 요청만 성공해야 합니다."
+        )
+        assertEquals(
+            1,
+            failCount.get(),
+            "동시 입금 신고 시 중복된 요청은 예외가 발생하여 차단되어야 합니다."
+        )
+
+        // 검증 2: 생성된 입금 신고 엔티티는 정확히 1건이어야 함
+        val reports = depositReportRepository.findAllByGroupIdOrderByCreatedAtDesc(group.id)
+        assertEquals(
+            1,
+            reports.size
+        )
+        assertEquals(
+            DepositReportStatus.WAITING_CONFIRMATION,
+            reports[0].status
+        )
+
+        // 검증 3: DailyRecord 상태는 WAITING_CONFIRMATION이어야 함
+        val r1 = dailyRecordRepository.findById(record1.id).get()
+        val r2 = dailyRecordRepository.findById(record2.id).get()
+        assertEquals(
+            DepositStatus.WAITING_CONFIRMATION,
+            r1.depositStatus
+        )
+        assertEquals(
+            DepositStatus.WAITING_CONFIRMATION,
+            r2.depositStatus
+        )
+
+        // 검증 4: 감사 로그도 REPORTED 1건만 존재해야 함
+        val auditLogs = depositAuditLogRepository.findAllByDepositReportIdOrderByCreatedAtAsc(reports[0].id)
+        assertEquals(
+            1,
+            auditLogs.size
+        )
+        assertEquals(
+            DepositAuditAction.REPORTED,
+            auditLogs[0].action
+        )
     }
 }
