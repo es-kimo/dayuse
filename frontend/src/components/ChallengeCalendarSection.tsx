@@ -47,12 +47,13 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
   const canVerifyToday =
     isMyRecord &&
     (record.status === 'WAITING' || (record.date === todayStr && record.status !== 'COMPLETED'));
-  // 늦은 인증: 과거 날짜이면서 미확인 또는 미수행 상태 + 정산 미잠금
+  // 늦은 인증: 과거 날짜이면서 미확인(UNCHECKED) 상태 + 정산 미잠금인 경우에만 허용
+  // (미수행 확정한 FAILED 상태는 결론이 났으므로 타이머 및 늦은 인증 대상에서 제외)
   const canVerifyLate =
     isMyRecord &&
     isPast &&
     !isLocked &&
-    (record.status === 'UNCHECKED' || record.status === 'FAILED');
+    record.status === 'UNCHECKED';
   const canVerify = canVerifyToday || canVerifyLate;
   const isLate = canVerifyLate;
 
@@ -65,17 +66,11 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
 
   return (
     <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition gap-2">
+      {/* 좌측: 날짜 + (완료 시) 사진 및 코멘트 */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-xs font-semibold text-slate-700 shrink-0">
           {record.date}
         </span>
-        {/* 유예 시간이 남은 미인증 과거 기록이면 실시간 미니 타이머 뱃지 노출 */}
-        {isPast && canVerifyLate && isGracePeriod && (
-          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
-            <Clock className="w-2.5 h-2.5 text-amber-600 animate-pulse" />
-            <span>{formattedTime} 남음</span>
-          </span>
-        )}
         {record.imageUrl && (
           <img
             src={record.imageUrl}
@@ -84,13 +79,24 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
           />
         )}
         {record.comment && (
-          <span className="text-[11px] text-slate-500 truncate max-w-[100px]">
+          <span className="text-[11px] text-slate-500 truncate max-w-[120px]">
             {record.comment}
           </span>
         )}
       </div>
+
+      {/* 우측: 상태 뱃지(또는 유예 타이머) + 액션 버튼 */}
       <div className="flex items-center gap-1.5 shrink-0">
-        {renderStatusBadge(record)}
+        {/* 유예 시간이 남은 미확인 기록인 경우 중복되는 '미확인' 뱃지 대신 '실시간 유예 타이머' 표시 */}
+        {isPast && canVerifyLate && isGracePeriod ? (
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+            <Clock className="w-2.5 h-2.5 text-amber-600 animate-pulse" />
+            <span>{formattedTime} 남음</span>
+          </span>
+        ) : (
+          renderStatusBadge(record)
+        )}
+
         {canVerify && onStartVerify && (
           <button
             onClick={() => onStartVerify(record, isLate)}
