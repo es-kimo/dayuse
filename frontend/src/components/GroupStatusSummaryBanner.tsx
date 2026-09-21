@@ -59,7 +59,7 @@ export const GroupStatusSummaryBanner: React.FC<GroupStatusSummaryBannerProps> =
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5">
               {hasUnchecked
-                ? '지난 날짜 인증을 확인해주세요'
+                ? '지난 날짜 인증 누락 (익일 09시 전 등록 시 정상)'
                 : '모든 지난 기록이 완료되었습니다'}
             </p>
           </div>

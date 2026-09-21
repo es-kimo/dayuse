@@ -15,6 +15,7 @@ import {
   Camera,
 } from 'lucide-react';
 import { getTodayKstString } from '../utils/date';
+import { useGracePeriodTimer } from '../hooks/useGracePeriodTimer';
 
 interface ChallengeCalendarSectionProps {
   calendarData: ChallengeCalendarResponse | null;
@@ -22,6 +23,93 @@ interface ChallengeCalendarSectionProps {
   currentUserId?: number;
   onStartVerify?: (record: CalendarDailyRecordItem, isLate: boolean) => void;
 }
+
+interface CalendarRecordRowProps {
+  record: CalendarDailyRecordItem;
+  isMyRecord: boolean;
+  todayStr: string;
+  renderStatusBadge: (record: CalendarDailyRecordItem) => React.ReactNode;
+  onStartVerify?: (record: CalendarDailyRecordItem, isLate: boolean) => void;
+}
+
+const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
+  record,
+  isMyRecord,
+  todayStr,
+  renderStatusBadge,
+  onStartVerify,
+}) => {
+  const isPast = record.date < todayStr;
+  const isLocked = record.depositStatus !== 'UNPAID';
+  const { isGracePeriod, formattedTime } = useGracePeriodTimer(record.date);
+
+  // 당일 인증: 오늘 날짜이거나 상태가 WAITING인 경우
+  const canVerifyToday =
+    isMyRecord &&
+    (record.status === 'WAITING' || (record.date === todayStr && record.status !== 'COMPLETED'));
+  // 늦은 인증: 과거 날짜이면서 미확인 또는 미수행 상태 + 정산 미잠금
+  const canVerifyLate =
+    isMyRecord &&
+    isPast &&
+    !isLocked &&
+    (record.status === 'UNCHECKED' || record.status === 'FAILED');
+  const canVerify = canVerifyToday || canVerifyLate;
+  const isLate = canVerifyLate;
+
+  // 늦은 인증 버튼 텍스트
+  const buttonLabel = isLate
+    ? isGracePeriod
+      ? '늦은인증 (정상)'
+      : '늦은인증 (지각)'
+    : '인증하기';
+
+  return (
+    <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition gap-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-xs font-semibold text-slate-700 shrink-0">
+          {record.date}
+        </span>
+        {/* 유예 시간이 남은 미인증 과거 기록이면 실시간 미니 타이머 뱃지 노출 */}
+        {isPast && canVerifyLate && isGracePeriod && (
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+            <Clock className="w-2.5 h-2.5 text-amber-600 animate-pulse" />
+            <span>{formattedTime} 남음</span>
+          </span>
+        )}
+        {record.imageUrl && (
+          <img
+            src={record.imageUrl}
+            alt="인증 사진"
+            className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
+          />
+        )}
+        {record.comment && (
+          <span className="text-[11px] text-slate-500 truncate max-w-[100px]">
+            {record.comment}
+          </span>
+        )}
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        {renderStatusBadge(record)}
+        {canVerify && onStartVerify && (
+          <button
+            onClick={() => onStartVerify(record, isLate)}
+            className={`px-2 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition active:scale-95 shadow-xs shrink-0 ${
+              isLate
+                ? isGracePeriod
+                  ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                  : 'bg-slate-600 hover:bg-slate-700 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
+          >
+            <Camera className="w-3 h-3" />
+            <span>{buttonLabel}</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> = ({
   calendarData,
@@ -122,21 +210,22 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
         <span className="inline-flex items-center gap-0.5 text-red-600 font-medium">
           <XCircle className="w-3 h-3" /> 미수행
         </span>
-        <span className="inline-flex items-center gap-0.5 text-slate-400 font-medium">
+        <span className="inline-flex items-center gap-0.5 text-slate-400">
           <CircleDot className="w-2.5 h-2.5" /> 예정
         </span>
       </div>
 
-      {/* 참여자 선택 탭 (2명 이상일 때) */}
+      {/* 참여자 선택 탭 (참여자가 여러 명일 경우) */}
       {calendarData.participants.length > 1 && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
           {calendarData.participants.map((p) => {
             const isSelected = p.userId === activeParticipant.userId;
+            const isMe = currentUserId !== undefined && p.userId === currentUserId;
             return (
               <button
                 key={p.userId}
                 onClick={() => setSelectedUserId(p.userId)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                className={`px-3 py-1.5 rounded-xl font-medium shrink-0 flex items-center gap-1.5 transition ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -146,12 +235,12 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
                   <img
                     src={p.profileImageUrl}
                     alt={p.nickname}
-                    className="w-4 h-4 rounded-full object-cover"
+                    className="w-3.5 h-3.5 rounded-full object-cover"
                   />
                 ) : (
                   <UserIcon className="w-3.5 h-3.5" />
                 )}
-                <span>{p.nickname}</span>
+                <span>{p.nickname}{isMe ? ' (나)' : ''}</span>
               </button>
             );
           })}
@@ -161,57 +250,19 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
       {/* 선택된 참여자의 날짜별 기록 목록 */}
       <div className="space-y-2">
         {activeParticipant.records.map((record) => {
-          const isMyRecord = currentUserId !== undefined && activeParticipant.userId === currentUserId;
+          const isMyRecord =
+            currentUserId !== undefined && activeParticipant.userId === currentUserId;
           const todayStr = getTodayKstString();
-          const isPast = record.date < todayStr;
-          const isLocked = record.depositStatus !== 'UNPAID';
-
-          // 당일 인증: 오늘 날짜이거나 상태가 WAITING인 경우
-          const canVerifyToday = isMyRecord && (record.status === 'WAITING' || (record.date === todayStr && record.status !== 'COMPLETED'));
-          // 늦은 인증: 과거 날짜이면서 미확인 또는 미수행 상태 + 정산 미잠금
-          const canVerifyLate = isMyRecord && isPast && !isLocked && (record.status === 'UNCHECKED' || record.status === 'FAILED');
-          const isLate = canVerifyLate;
-          const canVerify = canVerifyToday || canVerifyLate;
 
           return (
-            <div
+            <CalendarRecordRow
               key={record.id}
-              className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition gap-2"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-xs font-semibold text-slate-700 shrink-0">
-                  {record.date}
-                </span>
-                {record.imageUrl && (
-                  <img
-                    src={record.imageUrl}
-                    alt="인증 사진"
-                    className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
-                  />
-                )}
-                {record.comment && (
-                  <span className="text-[11px] text-slate-500 truncate max-w-[100px]">
-                    {record.comment}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {renderStatusBadge(record)}
-                {canVerify && onStartVerify && (
-                  <button
-                    onClick={() => onStartVerify(record, isLate)}
-                    className={`px-2 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition active:scale-95 shadow-xs shrink-0 ${
-                      isLate
-                        ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
-                  >
-                    <Camera className="w-3 h-3" />
-                    <span>{isLate ? '늦은인증' : '인증하기'}</span>
-                  </button>
-                )}
-              </div>
-            </div>
+              record={record}
+              isMyRecord={isMyRecord}
+              todayStr={todayStr}
+              renderStatusBadge={renderStatusBadge}
+              onStartVerify={onStartVerify}
+            />
           );
         })}
       </div>

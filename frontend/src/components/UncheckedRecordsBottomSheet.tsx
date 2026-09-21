@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { UncheckedRecordItem } from '../types';
+import { useGracePeriodTimer } from '../hooks/useGracePeriodTimer';
 import {
   X,
   Calendar,
@@ -8,7 +9,102 @@ import {
   XCircle,
   Loader2,
   CheckCircle2,
+  Clock,
+  AlertCircle,
 } from 'lucide-react';
+
+interface UncheckedRecordCardProps {
+  record: UncheckedRecordItem;
+  isBusy: boolean;
+  onStartVerifyLate: (record: UncheckedRecordItem) => void;
+  onMarkFailed: (recordId: number) => Promise<void>;
+}
+
+const UncheckedRecordCard: React.FC<UncheckedRecordCardProps> = ({
+  record,
+  isBusy,
+  onStartVerifyLate,
+  onMarkFailed,
+}) => {
+  const { isGracePeriod, formattedTime } = useGracePeriodTimer(record.date);
+
+  return (
+    <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5 shadow-xs">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
+            <Calendar className="w-3.5 h-3.5 text-blue-600" />
+            <span>{record.date} 대상 기록</span>
+          </div>
+          <span className="text-xs font-bold text-slate-700 mt-1 block">
+            {record.challengeTitle}
+          </span>
+        </div>
+        <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">
+          미확인
+        </span>
+      </div>
+
+      {/* 유예 시간 카운트다운 타이머 vs 마감 경과 안내 */}
+      {isGracePeriod ? (
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px]">
+          <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse shrink-0" />
+          <span>
+            정상 인정 마감까지 <b className="font-bold text-amber-700">{formattedTime}</b> 남음 (익일 09시)
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 text-[11px]">
+          <AlertCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span>유예 마감 경과 (인증 등록 시 지각으로 처리됩니다)</span>
+        </div>
+      )}
+
+      {record.verificationCriteria && (
+        <p className="text-[11px] text-slate-500 bg-white/80 p-2 rounded-lg border border-slate-100">
+          <span className="font-medium text-slate-600">기준:</span> {record.verificationCriteria}
+        </p>
+      )}
+
+      <div className="flex items-center justify-between text-[11px] pt-1">
+        <span className="text-slate-500">
+          미수행 확정 시 벌금:{' '}
+          <b className="text-red-600 font-bold">
+            {record.penaltyAmount.toLocaleString()}원
+          </b>
+        </span>
+      </div>
+
+      {/* 액션 버튼 2개: 인증 올리기 vs 미수행 확정 */}
+      <div className="flex gap-2 pt-1 border-t border-slate-200/60">
+        <button
+          onClick={() => onStartVerifyLate(record)}
+          disabled={isBusy}
+          className={`flex-1 py-2 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.99] ${
+            isGracePeriod
+              ? 'bg-blue-600 hover:bg-blue-700'
+              : 'bg-amber-600 hover:bg-amber-700'
+          }`}
+        >
+          <Upload className="w-3.5 h-3.5" />
+          <span>{isGracePeriod ? '인증 올리기 (정상 인정)' : '늦은 인증 올리기 (지각)'}</span>
+        </button>
+        <button
+          onClick={() => onMarkFailed(record.id)}
+          disabled={isBusy}
+          className="flex-1 py-2 bg-slate-200 hover:bg-red-50 hover:text-red-600 text-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.99]"
+        >
+          {isBusy ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <XCircle className="w-3.5 h-3.5" />
+          )}
+          <span>미수행 확정</span>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface UncheckedRecordsBottomSheetProps {
   isOpen: boolean;
@@ -66,7 +162,7 @@ export const UncheckedRecordsBottomSheet: React.FC<UncheckedRecordsBottomSheetPr
         <div className="bg-amber-50/70 border-b border-amber-100 px-4 py-2.5 text-[11px] text-amber-800 flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <span>
-            지난 날짜의 인증 누락 건입니다. 지금 사진을 올려 <b>늦은 인증</b>을 하거나, <b>미수행</b>을 확정하여 정리를 진행해주세요.
+            지난 날짜의 인증 누락 건입니다. 익일 오전 9시 이전 등록 시 정상 인정되며, 이후 등록 시 지각 처리됩니다.
           </span>
         </div>
 
@@ -83,70 +179,15 @@ export const UncheckedRecordsBottomSheet: React.FC<UncheckedRecordsBottomSheetPr
               <span className="text-xs font-semibold text-slate-700">모든 미확인 기록이 정리되었습니다!</span>
             </div>
           ) : (
-            records.map((record) => {
-              const isBusy = processingId === record.id;
-              return (
-                <div
-                  key={record.id}
-                  className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5 shadow-xs"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
-                        <Calendar className="w-3.5 h-3.5 text-blue-600" />
-                        <span>{record.date}</span>
-                      </div>
-                      <span className="text-xs font-bold text-slate-700 mt-1 block">
-                        {record.challengeTitle}
-                      </span>
-                    </div>
-                    <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">
-                      미확인
-                    </span>
-                  </div>
-
-                  {record.verificationCriteria && (
-                    <p className="text-[11px] text-slate-500 bg-white/80 p-2 rounded-lg border border-slate-100">
-                      <span className="font-medium text-slate-600">기준:</span>{' '}
-                      {record.verificationCriteria}
-                    </p>
-                  )}
-
-                  <div className="flex items-center justify-between text-[11px] pt-1">
-                    <span className="text-slate-500">
-                      미수행 시 벌금:{' '}
-                      <b className="text-red-600 font-bold">
-                        {record.penaltyAmount.toLocaleString()}원
-                      </b>
-                    </span>
-                  </div>
-
-                  {/* 액션 버튼 2개: 인증 올리기 vs 미수행 확정 */}
-                  <div className="flex gap-2 pt-1 border-t border-slate-200/60">
-                    <button
-                      onClick={() => onStartVerifyLate(record)}
-                      disabled={isBusy}
-                      className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.99]"
-                    >
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>인증 올리기</span>
-                    </button>
-                    <button
-                      onClick={() => handleMarkFailed(record.id)}
-                      disabled={isBusy}
-                      className="flex-1 py-2 bg-slate-200 hover:bg-red-50 hover:text-red-600 text-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.99]"
-                    >
-                      {isBusy ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <XCircle className="w-3.5 h-3.5" />
-                      )}
-                      <span>미수행 확정</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })
+            records.map((record) => (
+              <UncheckedRecordCard
+                key={record.id}
+                record={record}
+                isBusy={processingId === record.id}
+                onStartVerifyLate={onStartVerifyLate}
+                onMarkFailed={handleMarkFailed}
+              />
+            ))
           )}
         </div>
       </div>
