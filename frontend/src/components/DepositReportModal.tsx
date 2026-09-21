@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { UnpaidRecordItem, GroupAccount } from '../types';
 import { settlementApi } from '../api/settlement';
 import { useAuth } from '../context/AuthContext';
+import { getTodayKstString } from '../utils/date';
 import {
   X,
   CreditCard,
@@ -38,14 +39,14 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
 
   const [selectedRecordIds, setSelectedRecordIds] = useState<number[]>([]);
   const [depositorName, setDepositorName] = useState('');
-  const [depositDate, setDepositDate] = useState(new Date().toISOString().slice(0, 10));
+  const [depositDate, setDepositDate] = useState(getTodayKstString());
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       fetchUnpaidRecords();
       setDepositorName(user?.nickname || '');
-      setDepositDate(new Date().toISOString().slice(0, 10));
+      setDepositDate(getTodayKstString());
     } else {
       setSelectedRecordIds([]);
     }
