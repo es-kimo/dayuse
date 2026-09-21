@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { invitesApi } from '../api/invites';
+import { invitesApi, inviteStorage } from '../api/invites';
 import type { InviteInfo } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
-import { Users, AlertTriangle, ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { Users, AlertTriangle, ArrowRight, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export const InviteLandingPage: React.FC = () => {
   const { inviteCode } = useParams<{ inviteCode: string }>();
@@ -16,11 +16,14 @@ export const InviteLandingPage: React.FC = () => {
   const [isInvalid, setIsInvalid] = useState<boolean>(false);
   const [isJoining, setIsJoining] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isAlreadyJoined, setIsAlreadyJoined] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchInviteInfo = async () => {
       if (!inviteCode) return;
       try {
+        // 초대 링크 접속 시 향후 로그인/회원가입 플로우를 위해 세션 스토리지에 초대 코드 보관
+        inviteStorage.set(inviteCode);
         const data = await invitesApi.getInviteInfo(inviteCode);
         setInviteInfo(data);
       } catch (err: any) {
@@ -35,25 +38,41 @@ export const InviteLandingPage: React.FC = () => {
   }, [inviteCode]);
 
   const handleJoin = async () => {
+    if (!inviteCode) return;
+
     if (!isAuthenticated) {
-      alert('모임에 가입하려면 먼저 로그인해야 합니다.');
-      navigate('/login');
+      inviteStorage.set(inviteCode);
+      navigate(`/login?redirect=${encodeURIComponent(`/invite/${inviteCode}`)}`);
       return;
     }
 
-    if (!inviteCode) return;
-
     setIsJoining(true);
     setErrorMessage('');
+    setIsAlreadyJoined(false);
     try {
       const res = await invitesApi.joinGroup(inviteCode);
+      inviteStorage.clear();
       navigate(`/groups/${res.groupId}`);
     } catch (err: any) {
       console.error('Failed to join group:', err);
-      const msg = err.response?.data?.message || '모임 가입에 실패했습니다.';
-      setErrorMessage(msg);
+      if (err.response?.status === 409) {
+        setIsAlreadyJoined(true);
+        setErrorMessage('이미 참여 중인 모임입니다.');
+      } else {
+        const msg = err.response?.data?.message || '모임 가입에 실패했습니다.';
+        setErrorMessage(msg);
+      }
     } finally {
       setIsJoining(false);
+    }
+  };
+
+  const handleGoToLogin = () => {
+    if (inviteCode) {
+      inviteStorage.set(inviteCode);
+      navigate(`/login?redirect=${encodeURIComponent(`/invite/${inviteCode}`)}`);
+    } else {
+      navigate('/login');
     }
   };
 
@@ -120,14 +139,24 @@ export const InviteLandingPage: React.FC = () => {
           </div>
 
           {errorMessage && (
-            <div className="w-full p-3 bg-red-50 text-red-600 text-xs rounded-lg mb-4 text-center">
+            <div className={`w-full p-3 text-xs rounded-lg mb-4 text-center ${
+              isAlreadyJoined ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-red-50 text-red-600'
+            }`}>
               {errorMessage}
             </div>
           )}
         </div>
 
         <div>
-          {isAuthenticated ? (
+          {isAlreadyJoined ? (
+            <button
+              onClick={() => navigate(`/groups/${inviteInfo.groupId}`)}
+              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>모임 홈으로 바로 가기</span>
+            </button>
+          ) : isAuthenticated ? (
             <button
               onClick={handleJoin}
               disabled={isJoining}
@@ -147,7 +176,7 @@ export const InviteLandingPage: React.FC = () => {
             </button>
           ) : (
             <button
-              onClick={() => navigate('/login')}
+              onClick={handleGoToLogin}
               className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
             >
               <span>로그인하고 모임 참여하기</span>

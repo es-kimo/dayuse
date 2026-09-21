@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/auth';
+import { handlePostLoginNavigation, inviteStorage } from '../api/invites';
 import { MobileLayout } from '../components/MobileLayout';
 import { Loader2 } from 'lucide-react';
 
@@ -10,6 +11,7 @@ export const KakaoCallbackPage: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const processedRef = useRef(false);
+  const [hasPendingInvite] = useState<boolean>(() => !!inviteStorage.get());
 
   useEffect(() => {
     const code = searchParams.get('code');
@@ -27,7 +29,7 @@ export const KakaoCallbackPage: React.FC = () => {
         const redirectUri = window.location.origin + '/oauth/callback/kakao';
         const res = await authApi.loginWithKakao(code, redirectUri);
         login(res.accessToken, res.refreshToken, res.user);
-        navigate('/groups');
+        await handlePostLoginNavigation(navigate);
       } catch (err) {
         console.error('Failed to exchange kakao code:', err);
         alert('카카오 로그인 인증에 실패했습니다.');
@@ -42,7 +44,9 @@ export const KakaoCallbackPage: React.FC = () => {
     <MobileLayout showHeader={false}>
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
         <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
-        <h2 className="text-base font-semibold text-slate-800">카카오 로그인 처리 중...</h2>
+        <h2 className="text-base font-semibold text-slate-800">
+          {hasPendingInvite ? '로그인 및 모임 참여 처리 중...' : '카카오 로그인 처리 중...'}
+        </h2>
         <p className="text-xs text-slate-500 mt-1">잠시만 기다려 주세요.</p>
       </div>
     </MobileLayout>

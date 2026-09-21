@@ -1,15 +1,31 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/auth';
+import { handlePostLoginNavigation, inviteStorage } from '../api/invites';
 import { MobileLayout } from '../components/MobileLayout';
 import { MessageCircle, Sparkles, UserCheck } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [mockUserId, setMockUserId] = useState<string>('1');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    const inviteParam = searchParams.get('invite');
+    const redirectParam = searchParams.get('redirect');
+
+    if (inviteParam) {
+      inviteStorage.set(inviteParam);
+    } else if (redirectParam && redirectParam.includes('/invite/')) {
+      const match = redirectParam.match(/\/invite\/([^/?#]+)/);
+      if (match && match[1]) {
+        inviteStorage.set(match[1]);
+      }
+    }
+  }, [searchParams]);
 
   const handleKakaoLogin = () => {
     const clientId = import.meta.env.VITE_KAKAO_CLIENT_ID;
@@ -32,7 +48,7 @@ export const LoginPage: React.FC = () => {
     try {
       const res = await authApi.loginWithKakao(code);
       login(res.accessToken, res.refreshToken, res.user);
-      navigate('/groups');
+      await handlePostLoginNavigation(navigate);
     } catch (err) {
       console.error('Mock login failed:', err);
       alert('로그인에 실패했습니다. 백엔드 서버 상태를 확인해 주세요.');
