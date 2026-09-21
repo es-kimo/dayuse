@@ -244,8 +244,15 @@ export const ChallengeDetailPage: React.FC = () => {
       {/* 상단 네비게이션 헤더 */}
       <div className="flex items-center justify-between mb-4">
         <button
-          onClick={() => navigate(`/groups/${challenge.groupId}`)}
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate(`/groups/${challenge.groupId}?tab=challenges`);
+            }
+          }}
           className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
+          aria-label="뒤로가기"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>

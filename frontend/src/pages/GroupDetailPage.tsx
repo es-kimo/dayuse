@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
 import { challengesApi } from '../api/challenges';
 import { todayApi } from '../api/today';
@@ -45,10 +45,31 @@ export const GroupDetailPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'home' | 'challenges' | 'members'>(
-    location.pathname.endsWith('/challenges') ? 'challenges' : 'home'
-  );
+  const tabParam = searchParams.get('tab');
+  const activeTab: 'home' | 'challenges' | 'members' =
+    tabParam === 'challenges' || tabParam === 'members'
+      ? tabParam
+      : location.pathname.endsWith('/challenges')
+      ? 'challenges'
+      : 'home';
+
+  const handleTabChange = (tab: 'home' | 'challenges' | 'members') => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (tab === 'home') {
+          next.delete('tab');
+        } else {
+          next.set('tab', tab);
+        }
+        return next;
+      },
+      { replace: false }
+    );
+  };
+
   const [challengeFilter, setChallengeFilter] = useState<string>('ALL');
 
   const [group, setGroup] = useState<GroupDetail | null>(null);
@@ -390,7 +411,7 @@ export const GroupDetailPage: React.FC = () => {
       {/* 탭 네비게이션 */}
       <div className="flex border-b border-slate-200 mb-4">
         <button
-          onClick={() => setActiveTab('home')}
+          onClick={() => handleTabChange('home')}
           className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
             activeTab === 'home'
               ? 'border-blue-600 text-blue-600'
@@ -401,7 +422,7 @@ export const GroupDetailPage: React.FC = () => {
           <span>홈</span>
         </button>
         <button
-          onClick={() => setActiveTab('challenges')}
+          onClick={() => handleTabChange('challenges')}
           className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
             activeTab === 'challenges'
               ? 'border-blue-600 text-blue-600'
@@ -412,7 +433,7 @@ export const GroupDetailPage: React.FC = () => {
           <span>챌린지 ({challenges.length})</span>
         </button>
         <button
-          onClick={() => setActiveTab('members')}
+          onClick={() => handleTabChange('members')}
           className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
             activeTab === 'members'
               ? 'border-blue-600 text-blue-600'

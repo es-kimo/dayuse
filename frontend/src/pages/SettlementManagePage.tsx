@@ -151,8 +151,15 @@ export const SettlementManagePage: React.FC = () => {
       {/* 상단 헤더 */}
       <div className="flex items-center gap-2 mb-4">
         <button
-          onClick={() => navigate(`/groups/${groupId}`)}
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate(`/groups/${groupId}`);
+            }
+          }}
           className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
+          aria-label="뒤로가기"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
