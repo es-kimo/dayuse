@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { verificationsApi } from '../api/verifications';
 import { recordsApi } from '../api/records';
 import type { TodayAction } from '../types';
-import { X, Camera, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { X, Camera, Image as ImageIcon, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface VerificationModalProps {
   action: TodayAction | { challengeId: number; challengeTitle: string; verificationCriteria?: string };
@@ -24,7 +24,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [canRetry, setCanRetry] = useState<boolean>(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -57,8 +58,11 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
     }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = '';
+    }
+    if (galleryInputRef.current) {
+      galleryInputRef.current.value = '';
     }
   };
 
@@ -142,11 +146,21 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
           {/* 사진 선택 / 미리보기 영역 */}
           <div>
+            {/* 카메라 직접 촬영용 (capture="environment") */}
             <input
-              ref={fileInputRef}
+              ref={cameraInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               capture="environment"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {/* 갤러리/파일 보관함 선택용 (capture 없음) */}
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -169,21 +183,43 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 )}
               </div>
             ) : (
-              <div
-                onClick={() => !isSubmitting && fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition bg-slate-50 hover:bg-blue-50/30"
-              >
-                <div className="w-12 h-12 rounded-full bg-blue-100/80 text-blue-600 flex items-center justify-center">
-                  <Camera className="w-6 h-6" />
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-3">
+                  {/* 카메라 촬영 버튼 */}
+                  <button
+                    type="button"
+                    onClick={() => !isSubmitting && cameraInputRef.current?.click()}
+                    disabled={isSubmitting}
+                    className="p-4 border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-2xl flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-blue-50/30 transition active:scale-98 cursor-pointer"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-blue-100/80 text-blue-600 flex items-center justify-center">
+                      <Camera className="w-5 h-5" />
+                    </div>
+                    <div className="text-center">
+                      <span className="text-xs font-bold text-slate-700 block">카메라 촬영</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">즉시 사진 찍기</span>
+                    </div>
+                  </button>
+
+                  {/* 갤러리 선택 버튼 */}
+                  <button
+                    type="button"
+                    onClick={() => !isSubmitting && galleryInputRef.current?.click()}
+                    disabled={isSubmitting}
+                    className="p-4 border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-2xl flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition active:scale-98 cursor-pointer"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-indigo-100/80 text-indigo-600 flex items-center justify-center">
+                      <ImageIcon className="w-5 h-5" />
+                    </div>
+                    <div className="text-center">
+                      <span className="text-xs font-bold text-slate-700 block">갤러리 선택</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">보관함에서 선택</span>
+                    </div>
+                  </button>
                 </div>
-                <div className="text-center">
-                  <span className="text-xs font-bold text-slate-700 block">
-                    카메라 촬영 또는 갤러리 사진 선택
-                  </span>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">
-                    JPG, PNG, WebP (최대 10MB)
-                  </span>
-                </div>
+                <p className="text-center text-[10px] text-slate-400">
+                  JPG, PNG, WebP 형식 (최대 10MB)
+                </p>
               </div>
             )}
           </div>
