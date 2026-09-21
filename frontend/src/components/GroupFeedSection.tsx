@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { FeedItem } from '../types';
+import { formatKstTime } from '../utils/date';
 import {
   MessageCircle,
   Trash2,
@@ -168,7 +169,7 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
               </button>
 
               <span className="text-[10px] text-slate-400">
-                {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {formatKstTime(item.createdAt)}
               </span>
             </div>
           </div>

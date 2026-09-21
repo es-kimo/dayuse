@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { verificationsApi } from '../api/verifications';
 import type { CommentItem } from '../types';
+import { formatKstDateTime } from '../utils/date';
 import { X, Send, Trash2, Loader2, User as UserIcon } from 'lucide-react';
 
 interface CommentsBottomSheetProps {
@@ -117,7 +118,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
                         {comment.authorNickname}
                       </span>
                       <span className="text-[10px] text-slate-400">
-                        {new Date(comment.createdAt).toLocaleDateString()}
+                        {formatKstDateTime(comment.createdAt)}
                       </span>
                     </div>
                     <p className="text-xs text-slate-600 mt-1 leading-relaxed break-words whitespace-pre-wrap">
