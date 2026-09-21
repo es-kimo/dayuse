@@ -1,0 +1,30 @@
+name: dayuse Backend Deploy (CD)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'docker-compose.prod.yml'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: # GitHub 웹 화면에서 수동 배포 지원
+
+jobs:
+  deploy:
+    name: Deploy Backend to Oracle Cloud VM
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Executing remote SSH commands for deployment
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USERNAME }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          script: |
+            echo "==> Deploying dayuse backend..."
+            cd ~/dayuse
+            git pull origin main
+            docker compose -f docker-compose.prod.yml up -d --build backend
+            docker image prune -f
+            echo "==> Deployment completed successfully!"
