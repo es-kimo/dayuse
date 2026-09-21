@@ -70,3 +70,15 @@ export const formatKstDate = (dateInput: string | Date | null | undefined): stri
     day: '2-digit',
   }).format(d);
 };
+
+/**
+ * KST 기준 오늘 날짜 문자열 반환 (예: "2026-09-22")
+ */
+export const getTodayKstString = (): string => {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+};

@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { recordsApi } from '../api/records';
-import type { ChallengeDetail, ChallengeCalendarResponse } from '../types';
+import type { ChallengeDetail, ChallengeCalendarResponse, CalendarDailyRecordItem } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import { ChallengeCalendarSection } from '../components/ChallengeCalendarSection';
+import { VerificationModal } from '../components/VerificationModal';
+import { useAuth } from '../context/AuthContext';
 import {
   ArrowLeft,
   Calendar,
@@ -24,6 +26,7 @@ import {
 export const ChallengeDetailPage: React.FC = () => {
   const { challengeId } = useParams<{ challengeId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [challenge, setChallenge] = useState<ChallengeDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +36,10 @@ export const ChallengeDetailPage: React.FC = () => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showPenaltyModal, setShowPenaltyModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [verificationTarget, setVerificationTarget] = useState<{
+    recordId?: number;
+    isLate: boolean;
+  } | null>(null);
 
   // 폼 입력 상태
   const [joinPenalty, setJoinPenalty] = useState<number>(5000);
@@ -169,6 +176,19 @@ export const ChallengeDetailPage: React.FC = () => {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleStartVerify = (record: CalendarDailyRecordItem, isLate: boolean) => {
+    setVerificationTarget({
+      recordId: isLate ? record.id : undefined,
+      isLate,
+    });
+  };
+
+  const handleVerificationSuccess = () => {
+    setVerificationTarget(null);
+    fetchCalendar();
+    fetchChallenge();
   };
 
   if (loading) {
@@ -341,6 +361,8 @@ export const ChallengeDetailPage: React.FC = () => {
       <ChallengeCalendarSection
         calendarData={calendarData}
         loading={calendarLoading}
+        currentUserId={user?.id}
+        onStartVerify={handleStartVerify}
       />
 
       {/* 참여자 카드 목록 */}
@@ -671,6 +693,20 @@ export const ChallengeDetailPage: React.FC = () => {
             </div>
           </form>
         </div>
+      )}
+
+      {/* 사진 인증 모달 (당일 인증 / 늦은 인증) */}
+      {verificationTarget && challenge && (
+        <VerificationModal
+          action={{
+            challengeId: challenge.id,
+            challengeTitle: challenge.title,
+            verificationCriteria: challenge.verificationCriteria,
+          }}
+          recordId={verificationTarget.recordId}
+          onClose={() => setVerificationTarget(null)}
+          onSuccess={handleVerificationSuccess}
+        />
       )}
     </MobileLayout>
   );

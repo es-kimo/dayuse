@@ -12,16 +12,22 @@ import {
   CircleDot,
   Loader2,
   User as UserIcon,
+  Camera,
 } from 'lucide-react';
+import { getTodayKstString } from '../utils/date';
 
 interface ChallengeCalendarSectionProps {
   calendarData: ChallengeCalendarResponse | null;
   loading: boolean;
+  currentUserId?: number;
+  onStartVerify?: (record: CalendarDailyRecordItem, isLate: boolean) => void;
 }
 
 export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> = ({
   calendarData,
   loading,
+  currentUserId,
+  onStartVerify,
 }) => {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
@@ -154,31 +160,60 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
 
       {/* 선택된 참여자의 날짜별 기록 목록 */}
       <div className="space-y-2">
-        {activeParticipant.records.map((record) => (
-          <div
-            key={record.id}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-700 w-24">
-                {record.date}
-              </span>
-              {record.imageUrl && (
-                <img
-                  src={record.imageUrl}
-                  alt="인증 사진"
-                  className="w-7 h-7 rounded-lg object-cover border border-slate-200"
-                />
-              )}
-              {record.comment && (
-                <span className="text-[11px] text-slate-500 truncate max-w-[120px]">
-                  {record.comment}
+        {activeParticipant.records.map((record) => {
+          const isMyRecord = currentUserId !== undefined && activeParticipant.userId === currentUserId;
+          const todayStr = getTodayKstString();
+          const isPast = record.date < todayStr;
+          const isLocked = record.depositStatus !== 'UNPAID';
+
+          // 당일 인증: 오늘 날짜이거나 상태가 WAITING인 경우
+          const canVerifyToday = isMyRecord && (record.status === 'WAITING' || (record.date === todayStr && record.status !== 'COMPLETED'));
+          // 늦은 인증: 과거 날짜이면서 미확인 또는 미수행 상태 + 정산 미잠금
+          const canVerifyLate = isMyRecord && isPast && !isLocked && (record.status === 'UNCHECKED' || record.status === 'FAILED');
+          const isLate = canVerifyLate;
+          const canVerify = canVerifyToday || canVerifyLate;
+
+          return (
+            <div
+              key={record.id}
+              className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition gap-2"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs font-semibold text-slate-700 shrink-0">
+                  {record.date}
                 </span>
-              )}
+                {record.imageUrl && (
+                  <img
+                    src={record.imageUrl}
+                    alt="인증 사진"
+                    className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
+                  />
+                )}
+                {record.comment && (
+                  <span className="text-[11px] text-slate-500 truncate max-w-[100px]">
+                    {record.comment}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {renderStatusBadge(record)}
+                {canVerify && onStartVerify && (
+                  <button
+                    onClick={() => onStartVerify(record, isLate)}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition active:scale-95 shadow-xs shrink-0 ${
+                      isLate
+                        ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    <Camera className="w-3 h-3" />
+                    <span>{isLate ? '늦은인증' : '인증하기'}</span>
+                  </button>
+                )}
+              </div>
             </div>
-            <div>{renderStatusBadge(record)}</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
