@@ -1,0 +1,16 @@
+changelog:
+  categories:
+    - title: "✨ 주요 기능 및 개선 사항 (Features & Enhancements)"
+      labels:
+        - "enhancement"
+        - "feature"
+    - title: "🐛 버그 픽스 (Bug Fixes)"
+      labels:
+        - "bug"
+        - "fix"
+    - title: "🏗️ 인프라 및 환경 설정 (Infrastructure & Chores)"
+      labels:
+        - "chore"
+        - "ci"
+        - "infrastructure"
+        - "documentation"

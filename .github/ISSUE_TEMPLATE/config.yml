@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "DayUse GitHub Wiki"
+    url: "https://github.com/es-kimo/dayuse/wiki"
+    about: "기획 요구사항 정의서(PRD) 및 엔지니어링 학습 포인트를 확인하세요."
