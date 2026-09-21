@@ -103,6 +103,7 @@ class DailyRecordService(
         }
     }
 
+    @Transactional(readOnly = true)
     fun getStatusSummary(groupId: Long, userId: Long): StatusSummaryResponse {
         val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
         if (!isMember) {
@@ -110,8 +111,6 @@ class DailyRecordService(
         }
 
         val today = DateTimeUtils.todayKst()
-        ensureDailyRecordsForUserInGroup(groupId, userId, today)
-
         val uncheckedCount = dailyRecordRepository.countUncheckedRecords(userId, groupId, today)
         val unpaidPenaltyAmount = dailyRecordRepository.calculateUnpaidPenaltyAmount(userId, groupId)
 
@@ -122,6 +121,7 @@ class DailyRecordService(
         )
     }
 
+    @Transactional(readOnly = true)
     fun getUncheckedRecords(groupId: Long, userId: Long): List<UncheckedRecordResponse> {
         val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
         if (!isMember) {
@@ -129,16 +129,7 @@ class DailyRecordService(
         }
 
         val today = DateTimeUtils.todayKst()
-        ensureDailyRecordsForUserInGroup(groupId, userId, today)
-
         val uncheckedRecords = dailyRecordRepository.findUncheckedRecords(userId, groupId, today)
-
-        // 자정 경과로 인해 WAITING에서 UNCHECKED로 전이되어야 하는 레코드는 지연 갱신
-        for (record in uncheckedRecords) {
-            if (record.status == DailyRecordStatus.WAITING && record.date < today) {
-                record.status = DailyRecordStatus.UNCHECKED
-            }
-        }
 
         val challengeIds = uncheckedRecords.map { it.challengeId }.distinct()
         val challenges = challengeRepository.findAllById(challengeIds).associateBy { it.id }
@@ -149,18 +140,24 @@ class DailyRecordService(
         return uncheckedRecords.map { record ->
             val challenge = challenges[record.challengeId]
             val participant = participants[record.challengeParticipantId]
+            val effectiveStatus = if (record.status == DailyRecordStatus.WAITING && record.date < today) {
+                DailyRecordStatus.UNCHECKED
+            } else {
+                record.status
+            }
             UncheckedRecordResponse(
                 id = record.id,
                 challengeId = record.challengeId,
                 challengeTitle = challenge?.title ?: "알 수 없는 챌린지",
                 date = record.date,
-                status = record.status,
+                status = effectiveStatus,
                 penaltyAmount = participant?.penaltyAmount ?: 0,
                 verificationCriteria = challenge?.verificationCriteria ?: ""
             )
         }
     }
 
+    @Transactional(readOnly = true)
     fun getChallengeCalendar(challengeId: Long, userId: Long): ChallengeCalendarResponse {
         val challenge = challengeRepository.findById(challengeId)
             .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
@@ -172,9 +169,6 @@ class DailyRecordService(
 
         val today = DateTimeUtils.todayKst()
         val participants = challengeParticipantRepository.findAllByChallengeId(challengeId)
-        for (participant in participants) {
-            ensureDailyRecordsForParticipant(participant, challenge, today)
-        }
 
         val allRecords = dailyRecordRepository.findAllByChallengeId(challengeId)
         val recordsByParticipant = allRecords.groupBy { it.challengeParticipantId }
