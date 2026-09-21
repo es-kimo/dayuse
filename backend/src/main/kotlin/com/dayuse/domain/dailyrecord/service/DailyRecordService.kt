@@ -260,6 +260,10 @@ class DailyRecordService(
             throw BadRequestException("오늘 또는 미래 날짜는 늦은 인증 대상이 아닙니다.")
         }
 
+        if (record.status == DailyRecordStatus.WAITING && record.date < today) {
+            record.status = DailyRecordStatus.UNCHECKED
+        }
+
         if (record.isLocked()) {
             throw BadRequestException("정산 진행 중이거나 완료된 기록은 인증을 등록할 수 없습니다.")
         }

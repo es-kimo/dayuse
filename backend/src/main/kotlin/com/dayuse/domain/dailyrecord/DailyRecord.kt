@@ -121,9 +121,12 @@ class DailyRecord(
         this.failedAt = LocalDateTime.now()
     }
 
-    fun verifyLate(verificationId: Long) {
+    fun verifyLate(verificationId: Long, today: LocalDate = DateTimeUtils.todayKst()) {
         if (isLocked()) {
             throw BadRequestException("정산 진행 중이거나 완료된 기록은 인증을 등록할 수 없습니다.")
+        }
+        if (status == DailyRecordStatus.WAITING && date < today) {
+            status = DailyRecordStatus.UNCHECKED
         }
         if (status != DailyRecordStatus.UNCHECKED && status != DailyRecordStatus.FAILED) {
             throw BadRequestException("미확인 또는 미수행 상태의 기록만 늦은 인증을 등록할 수 있습니다.")
