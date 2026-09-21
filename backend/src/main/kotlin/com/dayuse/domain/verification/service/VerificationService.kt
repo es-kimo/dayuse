@@ -69,8 +69,8 @@ class VerificationService(
             throw BadRequestException("인증 대상 날짜는 챌린지 기간 내여야 합니다.")
         }
 
-        // 4. 지각 여부 계산 (대상 날짜 < 실제 등록일(KST))
-        val isLate = targetDate < today
+        // 4. 지각 여부 계산 (대상 날짜 익일 09:00 KST 이전이면 정상, 이후이면 지각)
+        val isLate = if (targetDate < today) DateTimeUtils.isLateVerification(targetDate) else false
 
         // 5. 중복 인증 애플리케이션 레벨 1차 체크
         if (verificationRepository.existsByChallengeIdAndUserIdAndTargetDate(

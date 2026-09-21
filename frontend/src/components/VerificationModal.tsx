@@ -127,6 +127,11 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               {recordId ? '늦은 사진 인증' : '오늘 사진 인증'}
             </h2>
             <p className="text-[11px] text-blue-600 font-medium truncate">{action.challengeTitle}</p>
+            {recordId && (
+              <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-1 inline-block">
+                익일 오전 9시 이전 등록 시 정상 인정 (지각 제외)
+              </p>
+            )}
           </div>
           <button
             onClick={onClose}

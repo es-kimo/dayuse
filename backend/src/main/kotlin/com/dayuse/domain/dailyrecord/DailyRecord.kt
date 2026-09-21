@@ -121,7 +121,11 @@ class DailyRecord(
         this.failedAt = LocalDateTime.now()
     }
 
-    fun verifyLate(verificationId: Long, today: LocalDate = DateTimeUtils.todayKst()) {
+    fun verifyLate(
+        verificationId: Long,
+        isLate: Boolean = true,
+        today: LocalDate = DateTimeUtils.todayKst()
+    ) {
         if (isLocked()) {
             throw BadRequestException("정산 진행 중이거나 완료된 기록은 인증을 등록할 수 없습니다.")
         }
@@ -134,7 +138,7 @@ class DailyRecord(
         this.status = DailyRecordStatus.COMPLETED
         this.verificationId = verificationId
         this.penaltyAmount = 0
-        this.isLate = true
+        this.isLate = isLate
     }
 
     fun verifyToday(verificationId: Long) {

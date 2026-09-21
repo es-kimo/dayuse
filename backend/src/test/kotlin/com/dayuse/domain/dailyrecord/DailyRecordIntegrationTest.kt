@@ -398,30 +398,31 @@ class DailyRecordIntegrationTest {
 
     @Test
     fun `과거 날짜의 기록이 WAITING 상태(예 당일 인증 삭제 후 다음날 경과)여도 늦은 인증 등록이 정상 처리된다`() {
-        // 어제 날짜 기록을 WAITING 상태로 명시 설정 (자정 경과 시 DB에 남아있을 수 있는 상태)
-        val yesterdayRecord = dailyRecordRepository.findByChallengeParticipantIdAndDate(
+        // 이틀 전 날짜 기록을 WAITING 상태로 명시 설정 (자정 경과 시 DB에 남아있을 수 있는 상태)
+        val twoDaysAgo = today.minusDays(2)
+        val pastRecord = dailyRecordRepository.findByChallengeParticipantIdAndDate(
             participant1.id,
-            today.minusDays(1)
+            twoDaysAgo
         )!!
-        yesterdayRecord.status = DailyRecordStatus.WAITING
-        dailyRecordRepository.save(yesterdayRecord)
+        pastRecord.status = DailyRecordStatus.WAITING
+        dailyRecordRepository.save(pastRecord)
 
         val lateRequest = LateVerificationRequest(
             imageUrl = "verifications/${challenge1.id}/${memberUser.id}/late_after_rollback.jpg",
             comment = "늦은 인증 성공 테스트"
         )
 
-        mockMvc.post("/api/v1/daily-records/${yesterdayRecord.id}/verify-late") {
+        mockMvc.post("/api/v1/daily-records/${pastRecord.id}/verify-late") {
             header("Authorization", "Bearer $memberToken")
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(lateRequest)
         }.andExpect {
             status { isOk() }
             jsonPath("$.isLate") { value(true) }
-            jsonPath("$.targetDate") { value(today.minusDays(1).toString()) }
+            jsonPath("$.targetDate") { value(twoDaysAgo.toString()) }
         }
 
-        val updated = dailyRecordRepository.findById(yesterdayRecord.id).get()
+        val updated = dailyRecordRepository.findById(pastRecord.id).get()
         assertEquals(DailyRecordStatus.COMPLETED, updated.status)
         assertEquals(true, updated.isLate)
         assertEquals(0, updated.penaltyAmount)

@@ -274,6 +274,8 @@ class DailyRecordService(
 
         presignedUrlService.validateImageOwnership(request.imageUrl, record.challengeId, userId)
 
+        val isLate = DateTimeUtils.isLateVerification(record.date)
+
         val verification = Verification(
             groupId = record.groupId,
             challengeId = record.challengeId,
@@ -281,11 +283,11 @@ class DailyRecordService(
             targetDate = record.date,
             imageUrl = request.imageUrl,
             comment = request.comment,
-            isLate = true
+            isLate = isLate
         )
         val savedVerification = verificationRepository.save(verification)
 
-        record.verifyLate(savedVerification.id)
+        record.verifyLate(savedVerification.id, isLate = isLate, today = today)
 
         return VerificationDetailResponse(
             id = savedVerification.id,
@@ -322,8 +324,8 @@ class DailyRecordService(
 
         record?.let {
             if (it.status != DailyRecordStatus.COMPLETED) {
-                if (verification.isLate) {
-                    it.verifyLate(verification.id)
+                if (verification.targetDate < today) {
+                    it.verifyLate(verification.id, isLate = verification.isLate, today = today)
                 } else {
                     it.verifyToday(verification.id)
                 }

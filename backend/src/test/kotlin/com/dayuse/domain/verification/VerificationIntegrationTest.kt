@@ -265,13 +265,13 @@ class VerificationIntegrationTest {
     }
 
     @Test
-    fun `과거 대상 날짜(targetDate 미도래 또는 이전 날짜)로 인증을 등록하면 isLate가 true로 세팅된다`() {
-        val yesterday = DateTimeUtils.todayKst().minusDays(1)
+    fun `과거 대상 날짜(targetDate 미도래 또는 이전 날짜)로 인증을 등록하면 익일 09시 경과 시 isLate가 true로 세팅된다`() {
+        val twoDaysAgo = DateTimeUtils.todayKst().minusDays(2)
         val request = CreateVerificationRequest(
             challengeId = challenge.id,
-            imageUrl = "https://s3.example.com/yesterday.jpg",
-            comment = "어제 깜빡해서 지금 올립니다",
-            targetDate = yesterday
+            imageUrl = "https://s3.example.com/twoDaysAgo.jpg",
+            comment = "이틀 전 깜빡해서 지금 올립니다",
+            targetDate = twoDaysAgo
         )
 
         mockMvc.post("/api/v1/verifications") {
@@ -283,7 +283,7 @@ class VerificationIntegrationTest {
             content = objectMapper.writeValueAsString(request)
         }.andExpect {
             status { isCreated() }
-            jsonPath("$.targetDate") { value(yesterday.toString()) }
+            jsonPath("$.targetDate") { value(twoDaysAgo.toString()) }
             jsonPath("$.isLate") { value(true) }
         }
     }
