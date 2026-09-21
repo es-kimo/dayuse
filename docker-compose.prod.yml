@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: dayuse-prod-mysql
+    restart: always
+    ports:
+      - "127.0.0.1:3306:3306"
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+09:00
+    volumes:
+      - prod_mysql_data:/var/lib/mysql
+    networks:
+      - dayuse-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dayuse-prod-backend
+    restart: always
+    ports:
+      - "80:8080"
+    env_file: .env
+    depends_on:
+      - mysql
+    networks:
+      - dayuse-network
+
+volumes:
+  prod_mysql_data:
+
+networks:
+  dayuse-network:
+    driver: bridge
