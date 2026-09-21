@@ -24,6 +24,7 @@ import { GroupStatusSummaryBanner } from '../components/GroupStatusSummaryBanner
 import { UncheckedRecordsBottomSheet } from '../components/UncheckedRecordsBottomSheet';
 import { GroupSettlementCard } from '../components/GroupSettlementCard';
 import { DepositReportModal } from '../components/DepositReportModal';
+import { formatKstDate } from '../utils/date';
 import {
   ArrowLeft,
   Copy,
@@ -683,7 +684,7 @@ export const GroupDetailPage: React.FC = () => {
                         )}
                       </div>
                       <span className="text-[10px] text-slate-400">
-                        {new Date(member.joinedAt).toLocaleDateString()} 가입
+                        {formatKstDate(member.joinedAt)} 가입
                       </span>
                     </div>
                   </div>

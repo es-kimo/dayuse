@@ -14,6 +14,11 @@ export const parseKstDate = (dateInput: string | Date | null | undefined): Date 
   let str = dateInput.trim();
   if (!str) return null;
 
+  // 공백 구분자(' ')가 있으면 'T'로 치환 (예: "2026-09-22 07:18:48")
+  if (str.includes(' ') && !str.includes('T')) {
+    str = str.replace(' ', 'T');
+  }
+
   // 타임존 오프셋(Z 또는 +XX:XX 또는 -XX:XX)이 없는 경우 KST(+09:00)로 보정
   const hasTimezone = str.endsWith('Z') || /[+-]\d{2}(:\d{2})?$/.test(str);
   if (!hasTimezone && str.includes('T')) {
@@ -81,4 +86,16 @@ export const getTodayKstString = (): string => {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date());
+};
+
+/**
+ * YYYY-MM-DD 날짜 문자열에 KST 기준으로 N일을 더한 날짜를 반환합니다.
+ */
+export const addDaysKst = (dateStr: string, days: number): string => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const d = new Date(Date.UTC(year, month - 1, day + days));
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
 };

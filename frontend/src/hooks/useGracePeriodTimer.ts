@@ -12,8 +12,13 @@ export interface GracePeriodStatus {
  */
 export function getGraceDeadline(targetDate: string): Date {
   const [year, month, day] = targetDate.split('-').map(Number);
-  // targetDate 익일 오전 09:00:00
-  return new Date(year, month - 1, day + 1, 9, 0, 0, 0);
+  // targetDate 익일 날짜 구하기 (Date.UTC로 안전하게 일 단위 연산)
+  const nextDayUtc = new Date(Date.UTC(year, month - 1, day + 1));
+  const nextYear = nextDayUtc.getUTCFullYear();
+  const nextMonth = String(nextDayUtc.getUTCMonth() + 1).padStart(2, '0');
+  const nextDay = String(nextDayUtc.getUTCDate()).padStart(2, '0');
+  // 브라우저 로컬 타임존과 무관하게 한국 표준시(+09:00) 오전 9시로 정확하게 파싱
+  return new Date(`${nextYear}-${nextMonth}-${nextDay}T09:00:00+09:00`);
 }
 
 export function calculateGracePeriod(targetDate: string): GracePeriodStatus {

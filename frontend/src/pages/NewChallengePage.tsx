@@ -3,29 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { MobileLayout } from '../components/MobileLayout';
 import { ArrowLeft, Calendar, ShieldCheck, Coins, AlertCircle, Loader2 } from 'lucide-react';
-
-const getTodayString = (): string => {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const addDays = (dateStr: string, days: number): string => {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + days);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+import { getTodayKstString, addDaysKst } from '../utils/date';
 
 export const NewChallengePage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
 
-  const today = getTodayString();
+  const today = getTodayKstString();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [verificationCriteria, setVerificationCriteria] = useState('');
@@ -36,7 +20,7 @@ export const NewChallengePage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const endDate = addDays(startDate, 13); // 시작일 포함 14일
+  const endDate = addDaysKst(startDate, 13); // 시작일 포함 14일
 
   const handleOpenConfirm = (e: React.FormEvent) => {
     e.preventDefault();
