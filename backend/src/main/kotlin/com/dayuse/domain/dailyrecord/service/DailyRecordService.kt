@@ -103,7 +103,6 @@ class DailyRecordService(
         }
     }
 
-    @Transactional(readOnly = true)
     fun getStatusSummary(groupId: Long, userId: Long): StatusSummaryResponse {
         val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
         if (!isMember) {
@@ -162,7 +161,6 @@ class DailyRecordService(
         }
     }
 
-    @Transactional(readOnly = true)
     fun getChallengeCalendar(challengeId: Long, userId: Long): ChallengeCalendarResponse {
         val challenge = challengeRepository.findById(challengeId)
             .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
