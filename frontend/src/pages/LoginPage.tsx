@@ -79,31 +79,33 @@ export const LoginPage: React.FC = () => {
           <span>카카오로 시작하기</span>
         </button>
 
-        {/* 로컬 개발/학습용 모의 로그인 영역 */}
-        <div className="w-full max-w-xs mt-10 pt-6 border-t border-slate-200">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 text-center">
-            로컬 개발·테스트용 빠른 로그인
+        {/* 로컬 개발/학습용 모의 로그인 영역 (개발 환경에서만 노출) */}
+        {import.meta.env.DEV && (
+          <div className="w-full max-w-xs mt-10 pt-6 border-t border-slate-200">
+            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 text-center">
+              로컬 개발·테스트용 빠른 로그인
+            </div>
+            <div className="flex items-center gap-2">
+              <select
+                value={mockUserId}
+                onChange={(e) => setMockUserId(e.target.value)}
+                className="flex-1 text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 outline-none focus:border-blue-500"
+              >
+                <option value="1">사용자 1 (모임장 테스트용)</option>
+                <option value="2">사용자 2 (초대 가입 테스트용)</option>
+                <option value="3">사용자 3 (비회원 차단 테스트용)</option>
+              </select>
+              <button
+                onClick={() => handleMockLogin(`mock-user-${mockUserId}`)}
+                disabled={isLoading}
+                className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium rounded-lg flex items-center gap-1 active:scale-95 transition"
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                접속
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <select
-              value={mockUserId}
-              onChange={(e) => setMockUserId(e.target.value)}
-              className="flex-1 text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 outline-none focus:border-blue-500"
-            >
-              <option value="1">사용자 1 (모임장 테스트용)</option>
-              <option value="2">사용자 2 (초대 가입 테스트용)</option>
-              <option value="3">사용자 3 (비회원 차단 테스트용)</option>
-            </select>
-            <button
-              onClick={() => handleMockLogin(`mock-user-${mockUserId}`)}
-              disabled={isLoading}
-              className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium rounded-lg flex items-center gap-1 active:scale-95 transition"
-            >
-              <UserCheck className="w-3.5 h-3.5" />
-              접속
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </MobileLayout>
   );
