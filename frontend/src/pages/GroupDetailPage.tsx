@@ -703,16 +703,6 @@ export const GroupDetailPage: React.FC = () => {
         />
       )}
 
-      {/* 사진 인증 모달 (늦은 인증) */}
-      {lateVerificationTarget && (
-        <VerificationModal
-          action={lateVerificationTarget.action}
-          recordId={lateVerificationTarget.recordId}
-          onClose={() => setLateVerificationTarget(null)}
-          onSuccess={handleLateVerificationSuccess}
-        />
-      )}
-
       {/* 미확인 기록 정리 바텀시트 */}
       <UncheckedRecordsBottomSheet
         isOpen={showUncheckedSheet}
@@ -722,6 +712,16 @@ export const GroupDetailPage: React.FC = () => {
         onMarkFailed={handleMarkFailed}
         onStartVerifyLate={handleStartVerifyLate}
       />
+
+      {/* 사진 인증 모달 (늦은 인증) */}
+      {lateVerificationTarget && (
+        <VerificationModal
+          action={lateVerificationTarget.action}
+          recordId={lateVerificationTarget.recordId}
+          onClose={() => setLateVerificationTarget(null)}
+          onSuccess={handleLateVerificationSuccess}
+        />
+      )}
 
       {/* 댓글 바텀시트 */}
       {activeCommentVerificationId !== null && (

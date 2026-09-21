@@ -82,7 +82,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
       {/* 플로팅 토스트 컨테이너 (모바일 하단 safe-area 여백 준수) */}
       <div
-        className="fixed bottom-[max(1.5rem,calc(1rem+env(safe-area-inset-bottom)))] left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-50 pointer-events-none flex flex-col gap-2"
+        className="fixed bottom-[max(1.5rem,calc(1rem+env(safe-area-inset-bottom)))] left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-[70] pointer-events-none flex flex-col gap-2"
         aria-live="polite"
       >
         {toasts.map((toast) => {
