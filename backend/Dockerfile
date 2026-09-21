@@ -22,5 +22,6 @@ USER dayuse
 
 EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=local
+ENV TZ=Asia/Seoul
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
