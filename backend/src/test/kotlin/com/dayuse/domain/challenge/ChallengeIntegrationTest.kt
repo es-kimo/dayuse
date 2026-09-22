@@ -182,22 +182,22 @@ class ChallengeIntegrationTest {
             )
         )
         challengeParticipantRepository.save(
-            ChallengeParticipant(challengeId = challenge.id, userId = hostUser.id, penaltyAmount = 5000)
+            ChallengeParticipant(challengeId = challenge.id, userId = hostUser.id, penaltyAmount = 5000, startDate = challenge.startDate)
         )
         challengeParticipantRepository.save(
-            ChallengeParticipant(challengeId = challenge.id, userId = memberUser.id, penaltyAmount = 5000)
+            ChallengeParticipant(challengeId = challenge.id, userId = memberUser.id, penaltyAmount = 5000, startDate = challenge.startDate)
         )
 
-        // 신규 참여 시도 -> 400 Bad Request
+        // 이미 참여 중인 사용자 중복 참여 시도 -> 409 Conflict
         mockMvc.post("/api/v1/challenges/${challenge.id}/participants") {
             header("Authorization", hostToken)
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(JoinChallengeRequest(penaltyAmount = 3000))
         }.andExpect {
-            status { isBadRequest() }
+            status { isConflict() }
         }
 
-        // 기존 참여자 참여 취소 시도 -> 400 Bad Request
+        // 기존 참여자(이미 시작됨) 참여 취소 시도 -> 400 Bad Request
         mockMvc.delete("/api/v1/challenges/${challenge.id}/participants/me") {
             header("Authorization", memberToken)
         }.andExpect {

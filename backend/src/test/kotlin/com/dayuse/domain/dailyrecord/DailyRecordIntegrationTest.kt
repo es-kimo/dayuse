@@ -125,7 +125,8 @@ class DailyRecordIntegrationTest {
             ChallengeParticipant(
                 challengeId = challenge1.id,
                 userId = memberUser.id,
-                penaltyAmount = 5000
+                penaltyAmount = 5000,
+                startDate = challenge1.startDate
             )
         )
 
@@ -237,7 +238,8 @@ class DailyRecordIntegrationTest {
             ChallengeParticipant(
                 challengeId = challenge2.id,
                 userId = memberUser.id,
-                penaltyAmount = 10000
+                penaltyAmount = 10000,
+                startDate = challenge2.startDate
             )
         )
         dailyRecordService.ensureDailyRecordsForParticipant(participant2, challenge2, today)

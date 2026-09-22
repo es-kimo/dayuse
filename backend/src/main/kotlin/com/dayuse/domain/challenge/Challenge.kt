@@ -81,7 +81,33 @@ class Challenge(
     }
 
     fun canJoin(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
-        return !isStarted(today)
+        return !isEnded(today)
+    }
+
+    fun calculateStartDate(
+        startDateType: com.dayuse.domain.challenge.dto.StartDateType?,
+        today: LocalDate = DateTimeUtils.todayKst()
+    ): LocalDate {
+        if (isEnded(today)) {
+            throw BadRequestException("이미 종료된 챌린지에는 참여할 수 없습니다.")
+        }
+        if (!isStarted(today)) {
+            return this.startDate
+        }
+        val type = startDateType ?: com.dayuse.domain.challenge.dto.StartDateType.TOMORROW
+        val calculated = when (type) {
+            com.dayuse.domain.challenge.dto.StartDateType.TODAY -> today
+            com.dayuse.domain.challenge.dto.StartDateType.TOMORROW -> {
+                if (today >= endDate) {
+                    throw BadRequestException("종료 당일에는 오늘부터만 참여할 수 있습니다.")
+                }
+                today.plusDays(1)
+            }
+        }
+        if (calculated > endDate) {
+            throw BadRequestException("수행 시작일은 챌린지 종료일 이전이어야 합니다.")
+        }
+        return calculated
     }
 
     fun canCancel(today: LocalDate = DateTimeUtils.todayKst()): Boolean {

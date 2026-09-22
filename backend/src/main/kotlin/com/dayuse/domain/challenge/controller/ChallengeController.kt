@@ -5,6 +5,7 @@ import com.dayuse.domain.challenge.dto.ChallengeParticipantResponse
 import com.dayuse.domain.challenge.dto.ChallengeSummaryResponse
 import com.dayuse.domain.challenge.dto.CreateChallengeRequest
 import com.dayuse.domain.challenge.dto.JoinChallengeRequest
+import com.dayuse.domain.challenge.dto.JoinPreviewResponse
 import com.dayuse.domain.challenge.dto.UpdateChallengeRequest
 import com.dayuse.domain.challenge.dto.UpdatePenaltyAmountRequest
 import com.dayuse.domain.challenge.service.ChallengeService
@@ -47,6 +48,16 @@ class GroupChallengeController(
         val response = challengeService.getGroupChallenges(groupId, userId, status)
         return ResponseEntity.ok(response)
     }
+
+    @GetMapping("/{challengeId}/preview-join")
+    fun getGroupChallengeJoinPreview(
+        @PathVariable groupId: Long,
+        @PathVariable challengeId: Long,
+        @CurrentUserId userId: Long
+    ): ResponseEntity<JoinPreviewResponse> {
+        val response = challengeService.getJoinPreview(challengeId, userId)
+        return ResponseEntity.ok(response)
+    }
 }
 
 @RestController
@@ -54,6 +65,15 @@ class GroupChallengeController(
 class ChallengeController(
     private val challengeService: ChallengeService
 ) {
+
+    @GetMapping("/preview-join")
+    fun getChallengeJoinPreview(
+        @PathVariable challengeId: Long,
+        @CurrentUserId userId: Long
+    ): ResponseEntity<JoinPreviewResponse> {
+        val response = challengeService.getJoinPreview(challengeId, userId)
+        return ResponseEntity.ok(response)
+    }
 
     @GetMapping
     fun getChallengeDetail(

@@ -1,13 +1,19 @@
 package com.dayuse.domain.challenge
 
 import com.dayuse.global.entity.BaseTimeEntity
+import com.dayuse.global.exception.BadRequestException
+import com.dayuse.global.exception.ChallengeAlreadyStartedException
+import com.dayuse.global.util.DateTimeUtils
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Entity
@@ -30,6 +36,13 @@ class ChallengeParticipant(
     @Column(nullable = false)
     var penaltyAmount: Int = 5000,
 
+    @Column(nullable = false)
+    var startDate: LocalDate = LocalDate.now(),
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    var status: ParticipantStatus = ParticipantStatus.ACTIVE,
+
     joinedAt: LocalDateTime = LocalDateTime.now()
 ) : BaseTimeEntity() {
     @Id
@@ -50,4 +63,43 @@ class ChallengeParticipant(
     @Column(nullable = false)
     var joinedAt: LocalDateTime = joinedAt
         protected set
+
+    fun isStarted(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
+        return today >= startDate
+    }
+
+    fun canCancel(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
+        return !isStarted(today) && status == ParticipantStatus.ACTIVE
+    }
+
+    fun canModifyPenalty(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
+        return !isStarted(today) && status == ParticipantStatus.ACTIVE
+    }
+
+    fun cancel(today: LocalDate = DateTimeUtils.todayKst()) {
+        if (!canCancel(today)) {
+            throw ChallengeAlreadyStartedException("이미 시작된 참여는 취소할 수 없습니다.")
+        }
+        this.status = ParticipantStatus.CANCELLED
+    }
+
+    fun updatePenalty(newAmount: Int, today: LocalDate = DateTimeUtils.todayKst()) {
+        if (!canModifyPenalty(today)) {
+            throw ChallengeAlreadyStartedException("이미 시작된 참여는 약정 금액을 변경할 수 없습니다.")
+        }
+        if (newAmount < 0) {
+            throw BadRequestException("약정 벌금은 0원 이상이어야 합니다.")
+        }
+        this.penaltyAmount = newAmount
+    }
+
+    fun reactivate(newStartDate: LocalDate, newPenalty: Int) {
+        if (newPenalty < 0) {
+            throw BadRequestException("약정 벌금은 0원 이상이어야 합니다.")
+        }
+        this.startDate = newStartDate
+        this.penaltyAmount = newPenalty
+        this.status = ParticipantStatus.ACTIVE
+        this.joinedAt = LocalDateTime.now()
+    }
 }
