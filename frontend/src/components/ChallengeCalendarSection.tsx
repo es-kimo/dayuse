@@ -274,7 +274,7 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
 
           return (
             <CalendarRecordRow
-              key={record.id}
+              key={`${record.date}-${record.id}`}
               record={record}
               isMyRecord={isMyRecord}
               todayStr={todayStr}
