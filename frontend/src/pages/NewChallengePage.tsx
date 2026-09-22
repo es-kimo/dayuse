@@ -111,7 +111,7 @@ export const NewChallengePage: React.FC = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="예: 매일 아침 10분 스트레칭"
-            className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
+            className="w-full text-base px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
           />
         </div>
 
@@ -125,7 +125,7 @@ export const NewChallengePage: React.FC = () => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="모임원들에게 챌린지의 목표나 규칙을 소개해 주세요."
-            className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
+            className="w-full text-base px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
           />
         </div>
 
@@ -141,7 +141,7 @@ export const NewChallengePage: React.FC = () => {
             value={verificationCriteria}
             onChange={(e) => setVerificationCriteria(e.target.value)}
             placeholder="예: 스트레칭 수행 화면 캡처 또는 운동 앱 기록 사진 1장 (자정 전까지 제출)"
-            className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
+            className="w-full text-base px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
           />
         </div>
 
@@ -161,7 +161,7 @@ export const NewChallengePage: React.FC = () => {
                 min={today}
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full text-xs px-2.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
+                className="w-full text-base px-2.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
               />
             </div>
             <div>
@@ -170,7 +170,7 @@ export const NewChallengePage: React.FC = () => {
                 type="date"
                 disabled
                 value={endDate}
-                className="w-full text-xs px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
+                className="w-full text-base px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
               />
             </div>
           </div>
@@ -216,7 +216,7 @@ export const NewChallengePage: React.FC = () => {
               step={1000}
               value={penaltyAmount}
               onChange={(e) => setPenaltyAmount(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
+              className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
             />
           </div>
           <p className="text-[11px] text-slate-400">

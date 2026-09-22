@@ -61,7 +61,7 @@ export const NewGroupPage: React.FC = () => {
               if (error) setError('');
             }}
             maxLength={50}
-            className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white transition"
+            className="w-full px-3.5 py-2.5 text-base bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white transition"
           />
           <div className="flex justify-between items-center mt-2 text-[11px] text-slate-400">
             <span>생성자는 자동으로 모임장(HOST)이 됩니다.</span>

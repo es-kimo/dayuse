@@ -155,7 +155,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
             onChange={(e) => setContent(e.target.value.slice(0, 300))}
             disabled={submitting}
             placeholder="응원과 격려의 댓글을 남겨보세요..."
-            className="flex-1 text-xs min-h-[44px] px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-blue-500 transition text-slate-800 placeholder:text-slate-400"
+            className="flex-1 text-base min-h-[44px] px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-blue-500 transition text-slate-800 placeholder:text-slate-400"
           />
           <button
             type="submit"

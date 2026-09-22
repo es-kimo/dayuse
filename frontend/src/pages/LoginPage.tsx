@@ -89,7 +89,7 @@ export const LoginPage: React.FC = () => {
               <select
                 value={mockUserId}
                 onChange={(e) => setMockUserId(e.target.value)}
-                className="flex-1 text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 outline-none focus:border-blue-500"
+                className="flex-1 text-base bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 outline-none focus:border-blue-500"
               >
                 <option value="1">사용자 1 (모임장 테스트용)</option>
                 <option value="2">사용자 2 (초대 가입 테스트용)</option>

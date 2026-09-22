@@ -504,7 +504,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 step={1000}
                 value={joinPenalty}
                 onChange={(e) => setJoinPenalty(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
+                className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -569,7 +569,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 step={1000}
                 value={joinPenalty}
                 onChange={(e) => setJoinPenalty(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
+                className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -621,7 +621,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 maxLength={50}
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
+                className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -631,7 +631,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 rows={2}
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
-                className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
 
@@ -644,7 +644,7 @@ export const ChallengeDetailPage: React.FC = () => {
                     required
                     value={editCriteria}
                     onChange={(e) => setEditCriteria(e.target.value)}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                    className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -654,7 +654,7 @@ export const ChallengeDetailPage: React.FC = () => {
                       type="date"
                       value={editStartDate}
                       onChange={(e) => setEditStartDate(e.target.value)}
-                      className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200"
+                      className="w-full text-base px-2 py-1.5 rounded-lg border border-slate-200"
                     />
                   </div>
                   <div>
@@ -663,7 +663,7 @@ export const ChallengeDetailPage: React.FC = () => {
                       type="date"
                       value={editEndDate}
                       onChange={(e) => setEditEndDate(e.target.value)}
-                      className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200"
+                      className="w-full text-base px-2 py-1.5 rounded-lg border border-slate-200"
                     />
                   </div>
                 </div>

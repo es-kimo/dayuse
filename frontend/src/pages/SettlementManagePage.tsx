@@ -384,7 +384,7 @@ export const SettlementManagePage: React.FC = () => {
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="예: 계좌 입금 내역이 확인되지 않습니다."
                   rows={3}
-                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white resize-none"
+                  className="w-full text-base p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white resize-none"
                   required
                 />
               </div>
@@ -440,7 +440,7 @@ export const SettlementManagePage: React.FC = () => {
                   onChange={(e) => setCancelReason(e.target.value)}
                   placeholder="예: 입금자명 오인으로 인한 실수 승인 취소"
                   rows={3}
-                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white resize-none"
+                  className="w-full text-base p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white resize-none"
                   required
                 />
               </div>

@@ -246,7 +246,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
                   maxLength={50}
-                  className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white"
+                  className="w-full text-base px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white"
                   required
                 />
               </div>
@@ -259,7 +259,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
                   maxLength={50}
-                  className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white"
+                  className="w-full text-base px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white"
                   required
                 />
               </div>
@@ -272,7 +272,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
                   value={accountHolder}
                   onChange={(e) => setAccountHolder(e.target.value)}
                   maxLength={50}
-                  className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white"
+                  className="w-full text-base px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white"
                   required
                 />
               </div>

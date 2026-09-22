@@ -641,7 +641,7 @@ export const GroupDetailPage: React.FC = () => {
                 type="text"
                 readOnly
                 value={inviteUrl}
-                className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-600 truncate outline-none select-all"
+                className="flex-1 text-base bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-600 truncate outline-none select-all"
               />
               <button
                 onClick={handleCopyLink}

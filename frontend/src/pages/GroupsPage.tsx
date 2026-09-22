@@ -78,7 +78,7 @@ export const GroupsPage: React.FC = () => {
             placeholder="초대 코드 또는 링크 입력"
             value={inviteInput}
             onChange={(e) => setInviteInput(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-lg outline-none focus:border-blue-500"
+            className="w-full pl-9 pr-3 py-2 text-base bg-white border border-slate-200 rounded-lg outline-none focus:border-blue-500"
           />
         </div>
         <button
