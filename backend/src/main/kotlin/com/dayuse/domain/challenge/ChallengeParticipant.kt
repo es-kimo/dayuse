@@ -40,7 +40,10 @@ class ChallengeParticipant(
     var startDate: LocalDate = LocalDate.now(),
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(
+        nullable = false,
+        length = 20
+    )
     var status: ParticipantStatus = ParticipantStatus.ACTIVE,
 
     joinedAt: LocalDateTime = LocalDateTime.now()
@@ -65,29 +68,41 @@ class ChallengeParticipant(
         protected set
 
     fun isStarted(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
-        // TODO [사용자 미션 1-1]: 참여자의 수행 시작일(startDate)과 기준일(today)을 비교하여 시작 여부를 반환하세요.
-        return false
+        return today >= startDate
     }
 
     fun canCancel(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
-        // TODO [사용자 미션 1-2]: 본인의 수행이 시작되기 전이면서 참여 상태가 ACTIVE인 경우에만 취소 가능하도록 구현하세요.
-        return false
+        return !isStarted(today) && status == ParticipantStatus.ACTIVE
     }
 
     fun canModifyPenalty(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
-        // TODO [사용자 미션 1-3]: 본인의 수행이 시작되기 전이면서 참여 상태가 ACTIVE인 경우에만 약정 금액 수정이 가능하도록 구현하세요.
-        return false
+        return !isStarted(today) && status == ParticipantStatus.ACTIVE
     }
 
     fun cancel(today: LocalDate = DateTimeUtils.todayKst()) {
-        // TODO [사용자 미션 1-4]: canCancel 검증을 통과하지 못하면 ChallengeAlreadyStartedException을 던지고, 상태를 CANCELLED로 전이하세요.
+        if (!canCancel(today)) {
+            throw ChallengeAlreadyStartedException("이미 시작된 참여는 취소할 수 없습니다.")
+        }
+        this.status = ParticipantStatus.CANCELLED
     }
 
-    fun updatePenalty(newAmount: Int, today: LocalDate = DateTimeUtils.todayKst()) {
-        // TODO [사용자 미션 1-5]: canModifyPenalty 검증 및 0원 이상 검증(BadRequestException) 후 penaltyAmount를 수정하세요.
+    fun updatePenalty(
+        newAmount: Int,
+        today: LocalDate = DateTimeUtils.todayKst()
+    ) {
+        if (!canModifyPenalty(today)) {
+            throw ChallengeAlreadyStartedException("이미 시작된 참여는 약정 금액을 변경할 수 없습니다.")
+        }
+        if (newAmount < 0) {
+            throw BadRequestException("약정 벌금은 0원 이상이어야 합니다.")
+        }
+        this.penaltyAmount = newAmount
     }
 
-    fun reactivate(newStartDate: LocalDate, newPenalty: Int) {
+    fun reactivate(
+        newStartDate: LocalDate,
+        newPenalty: Int
+    ) {
         if (newPenalty < 0) {
             throw BadRequestException("약정 벌금은 0원 이상이어야 합니다.")
         }

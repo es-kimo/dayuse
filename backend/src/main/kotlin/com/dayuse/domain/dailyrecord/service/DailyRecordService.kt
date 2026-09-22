@@ -46,14 +46,15 @@ class DailyRecordService(
         challenge: Challenge,
         today: LocalDate = DateTimeUtils.todayKst()
     ) {
-        // TODO [사용자 미션 3-1]: 참여자의 상태가 ACTIVE가 아니면 레코드를 생성하지 않고 즉시 리턴하세요.
+        if (participant.status != ParticipantStatus.ACTIVE) {
+            return
+        }
 
         val existingRecords = dailyRecordRepository.findAllByChallengeParticipantId(participant.id)
         val existingDates = existingRecords.map { it.date }.toSet()
 
-        // TODO [사용자 미션 3-2]: 중도 참여자의 참여 시작일 이전 날짜에는 DailyRecord가 생성되지 않도록
-        // challenge.startDate와 participant.startDate 중 더 늦은 시작일을 effectiveStartDate로 산출하세요.
-        val effectiveStartDate = challenge.startDate
+        val effectiveStartDate =
+            if (participant.startDate > challenge.startDate) participant.startDate else challenge.startDate
 
         val missingRecords = mutableListOf<DailyRecord>()
         var curDate = effectiveStartDate
@@ -102,23 +103,43 @@ class DailyRecordService(
     ) {
         val challenges = challengeRepository.findAllByGroupId(groupId)
         for (challenge in challenges) {
-            val participant = challengeParticipantRepository.findByChallengeIdAndUserId(challenge.id, userId)
+            val participant = challengeParticipantRepository.findByChallengeIdAndUserId(
+                challenge.id,
+                userId
+            )
             if (participant != null) {
-                ensureDailyRecordsForParticipant(participant, challenge, today)
+                ensureDailyRecordsForParticipant(
+                    participant,
+                    challenge,
+                    today
+                )
             }
         }
     }
 
     @Transactional(readOnly = true)
-    fun getStatusSummary(groupId: Long, userId: Long): StatusSummaryResponse {
-        val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
+    fun getStatusSummary(
+        groupId: Long,
+        userId: Long
+    ): StatusSummaryResponse {
+        val isMember = groupMemberRepository.existsByGroupIdAndUserId(
+            groupId,
+            userId
+        )
         if (!isMember) {
             throw ForbiddenException("해당 모임의 멤버만 상태 요약을 조회할 수 있습니다.")
         }
 
         val today = DateTimeUtils.todayKst()
-        val uncheckedCount = dailyRecordRepository.countUncheckedRecords(userId, groupId, today)
-        val unpaidPenaltyAmount = dailyRecordRepository.calculateUnpaidPenaltyAmount(userId, groupId)
+        val uncheckedCount = dailyRecordRepository.countUncheckedRecords(
+            userId,
+            groupId,
+            today
+        )
+        val unpaidPenaltyAmount = dailyRecordRepository.calculateUnpaidPenaltyAmount(
+            userId,
+            groupId
+        )
 
         return StatusSummaryResponse(
             groupId = groupId,
@@ -128,14 +149,24 @@ class DailyRecordService(
     }
 
     @Transactional(readOnly = true)
-    fun getUncheckedRecords(groupId: Long, userId: Long): List<UncheckedRecordResponse> {
-        val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
+    fun getUncheckedRecords(
+        groupId: Long,
+        userId: Long
+    ): List<UncheckedRecordResponse> {
+        val isMember = groupMemberRepository.existsByGroupIdAndUserId(
+            groupId,
+            userId
+        )
         if (!isMember) {
             throw ForbiddenException("해당 모임의 멤버만 미확인 기록을 조회할 수 있습니다.")
         }
 
         val today = DateTimeUtils.todayKst()
-        val uncheckedRecords = dailyRecordRepository.findUncheckedRecords(userId, groupId, today)
+        val uncheckedRecords = dailyRecordRepository.findUncheckedRecords(
+            userId,
+            groupId,
+            today
+        )
 
         val challengeIds = uncheckedRecords.map { it.challengeId }.distinct()
         val challenges = challengeRepository.findAllById(challengeIds).associateBy { it.id }
@@ -160,17 +191,26 @@ class DailyRecordService(
     }
 
     @Transactional(readOnly = true)
-    fun getChallengeCalendar(challengeId: Long, userId: Long): ChallengeCalendarResponse {
+    fun getChallengeCalendar(
+        challengeId: Long,
+        userId: Long
+    ): ChallengeCalendarResponse {
         val challenge = challengeRepository.findById(challengeId)
             .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
 
-        val isMember = groupMemberRepository.existsByGroupIdAndUserId(challenge.groupId, userId)
+        val isMember = groupMemberRepository.existsByGroupIdAndUserId(
+            challenge.groupId,
+            userId
+        )
         if (!isMember) {
             throw ForbiddenException("해당 모임의 멤버만 캘린더를 조회할 수 있습니다.")
         }
 
         val today = DateTimeUtils.todayKst()
-        val participants = challengeParticipantRepository.findAllByChallengeIdAndStatus(challengeId, ParticipantStatus.ACTIVE)
+        val participants = challengeParticipantRepository.findAllByChallengeIdAndStatus(
+            challengeId,
+            ParticipantStatus.ACTIVE
+        )
 
         val allRecords = dailyRecordRepository.findAllByChallengeId(challengeId)
         val recordsByParticipant = allRecords.groupBy { it.challengeParticipantId }
@@ -188,7 +228,11 @@ class DailyRecordService(
                 .map { record ->
                     val verification = record.verificationId?.let { verifications[it] }
                     val imageUrl = verification?.let {
-                        presignedUrlService.generatePresignedGetUrl(it.imageUrl, it.challengeId, it.userId)
+                        presignedUrlService.generatePresignedGetUrl(
+                            it.imageUrl,
+                            it.challengeId,
+                            it.userId
+                        )
                     }
 
                     // 자정 경과 동적 상태 평가
@@ -243,7 +287,10 @@ class DailyRecordService(
         )
     }
 
-    fun markFailed(recordId: Long, userId: Long): DailyRecordDetailResponse {
+    fun markFailed(
+        recordId: Long,
+        userId: Long
+    ): DailyRecordDetailResponse {
         val record = dailyRecordRepository.findById(recordId)
             .orElseThrow { ResourceNotFoundException("일일 기록을 찾을 수 없습니다.") }
 
@@ -275,7 +322,11 @@ class DailyRecordService(
         val today = DateTimeUtils.todayKst()
         record.validateLateVerification(today)
 
-        presignedUrlService.validateImageOwnership(request.imageUrl, record.challengeId, userId)
+        presignedUrlService.validateImageOwnership(
+            request.imageUrl,
+            record.challengeId,
+            userId
+        )
 
         val isLate = DateTimeUtils.isLateVerification(record.date)
 
@@ -290,7 +341,11 @@ class DailyRecordService(
         )
         val savedVerification = verificationRepository.save(verification)
 
-        record.verifyLate(savedVerification.id, isLate = isLate, today = today)
+        record.verifyLate(
+            savedVerification.id,
+            isLate = isLate,
+            today = today
+        )
 
         return VerificationDetailResponse(
             id = savedVerification.id,
@@ -318,7 +373,11 @@ class DailyRecordService(
 
         val challenge = challengeRepository.findById(verification.challengeId).orElse(null) ?: return
         val today = DateTimeUtils.todayKst()
-        ensureDailyRecordsForParticipant(participant, challenge, today)
+        ensureDailyRecordsForParticipant(
+            participant,
+            challenge,
+            today
+        )
 
         val record = dailyRecordRepository.findByChallengeParticipantIdAndDate(
             participant.id,
@@ -328,7 +387,11 @@ class DailyRecordService(
         record?.let {
             if (it.status != DailyRecordStatus.COMPLETED) {
                 if (verification.targetDate < today) {
-                    it.verifyLate(verification.id, isLate = verification.isLate, today = today)
+                    it.verifyLate(
+                        verification.id,
+                        isLate = verification.isLate,
+                        today = today
+                    )
                 } else {
                     it.verifyToday(verification.id)
                 }
