@@ -213,9 +213,10 @@ class ChallengeService(
         val allRecords = dailyRecordRepository?.findAllByChallengeId(challengeId).orEmpty()
         val participantResponses = participants.map { p ->
             val user = userMap[p.userId]
-            val totalDays = ChronoUnit.DAYS.between(p.startDate, challenge.endDate).toInt() + 1
-            val completedCount = allRecords.count { it.challengeParticipantId == p.id && it.status == DailyRecordStatus.COMPLETED }
-            val completionRate = if (totalDays > 0) ((completedCount.toDouble() / totalDays) * 100).toInt() else 0
+            // TODO [사용자 미션 4]: '본인 완료 일수 / 본인 전체 수행일 수' 공식으로 0~100 정수 백분율(completionRate)을 계산하세요.
+            // - 본인 전체 수행일 수: participant.startDate 부터 challenge.endDate 까지의 일수 (양 끝일 포함)
+            // - 본인 완료 일수: allRecords 중 해당 participant의 기록이면서 상태가 COMPLETED 인 개수
+            val completionRate = 0
 
             ChallengeParticipantResponse(
                 id = p.id,

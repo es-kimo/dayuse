@@ -46,12 +46,15 @@ class DailyRecordService(
         challenge: Challenge,
         today: LocalDate = DateTimeUtils.todayKst()
     ) {
-        if (participant.status != ParticipantStatus.ACTIVE) return
+        // TODO [사용자 미션 3-1]: 참여자의 상태가 ACTIVE가 아니면 레코드를 생성하지 않고 즉시 리턴하세요.
 
         val existingRecords = dailyRecordRepository.findAllByChallengeParticipantId(participant.id)
         val existingDates = existingRecords.map { it.date }.toSet()
 
-        val effectiveStartDate = if (participant.startDate > challenge.startDate) participant.startDate else challenge.startDate
+        // TODO [사용자 미션 3-2]: 중도 참여자의 참여 시작일 이전 날짜에는 DailyRecord가 생성되지 않도록
+        // challenge.startDate와 participant.startDate 중 더 늦은 시작일을 effectiveStartDate로 산출하세요.
+        val effectiveStartDate = challenge.startDate
+
         val missingRecords = mutableListOf<DailyRecord>()
         var curDate = effectiveStartDate
         while (!curDate.isAfter(challenge.endDate)) {
