@@ -13,12 +13,39 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* iOS Safari auto-zoom prevention: input/textarea/select must be at least 16px */
+/* iOS Safari auto-zoom prevention: input/textarea/select must be at least 16px
+   (Note: date inputs trigger native picker sheets rather than virtual keyboard, so they don't auto-zoom) */
 @layer base {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="date"]):not([type="time"]):not([type="datetime-local"]),
   textarea,
   select {
     font-size: 16px !important;
+  }
+
+  /* Date/time inputs: Prevent overflowing parent in mobile WebKit */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    font-size: 14px !important;
+    line-height: normal;
+  }
+
+  /* WebKit internal date text container */
+  input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    min-height: 1.25em;
+  }
+
+  /* WebKit calendar icon spacing */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
   }
 }
 

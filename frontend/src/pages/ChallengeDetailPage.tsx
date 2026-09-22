@@ -648,22 +648,22 @@ export const ChallengeDetailPage: React.FC = () => {
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-[11px] text-slate-500 mb-1">시작일</label>
                     <input
                       type="date"
                       value={editStartDate}
                       onChange={(e) => setEditStartDate(e.target.value)}
-                      className="w-full text-base px-2 py-1.5 rounded-lg border border-slate-200"
+                      className="w-full min-w-0 max-w-full text-sm px-2 py-1.5 rounded-lg border border-slate-200"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-[11px] text-slate-500 mb-1">종료일</label>
                     <input
                       type="date"
                       value={editEndDate}
                       onChange={(e) => setEditEndDate(e.target.value)}
-                      className="w-full text-base px-2 py-1.5 rounded-lg border border-slate-200"
+                      className="w-full min-w-0 max-w-full text-sm px-2 py-1.5 rounded-lg border border-slate-200"
                     />
                   </div>
                 </div>
