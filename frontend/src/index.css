@@ -26,23 +26,40 @@ body {
   input[type="date"],
   input[type="time"],
   input[type="datetime-local"] {
+    -webkit-appearance: none;
+    appearance: none;
     display: block;
     width: 100%;
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
-    font-size: 14px !important;
+    font-size: 13px !important;
     line-height: normal;
   }
 
   /* WebKit internal date text container */
-  input[type="date"]::-webkit-date-and-time-value {
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value,
+  input[type="datetime-local"]::-webkit-date-and-time-value {
     text-align: left;
     min-height: 1.25em;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
+  /* WebKit internal date fields */
+  input[type="date"]::-webkit-datetime-edit,
+  input[type="time"]::-webkit-datetime-edit,
+  input[type="datetime-local"]::-webkit-datetime-edit {
+    padding: 0;
+    margin: 0;
   }
 
   /* WebKit calendar icon spacing */
-  input[type="date"]::-webkit-calendar-picker-indicator {
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     padding: 0;
     margin: 0;
     cursor: pointer;

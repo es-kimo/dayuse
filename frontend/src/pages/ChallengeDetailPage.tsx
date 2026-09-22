@@ -654,7 +654,7 @@ export const ChallengeDetailPage: React.FC = () => {
                       type="date"
                       value={editStartDate}
                       onChange={(e) => setEditStartDate(e.target.value)}
-                      className="w-full min-w-0 max-w-full text-sm px-2 py-1.5 rounded-lg border border-slate-200"
+                      className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-1.5 rounded-lg border border-slate-200"
                     />
                   </div>
                   <div className="min-w-0">
@@ -663,7 +663,7 @@ export const ChallengeDetailPage: React.FC = () => {
                       type="date"
                       value={editEndDate}
                       onChange={(e) => setEditEndDate(e.target.value)}
-                      className="w-full min-w-0 max-w-full text-sm px-2 py-1.5 rounded-lg border border-slate-200"
+                      className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-1.5 rounded-lg border border-slate-200"
                     />
                   </div>
                 </div>

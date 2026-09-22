@@ -161,7 +161,7 @@ export const NewChallengePage: React.FC = () => {
                 min={today}
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full min-w-0 max-w-full text-sm px-2.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
+                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
               />
             </div>
             <div className="min-w-0">
@@ -170,7 +170,7 @@ export const NewChallengePage: React.FC = () => {
                 type="date"
                 disabled
                 value={endDate}
-                className="w-full min-w-0 max-w-full text-sm px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
+                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
               />
             </div>
           </div>

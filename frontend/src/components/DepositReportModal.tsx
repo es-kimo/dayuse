@@ -276,7 +276,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
                 type="date"
                 value={depositDate}
                 onChange={(e) => setDepositDate(e.target.value)}
-                className="w-full min-w-0 max-w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white"
+                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white"
                 required
               />
             </div>
