@@ -109,11 +109,11 @@ class DailyRecord(
 
     fun isLocked(): Boolean = depositStatus != DepositStatus.UNPAID
 
-    fun markFailed(penalty: Int) {
+    fun markFailed(penalty: Int, today: LocalDate = DateTimeUtils.todayKst()) {
         if (isLocked()) {
             throw BadRequestException("정산 진행 중이거나 완료된 기록은 상태를 변경할 수 없습니다.")
         }
-        if (status != DailyRecordStatus.UNCHECKED) {
+        if (currentStatus(today) != DailyRecordStatus.UNCHECKED) {
             throw BadRequestException("미확인 상태의 기록만 미수행으로 확정할 수 있습니다.")
         }
         this.status = DailyRecordStatus.FAILED
@@ -121,20 +121,25 @@ class DailyRecord(
         this.failedAt = LocalDateTime.now()
     }
 
+    fun validateLateVerification(today: LocalDate = DateTimeUtils.todayKst()) {
+        if (isLocked()) {
+            throw BadRequestException("정산 진행 중이거나 완료된 기록은 인증을 등록할 수 없습니다.")
+        }
+        if (date >= today) {
+            throw BadRequestException("오늘 또는 미래 날짜는 늦은 인증 대상이 아닙니다.")
+        }
+        val effectiveStatus = currentStatus(today)
+        if (effectiveStatus != DailyRecordStatus.UNCHECKED && effectiveStatus != DailyRecordStatus.FAILED) {
+            throw BadRequestException("미확인 또는 미수행 상태의 기록만 늦은 인증을 등록할 수 있습니다.")
+        }
+    }
+
     fun verifyLate(
         verificationId: Long,
         isLate: Boolean = true,
         today: LocalDate = DateTimeUtils.todayKst()
     ) {
-        if (isLocked()) {
-            throw BadRequestException("정산 진행 중이거나 완료된 기록은 인증을 등록할 수 없습니다.")
-        }
-        if (status == DailyRecordStatus.WAITING && date < today) {
-            status = DailyRecordStatus.UNCHECKED
-        }
-        if (status != DailyRecordStatus.UNCHECKED && status != DailyRecordStatus.FAILED) {
-            throw BadRequestException("미확인 또는 미수행 상태의 기록만 늦은 인증을 등록할 수 있습니다.")
-        }
+        validateLateVerification(today)
         this.status = DailyRecordStatus.COMPLETED
         this.verificationId = verificationId
         this.penaltyAmount = 0

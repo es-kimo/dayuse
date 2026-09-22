@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -46,6 +48,9 @@ class DailyRecordIntegrationTest {
 
     @Autowired
     private lateinit var mockMvc: MockMvc
+
+    @Autowired
+    private lateinit var entityManager: jakarta.persistence.EntityManager
 
     @Autowired
     private lateinit var objectMapper: ObjectMapper
@@ -427,4 +432,78 @@ class DailyRecordIntegrationTest {
         assertEquals(true, updated.isLate)
         assertEquals(0, updated.penaltyAmount)
     }
+    @ParameterizedTest
+    @EnumSource(value = DailyRecordStatus::class, names = ["PLANNED", "WAITING"])
+    fun `과거 예정과 대기 기록은 조회 없이 늦은 인증할 수 있다`(storedStatus: DailyRecordStatus) {
+        val record = dailyRecordRepository.findByChallengeParticipantIdAndDate(participant1.id, today.minusDays(2))!!
+        record.status = storedStatus
+        mockMvc.post("/api/v1/daily-records/${record.id}/verify-late") {
+            header("Authorization", "Bearer $memberToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(LateVerificationRequest(
+                imageUrl = "verifications/${challenge1.id}/${memberUser.id}/planned.jpg"
+            ))
+        }.andExpect { status { isOk() } }
+        assertEquals(DailyRecordStatus.COMPLETED, record.status)
+        assertEquals(0, record.penaltyAmount)
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = DailyRecordStatus::class, names = ["PLANNED", "WAITING"])
+    fun `과거 예정과 대기 기록은 조회 없이 미수행 확정할 수 있다`(storedStatus: DailyRecordStatus) {
+        val record = dailyRecordRepository.findByChallengeParticipantIdAndDate(participant1.id, today.minusDays(2))!!
+        record.status = storedStatus
+        mockMvc.post("/api/v1/daily-records/${record.id}/mark-failed") {
+            header("Authorization", "Bearer $memberToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.status") { value("FAILED") }
+            jsonPath("$.penaltyAmount") { value(5000) }
+        }
+    }
+
+    @Test
+    fun `미리 생성한 기록의 캘린더와 미확인 목록 및 건수가 일치하고 저장 상태는 유지된다`() {
+        dailyRecordRepository.findAllByChallengeId(challenge1.id).forEach { it.status = DailyRecordStatus.PLANNED }
+        mockMvc.get("/api/v1/challenges/${challenge1.id}/calendar") {
+            header("Authorization", "Bearer $memberToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.participants[0].records[0].status") { value("UNCHECKED") }
+            jsonPath("$.participants[0].records[2].status") { value("WAITING") }
+            jsonPath("$.participants[0].records[3].status") { value("PLANNED") }
+        }
+        mockMvc.get("/api/v1/groups/${group.id}/unchecked-records") {
+            header("Authorization", "Bearer $memberToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.length()") { value(2) }
+            jsonPath("$[0].status") { value("UNCHECKED") }
+            jsonPath("$[1].status") { value("UNCHECKED") }
+        }
+        mockMvc.get("/api/v1/groups/${group.id}/status-summary") {
+            header("Authorization", "Bearer $memberToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.uncheckedCount") { value(2) }
+            jsonPath("$.unpaidPenaltyAmount") { value(0) }
+        }
+        entityManager.flush()
+        entityManager.clear()
+        assertTrue(dailyRecordRepository.findAllByChallengeId(challenge1.id).all { it.status == DailyRecordStatus.PLANNED })
+    }
+
+    @Test
+    fun `일반 인증 생성 후 연결에서도 과거 예정 기록을 완료한다`() {
+        val record = dailyRecordRepository.findByChallengeParticipantIdAndDate(participant1.id, today.minusDays(2))!!
+        record.status = DailyRecordStatus.PLANNED
+        val verification = verificationRepository.save(Verification(
+            groupId = group.id, challengeId = challenge1.id, userId = memberUser.id,
+            targetDate = record.date, imageUrl = "verifications/${challenge1.id}/${memberUser.id}/callback.jpg", isLate = true
+        ))
+        dailyRecordService.onVerificationCreated(verification)
+        assertEquals(DailyRecordStatus.COMPLETED, record.status)
+        assertEquals(verification.id, record.verificationId)
+    }
+
 }

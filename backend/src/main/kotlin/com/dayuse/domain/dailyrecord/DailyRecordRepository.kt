@@ -7,6 +7,14 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.time.LocalDate
 
+// DailyRecord.currentStatus(today)가 UNCHECKED인 조건. 목록과 건수에 같은 조건을 사용한다.
+private const val UNCHECKED_CONDITION = """
+    r.date < :today
+    AND r.status IN (com.dayuse.domain.dailyrecord.DailyRecordStatus.PLANNED,
+                     com.dayuse.domain.dailyrecord.DailyRecordStatus.WAITING,
+                     com.dayuse.domain.dailyrecord.DailyRecordStatus.UNCHECKED)
+"""
+
 interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -91,8 +99,7 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
         FROM DailyRecord r
         WHERE r.userId = :userId
           AND r.groupId = :groupId
-          AND (r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.UNCHECKED
-               OR (r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.WAITING AND r.date < :today))
+          AND ($UNCHECKED_CONDITION)
     """
     )
     fun countUncheckedRecords(
@@ -107,8 +114,7 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
         FROM DailyRecord r
         WHERE r.userId = :userId
           AND r.groupId = :groupId
-          AND (r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.UNCHECKED
-               OR (r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.WAITING AND r.date < :today))
+          AND ($UNCHECKED_CONDITION)
         ORDER BY r.date ASC
     """
     )

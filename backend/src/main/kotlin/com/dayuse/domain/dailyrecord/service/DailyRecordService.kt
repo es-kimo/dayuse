@@ -21,7 +21,6 @@ import com.dayuse.domain.verification.Verification
 import com.dayuse.domain.verification.VerificationRepository
 import com.dayuse.domain.verification.dto.VerificationDetailResponse
 import com.dayuse.domain.verification.service.PresignedUrlService
-import com.dayuse.global.exception.BadRequestException
 import com.dayuse.global.exception.ForbiddenException
 import com.dayuse.global.exception.ResourceNotFoundException
 import com.dayuse.global.util.DateTimeUtils
@@ -140,11 +139,7 @@ class DailyRecordService(
         return uncheckedRecords.map { record ->
             val challenge = challenges[record.challengeId]
             val participant = participants[record.challengeParticipantId]
-            val effectiveStatus = if (record.status == DailyRecordStatus.WAITING && record.date < today) {
-                DailyRecordStatus.UNCHECKED
-            } else {
-                record.status
-            }
+            val effectiveStatus = record.currentStatus(today)
             UncheckedRecordResponse(
                 id = record.id,
                 challengeId = record.challengeId,
@@ -231,14 +226,10 @@ class DailyRecordService(
         }
 
         val today = DateTimeUtils.todayKst()
-        if (record.status == DailyRecordStatus.WAITING && record.date < today) {
-            record.status = DailyRecordStatus.UNCHECKED
-        }
-
         val participant = challengeParticipantRepository.findById(record.challengeParticipantId)
             .orElseThrow { ResourceNotFoundException("챌린지 참여 정보를 찾을 수 없습니다.") }
 
-        record.markFailed(participant.penaltyAmount)
+        record.markFailed(participant.penaltyAmount, today)
 
         return toDetailResponse(record)
     }
@@ -256,21 +247,7 @@ class DailyRecordService(
         }
 
         val today = DateTimeUtils.todayKst()
-        if (record.date >= today) {
-            throw BadRequestException("오늘 또는 미래 날짜는 늦은 인증 대상이 아닙니다.")
-        }
-
-        if (record.status == DailyRecordStatus.WAITING && record.date < today) {
-            record.status = DailyRecordStatus.UNCHECKED
-        }
-
-        if (record.isLocked()) {
-            throw BadRequestException("정산 진행 중이거나 완료된 기록은 인증을 등록할 수 없습니다.")
-        }
-
-        if (record.status != DailyRecordStatus.UNCHECKED && record.status != DailyRecordStatus.FAILED) {
-            throw BadRequestException("미확인 또는 미수행 상태의 기록만 늦은 인증을 등록할 수 있습니다.")
-        }
+        record.validateLateVerification(today)
 
         presignedUrlService.validateImageOwnership(request.imageUrl, record.challengeId, userId)
 
