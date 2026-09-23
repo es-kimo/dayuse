@@ -26,7 +26,7 @@ class PushSubscription(
     @Column(nullable = false)
     var userId: Long,
 
-    @Column(nullable = false, length = 1000, unique = true)
+    @Column(nullable = false, length = 500, unique = true)
     var endpoint: String,
 
     @Column(nullable = false, length = 255)

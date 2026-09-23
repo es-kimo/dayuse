@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `push_subscriptions` (
   `created_at` datetime(6) NOT NULL,
   `updated_at` datetime(6) NOT NULL,
   `user_id` bigint NOT NULL,
-  `endpoint` varchar(1000) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `endpoint` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
   `p256dh` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `auth` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `is_active` bit(1) NOT NULL DEFAULT 1,
