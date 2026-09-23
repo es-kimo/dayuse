@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertCircle, CheckCircle2, AlertTriangle, Info, X, RefreshCw } from 'lucide-react';
 
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
@@ -77,75 +78,83 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [showToast]);
 
+  /*
+   * 모달은 document.body로 Portal되므로 #root 바깥 스택에 놓인다.
+   * 토스트를 #root 안에 두면 모달 뒤로 숨기 때문에 같은 곳으로 보낸다.
+   * 겹침 순서는 tailwind.config.js의 zIndex 스케일이 정한다.
+   */
+  const toastLayer = (
+    <div
+      className="fixed bottom-[max(1.5rem,calc(1rem+env(safe-area-inset-bottom)))] left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-toast pointer-events-none flex flex-col gap-2"
+      aria-live="polite"
+    >
+      {toasts.map((toast) => {
+        const typeStyles = {
+          success: 'bg-slate-900/95 text-white border-emerald-500/40',
+          error: 'bg-red-950/95 text-white border-red-500/40',
+          warning: 'bg-amber-950/95 text-white border-amber-500/40',
+          info: 'bg-slate-900/95 text-white border-slate-700/60',
+        }[toast.type];
+
+        const Icon = {
+          success: CheckCircle2,
+          error: AlertCircle,
+          warning: AlertTriangle,
+          info: Info,
+        }[toast.type];
+
+        const iconColor = {
+          success: 'text-emerald-400',
+          error: 'text-red-400',
+          warning: 'text-amber-400',
+          info: 'text-blue-400',
+        }[toast.type];
+
+        return (
+          <div
+            key={toast.id}
+            className={`pointer-events-auto rounded-2xl p-3.5 shadow-xl border backdrop-blur-md flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-bottom-2 duration-200 ${typeStyles}`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Icon className={`w-4 h-4 shrink-0 ${iconColor}`} />
+              <span className="font-medium text-[11px] leading-snug break-words">
+                {toast.message}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {toast.action && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.action?.onClick();
+                    hideToast(toast.id);
+                  }}
+                  className="min-h-[36px] px-2.5 py-1 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 transition"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>{toast.action.label}</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => hideToast(toast.id)}
+                className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white rounded-lg transition"
+                aria-label="닫기"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
     <ToastContext.Provider value={{ showToast, showErrorToast, hideToast }}>
       {children}
-      {/* 플로팅 토스트 컨테이너 (모바일 하단 safe-area 여백 준수) */}
-      <div
-        className="fixed bottom-[max(1.5rem,calc(1rem+env(safe-area-inset-bottom)))] left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-[70] pointer-events-none flex flex-col gap-2"
-        aria-live="polite"
-      >
-        {toasts.map((toast) => {
-          const typeStyles = {
-            success: 'bg-slate-900/95 text-white border-emerald-500/40',
-            error: 'bg-red-950/95 text-white border-red-500/40',
-            warning: 'bg-amber-950/95 text-white border-amber-500/40',
-            info: 'bg-slate-900/95 text-white border-slate-700/60',
-          }[toast.type];
-
-          const Icon = {
-            success: CheckCircle2,
-            error: AlertCircle,
-            warning: AlertTriangle,
-            info: Info,
-          }[toast.type];
-
-          const iconColor = {
-            success: 'text-emerald-400',
-            error: 'text-red-400',
-            warning: 'text-amber-400',
-            info: 'text-blue-400',
-          }[toast.type];
-
-          return (
-            <div
-              key={toast.id}
-              className={`pointer-events-auto rounded-2xl p-3.5 shadow-xl border backdrop-blur-md flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-bottom-2 duration-200 ${typeStyles}`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <Icon className={`w-4 h-4 shrink-0 ${iconColor}`} />
-                <span className="font-medium text-[11px] leading-snug break-words">
-                  {toast.message}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-1.5 shrink-0">
-                {toast.action && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      toast.action?.onClick();
-                      hideToast(toast.id);
-                    }}
-                    className="min-h-[36px] px-2.5 py-1 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 transition"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    <span>{toast.action.label}</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => hideToast(toast.id)}
-                  className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white rounded-lg transition"
-                  aria-label="닫기"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {createPortal(toastLayer, document.body)}
     </ToastContext.Provider>
   );
 };

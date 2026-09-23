@@ -70,7 +70,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-sheet bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl h-[70vh] max-h-[600px] flex flex-col shadow-2xl">
         {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">

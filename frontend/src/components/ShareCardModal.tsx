@@ -380,7 +380,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] w-screen h-[100dvh] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-modal-top w-screen h-[100dvh] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-4 flex flex-col items-center shadow-2xl relative">
         {/* 상단 닫기 버튼 */}
         <button
@@ -554,7 +554,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
 
       {/* iOS 등 자동 저장이 막힌 환경의 폴백: 이미지를 길게 눌러 저장 */}
       {longPressUrl && (
-        <div className="fixed inset-0 z-[110] bg-black/90 flex flex-col items-center justify-center p-4 gap-3">
+        <div className="fixed inset-0 z-modal-over bg-black/90 flex flex-col items-center justify-center p-4 gap-3">
           <p className="text-xs text-white text-center leading-relaxed">
             아래 이미지를 <strong>길게 눌러</strong> &lsquo;사진에 저장&rsquo;을 선택해 주세요.
           </p>
@@ -577,7 +577,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
 
       {/* 클립보드가 막힌 환경의 폴백: 직접 선택해서 복사 */}
       {manualCopyUrl && (
-        <div className="fixed inset-0 z-[110] bg-black/90 flex flex-col items-center justify-center p-6 gap-3">
+        <div className="fixed inset-0 z-modal-over bg-black/90 flex flex-col items-center justify-center p-6 gap-3">
           <p className="text-xs text-white text-center leading-relaxed">
             자동 복사가 막힌 환경이에요. 아래 주소를 눌러 선택한 뒤 복사해 주세요.
           </p>

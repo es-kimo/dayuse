@@ -361,7 +361,7 @@ export const SettlementManagePage: React.FC = () => {
 
       {/* 반려 사유 입력 모달 */}
       {rejectTargetId && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-sheet bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold text-slate-800">입금 신고 반려</h3>
@@ -413,7 +413,7 @@ export const SettlementManagePage: React.FC = () => {
 
       {/* 승인 확인 취소 사유 모달 */}
       {cancelTargetId && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-sheet bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold text-slate-800">승인 확인 취소 (롤백)</h3>

@@ -237,7 +237,7 @@ export const NewChallengePage: React.FC = () => {
 
       {/* 최종 확인 모달 */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-sheet bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-2 text-slate-800">
               <ShieldCheck className="w-5 h-5 text-blue-600" />

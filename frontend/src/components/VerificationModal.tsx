@@ -135,7 +135,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
   if (createdVerification) {
     return createPortal(
-      <div className="fixed inset-0 z-[90] w-screen h-[100dvh] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
         <div className="bg-white w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-8 h-8" />
@@ -181,7 +181,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] w-screen h-[100dvh] bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-5 shadow-2xl flex flex-col">
         {/* 상단 헤더 */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">

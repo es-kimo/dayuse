@@ -507,7 +507,7 @@ export const ChallengeDetailPage: React.FC = () => {
 
       {/* 약정 금액 변경 모달 */}
       {showPenaltyModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-sheet bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4">
             <h2 className="text-sm font-bold text-slate-800">약정 금액 변경</h2>
             <p className="text-xs text-slate-500">
@@ -572,7 +572,7 @@ export const ChallengeDetailPage: React.FC = () => {
 
       {/* 챌린지 수정 모달 */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-sheet bg-black/40 flex items-center justify-center p-4">
           <form
             onSubmit={handleUpdateChallenge}
             className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 max-h-[90vh] overflow-y-auto"

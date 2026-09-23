@@ -138,7 +138,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[90] w-screen h-[100dvh] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-xl overflow-hidden">
         {/* 헤더 */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">

@@ -244,7 +244,7 @@ export const PublicShareLandingPage: React.FC = () => {
 
       {/* 비모임원 초대 링크 필요 안내 팝업 모달 */}
       {showInviteRequiredModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-sheet bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative">
             <button
               onClick={() => setShowInviteRequiredModal(false)}
