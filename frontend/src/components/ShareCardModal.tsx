@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { toPng } from 'html-to-image';
 import { shareApi } from '../api/share';
 import { shareToKakao } from '../utils/kakao';
+import { copyToClipboard } from '../utils/clipboard';
 import { useToast } from '../context/ToastContext';
 import type { ShareCardType, StreakHistoryItem } from '../types';
 import {
@@ -112,7 +113,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
     }
   };
 
-  // 1. 이미지 저장 (공개 토큰 생성 X)
+  // 1. 이미지 저장 (모바일에서는 갤러리 저장용 네이티브 공유 시트 지원)
   const handleSaveImage = async () => {
     if (!cardRef.current || savingImage) return;
     setSavingImage(true);
@@ -122,6 +123,33 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
         cacheBust: false,
         pixelRatio: 2,
       });
+
+      // 모바일 Web Share API (사진 앱/갤러리 저장 및 네이티브 공유 시트)
+      try {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `dayuse-${cardType.toLowerCase()}-${Date.now()}.png`, {
+          type: 'image/png',
+        });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `dayuse | ${title}`,
+            text: `${userNickname}님의 dayuse 공유 카드`,
+          });
+          showToast('공유/저장 창이 열렸습니다.', 'success');
+          return;
+        }
+      } catch (shareErr: any) {
+        if (shareErr.name === 'AbortError') {
+          // 사용자가 공유 창을 그냥 닫은 경우
+          return;
+        }
+        console.warn('Web Share API 이미지 공유 실패, 파일 다운로드로 fallback:', shareErr);
+      }
+
+      // PC 또는 Web Share 미지원 환경: a 태그 직접 다운로드
       const link = document.createElement('a');
       link.download = `dayuse-${cardType.toLowerCase()}-${Date.now()}.png`;
       link.href = dataUrl;
@@ -135,7 +163,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
     }
   };
 
-  // 2. 카카오톡 공유
+  // 2. 카카오톡 공유 (모바일 네이티브 공유 및 클립보드 폴백 지원)
   const handleKakaoShare = async () => {
     if (sharingKakao) return;
     setSharingKakao(true);
@@ -155,9 +183,28 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       });
 
       if (!success) {
-        // SDK 미지원 또는 키 미등록 시 클립보드 복사로 폴백
-        await navigator.clipboard.writeText(linkUrl);
-        showToast('카카오톡 SDK 미지원 환경으로 링크가 복사되었습니다!', 'success');
+        // 모바일 네이티브 공유 시트 시도 (카카오톡 바로 선택 가능)
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: `dayuse | ${title}`,
+              text: desc,
+              url: linkUrl,
+            });
+            showToast('공유 창이 열렸습니다.', 'success');
+            return;
+          } catch (shareErr: any) {
+            if (shareErr.name === 'AbortError') return;
+          }
+        }
+
+        // 클립보드 안전 복사 fallback
+        const copied = await copyToClipboard(linkUrl);
+        if (copied) {
+          showToast('공유 링크가 클립보드에 복사되었습니다!', 'success');
+        } else {
+          showToast('공유 링크: ' + linkUrl, 'info');
+        }
       }
     } catch (err: any) {
       console.error('카카오톡 공유 실패:', err);
@@ -174,8 +221,12 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
     try {
       const token = await ensureShareToken();
       const linkUrl = `${window.location.origin}/shares/${token}`;
-      await navigator.clipboard.writeText(linkUrl);
-      showToast('공유 링크가 클립보드에 복사되었습니다!', 'success');
+      const copied = await copyToClipboard(linkUrl);
+      if (copied) {
+        showToast('공유 링크가 클립보드에 복사되었습니다!', 'success');
+      } else {
+        showToast('공유 링크: ' + linkUrl, 'info');
+      }
     } catch (err) {
       console.error('링크 복사 실패:', err);
       showToast('링크 복사 중 오류가 발생했습니다.', 'error');
