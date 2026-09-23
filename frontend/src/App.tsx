@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -13,8 +13,16 @@ import { ProfilePage } from './pages/ProfilePage';
 import { NewChallengePage } from './pages/NewChallengePage';
 import { ChallengeDetailPage } from './pages/ChallengeDetailPage';
 import { SettlementManagePage } from './pages/SettlementManagePage';
+import { PublicShareLandingPage } from './pages/PublicShareLandingPage';
+import { preloadKakao } from './utils/kakao';
 
 export const App: React.FC = () => {
+  // 카카오 SDK를 부팅 때 붙여둔다.
+  // 공유 버튼을 누른 뒤에 로드하면 그 사이 사용자 제스처가 끊겨 데스크톱에서 팝업이 차단된다.
+  useEffect(() => {
+    void preloadKakao();
+  }, []);
+
   return (
     <ErrorBoundary>
       <ToastProvider>
@@ -31,6 +39,7 @@ export const App: React.FC = () => {
               <Route path="/groups/:groupId/challenges/new" element={<NewChallengePage />} />
               <Route path="/groups/:groupId/settlements" element={<SettlementManagePage />} />
               <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
+              <Route path="/shares/:token" element={<PublicShareLandingPage />} />
               <Route path="/invite/:inviteCode" element={<InviteLandingPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="*" element={<Navigate to="/groups" replace />} />

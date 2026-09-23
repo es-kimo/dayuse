@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { UnpaidRecordItem, GroupAccount } from '../types';
 import { settlementApi } from '../api/settlement';
 import { useAuth } from '../context/AuthContext';
@@ -47,6 +48,11 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
       fetchUnpaidRecords();
       setDepositorName(user?.nickname || '');
       setDepositDate(getTodayKstString());
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
     } else {
       setSelectedRecordIds([]);
     }
@@ -131,8 +137,8 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-xl overflow-hidden">
         {/* 헤더 */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
@@ -318,6 +324,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -223,7 +223,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
 
       {/* 모임장 계좌 등록/수정 모달 */}
       {isEditingAccount && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-sheet bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold text-slate-800">

@@ -106,6 +106,20 @@ class PresignedUrlService(
         return s3Presigner.presignGetObject(presignRequest).url().toString()
     }
 
+    /**
+     * 저장된 값을 우리 버킷의 객체 키로 바꾼다. 서버가 객체를 직접 읽어야 할 때 쓴다.
+     * 외부 URL이거나 소유 범위를 벗어나면 null을 돌려준다.
+     */
+    fun resolveOwnedBucketKey(imagePathOrUrl: String?, challengeId: Long, ownerUserId: Long): String? {
+        val key = extractOwnedBucketKey(imagePathOrUrl) ?: return null
+        return try {
+            validateImageOwnership(imagePathOrUrl, challengeId, ownerUserId)
+            key
+        } catch (_: ForbiddenException) {
+            null
+        }
+    }
+
     private fun extractOwnedBucketKey(imagePathOrUrl: String?): String? {
         if (imagePathOrUrl.isNullOrBlank()) return null
         if (imagePathOrUrl.startsWith("verifications/")) return imagePathOrUrl

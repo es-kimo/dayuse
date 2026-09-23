@@ -1,8 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { verificationsApi } from '../api/verifications';
 import { recordsApi } from '../api/records';
-import type { TodayAction } from '../types';
-import { X, Camera, Image as ImageIcon, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import type { TodayAction, VerificationDetail } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { ShareCardModal } from './ShareCardModal';
+import { X, Camera, Image as ImageIcon, Loader2, AlertCircle, RefreshCw, CheckCircle2, Share2 } from 'lucide-react';
 
 interface VerificationModalProps {
   action: TodayAction | { challengeId: number; challengeTitle: string; verificationCriteria?: string };
@@ -17,15 +20,27 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [comment, setComment] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [canRetry, setCanRetry] = useState<boolean>(false);
+  const [createdVerification, setCreatedVerification] = useState<VerificationDetail | null>(null);
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // 모달 오픈 시 배경 스크롤 방지
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -88,20 +103,21 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
       // 3. 인증 등록 (늦은 인증 vs 일반 인증)
       const uploadedKey = presignedData.imageKey || presignedData.presignedUrl.split('?')[0];
+      let savedVerification: VerificationDetail;
       if (recordId) {
-        await recordsApi.verifyLate(recordId, {
+        savedVerification = await recordsApi.verifyLate(recordId, {
           imageUrl: uploadedKey,
           comment: comment.trim() || undefined,
         });
       } else {
-        await verificationsApi.createVerification({
+        savedVerification = await verificationsApi.createVerification({
           challengeId: action.challengeId,
           imageUrl: uploadedKey,
           comment: comment.trim() || undefined,
         });
       }
 
-      onSuccess();
+      setCreatedVerification(savedVerification);
     } catch (err: any) {
       console.error('인증 등록 실패:', err);
       const msg =
@@ -117,8 +133,55 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+  if (createdVerification) {
+    return createPortal(
+      <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="bg-white w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-slate-800">인증이 완료되었습니다! 🎉</h3>
+            <p className="text-xs text-slate-500">오늘의 멋진 도전을 기록했습니다.</p>
+          </div>
+          <div className="pt-2 space-y-2">
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-blue-500/20"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>오늘 인증 공유 카드 만들기</span>
+            </button>
+            <button
+              onClick={onSuccess}
+              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition"
+            >
+              확인
+            </button>
+          </div>
+          {showShareModal && (
+            <ShareCardModal
+              cardType="TODAY_VERIFICATION"
+              targetId={createdVerification.id}
+              title={action.challengeTitle}
+              userNickname={user?.nickname || '참여자'}
+              imageUrl={previewUrl || createdVerification.imageUrl}
+              comment={createdVerification.comment}
+              targetDate={createdVerification.targetDate}
+              onClose={() => {
+                setShowShareModal(false);
+                onSuccess();
+              }}
+            />
+          )}
+        </div>
+      </div>,
+      document.body
+    );
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-5 shadow-2xl flex flex-col">
         {/* 상단 헤더 */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -292,6 +355,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

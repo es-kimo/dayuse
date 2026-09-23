@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="dayuse">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="flame" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="980" cy="200" r="340" fill="url(#glow)"/>
+
+  <!-- 브랜드 -->
+  <g transform="translate(96, 96)">
+    <rect width="56" height="56" rx="16" fill="#2563eb"/>
+    <text x="28" y="39" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="30" font-weight="800" fill="#ffffff" text-anchor="middle">D</text>
+    <text x="74" y="40" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="34" font-weight="800" letter-spacing="-1" fill="#ffffff">dayuse</text>
+  </g>
+
+  <!-- 헤드라인 -->
+  <g font-family="Apple SD Gothic Neo, Noto Sans KR, Malgun Gothic, sans-serif" fill="#ffffff">
+    <text x="96" y="310" font-size="66" font-weight="800" letter-spacing="-2">매일 인증하고,</text>
+    <text x="96" y="392" font-size="66" font-weight="800" letter-spacing="-2">함께 끝까지 갑니다</text>
+    <text x="96" y="458" font-size="30" font-weight="500" fill="#94a3b8">소모임 챌린지 인증과 보증금 정산</text>
+  </g>
+
+  <!-- 하단 도메인 -->
+  <text x="96" y="558" font-family="Menlo, Consolas, monospace" font-size="24" letter-spacing="3" fill="#64748b">dayuse.kr</text>
+
+  <!-- 연속 기록 불꽃 -->
+  <g transform="translate(900, 300)">
+    <rect x="-96" y="-96" width="192" height="192" rx="48" fill="url(#flame)" opacity="0.95"/>
+    <path d="M 0 -52 C 26 -22 46 -6 46 20 C 46 48 24 66 0 66 C -24 66 -46 48 -46 20 C -46 -2 -30 -14 -18 -32 C -14 -14 -4 -8 4 -14 C 10 -20 8 -36 0 -52 Z" fill="#ffffff" opacity="0.95"/>
+  </g>
+
+  <!-- 하단 강조선 -->
+  <rect x="96" y="590" width="120" height="6" rx="3" fill="#2563eb"/>
+</svg>

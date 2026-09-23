@@ -1,8 +1,22 @@
 {
   "name": "dayuse",
   "compatibility_date": "2026-09-21",
+
+  // 정적 자산에 없는 경로(/shares/:token 등)에서만 Worker가 돈다.
+  "main": "./worker/index.ts",
+
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+
+    // 기본값은 자산 라우팅이 먼저라 Worker가 아예 호출되지 않는다.
+    // 공유 카드 경로만 Worker를 먼저 태운다.
+    "run_worker_first": ["/shares/*"]
+  },
+
+  // 공개 API 주소라 비밀값이 아니다. 로컬에서는 --var 로 덮어쓴다.
+  "vars": {
+    "API_BASE_URL": "https://api.dayuse.kr/api/v1"
   }
 }
