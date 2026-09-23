@@ -387,7 +387,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
 
         <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5 self-start px-2">
           <Sparkles className="w-4 h-4 text-amber-400" />
-          공유 카드 미리보기 (9:16)
+          공유 카드 미리보기
         </h3>
 
         {/* 9:16 스토리 프리뷰 카드 영역 (270x480 → 4배 캡처 시 1080x1920) */}
