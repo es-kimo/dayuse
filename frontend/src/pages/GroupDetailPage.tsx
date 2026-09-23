@@ -90,6 +90,7 @@ export const GroupDetailPage: React.FC = () => {
   const [lateVerificationTarget, setLateVerificationTarget] = useState<{
     recordId: number;
     action: { challengeId: number; challengeTitle: string; verificationCriteria?: string };
+    targetDate?: string;
   } | null>(null);
 
   // 정산 및 계좌 상태 (F07)
@@ -234,6 +235,7 @@ export const GroupDetailPage: React.FC = () => {
         challengeTitle: record.challengeTitle,
         verificationCriteria: record.verificationCriteria,
       },
+      targetDate: record.date,
     });
   };
 
@@ -719,6 +721,7 @@ export const GroupDetailPage: React.FC = () => {
         <VerificationModal
           action={lateVerificationTarget.action}
           recordId={lateVerificationTarget.recordId}
+          targetDate={lateVerificationTarget.targetDate}
           onClose={() => setLateVerificationTarget(null)}
           onSuccess={handleLateVerificationSuccess}
         />

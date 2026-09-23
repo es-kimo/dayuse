@@ -5,11 +5,31 @@ import { recordsApi } from '../api/records';
 import type { TodayAction, VerificationDetail } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { ShareCardModal } from './ShareCardModal';
-import { X, Camera, Image as ImageIcon, Loader2, AlertCircle, RefreshCw, CheckCircle2, Share2 } from 'lucide-react';
+import {
+  getTodayKstString,
+  addDaysKst,
+  isNightGraceWindow,
+  getKstHour,
+  formatMonthDay,
+} from '../utils/date';
+import {
+  X,
+  Camera,
+  Image as ImageIcon,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
+  CheckCircle2,
+  Share2,
+  Clock,
+  Moon,
+  Sun,
+} from 'lucide-react';
 
 interface VerificationModalProps {
   action: TodayAction | { challengeId: number; challengeTitle: string; verificationCriteria?: string };
   recordId?: number;
+  targetDate?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -17,6 +37,7 @@ interface VerificationModalProps {
 export const VerificationModal: React.FC<VerificationModalProps> = ({
   action,
   recordId,
+  targetDate,
   onClose,
   onSuccess,
 }) => {
@@ -32,6 +53,26 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // KST 기준 날짜 및 심야 유예 시간(00:00 ~ 09:00) 판별
+  const todayKst = getTodayKstString();
+  const yesterdayKst = addDaysKst(todayKst, -1);
+  const isNightGrace = isNightGraceWindow();
+
+  // 기본 대상 날짜 결정:
+  // - targetDate가 직접 명시된 경우 최우선 사용
+  // - recordId가 있는 늦은 인증인 경우: targetDate 없으면 yesterdayKst 기본
+  // - 일반 인증이면서 심야(00:00~05:00)인 경우: 전날 밤 인증을 마무리하려는 경우가 많으므로 yesterdayKst 추천
+  // - 그 외(05:00~09:00 아침 또는 09:00 이후): todayKst 기본
+  const initialTargetDate = targetDate
+    ? targetDate
+    : recordId
+    ? yesterdayKst
+    : isNightGrace && getKstHour() < 5
+    ? yesterdayKst
+    : todayKst;
+
+  const [selectedTargetDate, setSelectedTargetDate] = useState<string>(initialTargetDate);
 
   // 모달 오픈 시 배경 스크롤 방지
   useEffect(() => {
@@ -114,6 +155,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           challengeId: action.challengeId,
           imageUrl: uploadedKey,
           comment: comment.trim() || undefined,
+          targetDate: selectedTargetDate,
         });
       }
 
@@ -187,12 +229,16 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
             <h2 className="text-sm font-bold text-slate-800">
-              {recordId ? '늦은 사진 인증' : '오늘 사진 인증'}
+              {recordId
+                ? '늦은 사진 인증'
+                : isNightGrace
+                ? '심야/새벽 사진 인증'
+                : '오늘 사진 인증'}
             </h2>
             <p className="text-[11px] text-blue-600 font-medium truncate">{action.challengeTitle}</p>
             {recordId && (
               <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-1 inline-block">
-                익일 오전 9시 이전 등록 시 정상 인정 (지각 제외)
+                {formatMonthDay(targetDate || yesterdayKst)} 대상 · 익일 오전 9시 이전 등록 시 정상 인정 (지각 제외)
               </p>
             )}
           </div>
@@ -207,6 +253,77 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
         {/* 폼 */}
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          {/* 심야/새벽(00:00~09:00) 인증 대상 날짜 선택 세그먼트 */}
+          {!recordId && isNightGrace && (
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-blue-600" />
+                  인증 대상 날짜 선택
+                </span>
+                <span className="text-[10px] text-blue-600 bg-blue-50 font-medium px-2 py-0.5 rounded-full border border-blue-200">
+                  오전 09:00까지 유예 시간
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {/* 어제 인증 선택 */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedTargetDate(yesterdayKst)}
+                  className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between ${
+                    selectedTargetDate === yesterdayKst
+                      ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-900 shadow-xs'
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center gap-1">
+                      <Moon className="w-3 h-3 text-indigo-500" />
+                      어제 ({formatMonthDay(yesterdayKst)})
+                    </span>
+                    {selectedTargetDate === yesterdayKst && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    )}
+                  </div>
+                  <span className="text-[10px] text-emerald-600 font-medium mt-1 block">
+                    09:00까지 정상 인정
+                  </span>
+                </button>
+
+                {/* 오늘 인증 선택 */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedTargetDate(todayKst)}
+                  className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between ${
+                    selectedTargetDate === todayKst
+                      ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-900 shadow-xs'
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold flex items-center gap-1">
+                      <Sun className="w-3 h-3 text-amber-500" />
+                      오늘 ({formatMonthDay(todayKst)})
+                    </span>
+                    {selectedTargetDate === todayKst && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-medium mt-1 block">
+                    오늘의 새로운 도전
+                  </span>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-slate-500 leading-snug">
+                {selectedTargetDate === yesterdayKst
+                  ? '🌙 어젯밤 인증을 깜빡하셨나요? 오전 9시 이전 등록 시 벌금 없이 정상 인정됩니다.'
+                  : '☀️ 오늘자 실천 내용으로 인증을 등록합니다.'}
+              </p>
+            </div>
+          )}
+
           {/* 인증 기준 안내 */}
           <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3 text-[11px] text-blue-900 leading-relaxed">
             <span className="font-bold">인증 기준:</span> {action.verificationCriteria}
@@ -349,7 +466,13 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                   <span>다시 시도하기</span>
                 </>
               ) : (
-                <span>인증 완료하기</span>
+                <span>
+                  {recordId
+                    ? `${formatMonthDay(targetDate || yesterdayKst)} 늦은 인증 완료하기`
+                    : isNightGrace
+                    ? `${formatMonthDay(selectedTargetDate)} 인증 완료하기`
+                    : '인증 완료하기'}
+                </span>
               )}
             </button>
           </div>
