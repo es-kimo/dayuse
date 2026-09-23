@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * 겹침 순서는 여기서만 정한다.
+ *
+ * 컴포넌트에 z-[90] 같은 숫자를 직접 쓰면 서로 모르는 채로 어긋난다.
+ * 실제로 모달을 Portal로 올리면서 토스트가 모달 뒤로 숨는 일이 있었다.
+ *
+ * tailwind.config.js의 theme.extend.zIndex가 아니라 이 파일에 두는 이유:
+ * config에 새 키를 추가하면 돌고 있는 dev 서버가 그걸 다시 읽기 전까지
+ * 클래스가 아예 생성되지 않는다. 그러면 z-index가 auto로 떨어져
+ * "요소가 조용히 뒤로 숨는" 형태로 깨진다. 소스 CSS는 저장 즉시 반영된다.
+ *
+ * 모달과 토스트는 모두 document.body로 Portal되어 같은 루트 스택을 공유하므로
+ * 아래 숫자만으로 순서가 정해진다.
+ */
+@layer utilities {
+  .z-header { z-index: 20; }      /* sticky 헤더 */
+  .z-sheet { z-index: 50; }       /* 전면 오버레이·바텀시트 (아직 Portal 미적용) */
+  .z-modal { z-index: 90; }       /* Portal 모달 */
+  .z-modal-top { z-index: 100; }  /* 모달 위에 겹쳐 뜨는 모달 (공유 카드) */
+  .z-modal-over { z-index: 110; } /* 모달 안에서 다시 전면을 덮는 폴백 화면 */
+  .z-toast { z-index: 120; }      /* 항상 최상단. 어떤 모달 위에서도 보여야 한다. */
+}
+
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }

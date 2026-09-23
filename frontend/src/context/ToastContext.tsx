@@ -81,7 +81,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   /*
    * 모달은 document.body로 Portal되므로 #root 바깥 스택에 놓인다.
    * 토스트를 #root 안에 두면 모달 뒤로 숨기 때문에 같은 곳으로 보낸다.
-   * 겹침 순서는 tailwind.config.js의 zIndex 스케일이 정한다.
+   * 겹침 순서는 index.css의 z-index 스케일이 정한다.
    */
   const toastLayer = (
     <div
