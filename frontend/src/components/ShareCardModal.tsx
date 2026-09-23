@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { shareApi } from '../api/share';
+import { absoluteApiUrl } from '../api/client';
 import { isKakaoReady, shareToKakao } from '../utils/kakao';
 import { copyText, copyTextDeferred } from '../utils/clipboard';
 import {
@@ -222,6 +223,10 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
 
   const buildShareUrl = (token: string) => `${window.location.origin}/shares/${token}`;
 
+  // 카카오 썸네일은 S3 프리사인 URL을 쓸 수 없다. 60분이면 만료되는 데다,
+  // 연속 기록 카드는 사진 자체가 없다. 만료 없는 서버 OG 엔드포인트로 넘긴다.
+  const buildOgImageUrl = (token: string) => absoluteApiUrl(`/public/shares/${token}/og.jpg`);
+
   const shareDescription =
     cardType === 'TODAY_VERIFICATION'
       ? `${userNickname}님의 오늘 인증: "${comment || title}"`
@@ -319,7 +324,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
         shareToKakao({
           title: `dayuse | ${title}`,
           description: shareDescription,
-          imageUrl,
+          imageUrl: buildOgImageUrl(shareToken),
           linkUrl,
         })
       ) {

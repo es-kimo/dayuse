@@ -37,7 +37,9 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.transaction.annotation.Transactional
+import java.io.ByteArrayInputStream
 import java.time.LocalDate
+import javax.imageio.ImageIO
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -289,6 +291,63 @@ class ShareCardIntegrationTest {
         mockMvc.get("/api/v1/public/shares/$shareToken") {
             contentType = MediaType.APPLICATION_JSON
         }.andExpect {
+            status { isNotFound() }
+        }
+    }
+
+    @Test
+    @DisplayName("공유 카드 OG 이미지는 비인가로 열리고 CDN이 받아낼 캐시 헤더가 붙는다")
+    fun publicShareOgImageIsServedWithCdnCacheHeader() {
+        val result = mockMvc.post("/api/v1/shares/verifications/${verification.id}") {
+            header("Authorization", "Bearer $token1")
+            contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isCreated() }
+        }.andReturn()
+
+        val shareToken = objectMapper.readTree(result.response.contentAsString).get("token").asText()
+
+        // 인증 헤더 없이(크롤러처럼) 접근한다.
+        val image = mockMvc.get("/api/v1/public/shares/$shareToken/og.jpg")
+            .andExpect {
+                status { isOk() }
+                content { contentType(MediaType.IMAGE_JPEG) }
+                header { string("Cache-Control", "max-age=86400, public") }
+            }.andReturn().response.contentAsByteArray
+
+        // 프리뷰로 쓸 수 있는 규격이어야 한다.
+        val decoded = ImageIO.read(ByteArrayInputStream(image))
+        assertEquals(1200, decoded.width)
+        assertEquals(630, decoded.height)
+    }
+
+    @Test
+    @DisplayName("공유 카드를 해제하면 OG 이미지도 즉시 404로 차단된다")
+    fun deactivateShareCardBlocksOgImage() {
+        val result = mockMvc.post("/api/v1/shares/verifications/${verification.id}") {
+            header("Authorization", "Bearer $token1")
+            contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+            status { isCreated() }
+        }.andReturn()
+
+        val shareToken = objectMapper.readTree(result.response.contentAsString).get("token").asText()
+
+        mockMvc.delete("/api/v1/shares/$shareToken") {
+            header("Authorization", "Bearer $token1")
+        }.andExpect {
+            status { isNoContent() }
+        }
+
+        mockMvc.get("/api/v1/public/shares/$shareToken/og.jpg").andExpect {
+            status { isNotFound() }
+        }
+    }
+
+    @Test
+    @DisplayName("없는 토큰의 OG 이미지는 404")
+    fun unknownTokenOgImageReturnsNotFound() {
+        mockMvc.get("/api/v1/public/shares/does-not-exist/og.jpg").andExpect {
             status { isNotFound() }
         }
     }

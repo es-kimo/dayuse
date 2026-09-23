@@ -3,6 +3,13 @@ import { triggerGlobalToast } from '../context/ToastContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
+/**
+ * 외부 서비스(카카오 스크래퍼, OG 크롤러)에 넘길 절대 URL을 만든다.
+ * 개발 환경의 상대 경로(/api/v1)로는 외부에서 접근할 수 없다.
+ */
+export const absoluteApiUrl = (path: string): string =>
+  new URL(`${API_BASE_URL}${path}`, window.location.origin).toString();
+
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
