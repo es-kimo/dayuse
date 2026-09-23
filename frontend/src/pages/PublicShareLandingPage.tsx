@@ -147,6 +147,7 @@ export const PublicShareLandingPage: React.FC = () => {
                   src={card.imageUrl}
                   alt="인증 사진"
                   className="w-full h-full object-cover"
+                  crossOrigin="anonymous"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">

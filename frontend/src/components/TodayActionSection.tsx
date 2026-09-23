@@ -82,6 +82,7 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
                     src={action.myVerification.imageUrl}
                     alt="오늘 인증 사진"
                     className="w-11 h-11 rounded-xl object-cover border border-emerald-200 shadow-2xs"
+                    crossOrigin="anonymous"
                   />
                 )}
               </div>

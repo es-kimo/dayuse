@@ -158,6 +158,7 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
                   alt="인증 사진"
                   className="w-full h-full object-cover"
                   loading="lazy"
+                  crossOrigin="anonymous"
                 />
               </div>
             </div>
