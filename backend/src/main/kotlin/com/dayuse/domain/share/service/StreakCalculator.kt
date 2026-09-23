@@ -33,25 +33,14 @@ class StreakCalculator(
         val recordsByDate = records.associateBy { it.date }
         val effectiveStartDate = if (participantStartDate > challengeStartDate) participantStartDate else challengeStartDate
 
-        val todayRecord = recordsByDate[today]
-        val isTodayCompleted = todayRecord?.status == DailyRecordStatus.COMPLETED
+        // TODO [사용자 미션 2-1]: 오늘 인증 완료 여부(isTodayCompleted)에 따라 기준 날짜(baseDate)를 결정하세요.
+        // - "오늘 완료 전에는 어제까지(today.minusDays(1)), 오늘 완료 후에는 오늘까지(today) 집계" 규칙을 적용합니다.
+        val baseDate = today // 임시 스텁
 
-        // 오늘 완료 전에는 어제까지, 오늘 완료 후에는 오늘까지 집계
-        val baseDate = if (isTodayCompleted) today else today.minusDays(1)
-
-        var streakDays = 0
-        if (baseDate >= effectiveStartDate && recordsByDate[baseDate]?.status == DailyRecordStatus.COMPLETED) {
-            var checkDate = baseDate
-            while (checkDate >= effectiveStartDate) {
-                val record = recordsByDate[checkDate]
-                if (record?.status == DailyRecordStatus.COMPLETED) {
-                    streakDays++
-                    checkDate = checkDate.minusDays(1)
-                } else {
-                    break
-                }
-            }
-        }
+        // TODO [사용자 미션 2-2]: 기준일(baseDate)부터 날짜 역순(과거 방향)으로 순회하며 연속 완료 일수(streakDays)를 산출하세요.
+        // - 기준일이 effectiveStartDate 이전이거나 미완료(COMPLETED가 아님)인 경우 streakDays는 0입니다.
+        // - 연속으로 COMPLETED인 일수를 세되, effectiveStartDate 이전으로 넘어가지 않도록 방어하세요.
+        val streakDays = 0 // 임시 스텁
 
         // 최근 N일간의 히스토리 (과거 -> 오늘 순서)
         val historyItems = (0 until historyDays).map { offset ->

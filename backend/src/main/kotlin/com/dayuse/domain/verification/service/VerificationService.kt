@@ -157,9 +157,7 @@ class VerificationService(
             throw BadRequestException("정산 진행 중이거나 완료된 기록의 인증은 삭제할 수 없습니다.")
         }
 
-        shareCardRepository?.findAllByVerificationIdAndIsActiveTrue(verificationId)?.forEach {
-            it.deactivate()
-        }
+        // TODO [사용자 미션 4]: 원본 인증 삭제 시 연계된 모든 활성 공유 카드(ShareCard)를 조회하여 비활성화(deactivate)하세요.
 
         verificationRepository.delete(verification)
         dailyRecordService?.onVerificationDeleted(verification)

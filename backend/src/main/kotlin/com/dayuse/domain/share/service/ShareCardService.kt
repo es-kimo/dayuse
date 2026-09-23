@@ -119,9 +119,7 @@ class ShareCardService(
         val card = shareCardRepository.findByToken(token)
             ?: throw ResourceNotFoundException("공유 카드를 찾을 수 없거나 비활성화되었습니다.")
 
-        if (!card.isActive) {
-            throw ResourceNotFoundException("공유 카드를 찾을 수 없거나 비활성화되었습니다.")
-        }
+        // TODO [사용자 미션 3-1]: 카드가 비활성화(!card.isActive)된 경우 ResourceNotFoundException("공유 카드를 찾을 수 없거나 비활성화되었습니다.")을 발생시켜 외부 접근을 차단하세요.
 
         val presignedUrl = card.imageUrl?.let {
             presignedUrlService.generatePresignedGetUrl(it, card.challengeId, card.userId)
@@ -133,7 +131,6 @@ class ShareCardService(
         val card = shareCardRepository.findByToken(token)
             ?: throw ResourceNotFoundException("공유 카드를 찾을 수 없습니다.")
 
-        card.validateOwner(userId)
-        card.deactivate()
+        // TODO [사용자 미션 3-2]: 작성자 본인 확인(card.validateOwner(userId))을 수행하고 카드를 비활성화(card.deactivate())하세요.
     }
 }
