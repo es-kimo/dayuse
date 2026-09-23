@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Wrangler 로컬 개발 상태
+.wrangler

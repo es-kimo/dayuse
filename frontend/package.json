@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:worker": "wrangler dev",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "verify:kakao-sdk": "node scripts/verify-kakao-sdk-integrity.mjs",
@@ -20,6 +21,7 @@
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260923.1",
     "@types/node": "^24.13.5",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
@@ -29,6 +31,7 @@
     "postcss": "^8.5.28",
     "tailwindcss": "^3.4.19",
     "typescript": "~6.0.2",
-    "vite": "^8.3.0"
+    "vite": "^8.3.0",
+    "wrangler": "^4.136.3"
   }
 }

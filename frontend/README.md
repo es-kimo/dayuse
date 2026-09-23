@@ -4,9 +4,10 @@ React (Vite, TypeScript) + Tailwind CSS. 모바일 반응형 웹 뷰포트 기�
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173 (/api 는 localhost:8080 으로 프록시)
-npm run build    # tsc -b && vite build
-npm run lint     # oxlint
+npm run dev        # http://localhost:5173 (/api 는 localhost:8080 으로 프록시)
+npm run build      # tsc -b && vite build
+npm run lint       # oxlint
+npm run dev:worker # dist/ 를 Cloudflare Worker로 서빙 (OG 주입 확인용, build 먼저)
 ```
 
 ## 환경 변수
@@ -62,6 +63,25 @@ npm run lint     # oxlint
 | 카카오톡 인앱 브라우저 | 공유 시트 또는 길게 눌러 저장 | SDK | 실패 시 수동 복사 창 |
 | 데스크톱 | 파일 다운로드 | SDK 팝업 → 복사 | `navigator.clipboard` |
 
-공유 링크(`/shares/:token`)의 OG 프리뷰는 아직 미구현이다. SPA가 정적 `index.html`을
-그대로 내려주기 때문에 카카오톡·슬랙 등의 링크 미리보기에는 공유 카드가 아니라 서비스
-공통 설명이 표시된다. 크롤러 대응은 별도 작업으로 남아 있다.
+## 공유 링크의 OG 프리뷰 ([worker/index.ts](worker/index.ts))
+
+SPA는 모든 경로에 같은 정적 `index.html`을 내려주므로, 링크를 붙여넣었을 때의 미리보기가
+서비스 공통 설명으로만 뜬다. 크롤러는 자바스크립트를 실행하지 않아 클라이언트에서 메타
+태그를 고쳐도 소용이 없다.
+
+그래서 `/shares/:token` 요청은 Cloudflare Worker가 먼저 받아, 공개 API로 카드를 조회한 뒤
+`index.html`의 메타 태그만 바꿔 끼운다. User-Agent로 크롤러를 가려내지 않는다. 사람과
+크롤러가 같은 HTML을 받으므로 판정이 빗나가 빈 페이지를 보는 경우가 없다.
+
+- `og:image`는 백엔드의 `GET /api/v1/public/shares/{token}/og.jpg`를 가리킨다.
+  카드 이미지를 따로 저장하지 않고 요청 시점에 만들며, 응답에 하루짜리 공개 캐시가 붙는다.
+- 카드 조회에 실패하거나 없는 토큰이면 원본 `index.html`을 그대로 내려준다.
+  프리뷰는 있으면 좋은 것이지 페이지가 뜨기 위한 조건이 아니다.
+- 자산 라우팅이 Worker보다 먼저 도는 게 기본값이라, `wrangler.jsonc`의
+  `assets.run_worker_first`로 `/shares/*`만 Worker를 먼저 태운다. 이 설정이 빠지면
+  Worker가 호출되지 않고 SPA 폴백이 그대로 응답한다.
+- Worker가 쓰는 API 주소는 `wrangler.jsonc`의 `vars.API_BASE_URL`에 있다. 공개 주소라
+  비밀값이 아니다. 로컬에서는 `npm run dev:worker -- --var API_BASE_URL:<주소>`로 덮어쓴다.
+
+`npm run dev`(Vite)에서는 Worker가 돌지 않는다. 주입 결과를 보려면 `npm run build` 후
+`npm run dev:worker`를 쓴다.
