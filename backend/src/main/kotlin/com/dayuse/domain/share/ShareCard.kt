@@ -97,11 +97,12 @@ class ShareCard(
         protected set
 
     fun deactivate() {
-        // TODO [사용자 미션 1-1]: 공유 카드를 비활성화(isActive = false) 처리하세요.
+        this.isActive = false
     }
 
     fun validateOwner(requestUserId: Long) {
-        // TODO [사용자 미션 1-2]: 본인의 카드가 아닌 경우(this.userId != requestUserId)
-        // ForbiddenException("본인의 공유 카드만 조작할 수 있습니다.")을 발생시키세요.
+        if (requestUserId != this.userId) {
+            throw ForbiddenException("본인의 공유 카드만 조작할 수 있습니다.")
+        }
     }
 }

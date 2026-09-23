@@ -83,7 +83,11 @@ class VerificationService(
             throw DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")
         }
 
-        presignedUrlService.validateImageOwnership(request.imageUrl, challenge.id, userId)
+        presignedUrlService.validateImageOwnership(
+            request.imageUrl,
+            challenge.id,
+            userId
+        )
 
         try {
             val verification = Verification(
@@ -130,7 +134,11 @@ class VerificationService(
             throw BadRequestException("과거 대상 날짜의 인증은 수정할 수 없습니다.")
         }
 
-        presignedUrlService.validateImageOwnership(request.imageUrl, verification.challengeId, verification.userId)
+        presignedUrlService.validateImageOwnership(
+            request.imageUrl,
+            verification.challengeId,
+            verification.userId
+        )
 
         verification.update(
             request.imageUrl,
@@ -157,7 +165,9 @@ class VerificationService(
             throw BadRequestException("정산 진행 중이거나 완료된 기록의 인증은 삭제할 수 없습니다.")
         }
 
-        // TODO [사용자 미션 4]: 원본 인증 삭제 시 연계된 모든 활성 공유 카드(ShareCard)를 조회하여 비활성화(deactivate)하세요.
+        shareCardRepository?.findAllByVerificationIdAndIsActiveTrue(verificationId)?.forEach {
+            it.deactivate()
+        }
 
         verificationRepository.delete(verification)
         dailyRecordService?.onVerificationDeleted(verification)
@@ -170,7 +180,11 @@ class VerificationService(
             challengeId = v.challengeId,
             userId = v.userId,
             targetDate = v.targetDate,
-            imageUrl = presignedUrlService.generatePresignedGetUrl(v.imageUrl, v.challengeId, v.userId),
+            imageUrl = presignedUrlService.generatePresignedGetUrl(
+                v.imageUrl,
+                v.challengeId,
+                v.userId
+            ),
             comment = v.comment,
             isLate = v.isLate,
             createdAt = v.createdAt,

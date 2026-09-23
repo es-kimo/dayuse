@@ -31,7 +31,10 @@ class ShareCardService(
     private val presignedUrlService: PresignedUrlService
 ) {
 
-    fun createVerificationShare(userId: Long, verificationId: Long): ShareCardResponse {
+    fun createVerificationShare(
+        userId: Long,
+        verificationId: Long
+    ): ShareCardResponse {
         val verification = verificationRepository.findById(verificationId)
             .orElseThrow { ResourceNotFoundException("인증 내역을 찾을 수 없습니다.") }
 
@@ -43,9 +46,16 @@ class ShareCardService(
         val existingCard = shareCardRepository.findByVerificationIdAndIsActiveTrue(verificationId)
         if (existingCard != null) {
             val presignedUrl = existingCard.imageUrl?.let {
-                presignedUrlService.generatePresignedGetUrl(it, existingCard.challengeId, existingCard.userId)
+                presignedUrlService.generatePresignedGetUrl(
+                    it,
+                    existingCard.challengeId,
+                    existingCard.userId
+                )
             }
-            return ShareCardResponse.from(existingCard, presignedUrl)
+            return ShareCardResponse.from(
+                existingCard,
+                presignedUrl
+            )
         }
 
         val challenge = challengeRepository.findById(verification.challengeId)
@@ -69,16 +79,29 @@ class ShareCardService(
         )
         val saved = shareCardRepository.save(shareCard)
         val presignedUrl = saved.imageUrl?.let {
-            presignedUrlService.generatePresignedGetUrl(it, saved.challengeId, saved.userId)
+            presignedUrlService.generatePresignedGetUrl(
+                it,
+                saved.challengeId,
+                saved.userId
+            )
         }
-        return ShareCardResponse.from(saved, presignedUrl)
+        return ShareCardResponse.from(
+            saved,
+            presignedUrl
+        )
     }
 
-    fun createStreakShare(userId: Long, challengeId: Long): ShareCardResponse {
+    fun createStreakShare(
+        userId: Long,
+        challengeId: Long
+    ): ShareCardResponse {
         val challenge = challengeRepository.findById(challengeId)
             .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
 
-        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(challengeId, userId)
+        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(
+            challengeId,
+            userId
+        )
             ?: throw ForbiddenException("해당 챌린지의 참여자만 연속 기록을 공유할 수 있습니다.")
 
         if (participant.status != ParticipantStatus.ACTIVE) {
@@ -119,18 +142,31 @@ class ShareCardService(
         val card = shareCardRepository.findByToken(token)
             ?: throw ResourceNotFoundException("공유 카드를 찾을 수 없거나 비활성화되었습니다.")
 
-        // TODO [사용자 미션 3-1]: 카드가 비활성화(!card.isActive)된 경우 ResourceNotFoundException("공유 카드를 찾을 수 없거나 비활성화되었습니다.")을 발생시켜 외부 접근을 차단하세요.
+        if (!card.isActive) {
+            throw ResourceNotFoundException("공유 카드를 찾을 수 없거나 비활성화되었습니다.")
+        }
 
         val presignedUrl = card.imageUrl?.let {
-            presignedUrlService.generatePresignedGetUrl(it, card.challengeId, card.userId)
+            presignedUrlService.generatePresignedGetUrl(
+                it,
+                card.challengeId,
+                card.userId
+            )
         }
-        return PublicShareCardResponse.from(card, presignedUrl)
+        return PublicShareCardResponse.from(
+            card,
+            presignedUrl
+        )
     }
 
-    fun deactivateShareCard(userId: Long, token: String) {
+    fun deactivateShareCard(
+        userId: Long,
+        token: String
+    ) {
         val card = shareCardRepository.findByToken(token)
             ?: throw ResourceNotFoundException("공유 카드를 찾을 수 없습니다.")
 
-        // TODO [사용자 미션 3-2]: 작성자 본인 확인(card.validateOwner(userId))을 수행하고 카드를 비활성화(card.deactivate())하세요.
+        card.validateOwner(userId)
+        card.deactivate()
     }
 }
