@@ -19,5 +19,7 @@ data class TodayActionResponse(
     val endDate: LocalDate,
     val isCompletedToday: Boolean,
     val canVerify: Boolean,
-    val myVerification: TodayVerificationSummary?
+    val myVerification: TodayVerificationSummary?,
+    val groupId: Long? = null,
+    val groupName: String? = null
 )

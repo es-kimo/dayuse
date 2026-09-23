@@ -166,6 +166,8 @@ export interface TodayAction {
   isCompletedToday: boolean;
   canVerify: boolean;
   myVerification?: TodayVerificationSummary | null;
+  groupId?: number;
+  groupName?: string;
 }
 
 export interface PresignedUrlResponse {
