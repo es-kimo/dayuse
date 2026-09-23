@@ -34,12 +34,10 @@ class NotificationPushService(
                 payloadJson = payloadJson
             )
 
-            if (result.isSuccess) {
-                successCount++
-            } else if (result.isExpired) {
-                log.info("만료된 웹 푸시 구독 비활성화 처리: subscriptionId={}, endpoint={}", subscription.id, subscription.endpoint)
-                subscription.deactivate()
-            }
+            // TODO [사용자 미션 2]: W3C Web Push 발송 결과 처리 파이프라인을 완성하세요.
+            // 1. result.isSuccess 인 경우 successCount를 1 증가시킵니다.
+            // 2. result.isExpired (HTTP 410 Gone 또는 404 Not Found)인 경우, 만료/차단된 기기이므로
+            //    subscription.deactivate()를 호출하여 비활성화 상태(isActive = false)로 갱신하세요.
         }
 
         return successCount

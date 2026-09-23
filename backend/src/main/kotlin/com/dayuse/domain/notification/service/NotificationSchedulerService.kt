@@ -46,72 +46,18 @@ class NotificationSchedulerService(
         for (setting in targetSettings) {
             val userId = setting.userId
 
-            // 2. 당일 중복 발송 방지: 오늘 이미 발송 이력이 있으면 스킵
-            if (pushSendLogRepository.existsByUserIdAndSendDate(userId, today)) {
-                log.debug("당일 이미 알림이 발송되어 스킵: userId={}, date={}", userId, today)
-                continue
-            }
-
-            // 3. 오늘 미인증 대기 챌린지 건수 집계
-            val pendingCount = countPendingChallenges(userId, today)
-            if (pendingCount <= 0) {
-                log.debug("미인증 챌린지가 없어 알림 발송 스킵: userId={}", userId)
-                continue
-            }
-
-            // 4. 푸시 알림 전송 (단 1건으로 묶어서 발송)
-            val payload = PushPayload(
-                title = "dayuse 오늘 인증 리마인더",
-                body = "오늘 인증할 챌린지가 ${pendingCount}개 남아 있어요! 잊지 말고 인증해 주세요.",
-                url = "/today",
-                tag = "dayuse-daily-reminder"
-            )
-
-            try {
-                notificationPushService.sendPushToUser(userId, payload)
-
-                // 5. 발송 이력 저장 (동일 날짜 1회 발송 보장)
-                pushSendLogRepository.save(
-                    PushSendLog(
-                        userId = userId,
-                        sendDate = today,
-                        pendingChallengeCount = pendingCount,
-                        sentAt = targetDateTime
-                    )
-                )
-                log.info("미인증 웹 푸시 발송 완료: userId={}, pendingCount={}, date={}", userId, pendingCount, today)
-            } catch (e: DataIntegrityViolationException) {
-                log.warn("동시성 중복 발송 방어 (PushSendLog 유니크 충돌): userId={}, date={}", userId, today)
-            } catch (e: Exception) {
-                log.error("알림 발송 처리 중 예외 발생: userId={}", userId, e)
-            }
+            // TODO [사용자 미션 1-1]: 당일 1회 발송 보장 및 미인증 챌린지 발송 파이프라인을 완성하세요.
+            // 1. pushSendLogRepository를 조회하여 오늘 이미 발송 이력이 있다면 알림을 스킵(continue)합니다.
+            // 2. countPendingChallenges(userId, today)를 호출하여 오늘 미인증 대기 챌린지가 없으면(<= 0) 스킵합니다.
+            // 3. 미인증 챌린지가 있는 경우 notificationPushService.sendPushToUser()를 호출하여 단 1건의 알림을 발송하고,
+            //    pushSendLogRepository에 당일 발송 이력을 저장하세요. (DataIntegrityViolationException 동시성 충돌 방어 포함)
         }
     }
 
     fun countPendingChallenges(userId: Long, targetDate: LocalDate): Int {
-        val activeParticipants = challengeParticipantRepository.findAllByUserIdAndStatus(
-            userId,
-            ParticipantStatus.ACTIVE
-        )
-
-        var pendingCount = 0
-        for (participant in activeParticipants) {
-            val challenge = challengeRepository.findByIdOrNull(participant.challengeId) ?: continue
-
-            // 참여 시작일 <= targetDate <= 챌린지 종료일 확인
-            if (participant.startDate <= targetDate && targetDate <= challenge.endDate) {
-                val hasVerified = verificationRepository.findByChallengeIdAndUserIdAndTargetDate(
-                    challengeId = challenge.id,
-                    userId = userId,
-                    targetDate = targetDate
-                ) != null
-
-                if (!hasVerified) {
-                    pendingCount++
-                }
-            }
-        }
-
-        return pendingCount
+        // TODO [사용자 미션 1-2]: 사용자가 활성 참여(ACTIVE) 중인 챌린지 중,
+        // 오늘 수행 대상(participant.startDate <= targetDate <= challenge.endDate)이면서
+        // 아직 오늘 인증(Verification)을 완료하지 않은 미인증 챌린지 건수를 집계하여 반환하세요.
+        return 0
     }
 }

@@ -337,31 +337,14 @@ class NotificationIntegrationTest {
 
     @Test
     fun `모든 챌린지 인증을 완료한 사용자는 스케줄러 발송 대상에서 제외된다`() {
-        val today = DateTimeUtils.todayKst()
-        val targetTime = LocalTime.of(21, 0)
-        val targetDateTime = LocalDateTime.of(today, targetTime)
-
-        userNotificationSettingRepository.save(UserNotificationSetting(userId = user.id, enabled = true, reminderTime = targetTime))
-        pushSubscriptionRepository.save(
-            PushSubscription(userId = user.id, endpoint = "https://fcm.googleapis.com/fcm/send/active-device-2", p256dh = "k", auth = "a", isActive = true)
-        )
-
-        val group = groupRepository.save(Group(name = "완료 모임", hostUserId = user.id, inviteCode = "NOTI-222"))
-        val challenge = challengeRepository.save(
-            Challenge(groupId = group.id, creatorUserId = user.id, title = "독서", description = "설명", verificationCriteria = "기준", startDate = today.minusDays(1), endDate = today.plusDays(1))
-        )
-        challengeParticipantRepository.save(ChallengeParticipant(challengeId = challenge.id, userId = user.id, penaltyAmount = 1000))
-
-        // 이미 오늘 인증 완료함
-        verificationRepository.save(
-            Verification(groupId = group.id, challengeId = challenge.id, userId = user.id, targetDate = today, imageUrl = "url", comment = "완료", isLate = false)
-        )
-
-        notificationSchedulerService.processScheduledNotifications(targetDateTime)
-
-        // 발송되지 않아야 함
-        assertEquals(0, fakeWebPushClient.sentEndpoints.size)
-        assertFalse(pushSendLogRepository.existsByUserIdAndSendDate(user.id, today))
+        // TODO [사용자 미션 3]: 스케줄러 실행 시 오늘 인증을 이미 마친 사용자는 발송 대상에서 제외되는지 검증하는 테스트를 작성하세요.
+        // 1. targetTime(21:00)에 알림 ON 설정 및 활성 PushSubscription 기기를 등록합니다.
+        // 2. 모임, 활성 챌린지, 참여자 레코드를 생성합니다.
+        // 3. 오늘(today) 날짜로 해당 챌린지의 Verification(인증)을 완료 처리합니다.
+        // 4. notificationSchedulerService.processScheduledNotifications(targetDateTime)을 실행합니다.
+        // 5. fakeWebPushClient.sentEndpoints.size 가 0이어야 하고,
+        //    pushSendLogRepository.existsByUserIdAndSendDate(user.id, today)가 false여야 함을 단언(assert)하세요.
+        throw NotImplementedError("미션 3 테스트 코드를 완성해 주세요.")
     }
 
     @Test
