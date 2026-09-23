@@ -49,7 +49,14 @@ const describe = (card: PublicShareCard): string =>
     ? `${card.userNickname}님이 ${card.streakDays}일 연속 인증을 달성했어요.`
     : `${card.userNickname}님의 오늘 인증: "${card.comment || card.title}"`;
 
-/** 값을 그대로 쓰는 속성 치환이므로 이스케이프는 HTMLRewriter에 맡긴다. */
+/**
+ * HTMLRewriter는 속성값의 `"`는 이스케이프하지만 `&`는 그대로 둔다.
+ * 사용자 글에 `&quot;` 같은 문자열이 들어오면 파서가 그걸 엔티티로 되돌려 읽으므로
+ * `&`만 미리 막아둔다. `<`와 `>`는 따옴표 안에서 특수문자가 아니라 건드릴 필요가 없다.
+ */
+const escapeAmpersand = (value: string): string => value.replace(/&/g, '&amp;');
+
+/** 나머지 이스케이프는 HTMLRewriter에 맡긴다. */
 class AttributeSetter {
   private readonly values: Record<string, string>;
   private readonly keyAttribute: 'property' | 'name';
@@ -64,7 +71,7 @@ class AttributeSetter {
     if (!key) return;
     const value = this.values[key];
     if (value !== undefined) {
-      element.setAttribute('content', value);
+      element.setAttribute('content', escapeAmpersand(value));
     }
   }
 }
