@@ -43,16 +43,19 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
   const isLocked = record.depositStatus !== 'UNPAID';
   const { isGracePeriod, formattedTime } = useGracePeriodTimer(record.date);
 
-  // 당일 인증: 오늘 날짜이거나 상태가 WAITING인 경우
+  const isNotParticipated = record.status === 'NOT_PARTICIPATED';
+
+  // 당일 인증: 오늘 날짜이거나 상태가 WAITING인 경우 (참여 전 제외)
   const canVerifyToday =
     isMyRecord &&
+    !isNotParticipated &&
     (record.status === 'WAITING' || (record.date === todayStr && record.status !== 'COMPLETED'));
-  // 늦은 인증: 과거 날짜이면서 미확인(UNCHECKED) 상태 + 정산 미잠금인 경우에만 허용
-  // (미수행 확정한 FAILED 상태는 결론이 났으므로 타이머 및 늦은 인증 대상에서 제외)
+  // 늦은 인증: 과거 날짜이면서 미확인(UNCHECKED) 상태 + 정산 미잠금인 경우에만 허용 (참여 전 제외)
   const canVerifyLate =
     isMyRecord &&
     isPast &&
     !isLocked &&
+    !isNotParticipated &&
     record.status === 'UNCHECKED';
   const canVerify = canVerifyToday || canVerifyLate;
   const isLate = canVerifyLate;
@@ -186,6 +189,12 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
             <span>예정</span>
           </span>
         );
+      case 'NOT_PARTICIPATED':
+        return (
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 border border-slate-200">
+            참여 전
+          </span>
+        );
     }
   };
 
@@ -201,7 +210,7 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
         </span>
       </div>
 
-      {/* 상태 범례 (5대 상태 가이드) */}
+      {/* 상태 범례 (상태 가이드) */}
       <div className="flex flex-wrap gap-1.5 text-[10px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
         <span className="font-semibold text-slate-600 mr-1">상태:</span>
         <span className="inline-flex items-center gap-0.5 text-emerald-700 font-medium">
@@ -218,6 +227,9 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
         </span>
         <span className="inline-flex items-center gap-0.5 text-slate-400">
           <CircleDot className="w-2.5 h-2.5" /> 예정
+        </span>
+        <span className="inline-flex items-center gap-0.5 text-slate-400">
+          참여 전
         </span>
       </div>
 
@@ -262,7 +274,7 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
 
           return (
             <CalendarRecordRow
-              key={record.id}
+              key={`${record.date}-${record.id}`}
               record={record}
               isMyRecord={isMyRecord}
               todayStr={todayStr}

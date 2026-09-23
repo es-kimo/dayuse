@@ -1,6 +1,7 @@
 package com.dayuse.domain.challenge.dto
 
 import com.dayuse.domain.challenge.ChallengeStatus
+import com.dayuse.domain.challenge.ParticipantStatus
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
@@ -40,12 +41,31 @@ data class UpdateChallengeRequest(
 
 data class JoinChallengeRequest(
     @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
-    val penaltyAmount: Int = 5000
+    val penaltyAmount: Int = 5000,
+
+    val startDateType: StartDateType? = StartDateType.TOMORROW
 )
 
 data class UpdatePenaltyAmountRequest(
     @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
     val penaltyAmount: Int
+)
+
+data class JoinOptionDto(
+    val type: StartDateType,
+    val startDate: LocalDate,
+    val remainingDays: Int,
+    val isRecommended: Boolean
+)
+
+data class JoinPreviewResponse(
+    val challengeId: Long,
+    val challengeTitle: String,
+    val challengeStartDate: LocalDate,
+    val challengeEndDate: LocalDate,
+    val isStarted: Boolean,
+    val options: List<JoinOptionDto>,
+    val defaultPenaltyAmount: Int = 5000
 )
 
 data class ChallengeSummaryResponse(
@@ -70,6 +90,9 @@ data class ChallengeParticipantResponse(
     val nickname: String,
     val profileImageUrl: String?,
     val penaltyAmount: Int,
+    val startDate: LocalDate = LocalDate.now(),
+    val status: ParticipantStatus = ParticipantStatus.ACTIVE,
+    val completionRate: Int = 0,
     val joinedAt: LocalDateTime,
     val isCreator: Boolean
 )

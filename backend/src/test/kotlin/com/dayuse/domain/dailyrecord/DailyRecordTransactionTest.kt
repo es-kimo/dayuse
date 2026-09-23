@@ -96,7 +96,8 @@ class DailyRecordTransactionTest {
             ChallengeParticipant(
                 challengeId = challenge.id,
                 userId = user.id,
-                penaltyAmount = 10000
+                penaltyAmount = 10000,
+                startDate = challenge.startDate
             )
         )
         dailyRecordService.ensureDailyRecordsForParticipant(

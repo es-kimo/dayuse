@@ -11,6 +11,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    enabled: false
 
 jwt:
   secret: dayuse-test-jwt-secret-key-must-be-very-long-and-secure-at-least-256-bits-for-hmac-sha!

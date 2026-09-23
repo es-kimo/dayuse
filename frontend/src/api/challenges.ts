@@ -5,6 +5,7 @@ import type {
   ChallengeSummary,
   CreateChallengePayload,
   JoinChallengePayload,
+  JoinPreviewResponse,
   UpdateChallengePayload,
   UpdatePenaltyPayload,
 } from '../types';
@@ -37,6 +38,11 @@ export const challengesApi = {
 
   joinChallenge: async (challengeId: number, payload: JoinChallengePayload): Promise<ChallengeParticipant> => {
     const res = await apiClient.post<ChallengeParticipant>(`/challenges/${challengeId}/participants`, payload);
+    return res.data;
+  },
+
+  getJoinPreview: async (challengeId: number): Promise<JoinPreviewResponse> => {
+    const res = await apiClient.get<JoinPreviewResponse>(`/challenges/${challengeId}/preview-join`);
     return res.data;
   },
 

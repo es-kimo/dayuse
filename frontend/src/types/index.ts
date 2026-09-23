@@ -74,8 +74,31 @@ export interface ChallengeParticipant {
   nickname: string;
   profileImageUrl?: string | null;
   penaltyAmount: number;
+  startDate: string;
+  status: ParticipantStatus;
+  completionRate: number;
   joinedAt: string;
   isCreator: boolean;
+}
+
+export type StartDateType = 'TODAY' | 'TOMORROW';
+export type ParticipantStatus = 'ACTIVE' | 'CANCELLED';
+
+export interface JoinOption {
+  type: StartDateType;
+  startDate: string;
+  remainingDays: number;
+  isRecommended: boolean;
+}
+
+export interface JoinPreviewResponse {
+  challengeId: number;
+  challengeTitle: string;
+  challengeStartDate: string;
+  challengeEndDate: string;
+  isStarted: boolean;
+  options: JoinOption[];
+  defaultPenaltyAmount: number;
 }
 
 export interface ChallengeDetail {
@@ -119,6 +142,7 @@ export interface UpdateChallengePayload {
 
 export interface JoinChallengePayload {
   penaltyAmount: number;
+  startDateType?: StartDateType;
 }
 
 export interface UpdatePenaltyPayload {
@@ -200,7 +224,7 @@ export interface CommentItem {
   createdAt: string;
 }
 
-export type DailyRecordStatus = 'PLANNED' | 'WAITING' | 'COMPLETED' | 'UNCHECKED' | 'FAILED';
+export type DailyRecordStatus = 'NOT_PARTICIPATED' | 'PLANNED' | 'WAITING' | 'COMPLETED' | 'UNCHECKED' | 'FAILED';
 export type DepositStatus = 'UNPAID' | 'WAITING_CONFIRMATION' | 'CONFIRMED';
 
 export interface StatusSummaryResponse {

@@ -59,7 +59,8 @@ class ChallengePolicyTest {
             ChallengeStatus.IN_PROGRESS,
             challenge.status(baseToday)
         )
-        assertFalse(challenge.canJoin(baseToday))
+        // v0.2 F03: 진행 중이어도 종료 전이면 중도 참여 가능
+        assertTrue(challenge.canJoin(baseToday))
         assertFalse(challenge.canCancel(baseToday))
         assertFalse(challenge.canDelete(baseToday))
         assertFalse(challenge.canModifyFullConditions(baseToday))

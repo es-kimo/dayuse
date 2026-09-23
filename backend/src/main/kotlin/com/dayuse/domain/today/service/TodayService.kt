@@ -31,15 +31,16 @@ class TodayService(
         val today = DateTimeUtils.todayKst()
         val challenges = challengeRepository.findAllByGroupId(groupId)
 
-        // 사용자가 참여 중인 챌린지 ID 목록
-        val participatingChallengeIds = challengeParticipantRepository.findAllByUserId(userId)
-            .map { it.challengeId }
-            .toSet()
+        // 사용자가 활성 참여 중인 챌린지 및 참여 정보
+        val participantsMap = challengeParticipantRepository.findAllByUserIdAndStatus(
+            userId,
+            com.dayuse.domain.challenge.ParticipantStatus.ACTIVE
+        ).associateBy { it.challengeId }
 
-        // 오늘 진행 중(시작일 <= today <= 종료일)이며 사용자가 참여 중인 챌린지만 추출
+        // 오늘 수행 대상(참여자 시작일 <= today <= 챌린지 종료일)인 챌린지만 추출
         val activeParticipatingChallenges = challenges.filter { challenge ->
-            participatingChallengeIds.contains(challenge.id) &&
-                    challenge.startDate <= today && today <= challenge.endDate
+            val participant = participantsMap[challenge.id] ?: return@filter false
+            participant.startDate <= today && today <= challenge.endDate
         }
 
         return activeParticipatingChallenges.map { challenge ->

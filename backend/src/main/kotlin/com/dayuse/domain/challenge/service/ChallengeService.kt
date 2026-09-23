@@ -4,13 +4,19 @@ import com.dayuse.domain.challenge.Challenge
 import com.dayuse.domain.challenge.ChallengeParticipant
 import com.dayuse.domain.challenge.ChallengeParticipantRepository
 import com.dayuse.domain.challenge.ChallengeRepository
+import com.dayuse.domain.challenge.ParticipantStatus
 import com.dayuse.domain.challenge.dto.ChallengeDetailResponse
 import com.dayuse.domain.challenge.dto.ChallengeParticipantResponse
 import com.dayuse.domain.challenge.dto.ChallengeSummaryResponse
 import com.dayuse.domain.challenge.dto.CreateChallengeRequest
 import com.dayuse.domain.challenge.dto.JoinChallengeRequest
+import com.dayuse.domain.challenge.dto.JoinOptionDto
+import com.dayuse.domain.challenge.dto.JoinPreviewResponse
+import com.dayuse.domain.challenge.dto.StartDateType
 import com.dayuse.domain.challenge.dto.UpdateChallengeRequest
 import com.dayuse.domain.challenge.dto.UpdatePenaltyAmountRequest
+import com.dayuse.domain.dailyrecord.DailyRecordRepository
+import com.dayuse.domain.dailyrecord.DailyRecordStatus
 import com.dayuse.domain.dailyrecord.service.DailyRecordService
 import com.dayuse.domain.group.GroupMemberRepository
 import com.dayuse.domain.group.GroupRepository
@@ -24,6 +30,7 @@ import com.dayuse.global.util.DateTimeUtils
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import kotlin.Long
 
 @Service
@@ -34,7 +41,8 @@ class ChallengeService(
     private val groupRepository: GroupRepository,
     private val groupMemberRepository: GroupMemberRepository,
     private val userRepository: UserRepository,
-    private val dailyRecordService: DailyRecordService? = null
+    private val dailyRecordService: DailyRecordService? = null,
+    private val dailyRecordRepository: DailyRecordRepository? = null
 ) {
 
     @Transactional
@@ -81,10 +89,16 @@ class ChallengeService(
             ChallengeParticipant(
                 challengeId = challenge.id,
                 userId = userId,
-                penaltyAmount = request.myPenaltyAmount
+                penaltyAmount = request.myPenaltyAmount,
+                startDate = challenge.startDate,
+                status = ParticipantStatus.ACTIVE
             )
         )
-        dailyRecordService?.ensureDailyRecordsForParticipant(creatorParticipant, challenge, today)
+        dailyRecordService?.ensureDailyRecordsForParticipant(
+            creatorParticipant,
+            challenge,
+            today
+        )
         val creatorUser = userRepository.findById(userId).orElse(null)
         val participantResponse = ChallengeParticipantResponse(
             id = creatorParticipant.id,
@@ -92,6 +106,9 @@ class ChallengeService(
             nickname = creatorUser?.nickname ?: "참여자",
             profileImageUrl = creatorUser?.profileImageUrl,
             penaltyAmount = creatorParticipant.penaltyAmount,
+            startDate = creatorParticipant.startDate,
+            status = creatorParticipant.status,
+            completionRate = 0,
             joinedAt = creatorParticipant.joinedAt,
             isCreator = true
         )
@@ -149,10 +166,14 @@ class ChallengeService(
                 }
             }
 
-            val participantCount = challengeParticipantRepository.countByChallengeId(challenge.id).toInt()
-            val myParticipant = challengeParticipantRepository.findByChallengeIdAndUserId(
+            val participantCount = challengeParticipantRepository.countByChallengeIdAndStatus(
                 challenge.id,
-                userId
+                ParticipantStatus.ACTIVE
+            ).toInt()
+            val myParticipant = challengeParticipantRepository.findByChallengeIdAndUserIdAndStatus(
+                challenge.id,
+                userId,
+                ParticipantStatus.ACTIVE
             )
 
             ChallengeSummaryResponse(
@@ -192,18 +213,33 @@ class ChallengeService(
             ResourceNotFoundException("모임을 찾을 수 없습니다. (ID: ${challenge.groupId})")
         }
 
-        val participants = challengeParticipantRepository.findAllByChallengeId(challengeId)
+        val participants = challengeParticipantRepository.findAllByChallengeIdAndStatus(
+            challengeId,
+            ParticipantStatus.ACTIVE
+        )
         val userMap = userRepository.findAllById(participants.map { it.userId }).associateBy { it.id }
         val creatorUser = userRepository.findById(challenge.creatorUserId).orElse(null)
 
+        val allRecords = dailyRecordRepository?.findAllByChallengeId(challengeId).orEmpty()
         val participantResponses = participants.map { p ->
             val user = userMap[p.userId]
+            val totalDays = 1 + ChronoUnit.DAYS.between(
+                p.startDate,
+                challenge.endDate
+            )
+            val completedCount =
+                allRecords.count { it.challengeParticipantId == p.id && it.status == DailyRecordStatus.COMPLETED }
+            val completionRate = if (totalDays > 0) ((completedCount.toDouble() / totalDays) * 100).toInt() else 0
+
             ChallengeParticipantResponse(
                 id = p.id,
                 userId = p.userId,
                 nickname = user?.nickname ?: "탈퇴한 사용자",
                 profileImageUrl = user?.profileImageUrl,
                 penaltyAmount = p.penaltyAmount,
+                startDate = p.startDate,
+                status = p.status,
+                completionRate = completionRate,
                 joinedAt = p.joinedAt,
                 isCreator = p.userId == challenge.creatorUserId
             )
@@ -229,10 +265,98 @@ class ChallengeService(
             isParticipating = isParticipating,
             myPenaltyAmount = myParticipant?.penaltyAmount,
             canJoin = challenge.canJoin(today) && !isParticipating,
-            canCancel = challenge.canCancel(today) && isParticipating && !isCreator,
+            canCancel = myParticipant?.canCancel(today) == true && !isCreator,
             canDelete = challenge.canDelete(today) && isCreator,
             canModifyFull = challenge.canModifyFullConditions(today) && isCreator,
             participants = participantResponses
+        )
+    }
+
+    fun getJoinPreview(
+        challengeId: Long,
+        userId: Long,
+        today: LocalDate = DateTimeUtils.todayKst()
+    ): JoinPreviewResponse {
+        val challenge = challengeRepository.findById(challengeId).orElseThrow {
+            ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
+        }
+
+        groupMemberRepository.findByGroupIdAndUserId(
+            challenge.groupId,
+            userId
+        )
+            ?: throw ForbiddenException("해당 모임의 멤버만 챌린지 정보를 조회할 수 있습니다.")
+
+        if (challenge.isEnded(today)) {
+            throw BadRequestException("이미 종료된 챌린지입니다.")
+        }
+
+        if (challengeParticipantRepository.existsByChallengeIdAndUserIdAndStatus(
+                challengeId,
+                userId,
+                ParticipantStatus.ACTIVE
+            )
+        ) {
+            throw DuplicateResourceException("이미 참여 중인 챌린지입니다.")
+        }
+
+        val isStarted = challenge.isStarted(today)
+        val options = mutableListOf<JoinOptionDto>()
+
+        if (!isStarted) {
+            val days = ChronoUnit.DAYS.between(
+                challenge.startDate,
+                challenge.endDate
+            ).toInt() + 1
+            options.add(
+                JoinOptionDto(
+                    type = StartDateType.TOMORROW,
+                    startDate = challenge.startDate,
+                    remainingDays = days,
+                    isRecommended = true
+                )
+            )
+        } else {
+            // 진행 중인 경우: 오늘부터 및 내일부터 옵션
+            val daysToday = ChronoUnit.DAYS.between(
+                today,
+                challenge.endDate
+            ).toInt() + 1
+            val isLastDay = today >= challenge.endDate
+            options.add(
+                JoinOptionDto(
+                    type = StartDateType.TODAY,
+                    startDate = today,
+                    remainingDays = daysToday,
+                    isRecommended = isLastDay
+                )
+            )
+
+            if (!isLastDay) {
+                val tomorrow = today.plusDays(1)
+                val daysTomorrow = ChronoUnit.DAYS.between(
+                    tomorrow,
+                    challenge.endDate
+                ).toInt() + 1
+                options.add(
+                    JoinOptionDto(
+                        type = StartDateType.TOMORROW,
+                        startDate = tomorrow,
+                        remainingDays = daysTomorrow,
+                        isRecommended = true
+                    )
+                )
+            }
+        }
+
+        return JoinPreviewResponse(
+            challengeId = challenge.id,
+            challengeTitle = challenge.title,
+            challengeStartDate = challenge.startDate,
+            challengeEndDate = challenge.endDate,
+            isStarted = isStarted,
+            options = options,
+            defaultPenaltyAmount = 5000
         )
     }
 
@@ -254,25 +378,44 @@ class ChallengeService(
             ?: throw ForbiddenException("해당 모임의 멤버만 챌린지에 참여할 수 있습니다.")
 
         if (!challenge.canJoin(today)) {
-            throw ChallengeAlreadyStartedException("이미 시작된 챌린지에는 참여할 수 없습니다.")
+            throw ChallengeAlreadyStartedException("이미 종료된 챌린지에는 참여할 수 없습니다.")
         }
 
-        if (challengeParticipantRepository.existsByChallengeIdAndUserId(
-                challengeId,
-                userId
-            )
-        ) {
+        val existing = challengeParticipantRepository.findByChallengeIdAndUserId(
+            challengeId,
+            userId
+        )
+        if (existing != null && existing.status == ParticipantStatus.ACTIVE) {
             throw DuplicateResourceException("이미 참여 중인 챌린지입니다.")
         }
 
-        val participant = challengeParticipantRepository.save(
-            ChallengeParticipant(
-                challengeId = challengeId,
-                userId = userId,
-                penaltyAmount = request.penaltyAmount
-            )
+        val calculatedStartDate = challenge.calculateStartDate(
+            request.startDateType,
+            today
         )
-        dailyRecordService?.ensureDailyRecordsForParticipant(participant, challenge, today)
+
+        val participant = if (existing != null && existing.status == ParticipantStatus.CANCELLED) {
+            existing.reactivate(
+                calculatedStartDate,
+                request.penaltyAmount
+            )
+            challengeParticipantRepository.save(existing)
+        } else {
+            challengeParticipantRepository.save(
+                ChallengeParticipant(
+                    challengeId = challengeId,
+                    userId = userId,
+                    penaltyAmount = request.penaltyAmount,
+                    startDate = calculatedStartDate,
+                    status = ParticipantStatus.ACTIVE
+                )
+            )
+        }
+        dailyRecordService?.ensureDailyRecordsForParticipant(
+            participant,
+            challenge,
+            today
+        )
 
         val user = userRepository.findById(userId).orElse(null)
         return ChallengeParticipantResponse(
@@ -281,6 +424,9 @@ class ChallengeService(
             nickname = user?.nickname ?: "참여자",
             profileImageUrl = user?.profileImageUrl,
             penaltyAmount = participant.penaltyAmount,
+            startDate = participant.startDate,
+            status = participant.status,
+            completionRate = 0,
             joinedAt = participant.joinedAt,
             isCreator = userId == challenge.creatorUserId
         )
@@ -302,21 +448,25 @@ class ChallengeService(
         )
             ?: throw ForbiddenException("해당 모임의 멤버만 챌린지 참여를 취소할 수 있습니다.")
 
-        if (!challenge.canCancel(today)) {
-            throw ChallengeAlreadyStartedException("이미 시작된 챌린지는 참여 취소할 수 없습니다.")
-        }
-
         if (challenge.creatorUserId == userId) {
             throw BadRequestException("챌린지 생성자는 참여를 취소할 수 없습니다. 대신 챌린지를 삭제해주세요.")
         }
 
-        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(
+        val participant = challengeParticipantRepository.findByChallengeIdAndUserIdAndStatus(
             challengeId,
-            userId
-        )
-            ?: throw ResourceNotFoundException("참여 중인 챌린지가 아닙니다.")
+            userId,
+            ParticipantStatus.ACTIVE
+        ) ?: throw ResourceNotFoundException("참여 중인 챌린지가 아닙니다.")
 
-        challengeParticipantRepository.delete(participant)
+        participant.cancel(today)
+
+        dailyRecordRepository?.let { repo ->
+            val recordsToDelete = repo.findAllByChallengeParticipantId(participant.id)
+                .filter { it.date >= today }
+            if (recordsToDelete.isNotEmpty()) {
+                repo.deleteAll(recordsToDelete)
+            }
+        }
     }
 
     @Transactional
@@ -330,18 +480,32 @@ class ChallengeService(
             ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
         }
 
-        if (challenge.isStarted(today)) {
-            throw ChallengeAlreadyStartedException("이미 시작된 챌린지는 약정 금액을 변경할 수 없습니다.")
-        }
-
-        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(
-            challengeId,
+        groupMemberRepository.findByGroupIdAndUserId(
+            challenge.groupId,
             userId
         )
-            ?: throw ResourceNotFoundException("참여 중인 챌린지가 아닙니다.")
+            ?: throw ForbiddenException("해당 모임의 멤버만 약정 금액을 변경할 수 있습니다.")
 
-        participant.penaltyAmount = request.penaltyAmount
+        val participant = challengeParticipantRepository.findByChallengeIdAndUserIdAndStatus(
+            challengeId,
+            userId,
+            ParticipantStatus.ACTIVE
+        ) ?: throw ResourceNotFoundException("참여 중인 챌린지가 아닙니다.")
+
+        participant.updatePenalty(
+            request.penaltyAmount,
+            today
+        )
         val user = userRepository.findById(userId).orElse(null)
+
+        val allRecords = dailyRecordRepository?.findAllByChallengeId(challengeId).orEmpty()
+        val totalDays = ChronoUnit.DAYS.between(
+            participant.startDate,
+            challenge.endDate
+        ).toInt() + 1
+        val completedCount =
+            allRecords.count { it.challengeParticipantId == participant.id && it.status == DailyRecordStatus.COMPLETED }
+        val completionRate = if (totalDays > 0) ((completedCount.toDouble() / totalDays) * 100).toInt() else 0
 
         return ChallengeParticipantResponse(
             id = participant.id,
@@ -349,6 +513,9 @@ class ChallengeService(
             nickname = user?.nickname ?: "참여자",
             profileImageUrl = user?.profileImageUrl,
             penaltyAmount = participant.penaltyAmount,
+            startDate = participant.startDate,
+            status = participant.status,
+            completionRate = completionRate,
             joinedAt = participant.joinedAt,
             isCreator = userId == challenge.creatorUserId
         )

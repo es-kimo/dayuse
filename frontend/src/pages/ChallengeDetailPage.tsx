@@ -6,7 +6,9 @@ import type { ChallengeDetail, ChallengeCalendarResponse, CalendarDailyRecordIte
 import { MobileLayout } from '../components/MobileLayout';
 import { ChallengeCalendarSection } from '../components/ChallengeCalendarSection';
 import { VerificationModal } from '../components/VerificationModal';
+import { MidJoinBottomSheet } from '../components/MidJoinBottomSheet';
 import { useAuth } from '../context/AuthContext';
+import { getTodayKstString } from '../utils/date';
 import {
   ArrowLeft,
   Calendar,
@@ -99,20 +101,6 @@ export const ChallengeDetailPage: React.FC = () => {
     fetchCalendar();
   }, [challengeId]);
 
-  const handleJoin = async () => {
-    if (!challenge) return;
-    setActionLoading(true);
-    setActionError(null);
-    try {
-      await challengesApi.joinChallenge(challenge.id, { penaltyAmount: joinPenalty });
-      setShowJoinModal(false);
-      await fetchChallenge();
-    } catch (err: any) {
-      setActionError(err.response?.data?.message || '참여 신청에 실패했습니다.');
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const handleLeave = async () => {
     if (!challenge || !window.confirm('챌린지 참여를 취소하시겠습니까?')) return;
@@ -404,16 +392,25 @@ export const ChallengeDetailPage: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] text-slate-400">
-                    {p.joinedAt.split('T')[0]} 참여
-                  </span>
+                  <div className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                    <span>{p.startDate} 시작</span>
+                    <span>·</span>
+                    <span>{p.joinedAt.split('T')[0]} 신청</span>
+                  </div>
                 </div>
               </div>
               <div className="text-right">
                 <span className="text-xs font-bold text-amber-600 block">
                   {p.penaltyAmount.toLocaleString()}원
                 </span>
-                <span className="text-[9px] text-slate-400">1일 미수행 약정</span>
+                <div className="flex items-center justify-end gap-1 mt-0.5">
+                  <span className="text-[9px] text-slate-400">1일 약정</span>
+                  {p.completionRate !== undefined && (
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-100">
+                      달성 {p.completionRate}%
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -431,104 +428,69 @@ export const ChallengeDetailPage: React.FC = () => {
             className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
           >
             <Coins className="w-4 h-4" />
-            <span>챌린지 참여하기</span>
+            <span>{(() => {
+              if (challenge.status === 'NOT_STARTED') return '챌린지 참여하기';
+              const todayStr = getTodayKstString();
+              if (challenge.endDate === todayStr) return '오늘 하루 참여하기';
+              const diffDays = Math.max(
+                1,
+                Math.round(
+                  (new Date(challenge.endDate).getTime() - new Date(todayStr).getTime()) /
+                    (1000 * 60 * 60 * 24)
+                ) + 1
+              );
+              return `남은 ${diffDays}일 참여하기`;
+            })()}</span>
           </button>
         ) : challenge.isParticipating ? (
           <div className="flex gap-2">
-            {challenge.status === 'NOT_STARTED' && (
-              <button
-                onClick={() => {
-                  setShowPenaltyModal(true);
-                  setActionError(null);
-                }}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition"
-              >
-                약정 금액 변경
-              </button>
-            )}
-            {challenge.canCancel && (
-              <button
-                onClick={handleLeave}
-                disabled={actionLoading}
-                className="py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs rounded-xl transition"
-              >
-                참여 취소
-              </button>
+            {(challenge.status === 'NOT_STARTED' || challenge.canCancel) ? (
+              <>
+                <button
+                  onClick={() => {
+                    setShowPenaltyModal(true);
+                    setActionError(null);
+                  }}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition"
+                >
+                  약정 금액 변경
+                </button>
+                {challenge.canCancel && (
+                  <button
+                    onClick={handleLeave}
+                    disabled={actionLoading}
+                    className="py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs rounded-xl transition"
+                  >
+                    참여 취소
+                  </button>
+                )}
+              </>
+            ) : (
+              <div className="flex-1 py-2.5 bg-slate-50 border border-slate-200 text-slate-500 font-medium text-xs rounded-xl flex items-center justify-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-slate-400" />
+                <span>수행 진행 중 (약정·취소 고정)</span>
+              </div>
             )}
           </div>
         ) : (
           <div className="text-center py-2 text-xs text-slate-400">
-            {challenge.status === 'NOT_STARTED'
-              ? '참여 가능한 상태입니다.'
-              : '챌린지가 시작되어 참여가 마감되었습니다.'}
+            {challenge.status === 'ENDED'
+              ? '챌린지가 종료되어 참여가 마감되었습니다.'
+              : '현재 참여할 수 없는 상태입니다.'}
           </div>
         )}
       </div>
 
-      {/* 참여 신청 모달 */}
-      {showJoinModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4">
-            <h2 className="text-sm font-bold text-slate-800">챌린지 참여 약정 금액 설정</h2>
-            <p className="text-xs text-slate-500">
-              미수행 시 차감될 1일 약정 벌금을 설정해주세요.
-            </p>
-
-            {actionError && (
-              <div className="p-2.5 rounded-lg bg-red-50 text-red-600 text-[11px] flex items-center gap-1.5">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{actionError}</span>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                {[3000, 5000, 10000].map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    onClick={() => setJoinPenalty(amt)}
-                    className={`flex-1 py-1.5 text-xs rounded-lg border transition ${
-                      joinPenalty === amt
-                        ? 'border-amber-500 bg-amber-50 text-amber-800 font-semibold'
-                        : 'border-slate-200 bg-slate-50 text-slate-600'
-                    }`}
-                  >
-                    {amt.toLocaleString()}원
-                  </button>
-                ))}
-              </div>
-              <input
-                type="number"
-                min={0}
-                step={1000}
-                value={joinPenalty}
-                onChange={(e) => setJoinPenalty(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowJoinModal(false)}
-                disabled={actionLoading}
-                className="flex-1 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleJoin}
-                disabled={actionLoading}
-                className="flex-1 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1"
-              >
-                {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : '참여 확정'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 중도/신규 참여 바텀시트 */}
+      <MidJoinBottomSheet
+        challengeId={challenge.id}
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        onSuccess={() => {
+          fetchChallenge();
+          fetchCalendar();
+        }}
+      />
 
       {/* 약정 금액 변경 모달 */}
       {showPenaltyModal && (
