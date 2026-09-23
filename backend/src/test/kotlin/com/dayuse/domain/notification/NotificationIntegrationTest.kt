@@ -134,14 +134,22 @@ class NotificationIntegrationTest {
     @BeforeEach
     fun setUp() {
         fakeWebPushClient.reset()
-        user = userRepository.save(User(kakaoId = "noti_user_1", nickname = "알림테스터"))
+        user = userRepository.save(
+            User(
+                kakaoId = "noti_user_1",
+                nickname = "알림테스터"
+            )
+        )
         userToken = jwtTokenProvider.generateAccessToken(user.id)
     }
 
     @Test
     fun `내 알림 설정 조회 시 기본값은 꺼짐(OFF) 및 21시이며 VAPID 공개키를 포함한다`() {
         mockMvc.get("/api/v1/notifications/settings") {
-            header("Authorization", "Bearer $userToken")
+            header(
+                "Authorization",
+                "Bearer $userToken"
+            )
             accept = MediaType.APPLICATION_JSON
         }.andExpect {
             status { isOk() }
@@ -154,10 +162,16 @@ class NotificationIntegrationTest {
 
     @Test
     fun `알림 설정을 켜고 희망 시간을 22시 30분으로 수정할 수 있다`() {
-        val request = UpdateNotificationSettingRequest(enabled = true, reminderTime = "22:30")
+        val request = UpdateNotificationSettingRequest(
+            enabled = true,
+            reminderTime = "22:30"
+        )
 
         mockMvc.put("/api/v1/notifications/settings") {
-            header("Authorization", "Bearer $userToken")
+            header(
+                "Authorization",
+                "Bearer $userToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(request)
         }.andExpect {
@@ -169,7 +183,13 @@ class NotificationIntegrationTest {
         val saved = userNotificationSettingRepository.findByUserId(user.id)
         assertNotNull(saved)
         assertTrue(saved!!.enabled)
-        assertEquals(LocalTime.of(22, 30), saved.reminderTime)
+        assertEquals(
+            LocalTime.of(
+                22,
+                30
+            ),
+            saved.reminderTime
+        )
     }
 
     @Test
@@ -181,7 +201,10 @@ class NotificationIntegrationTest {
         )
 
         mockMvc.post("/api/v1/notifications/subscriptions") {
-            header("Authorization", "Bearer $userToken")
+            header(
+                "Authorization",
+                "Bearer $userToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(request1)
         }.andExpect {
@@ -189,8 +212,14 @@ class NotificationIntegrationTest {
         }
 
         val subscriptions = pushSubscriptionRepository.findAllByUserIdAndIsActiveTrue(user.id)
-        assertEquals(1, subscriptions.size)
-        assertEquals("https://fcm.googleapis.com/fcm/send/device-token-1", subscriptions[0].endpoint)
+        assertEquals(
+            1,
+            subscriptions.size
+        )
+        assertEquals(
+            "https://fcm.googleapis.com/fcm/send/device-token-1",
+            subscriptions[0].endpoint
+        )
 
         // 동일 엔드포인트로 키 갱신
         val request2 = RegisterPushSubscriptionRequest(
@@ -200,7 +229,10 @@ class NotificationIntegrationTest {
         )
 
         mockMvc.post("/api/v1/notifications/subscriptions") {
-            header("Authorization", "Bearer $userToken")
+            header(
+                "Authorization",
+                "Bearer $userToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(request2)
         }.andExpect {
@@ -209,8 +241,14 @@ class NotificationIntegrationTest {
 
         val updated = pushSubscriptionRepository.findByEndpoint("https://fcm.googleapis.com/fcm/send/device-token-1")
         assertNotNull(updated)
-        assertEquals("key2-updated", updated!!.p256dh)
-        assertEquals("auth2-updated", updated.auth)
+        assertEquals(
+            "key2-updated",
+            updated!!.p256dh
+        )
+        assertEquals(
+            "auth2-updated",
+            updated.auth
+        )
         assertTrue(updated.isActive)
     }
 
@@ -229,7 +267,10 @@ class NotificationIntegrationTest {
         val request = UnregisterPushSubscriptionRequest(endpoint = subscription.endpoint)
 
         mockMvc.delete("/api/v1/notifications/subscriptions") {
-            header("Authorization", "Bearer $userToken")
+            header(
+                "Authorization",
+                "Bearer $userToken"
+            )
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(request)
         }.andExpect {
@@ -265,17 +306,30 @@ class NotificationIntegrationTest {
         assertFalse(result.success)
 
         val reloaded = pushSubscriptionRepository.findById(subscription.id).orElseThrow()
-        assertFalse(reloaded.isActive, "410 응답을 받은 구독은 isActive가 false로 변경되어야 합니다.")
+        assertFalse(
+            reloaded.isActive,
+            "410 응답을 받은 구독은 isActive가 false로 변경되어야 합니다."
+        )
     }
 
     @Test
     fun `스케줄러는 미인증 챌린지가 남아 있는 대상자에게만 단 1회의 알림을 발송하고 PushSendLog를 남긴다`() {
         val today = DateTimeUtils.todayKst()
-        val targetTime = LocalTime.of(21, 0)
-        val targetDateTime = LocalDateTime.of(today, targetTime)
+        val targetTime = LocalTime.of(
+            21,
+            0
+        )
+        val targetDateTime = LocalDateTime.of(
+            today,
+            targetTime
+        )
 
         // 알림 설정 ON (21:00)
-        val setting = UserNotificationSetting(userId = user.id, enabled = true, reminderTime = targetTime)
+        val setting = UserNotificationSetting(
+            userId = user.id,
+            enabled = true,
+            reminderTime = targetTime
+        )
         userNotificationSettingRepository.save(setting)
 
         // 기기 구독 등록
@@ -290,8 +344,20 @@ class NotificationIntegrationTest {
         )
 
         // 모임 및 미인증 챌린지 2개 생성
-        val group = groupRepository.save(Group(name = "챌린지 모임", hostUserId = user.id, inviteCode = "NOTI-111"))
-        groupMemberRepository.save(GroupMember(groupId = group.id, userId = user.id, role = GroupRole.MEMBER))
+        val group = groupRepository.save(
+            Group(
+                name = "챌린지 모임",
+                hostUserId = user.id,
+                inviteCode = "NOTI-111"
+            )
+        )
+        groupMemberRepository.save(
+            GroupMember(
+                groupId = group.id,
+                userId = user.id,
+                role = GroupRole.MEMBER
+            )
+        )
 
         val challenge1 = challengeRepository.save(
             Challenge(
@@ -316,55 +382,196 @@ class NotificationIntegrationTest {
             )
         )
 
-        challengeParticipantRepository.save(ChallengeParticipant(challengeId = challenge1.id, userId = user.id, penaltyAmount = 1000))
-        challengeParticipantRepository.save(ChallengeParticipant(challengeId = challenge2.id, userId = user.id, penaltyAmount = 1000))
+        challengeParticipantRepository.save(
+            ChallengeParticipant(
+                challengeId = challenge1.id,
+                userId = user.id,
+                penaltyAmount = 1000
+            )
+        )
+        challengeParticipantRepository.save(
+            ChallengeParticipant(
+                challengeId = challenge2.id,
+                userId = user.id,
+                penaltyAmount = 1000
+            )
+        )
 
         // 스케줄러 실행 (21:00)
         notificationSchedulerService.processScheduledNotifications(targetDateTime)
 
         // 검증: 1건 발송되었는가?
-        assertEquals(1, fakeWebPushClient.sentEndpoints.size)
-        assertEquals("https://fcm.googleapis.com/fcm/send/active-device-1", fakeWebPushClient.sentEndpoints[0])
+        assertEquals(
+            1,
+            fakeWebPushClient.sentEndpoints.size
+        )
+        assertEquals(
+            "https://fcm.googleapis.com/fcm/send/active-device-1",
+            fakeWebPushClient.sentEndpoints[0]
+        )
 
         // 검증: PushSendLog가 2건의 미인증으로 남았는가?
-        assertTrue(pushSendLogRepository.existsByUserIdAndSendDate(user.id, today))
+        assertTrue(
+            pushSendLogRepository.existsByUserIdAndSendDate(
+                user.id,
+                today
+            )
+        )
 
         // 동일 날짜에 스케줄러 재실행 시 당일 1회 보장으로 발송되지 않아야 함
         fakeWebPushClient.reset()
         notificationSchedulerService.processScheduledNotifications(targetDateTime)
-        assertEquals(0, fakeWebPushClient.sentEndpoints.size, "동일 날짜에는 중복 발송되지 않아야 합니다.")
+        assertEquals(
+            0,
+            fakeWebPushClient.sentEndpoints.size,
+            "동일 날짜에는 중복 발송되지 않아야 합니다."
+        )
     }
 
     @Test
     fun `모든 챌린지 인증을 완료한 사용자는 스케줄러 발송 대상에서 제외된다`() {
-        // TODO [사용자 미션 3]: 스케줄러 실행 시 오늘 인증을 이미 마친 사용자는 발송 대상에서 제외되는지 검증하는 테스트를 작성하세요.
-        // 1. targetTime(21:00)에 알림 ON 설정 및 활성 PushSubscription 기기를 등록합니다.
-        // 2. 모임, 활성 챌린지, 참여자 레코드를 생성합니다.
-        // 3. 오늘(today) 날짜로 해당 챌린지의 Verification(인증)을 완료 처리합니다.
-        // 4. notificationSchedulerService.processScheduledNotifications(targetDateTime)을 실행합니다.
-        // 5. fakeWebPushClient.sentEndpoints.size 가 0이어야 하고,
-        //    pushSendLogRepository.existsByUserIdAndSendDate(user.id, today)가 false여야 함을 단언(assert)하세요.
-        throw NotImplementedError("미션 3 테스트 코드를 완성해 주세요.")
+        val today = DateTimeUtils.todayKst()
+        val targetTime = LocalTime.of(
+            21,
+            0
+        )
+        val targetDateTime = LocalDateTime.of(
+            today,
+            targetTime
+        )
+
+        userNotificationSettingRepository.save(
+            UserNotificationSetting(
+                userId = user.id,
+                enabled = true,
+                reminderTime = targetTime
+            )
+        )
+        pushSubscriptionRepository.save(
+            PushSubscription(
+                userId = user.id,
+                endpoint = "https://fcm.googleapis.com/fcm/send/active-device-2",
+                p256dh = "k",
+                auth = "a",
+                isActive = true
+            )
+        )
+
+        val group = groupRepository.save(
+            Group(
+                name = "완료 모임",
+                hostUserId = user.id,
+                inviteCode = "NOTI-222"
+            )
+        )
+        val challenge = challengeRepository.save(
+            Challenge(
+                groupId = group.id,
+                creatorUserId = user.id,
+                title = "독서",
+                description = "설명",
+                verificationCriteria = "기준",
+                startDate = today.minusDays(1),
+                endDate = today.plusDays(1)
+            )
+        )
+        challengeParticipantRepository.save(
+            ChallengeParticipant(
+                challengeId = challenge.id,
+                userId = user.id,
+                penaltyAmount = 1000
+            )
+        )
+
+        // 이미 오늘 인증 완료함
+        verificationRepository.save(
+            Verification(
+                groupId = group.id,
+                challengeId = challenge.id,
+                userId = user.id,
+                targetDate = today,
+                imageUrl = "url",
+                comment = "완료",
+                isLate = false
+            )
+        )
+
+        notificationSchedulerService.processScheduledNotifications(targetDateTime)
+
+        // 발송되지 않아야 함
+        assertEquals(
+            0,
+            fakeWebPushClient.sentEndpoints.size
+        )
+        assertFalse(
+            pushSendLogRepository.existsByUserIdAndSendDate(
+                user.id,
+                today
+            )
+        )
     }
 
     @Test
     fun `GET api v1 today 엔드포인트로 참여 중인 모든 모임의 오늘 할 일 목록을 통합 조회할 수 있다`() {
         val today = DateTimeUtils.todayKst()
-        val group1 = groupRepository.save(Group(name = "1번 모임", hostUserId = user.id, inviteCode = "NOTI-G1"))
-        val group2 = groupRepository.save(Group(name = "2번 모임", hostUserId = user.id, inviteCode = "NOTI-G2"))
+        val group1 = groupRepository.save(
+            Group(
+                name = "1번 모임",
+                hostUserId = user.id,
+                inviteCode = "NOTI-G1"
+            )
+        )
+        val group2 = groupRepository.save(
+            Group(
+                name = "2번 모임",
+                hostUserId = user.id,
+                inviteCode = "NOTI-G2"
+            )
+        )
 
         val challenge1 = challengeRepository.save(
-            Challenge(groupId = group1.id, creatorUserId = user.id, title = "1번 챌린지", description = "설명", verificationCriteria = "기준1", startDate = today.minusDays(1), endDate = today.plusDays(1))
+            Challenge(
+                groupId = group1.id,
+                creatorUserId = user.id,
+                title = "1번 챌린지",
+                description = "설명",
+                verificationCriteria = "기준1",
+                startDate = today.minusDays(1),
+                endDate = today.plusDays(1)
+            )
         )
         val challenge2 = challengeRepository.save(
-            Challenge(groupId = group2.id, creatorUserId = user.id, title = "2번 챌린지", description = "설명", verificationCriteria = "기준2", startDate = today.minusDays(1), endDate = today.plusDays(1))
+            Challenge(
+                groupId = group2.id,
+                creatorUserId = user.id,
+                title = "2번 챌린지",
+                description = "설명",
+                verificationCriteria = "기준2",
+                startDate = today.minusDays(1),
+                endDate = today.plusDays(1)
+            )
         )
 
-        challengeParticipantRepository.save(ChallengeParticipant(challengeId = challenge1.id, userId = user.id, penaltyAmount = 1000))
-        challengeParticipantRepository.save(ChallengeParticipant(challengeId = challenge2.id, userId = user.id, penaltyAmount = 1000))
+        challengeParticipantRepository.save(
+            ChallengeParticipant(
+                challengeId = challenge1.id,
+                userId = user.id,
+                penaltyAmount = 1000
+            )
+        )
+        challengeParticipantRepository.save(
+            ChallengeParticipant(
+                challengeId = challenge2.id,
+                userId = user.id,
+                penaltyAmount = 1000
+            )
+        )
 
         mockMvc.get("/api/v1/today") {
-            header("Authorization", "Bearer $userToken")
+            header(
+                "Authorization",
+                "Bearer $userToken"
+            )
             accept = MediaType.APPLICATION_JSON
         }.andExpect {
             status { isOk() }

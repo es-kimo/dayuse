@@ -17,7 +17,10 @@ class NotificationPushService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Transactional
-    fun sendPushToUser(userId: Long, payload: PushPayload): Int {
+    fun sendPushToUser(
+        userId: Long,
+        payload: PushPayload
+    ): Int {
         val subscriptions = pushSubscriptionRepository.findAllByUserIdAndIsActiveTrue(userId)
         if (subscriptions.isEmpty()) {
             return 0
@@ -34,12 +37,17 @@ class NotificationPushService(
                 payloadJson = payloadJson
             )
 
-            // TODO [사용자 미션 2]: W3C Web Push 발송 결과 처리 파이프라인을 완성하세요.
-            // 1. result.isSuccess 인 경우 successCount를 1 증가시킵니다.
-            // 2. result.isExpired (HTTP 410 Gone 또는 404 Not Found)인 경우, 만료/차단된 기기이므로
-            //    subscription.deactivate()를 호출하여 비활성화 상태(isActive = false)로 갱신하세요.
+            if (result.isSuccess) {
+                successCount++;
+            } else if (result.isExpired) {
+                log.info(
+                    "만료된 웹 푸시 구독 비활성화 처리: subscriptionId={}, endpoint={}",
+                    subscription.id,
+                    subscription.endpoint
+                )
+                subscription.deactivate()
+            }
         }
-
         return successCount
     }
 
@@ -61,7 +69,10 @@ class NotificationPushService(
             tag = "dayuse-test"
         )
 
-        val sentCount = sendPushToUser(userId, testPayload)
+        val sentCount = sendPushToUser(
+            userId,
+            testPayload
+        )
         return TestPushResponse(
             success = sentCount > 0,
             message = if (sentCount > 0) "테스트 알림이 전송되었습니다." else "알림 전송에 실패했습니다. 기기 권한을 확인해 주세요.",
