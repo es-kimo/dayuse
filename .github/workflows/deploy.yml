@@ -1,4 +1,4 @@
-name: dayuse Backend Deploy (CD)
+name: dayuse Production Deploy (CD)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # GitHub 웹 화면에서 수동 배포 지원
 
 jobs:
-  deploy:
+  deploy-backend:
     name: Deploy Backend to Oracle Cloud VM
     runs-on: ubuntu-latest
 
@@ -21,7 +21,43 @@ jobs:
           script: |
             echo "==> Deploying dayuse backend..."
             cd ~/dayuse
-            git pull origin main
+            git fetch origin && git checkout main && git pull origin main
             docker compose -f docker-compose.prod.yml up -d --build backend
             docker image prune -f
-            echo "==> Deployment completed successfully!"
+            echo "==> Backend deployment completed successfully!"
+
+  deploy-frontend:
+    name: Deploy Frontend to Cloudflare
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+        env:
+          VITE_KAKAO_CLIENT_ID: ${{ secrets.VITE_KAKAO_CLIENT_ID }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: 'frontend'
+          command: deploy
