@@ -52,6 +52,8 @@ jobs:
           npm run build
         env:
           VITE_KAKAO_CLIENT_ID: ${{ secrets.VITE_KAKAO_CLIENT_ID }}
+          # 카카오톡 공유용 JavaScript 키. 위 REST API 키와 다른 값이다.
+          VITE_KAKAO_JAVASCRIPT_KEY: ${{ secrets.VITE_KAKAO_JAVASCRIPT_KEY }}
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
       - name: Deploy to Cloudflare Workers
