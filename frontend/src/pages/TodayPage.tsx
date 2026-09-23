@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, Calendar, Bell } from 'lucide-react';
-import { Header } from '../components/Header';
 import { MobileLayout } from '../components/MobileLayout';
 import { VerificationModal } from '../components/VerificationModal';
 import { todayApi } from '../api/today';
@@ -40,8 +39,7 @@ export const TodayPage: React.FC = () => {
 
   return (
     <MobileLayout>
-      <Header />
-      <div className="p-4 space-y-5">
+      <div className="space-y-5">
         {/* 상단 타이틀 & 알림 설정 바로가기 */}
         <div className="flex items-center justify-between">
           <div>

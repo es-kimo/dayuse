@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Clock, Send, ShieldAlert, AlertCircle, Smartphone } from 'lucide-react';
-import { Header } from '../components/Header';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Clock, Send, ShieldAlert, AlertCircle, Smartphone, ArrowLeft } from 'lucide-react';
 import { MobileLayout } from '../components/MobileLayout';
 import { IosInstallGuideModal } from '../components/IosInstallGuideModal';
 import { useToast } from '../context/ToastContext';
@@ -21,6 +21,7 @@ import {
 } from '../utils/webPush';
 
 export const NotificationSettingsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -148,14 +149,21 @@ export const NotificationSettingsPage: React.FC = () => {
 
   return (
     <MobileLayout>
-      <Header />
-      <div className="p-4 space-y-5">
+      <div className="space-y-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Bell className="w-5 h-5 text-blue-600" />
-            알림 설정
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg transition"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Bell className="w-5 h-5 text-blue-600" />
+              알림 설정
+            </h1>
+          </div>
+          <p className="text-xs text-slate-500">
             오늘 아직 완료하지 않은 챌린지가 있을 때 정해진 시간에 리마인드해 드려요.
           </p>
         </div>
