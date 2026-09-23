@@ -2,11 +2,8 @@ name: dayuse Backend Deploy (CD)
 
 on:
   push:
-    branches: [main]
-    paths:
-      - 'backend/**'
-      - 'docker-compose.prod.yml'
-      - '.github/workflows/deploy.yml'
+    tags:
+      - 'v*' # v0.2.0 등 버전 태그 푸시 시 프로덕션 배포
   workflow_dispatch: # GitHub 웹 화면에서 수동 배포 지원
 
 jobs:
