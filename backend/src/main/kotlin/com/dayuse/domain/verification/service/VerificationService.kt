@@ -29,7 +29,8 @@ class VerificationService(
     private val groupMemberRepository: GroupMemberRepository,
     private val presignedUrlService: PresignedUrlService,
     private val dailyRecordService: DailyRecordService? = null,
-    private val dailyRecordRepository: DailyRecordRepository? = null
+    private val dailyRecordRepository: DailyRecordRepository? = null,
+    private val shareCardRepository: com.dayuse.domain.share.ShareCardRepository? = null
 ) {
 
     fun createVerification(
@@ -154,6 +155,10 @@ class VerificationService(
         val records = dailyRecordRepository?.findAllByVerificationId(verificationId).orEmpty()
         if (records.any { it.isLocked() }) {
             throw BadRequestException("정산 진행 중이거나 완료된 기록의 인증은 삭제할 수 없습니다.")
+        }
+
+        shareCardRepository?.findAllByVerificationIdAndIsActiveTrue(verificationId)?.forEach {
+            it.deactivate()
         }
 
         verificationRepository.delete(verification)

@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS `share_cards` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `card_type` enum('TODAY_VERIFICATION','STREAK') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` bigint NOT NULL,
+  `challenge_id` bigint NOT NULL,
+  `verification_id` bigint DEFAULT NULL,
+  `title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_nickname` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `image_url` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `comment` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `streak_days` int NOT NULL DEFAULT 0,
+  `history_json` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` bit(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_share_cards_token` (`token`),
+  KEY `idx_share_cards_user_id` (`user_id`),
+  KEY `idx_share_cards_challenge_id` (`challenge_id`),
+  KEY `idx_share_cards_verification_id` (`verification_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

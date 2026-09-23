@@ -385,5 +385,41 @@ export interface SettlementSummary {
   account?: GroupAccount | null;
 }
 
+export type ShareCardType = 'TODAY_VERIFICATION' | 'STREAK';
+
+export interface StreakHistoryItem {
+  date: string;
+  completed: boolean;
+  inPeriod: boolean;
+}
+
+export interface ShareCardResponse {
+  id: number;
+  token: string;
+  cardType: ShareCardType;
+  challengeId: number;
+  verificationId?: number | null;
+  title: string;
+  userNickname: string;
+  imageUrl?: string | null;
+  comment?: string | null;
+  streakDays: number;
+  historyJson?: string | null;
+  createdAt: string;
+}
+
+export interface PublicShareCardResponse {
+  token: string;
+  cardType: ShareCardType;
+  challengeId: number;
+  title: string;
+  userNickname: string;
+  imageUrl?: string | null;
+  comment?: string | null;
+  streakDays: number;
+  historyJson?: string | null;
+  createdAt: string;
+}
+
 
 

@@ -8,7 +8,9 @@ import {
   AlertTriangle,
   User as UserIcon,
   Loader2,
+  Share2,
 } from 'lucide-react';
+import { ShareCardModal } from './ShareCardModal';
 
 interface GroupFeedSectionProps {
   feedItems: FeedItem[];
@@ -30,6 +32,7 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
   onDeleteVerification,
 }) => {
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [shareItem, setShareItem] = useState<FeedItem | null>(null);
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('인증을 삭제하시겠습니까?\n오늘 인증을 삭제하면 다시 인증 대기 상태로 변경됩니다.')) {
@@ -121,19 +124,29 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
               </div>
 
               {item.isMine && (
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  disabled={deletingId === item.id}
-                  className="w-11 h-11 flex items-center justify-center text-slate-400 hover:text-red-500 transition rounded-xl active:scale-95"
-                  title="인증 삭제"
-                  aria-label="인증 삭제"
-                >
-                  {deletingId === item.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                </button>
+                <div className="flex items-center gap-0.5">
+                  <button
+                    onClick={() => setShareItem(item)}
+                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 transition rounded-xl active:scale-95"
+                    title="인증 공유 카드 만들기"
+                    aria-label="인증 공유 카드 만들기"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    disabled={deletingId === item.id}
+                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 transition rounded-xl active:scale-95"
+                    title="인증 삭제"
+                    aria-label="인증 삭제"
+                  >
+                    {deletingId === item.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               )}
             </div>
 
@@ -194,6 +207,20 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
             )}
           </button>
         </div>
+      )}
+
+      {/* 공유 카드 모달 */}
+      {shareItem && (
+        <ShareCardModal
+          cardType="TODAY_VERIFICATION"
+          targetId={shareItem.id}
+          title={shareItem.challengeTitle}
+          userNickname={shareItem.authorNickname}
+          imageUrl={shareItem.imageUrl}
+          comment={shareItem.comment}
+          targetDate={shareItem.targetDate}
+          onClose={() => setShareItem(null)}
+        />
       )}
     </div>
   );

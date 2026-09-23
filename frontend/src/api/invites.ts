@@ -48,6 +48,12 @@ export const handlePostLoginNavigation = async (
 ) => {
   const pendingCode = inviteStorage.get();
   if (!pendingCode) {
+    const pendingChallengeId = sessionStorage.getItem('dayuse_pending_challenge_id');
+    if (pendingChallengeId) {
+      sessionStorage.removeItem('dayuse_pending_challenge_id');
+      navigate(`/challenges/${pendingChallengeId}`, { replace: true });
+      return;
+    }
     navigate('/groups', { replace: true });
     return;
   }

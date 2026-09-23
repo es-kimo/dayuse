@@ -23,7 +23,9 @@ import {
   Users,
   AlertCircle,
   Lock,
+  Flame,
 } from 'lucide-react';
+import { ShareCardModal } from '../components/ShareCardModal';
 
 export const ChallengeDetailPage: React.FC = () => {
   const { challengeId } = useParams<{ challengeId: string }>();
@@ -38,6 +40,7 @@ export const ChallengeDetailPage: React.FC = () => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showPenaltyModal, setShowPenaltyModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showStreakModal, setShowStreakModal] = useState(false);
   const [verificationTarget, setVerificationTarget] = useState<{
     recordId?: number;
     isLate: boolean;
@@ -266,7 +269,17 @@ export const ChallengeDetailPage: React.FC = () => {
         </button>
         <div className="flex items-center gap-2">
           {getStatusBadge()}
-          {challenge.isCreator && challenge.canDelete && (
+          {challenge.isParticipating && (
+            <button
+              onClick={() => setShowStreakModal(true)}
+              className="px-2.5 py-1 text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 rounded-lg transition flex items-center gap-1 text-[11px] font-bold"
+              title="연속 기록 공유 카드 만들기"
+            >
+              <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <span>기록 공유</span>
+            </button>
+          )}
+          {challenge.isCreator && challenge.status === 'NOT_STARTED' && (
             <button
               onClick={handleDeleteChallenge}
               className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg transition"
@@ -668,6 +681,17 @@ export const ChallengeDetailPage: React.FC = () => {
           recordId={verificationTarget.recordId}
           onClose={() => setVerificationTarget(null)}
           onSuccess={handleVerificationSuccess}
+        />
+      )}
+
+      {/* 연속 기록(Streak) 공유 카드 모달 */}
+      {showStreakModal && challenge && (
+        <ShareCardModal
+          cardType="STREAK"
+          targetId={challenge.id}
+          title={challenge.title}
+          userNickname={user?.nickname || '참여자'}
+          onClose={() => setShowStreakModal(false)}
         />
       )}
     </MobileLayout>
