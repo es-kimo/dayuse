@@ -119,7 +119,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
     try {
       // 폰트 및 이미지 렌더링 대기
       const dataUrl = await toPng(cardRef.current, {
-        cacheBust: true,
+        cacheBust: false,
         pixelRatio: 2,
       });
       const link = document.createElement('a');
