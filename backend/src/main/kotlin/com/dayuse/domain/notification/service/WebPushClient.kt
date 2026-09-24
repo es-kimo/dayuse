@@ -28,10 +28,17 @@ class DefaultWebPushClient(
 ) : WebPushClient {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val pushService: PushService by lazy {
+    init {
+        // Notification 생성자가 KeyFactory.getInstance("ECDH", "BC")를 호출한다.
+        // send()는 pushService를 참조하기 전에 Notification을 먼저 만들기 때문에,
+        // 프로바이더 등록을 lazy 블록에 두면 lazy가 실행될 기회 없이
+        // "no such provider: BC"로 매번 실패한다.
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(BouncyCastleProvider())
         }
+    }
+
+    private val pushService: PushService by lazy {
         PushService(
             properties.publicKey,
             properties.privateKey,
