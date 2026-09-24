@@ -313,6 +313,42 @@ class NotificationIntegrationTest {
     }
 
     @Test
+    fun `만료가 아닌 거부(403) 응답을 받으면 구독을 살려 두고 서버 문제로 안내한다`() {
+        val rejectedEndpoint = "https://fcm.googleapis.com/fcm/send/rejected-device"
+        val subscription = pushSubscriptionRepository.save(
+            PushSubscription(
+                userId = user.id,
+                endpoint = rejectedEndpoint,
+                p256dh = "key",
+                auth = "auth",
+                isActive = true
+            )
+        )
+
+        // VAPID 키 불일치 등으로 푸시 서비스가 거부한 상황
+        fakeWebPushClient.endpointResponses[rejectedEndpoint] = PushSendResult(
+            statusCode = 403,
+            isSuccess = false,
+            isExpired = false
+        )
+
+        val result = notificationPushService.sendTestPush(user.id)
+
+        assertFalse(result.success)
+        assertEquals(
+            "푸시 서버가 발송을 거부했습니다. 잠시 후 다시 시도해 주세요.",
+            result.message,
+            "구독이 살아 있는데 기기 권한 문제로 안내하면 안 됩니다."
+        )
+
+        val reloaded = pushSubscriptionRepository.findById(subscription.id).orElseThrow()
+        assertTrue(
+            reloaded.isActive,
+            "만료가 아닌 거부는 구독을 비활성화하면 안 됩니다."
+        )
+    }
+
+    @Test
     fun `스케줄러는 미인증 챌린지가 남아 있는 대상자에게만 단 1회의 알림을 발송하고 PushSendLog를 남긴다`() {
         val today = DateTimeUtils.todayKst()
         val targetTime = LocalTime.of(
