@@ -40,6 +40,22 @@ self.addEventListener('push', (event) => {
   );
 });
 
+self.addEventListener('pushsubscriptionchange', (event) => {
+  // 브라우저가 구독을 스스로 폐기하고 새로 발급할 때 발생한다.
+  // 여기서 다시 구독해 두지 않으면 구독이 통째로 사라져 이후 알림이 오지 않는다.
+  // 인증 토큰은 localStorage에 있어 Service Worker에서 읽을 수 없으므로,
+  // 새 endpoint를 서버에 반영하는 일은 페이지 쪽 syncPushSubscription()이 맡는다.
+  const applicationServerKey = event.oldSubscription?.options?.applicationServerKey;
+  if (!applicationServerKey) return;
+
+  event.waitUntil(
+    self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey
+    })
+  );
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 

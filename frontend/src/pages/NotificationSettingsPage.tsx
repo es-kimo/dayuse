@@ -18,6 +18,8 @@ import {
   isStandalone,
   subscribeToPush,
   unsubscribePush,
+  getMatchingSubscription,
+  toSubscriptionData,
 } from '../utils/webPush';
 
 export const NotificationSettingsPage: React.FC = () => {
@@ -28,6 +30,7 @@ export const NotificationSettingsPage: React.FC = () => {
   const [testing, setTesting] = useState(false);
   const [settings, setSettings] = useState<NotificationSettingResponse | null>(null);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  const [deviceOutOfSync, setDeviceOutOfSync] = useState(false);
 
   const supported = isPushNotificationSupported();
   const iosEnv = isIos();
@@ -43,10 +46,53 @@ export const NotificationSettingsPage: React.FC = () => {
       setLoading(true);
       const data = await getNotificationSettings();
       setSettings(data);
+      await reconcileDevice(data);
     } catch {
       showToast('알림 설정을 불러오지 못했습니다.', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * 서버가 아는 구독과 이 브라우저의 실제 구독을 맞춘다.
+   *
+   * 브라우저 데이터를 지우거나 구독이 갱신되면 둘이 어긋나는데, 서버는 이를 알 방법이 없다.
+   * 그대로 두면 토글은 켜진 것처럼 보이지만 알림은 오지 않는다.
+   */
+  const reconcileDevice = async (data: NotificationSettingResponse) => {
+    if (!isPushNotificationSupported()) return;
+
+    try {
+      const local = await getMatchingSubscription(data.vapidPublicKey);
+
+      // 브라우저에는 구독이 있는데 서버가 모르는 경우 (구독 갱신 직후 등)
+      if (local && !data.hasActiveSubscription) {
+        await registerPushSubscription(toSubscriptionData(local));
+        setSettings({ ...data, hasActiveSubscription: true });
+        setDeviceOutOfSync(false);
+        return;
+      }
+
+      // 서버는 등록됐다고 보는데 이 브라우저에는 구독이 없는 경우
+      if (!local && data.hasActiveSubscription) {
+        if (Notification.permission === 'granted') {
+          // 권한이 이미 있으니 프롬프트 없이 조용히 다시 등록된다.
+          const subData = await subscribeToPush(data.vapidPublicKey);
+          if (subData) {
+            await registerPushSubscription(subData);
+            setDeviceOutOfSync(false);
+            return;
+          }
+        }
+        setDeviceOutOfSync(true);
+        return;
+      }
+
+      setDeviceOutOfSync(false);
+    } catch (err) {
+      console.error('구독 상태 동기화 실패:', err);
+      setDeviceOutOfSync(true);
     }
   };
 
@@ -78,6 +124,7 @@ export const NotificationSettingsPage: React.FC = () => {
           reminderTime: settings.reminderTime,
         });
         setSettings(updated);
+        setDeviceOutOfSync(false);
         showToast('알림이 활성화되었습니다.', 'success');
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : '알림 권한을 얻지 못했습니다.';
@@ -99,6 +146,7 @@ export const NotificationSettingsPage: React.FC = () => {
           reminderTime: settings.reminderTime,
         });
         setSettings(updated);
+        setDeviceOutOfSync(false);
         showToast('알림이 비활성화되었습니다.', 'info');
       } catch {
         showToast('알림 끄기에 실패했습니다.', 'error');
@@ -267,19 +315,24 @@ export const NotificationSettingsPage: React.FC = () => {
 
               <button
                 type="button"
-                disabled={testing || !settings.hasActiveSubscription}
+                disabled={testing || !settings.hasActiveSubscription || deviceOutOfSync}
                 onClick={handleTestPush}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="w-4 h-4" />
                 {testing ? '발송 중...' : '테스트 알림 발송'}
               </button>
-              {!settings.hasActiveSubscription && (
+              {deviceOutOfSync ? (
+                <p className="text-xs text-amber-600 flex items-center gap-1">
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  이 기기의 알림 구독이 해제되어 있습니다. 알림을 껐다가 다시 켜 주세요.
+                </p>
+              ) : !settings.hasActiveSubscription ? (
                 <p className="text-xs text-amber-600 flex items-center gap-1">
                   <ShieldAlert className="w-3.5 h-3.5" />
                   먼저 상단의 알림을 켜서 현재 기기를 등록해 주세요.
                 </p>
-              )}
+              ) : null}
             </div>
 
             {/* 안내사항 */}
