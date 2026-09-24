@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Users, User as UserIcon, LogOut } from 'lucide-react';
+import { Users, User as UserIcon, LogOut, CalendarCheck } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -15,6 +15,13 @@ export const Header: React.FC = () => {
 
       {isAuthenticated && user && (
         <div className="flex items-center gap-3">
+          <Link
+            to="/today"
+            className="flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-blue-600 transition"
+          >
+            <CalendarCheck className="w-4 h-4" />
+            <span className="hidden sm:inline">오늘</span>
+          </Link>
           <Link
             to="/groups"
             className="flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-blue-600 transition"

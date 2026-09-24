@@ -6,4 +6,8 @@ export const todayApi = {
     const res = await apiClient.get<TodayAction[]>(`/groups/${groupId}/today`);
     return res.data;
   },
+  getAllTodayActions: async (): Promise<TodayAction[]> => {
+    const res = await apiClient.get<TodayAction[]>('/today');
+    return res.data;
+  },
 };

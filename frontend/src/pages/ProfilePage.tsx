@@ -99,6 +99,29 @@ export const ProfilePage: React.FC = () => {
               </p>
             )}
           </form>
+
+          {/* 알림 설정 메뉴 */}
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+            <button
+              onClick={() => navigate('/settings/notifications')}
+              className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                </div>
+                <div>
+                  <span className="text-sm font-semibold text-slate-800">미인증 웹 푸시 알림</span>
+                  <p className="text-[11px] text-slate-400">매일 저녁 리마인더 시간 및 수신 설정</p>
+                </div>
+              </div>
+              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* 로그아웃 버튼 */}

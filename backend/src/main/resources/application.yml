@@ -48,6 +48,11 @@ aws:
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
 
+webpush:
+  public-key: ${VAPID_PUBLIC_KEY:BF5PuGK_jwgfQpNNUcTf75z93uuqrwrN1yl4Vkxnhsfi0vWu_dX6vOxFY6DXUyiWVTxqIxz4-Jwz3gGBD-om-EA}
+  private-key: ${VAPID_PRIVATE_KEY:NghqENb7xUAkfU6oc9QJJSjNbO1BRPRMOK_rtJqYjNA}
+  subject: ${VAPID_SUBJECT:mailto:support@dayuse.kr}
+
 ---
 spring:
   config:
@@ -77,6 +82,11 @@ kakao:
   client-id: test-kakao-client-id
   client-secret: test-kakao-client-secret
   redirect-uri: http://localhost:5173/oauth/callback/kakao
+
+webpush:
+  public-key: BF5PuGK_jwgfQpNNUcTf75z93uuqrwrN1yl4Vkxnhsfi0vWu_dX6vOxFY6DXUyiWVTxqIxz4-Jwz3gGBD-om-EA
+  private-key: NghqENb7xUAkfU6oc9QJJSjNbO1BRPRMOK_rtJqYjNA
+  subject: mailto:test@dayuse.kr
 
 ---
 spring:
@@ -121,3 +131,8 @@ aws:
     access-key: ${AWS_ACCESS_KEY:dummy-access-key}
     secret-key: ${AWS_SECRET_KEY:dummy-secret-key}
     endpoint: ${AWS_S3_ENDPOINT:}
+
+webpush:
+  public-key: ${VAPID_PUBLIC_KEY}
+  private-key: ${VAPID_PRIVATE_KEY}
+  subject: ${VAPID_SUBJECT:mailto:support@dayuse.kr}

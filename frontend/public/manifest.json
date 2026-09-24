@@ -1,0 +1,16 @@
+{
+  "name": "dayuse - 매일 함께하는 챌린지와 정산",
+  "short_name": "dayuse",
+  "start_url": "/today",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

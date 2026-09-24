@@ -9,6 +9,8 @@ import com.dayuse.domain.verification.VerificationRepository
 import com.dayuse.domain.verification.service.PresignedUrlService
 import com.dayuse.global.exception.ForbiddenException
 import com.dayuse.global.util.DateTimeUtils
+import com.dayuse.domain.group.GroupRepository
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -16,11 +18,59 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class TodayService(
     private val groupMemberRepository: GroupMemberRepository,
+    private val groupRepository: GroupRepository,
     private val challengeRepository: ChallengeRepository,
     private val challengeParticipantRepository: ChallengeParticipantRepository,
     private val verificationRepository: VerificationRepository,
     private val presignedUrlService: PresignedUrlService
 ) {
+
+    fun getAllTodayActions(userId: Long): List<TodayActionResponse> {
+        val today = DateTimeUtils.todayKst()
+        val activeParticipants = challengeParticipantRepository.findAllByUserIdAndStatus(
+            userId,
+            com.dayuse.domain.challenge.ParticipantStatus.ACTIVE
+        )
+
+        return activeParticipants.mapNotNull { participant ->
+            val challenge = challengeRepository.findByIdOrNull(participant.challengeId) ?: return@mapNotNull null
+            if (participant.startDate > today || today > challenge.endDate) {
+                return@mapNotNull null
+            }
+
+            val group = groupRepository.findByIdOrNull(challenge.groupId)
+
+            val verification = verificationRepository.findByChallengeIdAndUserIdAndTargetDate(
+                challengeId = challenge.id,
+                userId = userId,
+                targetDate = today
+            )
+
+            val isCompleted = verification != null
+            val summary = verification?.let {
+                TodayVerificationSummary(
+                    id = it.id,
+                    imageUrl = presignedUrlService.generatePresignedGetUrl(it.imageUrl, it.challengeId, it.userId),
+                    comment = it.comment,
+                    isLate = it.isLate,
+                    createdAt = it.createdAt
+                )
+            }
+
+            TodayActionResponse(
+                challengeId = challenge.id,
+                challengeTitle = challenge.title,
+                verificationCriteria = challenge.verificationCriteria,
+                startDate = challenge.startDate,
+                endDate = challenge.endDate,
+                isCompletedToday = isCompleted,
+                canVerify = !isCompleted,
+                myVerification = summary,
+                groupId = challenge.groupId,
+                groupName = group?.name
+            )
+        }
+    }
 
     fun getTodayActions(groupId: Long, userId: Long): List<TodayActionResponse> {
         val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
