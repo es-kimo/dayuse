@@ -454,6 +454,15 @@ class NotificationIntegrationTest {
             )
         )
 
+        // 집계 대상은 "이 사용자가 참여 중인 모든 챌린지"다.
+        // 참여 목록이 아닌 다른 기준으로 조회하면 건수가 어긋나므로 값까지 확인한다.
+        val sendLog = pushSendLogRepository.findAll().single { it.userId == user.id && it.sendDate == today }
+        assertEquals(
+            2,
+            sendLog.pendingChallengeCount,
+            "참여 중인 미인증 챌린지 2건이 모두 집계되어야 합니다."
+        )
+
         // 동일 날짜에 스케줄러 재실행 시 당일 1회 보장으로 발송되지 않아야 함
         fakeWebPushClient.reset()
         notificationSchedulerService.processScheduledNotifications(targetDateTime)

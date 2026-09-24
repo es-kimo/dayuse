@@ -122,7 +122,7 @@ class NotificationSchedulerService(
         userId: Long,
         targetDate: LocalDate
     ): Int {
-        val activeParticipants = challengeParticipantRepository.findAllByChallengeIdAndStatus(
+        val activeParticipants = challengeParticipantRepository.findAllByUserIdAndStatus(
             userId,
             ParticipantStatus.ACTIVE
         )
