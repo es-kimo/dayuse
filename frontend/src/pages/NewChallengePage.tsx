@@ -1,26 +1,143 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { MobileLayout } from '../components/MobileLayout';
-import { ArrowLeft, Calendar, ShieldCheck, Coins, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Calendar,
+  ShieldCheck,
+  Coins,
+  AlertCircle,
+  Loader2,
+  History,
+  RotateCcw,
+  Sparkles,
+  X,
+  Check,
+} from 'lucide-react';
 import { getTodayKstString, addDaysKst } from '../utils/date';
+import type { ChallengeSummary } from '../types';
 
 export const NewChallengePage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  const restartFromId = searchParams.get('restartFrom');
   const today = getTodayKstString();
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [verificationCriteria, setVerificationCriteria] = useState('');
   const [startDate, setStartDate] = useState(today);
+  const [durationDays, setDurationDays] = useState<number>(14);
   const [penaltyAmount, setPenaltyAmount] = useState<number>(5000);
+
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  const [isTemplateLoaded, setIsTemplateLoaded] = useState(false);
+  const [activeRestartId, setActiveRestartId] = useState<string | null>(restartFromId);
+
+  // 이전 챌린지 불러오기 모달 상태
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [historyChallenges, setHistoryChallenges] = useState<ChallengeSummary[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
-  const endDate = addDaysKst(startDate, 13); // 시작일 포함 14일
+  // 기간 자동 연동: startDate + (durationDays - 1)
+  const endDate = addDaysKst(startDate, Math.max(0, durationDays - 1));
+
+  // 1. URL restartFrom 쿼리 파라미터가 있을 때 템플릿 로드
+  useEffect(() => {
+    if (!groupId || !restartFromId) return;
+
+    const loadTemplate = async () => {
+      setIsLoadingTemplate(true);
+      setError(null);
+      try {
+        const template = await challengesApi.getRestartTemplate(Number(groupId), Number(restartFromId));
+        setTitle(template.title);
+        setDescription(template.description || '');
+        setVerificationCriteria(template.verificationCriteria);
+        setDurationDays(template.durationDays || 14);
+        setStartDate(template.suggestedStartDate);
+        setPenaltyAmount(template.suggestedPenaltyAmount || 5000);
+        setIsTemplateLoaded(true);
+        setActiveRestartId(restartFromId);
+        setSuccessNotice('종료된 챌린지 설정을 성공적으로 불러왔습니다.');
+      } catch (err: any) {
+        console.error('Failed to load restart template:', err);
+        setError(err.response?.data?.message || '챌린지 정보를 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoadingTemplate(false);
+      }
+    };
+
+    loadTemplate();
+  }, [groupId, restartFromId]);
+
+  // 2. 모임 내 기존 챌린지 목록 조회 (불러오기 모달용)
+  const handleOpenHistoryModal = async () => {
+    if (!groupId) return;
+    setShowHistoryModal(true);
+    setIsLoadingHistory(true);
+    try {
+      const list = await challengesApi.getGroupChallenges(Number(groupId));
+      setHistoryChallenges(list);
+    } catch (err: any) {
+      console.error('Failed to load group challenges:', err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  // 3. 특정 기존 챌린지 선택하여 불러오기
+  const handleSelectHistoryChallenge = async (selected: ChallengeSummary) => {
+    if (!groupId) return;
+    setError(null);
+    setIsLoadingTemplate(true);
+
+    try {
+      if (selected.status === 'ENDED') {
+        // 종료된 챌린지는 공식 restart-template API를 활용하여 정밀 로드
+        const template = await challengesApi.getRestartTemplate(Number(groupId), selected.id);
+        setTitle(template.title);
+        setDescription(template.description || '');
+        setVerificationCriteria(template.verificationCriteria);
+        setDurationDays(template.durationDays || 14);
+        setStartDate(template.suggestedStartDate);
+        setPenaltyAmount(template.suggestedPenaltyAmount || 5000);
+        setActiveRestartId(String(selected.id));
+      } else {
+        // 진행 중/시작 전 챌린지도 설정을 복사할 수 있도록 지원
+        setTitle(selected.title);
+        setDescription(selected.description || '');
+        setVerificationCriteria(selected.verificationCriteria);
+        setStartDate(addDaysKst(today, 1));
+        const startMs = new Date(selected.startDate).getTime();
+        const endMs = new Date(selected.endDate).getTime();
+        const days = Math.max(1, Math.round((endMs - startMs) / (1000 * 60 * 60 * 24)) + 1);
+        setDurationDays(days);
+        if (selected.myPenaltyAmount) {
+          setPenaltyAmount(selected.myPenaltyAmount);
+        }
+        setActiveRestartId(null);
+      }
+
+      setIsTemplateLoaded(true);
+      setShowHistoryModal(false);
+      setSuccessNotice(`'${selected.title}' 챌린지 설정을 불러왔습니다.`);
+      setTimeout(() => setSuccessNotice(null), 3000);
+    } catch (err: any) {
+      console.error('Failed to import challenge:', err);
+      setError(err.response?.data?.message || '챌린지 설정을 불러오는데 실패했습니다.');
+    } finally {
+      setIsLoadingTemplate(false);
+    }
+  };
 
   const handleOpenConfirm = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,21 +164,33 @@ export const NewChallengePage: React.FC = () => {
   };
 
   const handleConfirmSubmit = async () => {
-    if (!groupId) return;
+    if (!groupId || isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const challenge = await challengesApi.createChallenge(Number(groupId), {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        verificationCriteria: verificationCriteria.trim(),
-        startDate,
-        endDate,
-        myPenaltyAmount: penaltyAmount,
-      });
+      let createdChallenge;
+      if (activeRestartId) {
+        createdChallenge = await challengesApi.restartChallenge(Number(groupId), Number(activeRestartId), {
+          title: title.trim(),
+          description: description.trim() || undefined,
+          verificationCriteria: verificationCriteria.trim(),
+          startDate,
+          endDate,
+          myPenaltyAmount: penaltyAmount,
+        });
+      } else {
+        createdChallenge = await challengesApi.createChallenge(Number(groupId), {
+          title: title.trim(),
+          description: description.trim() || undefined,
+          verificationCriteria: verificationCriteria.trim(),
+          startDate,
+          endDate,
+          myPenaltyAmount: penaltyAmount,
+        });
+      }
 
-      navigate(`/challenges/${challenge.id}`);
+      navigate(`/challenges/${createdChallenge.id}`);
     } catch (err: any) {
       console.error('Failed to create challenge:', err);
       setError(err.response?.data?.message || '챌린지 생성에 실패했습니다.');
@@ -74,22 +203,58 @@ export const NewChallengePage: React.FC = () => {
   return (
     <MobileLayout>
       {/* 상단 헤더 */}
-      <div className="flex items-center gap-2 mb-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate(`/groups/${groupId}?tab=challenges`);
+              }
+            }}
+            className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
+            aria-label="뒤로가기"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-lg font-bold text-slate-800">
+            {activeRestartId ? '챌린지 다시 시작' : '새 챌린지 만들기'}
+          </h1>
+        </div>
+
+        {/* 이전 챌린지 불러오기 버튼 */}
         <button
-          onClick={() => {
-            if (window.history.length > 1) {
-              navigate(-1);
-            } else {
-              navigate(`/groups/${groupId}?tab=challenges`);
-            }
-          }}
-          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
-          aria-label="뒤로가기"
+          type="button"
+          onClick={handleOpenHistoryModal}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-semibold transition active:scale-95"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <History className="w-3.5 h-3.5" />
+          <span>기존 내용 불러오기</span>
         </button>
-        <h1 className="text-lg font-bold text-slate-800">새 챌린지 만들기</h1>
       </div>
+
+      {isLoadingTemplate && (
+        <div className="p-4 mb-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs flex items-center justify-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+          <span>이전 챌린지 설정을 불러오는 중입니다...</span>
+        </div>
+      )}
+
+      {successNotice && (
+        <div className="p-3 mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{successNotice}</span>
+          </div>
+          <button
+            onClick={() => setSuccessNotice(null)}
+            className="text-emerald-500 hover:text-emerald-700"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs flex items-center gap-2">
@@ -147,9 +312,16 @@ export const NewChallengePage: React.FC = () => {
 
         {/* 기간 설정 */}
         <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-            <Calendar className="w-4 h-4 text-blue-600" />
-            <span>챌린지 기간 설정 (기본 14일)</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+              <Calendar className="w-4 h-4 text-blue-600" />
+              <span>챌린지 기간 설정 ({durationDays}일간)</span>
+            </div>
+            {isTemplateLoaded && (
+              <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
+                기존 기간 길이 유지
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -165,7 +337,7 @@ export const NewChallengePage: React.FC = () => {
               />
             </div>
             <div className="min-w-0">
-              <span className="block text-[11px] text-slate-500 mb-1">종료일 (자동 14일)</span>
+              <span className="block text-[11px] text-slate-500 mb-1">종료일 (자동 계산)</span>
               <input
                 type="date"
                 disabled
@@ -175,7 +347,7 @@ export const NewChallengePage: React.FC = () => {
             </div>
           </div>
           <p className="text-[11px] text-slate-400">
-            시작일 00:00 KST부터 14일간 매일 수행 주기로 진행됩니다.
+            시작일 00:00 KST부터 {durationDays}일간 매일 수행 주기로 진행됩니다.
           </p>
         </div>
 
@@ -228,12 +400,89 @@ export const NewChallengePage: React.FC = () => {
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-xs transition active:scale-[0.99]"
+            disabled={isSubmitting}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold text-xs rounded-xl shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
           >
-            챌린지 생성 확인
+            {activeRestartId ? (
+              <>
+                <RotateCcw className="w-4 h-4" />
+                <span>새로운 기간으로 다시 시작하기</span>
+              </>
+            ) : (
+              <span>챌린지 생성 확인</span>
+            )}
           </button>
         </div>
       </form>
+
+      {/* 이전 챌린지 불러오기 모달 */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-modal bg-black/40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-blue-600" />
+                <h2 className="text-sm font-bold text-slate-800">이전 챌린지 불러오기</h2>
+              </div>
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 -mr-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              이전에 진행했던 챌린지의 제목, 인증 기준, 기간 길이를 그대로 불러옵니다.
+            </p>
+
+            <div className="flex-1 overflow-y-auto space-y-2 pr-0.5">
+              {isLoadingHistory ? (
+                <div className="py-8 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                  <span>모임 챌린지 목록을 불러오는 중...</span>
+                </div>
+              ) : historyChallenges.length === 0 ? (
+                <div className="py-8 text-center text-xs text-slate-400">
+                  불러올 수 있는 이전 챌린지가 없습니다.
+                </div>
+              ) : (
+                historyChallenges.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => handleSelectHistoryChallenge(c)}
+                    className="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 transition group"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-slate-800 group-hover:text-blue-600 line-clamp-1">
+                        {c.title}
+                      </span>
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                          c.status === 'ENDED'
+                            ? 'bg-slate-100 text-slate-600'
+                            : c.status === 'IN_PROGRESS'
+                            ? 'bg-emerald-50 text-emerald-600'
+                            : 'bg-blue-50 text-blue-600'
+                        }`}
+                      >
+                        {c.status === 'ENDED' ? '종료됨' : c.status === 'IN_PROGRESS' ? '진행 중' : '시작 전'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 flex items-center justify-between">
+                      <span>{c.startDate} ~ {c.endDate}</span>
+                      <span className="text-blue-600 font-semibold flex items-center gap-0.5">
+                        불러오기 <Check className="w-3 h-3" />
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 최종 확인 모달 */}
       {showConfirmModal && (
@@ -241,7 +490,9 @@ export const NewChallengePage: React.FC = () => {
           <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center gap-2 text-slate-800">
               <ShieldCheck className="w-5 h-5 text-blue-600" />
-              <h2 className="text-sm font-bold">챌린지 생성 최종 확인</h2>
+              <h2 className="text-sm font-bold">
+                {activeRestartId ? '다시 시작 챌린지 생성 최종 확인' : '챌린지 생성 최종 확인'}
+              </h2>
             </div>
 
             <div className="bg-slate-50 rounded-xl p-3.5 space-y-2 text-xs border border-slate-200">
@@ -251,7 +502,7 @@ export const NewChallengePage: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">진행 기간</span>
-                <span className="font-semibold text-slate-800">{startDate} ~ {endDate} (14일)</span>
+                <span className="font-semibold text-slate-800">{startDate} ~ {endDate} ({durationDays}일)</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">수행 주기</span>
@@ -266,6 +517,12 @@ export const NewChallengePage: React.FC = () => {
                 <p className="text-[11px] text-slate-700 whitespace-pre-wrap">{verificationCriteria}</p>
               </div>
             </div>
+
+            {activeRestartId && (
+              <div className="text-[11px] text-blue-700 bg-blue-50 p-2.5 rounded-lg border border-blue-200">
+                ℹ️ 기존 챌린지의 과거 기록(참여자, 인증 사진 등)은 새 챌린지로 복사되지 않으며 생성자 본인만 새롭게 참여됩니다.
+              </div>
+            )}
 
             <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
               ⚠️ 챌린지가 시작(시작일 00:00 KST)되면 기간 및 인증 기준 수정과 챌린지 삭제가 잠깁니다.
@@ -284,12 +541,12 @@ export const NewChallengePage: React.FC = () => {
                 type="button"
                 onClick={handleConfirmSubmit}
                 disabled={isSubmitting}
-                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1 shadow-xs transition"
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1 shadow-xs transition"
               >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <span>확정하고 생성하기</span>
+                  <span>{activeRestartId ? '다시 시작하기' : '확정하고 생성하기'}</span>
                 )}
               </button>
             </div>

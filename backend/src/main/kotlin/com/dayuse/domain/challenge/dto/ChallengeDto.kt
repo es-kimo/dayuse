@@ -26,6 +26,36 @@ data class CreateChallengeRequest(
     val myPenaltyAmount: Int = 5000
 )
 
+data class RestartChallengeRequest(
+    @field:NotBlank(message = "챌린지 제목은 필수입니다.")
+    @field:Size(min = 1, max = 50, message = "챌린지 제목은 1자 이상 50자 이하여야 합니다.")
+    val title: String,
+
+    val description: String? = null,
+
+    @field:NotBlank(message = "인증 기준은 필수입니다.")
+    val verificationCriteria: String,
+
+    val startDate: LocalDate,
+
+    val endDate: LocalDate? = null,
+
+    @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
+    val myPenaltyAmount: Int = 5000
+)
+
+data class ChallengeRestartTemplateResponse(
+    val challengeId: Long,
+    val title: String,
+    val description: String?,
+    val verificationCriteria: String,
+    val durationDays: Int,
+    val suggestedStartDate: LocalDate,
+    val suggestedEndDate: LocalDate,
+    val suggestedPenaltyAmount: Int
+)
+
+
 data class UpdateChallengeRequest(
     @field:Size(max = 50, message = "챌린지 제목은 50자 이하여야 합니다.")
     val title: String? = null,

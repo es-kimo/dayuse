@@ -2,10 +2,12 @@ package com.dayuse.domain.challenge.controller
 
 import com.dayuse.domain.challenge.dto.ChallengeDetailResponse
 import com.dayuse.domain.challenge.dto.ChallengeParticipantResponse
+import com.dayuse.domain.challenge.dto.ChallengeRestartTemplateResponse
 import com.dayuse.domain.challenge.dto.ChallengeSummaryResponse
 import com.dayuse.domain.challenge.dto.CreateChallengeRequest
 import com.dayuse.domain.challenge.dto.JoinChallengeRequest
 import com.dayuse.domain.challenge.dto.JoinPreviewResponse
+import com.dayuse.domain.challenge.dto.RestartChallengeRequest
 import com.dayuse.domain.challenge.dto.UpdateChallengeRequest
 import com.dayuse.domain.challenge.dto.UpdatePenaltyAmountRequest
 import com.dayuse.domain.challenge.service.ChallengeService
@@ -47,6 +49,27 @@ class GroupChallengeController(
     ): ResponseEntity<List<ChallengeSummaryResponse>> {
         val response = challengeService.getGroupChallenges(groupId, userId, status)
         return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/{challengeId}/restart-template")
+    fun getRestartTemplate(
+        @PathVariable groupId: Long,
+        @PathVariable challengeId: Long,
+        @CurrentUserId userId: Long
+    ): ResponseEntity<ChallengeRestartTemplateResponse> {
+        val response = challengeService.getRestartTemplate(groupId, challengeId, userId)
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/{challengeId}/restart")
+    fun restartChallenge(
+        @PathVariable groupId: Long,
+        @PathVariable challengeId: Long,
+        @CurrentUserId userId: Long,
+        @Valid @RequestBody request: RestartChallengeRequest
+    ): ResponseEntity<ChallengeDetailResponse> {
+        val response = challengeService.restartChallenge(groupId, challengeId, userId, request)
+        return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 
     @GetMapping("/{challengeId}/preview-join")
