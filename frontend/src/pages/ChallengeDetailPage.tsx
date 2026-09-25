@@ -25,6 +25,7 @@ import {
   Lock,
   Flame,
   RotateCcw,
+  Repeat,
 } from 'lucide-react';
 import { ShareCardModal } from '../components/ShareCardModal';
 
@@ -331,13 +332,56 @@ export const ChallengeDetailPage: React.FC = () => {
               <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 block">진행 기간 (매일 수행)</span>
+              <span className="text-[10px] text-slate-400 block">
+                진행 기간 ({challenge.periodType === 'WEEKLY_N' ? `주 ${challenge.targetFrequency}회 수행` : '매일 수행'})
+              </span>
               <span className="text-xs font-semibold text-slate-700">
-                {challenge.startDate} ~ {challenge.endDate}
+                {challenge.startDate} ~ {challenge.endDate} ({challenge.durationDays || 14}일간)
               </span>
             </div>
           </div>
         </div>
+
+        {/* 주 N회 또는 매일형 현재 구간 달성 현황 */}
+        {challenge.currentPeriod && (
+          <div className="bg-blue-50/80 border border-blue-200 rounded-xl p-3.5 space-y-2.5 shadow-xs">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-blue-900 flex items-center gap-1.5">
+                <Repeat className="w-3.5 h-3.5 text-blue-600" />
+                <span>현재 {challenge.currentPeriod.index}구간 진행 현황</span>
+              </span>
+              <span className="font-bold text-blue-700">
+                {challenge.currentPeriod.completedCount} / {challenge.currentPeriod.targetCount}회 달성
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-500 flex justify-between items-center">
+              <span>{challenge.currentPeriod.startDate} ~ {challenge.currentPeriod.endDate}</span>
+              {challenge.currentPeriod.isAchieved ? (
+                <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  구간 달성 완료! 🎉
+                </span>
+              ) : (
+                <span className="text-blue-600 font-medium">
+                  남은 목표: {Math.max(0, challenge.currentPeriod.targetCount - challenge.currentPeriod.completedCount)}회
+                </span>
+              )}
+            </div>
+            {challenge.progressRate !== undefined && (
+              <div className="pt-1 border-t border-blue-100">
+                <div className="flex justify-between text-[11px] text-slate-600 mb-1">
+                  <span>전체 달성률</span>
+                  <span className="font-bold text-blue-700">{challenge.progressRate}%</span>
+                </div>
+                <div className="w-full bg-blue-100 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min(100, Math.max(0, challenge.progressRate))}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">

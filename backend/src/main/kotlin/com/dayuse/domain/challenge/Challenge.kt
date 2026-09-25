@@ -6,6 +6,8 @@ import com.dayuse.global.exception.BadRequestException
 import com.dayuse.global.util.DateTimeUtils
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -49,7 +51,17 @@ class Challenge(
     var startDate: LocalDate = LocalDate.now(),
 
     @Column(nullable = false)
-    var endDate: LocalDate = LocalDate.now().plusDays(13)
+    var endDate: LocalDate = LocalDate.now().plusDays(13),
+
+    @Enumerated(EnumType.STRING)
+    @Column(
+        nullable = false,
+        length = 20
+    )
+    var periodType: PeriodType = PeriodType.DAILY,
+
+    @Column(nullable = true)
+    var targetFrequency: Int? = null
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,6 +75,23 @@ class Challenge(
     @Column(nullable = false)
     var creatorUserId: Long = creatorUserId
         protected set
+
+    init {
+        if (endDate < startDate) {
+            throw BadRequestException("종료일은 시작일 이후여야 합니다.")
+        }
+        when (periodType) {
+            PeriodType.DAILY -> {
+                targetFrequency = null
+            }
+            PeriodType.WEEKLY_N -> {
+                val freq = targetFrequency ?: throw BadRequestException("주 N회 챌린지는 목표 횟수가 필수입니다.")
+                if (freq !in 1..7) {
+                    throw BadRequestException("주 N회 챌린지의 목표 횟수는 1회 이상 7회 이하여야 합니다.")
+                }
+            }
+        }
+    }
 
 
     fun isStarted(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
@@ -130,6 +159,8 @@ class Challenge(
         newVerificationCriteria: String?,
         newStartDate: LocalDate?,
         newEndDate: LocalDate?,
+        newPeriodType: PeriodType? = null,
+        newTargetFrequency: Int? = null,
         today: LocalDate = DateTimeUtils.todayKst()
     ) {
         // 1. 변경 후 값 계산: 아직 객체는 변경하지 않음
@@ -138,13 +169,17 @@ class Challenge(
         val nextCriteria = newVerificationCriteria ?: this.verificationCriteria
         val nextStartDate = newStartDate ?: this.startDate
         val nextEndDate = newEndDate ?: this.endDate
+        val nextPeriodType = newPeriodType ?: this.periodType
+        val nextTargetFrequency = if (nextPeriodType == PeriodType.DAILY) null else (newTargetFrequency ?: this.targetFrequency)
 
         // 2. 전체 검증
         if (isStarted(today)) {
             val conditionsChanged =
                 nextCriteria != this.verificationCriteria ||
                         nextStartDate != this.startDate ||
-                        nextEndDate != this.endDate
+                        nextEndDate != this.endDate ||
+                        nextPeriodType != this.periodType ||
+                        nextTargetFrequency != this.targetFrequency
 
             if (conditionsChanged) {
                 throw BadRequestException("챌린지 시작 후에는 제목과 설명만 수정할 수 있습니다.")
@@ -161,6 +196,13 @@ class Challenge(
             if (newVerificationCriteria != null && nextCriteria.isBlank()) {
                 throw BadRequestException("인증 기준은 필수 항목입니다.")
             }
+
+            if (nextPeriodType == PeriodType.WEEKLY_N) {
+                val freq = nextTargetFrequency ?: throw BadRequestException("주 N회 챌린지는 목표 횟수가 필수입니다.")
+                if (freq !in 1..7) {
+                    throw BadRequestException("주 N회 챌린지의 목표 횟수는 1회 이상 7회 이하여야 합니다.")
+                }
+            }
         }
 
         if (newTitle != null && (nextTitle.isBlank() || nextTitle.length > 50)) {
@@ -172,6 +214,8 @@ class Challenge(
         this.verificationCriteria = nextCriteria
         this.startDate = nextStartDate
         this.endDate = nextEndDate
+        this.periodType = nextPeriodType
+        this.targetFrequency = nextTargetFrequency
     }
 
     companion object {
@@ -183,6 +227,8 @@ class Challenge(
             newTitle: String? = null,
             newDescription: String? = null,
             newVerificationCriteria: String? = null,
+            newPeriodType: PeriodType? = null,
+            newTargetFrequency: Int? = null,
             today: LocalDate = DateTimeUtils.todayKst()
         ): Challenge {
             if (!source.isEnded(today)) {
@@ -205,6 +251,9 @@ class Challenge(
                 throw BadRequestException("인증 기준은 필수 항목입니다.")
             }
 
+            val finalPeriodType = newPeriodType ?: source.periodType
+            val finalTargetFrequency = if (finalPeriodType == PeriodType.DAILY) null else (newTargetFrequency ?: source.targetFrequency)
+
             return Challenge(
                 id = 0L,
                 groupId = source.groupId,
@@ -213,7 +262,9 @@ class Challenge(
                 description = newDescription ?: source.description,
                 verificationCriteria = finalCriteria,
                 startDate = newStartDate,
-                endDate = newEndDate
+                endDate = newEndDate,
+                periodType = finalPeriodType,
+                targetFrequency = finalTargetFrequency
             )
         }
     }

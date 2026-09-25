@@ -7,6 +7,7 @@ import com.dayuse.domain.challenge.ChallengeRepository
 import com.dayuse.domain.challenge.ParticipantStatus
 import com.dayuse.domain.challenge.dto.ChallengeDetailResponse
 import com.dayuse.domain.challenge.dto.ChallengeParticipantResponse
+import com.dayuse.domain.challenge.dto.ChallengePeriodIntervalDto
 import com.dayuse.domain.challenge.dto.ChallengeRestartTemplateResponse
 import com.dayuse.domain.challenge.dto.ChallengeSummaryResponse
 import com.dayuse.domain.challenge.dto.CreateChallengeRequest
@@ -17,6 +18,8 @@ import com.dayuse.domain.challenge.dto.RestartChallengeRequest
 import com.dayuse.domain.challenge.dto.StartDateType
 import com.dayuse.domain.challenge.dto.UpdateChallengeRequest
 import com.dayuse.domain.challenge.dto.UpdatePenaltyAmountRequest
+import com.dayuse.domain.challenge.period.ChallengePeriodCalculator
+import com.dayuse.domain.challenge.period.ChallengePeriodInterval
 import com.dayuse.domain.dailyrecord.DailyRecordRepository
 import com.dayuse.domain.dailyrecord.DailyRecordStatus
 import com.dayuse.domain.dailyrecord.service.DailyRecordService
@@ -81,7 +84,9 @@ class ChallengeService(
                 description = request.description,
                 verificationCriteria = request.verificationCriteria,
                 startDate = request.startDate,
-                endDate = calculatedEndDate
+                endDate = calculatedEndDate,
+                periodType = request.periodType,
+                targetFrequency = request.targetFrequency
             )
         )
 
@@ -115,6 +120,17 @@ class ChallengeService(
             isCreator = true
         )
 
+        val durationDays = ChronoUnit.DAYS.between(challenge.startDate, challenge.endDate).toInt() + 1
+        val initCalc = ChallengePeriodCalculator.calculate(
+            challenge.startDate,
+            challenge.endDate,
+            challenge.startDate,
+            challenge.periodType,
+            challenge.targetFrequency,
+            emptySet(),
+            today
+        )
+
         return ChallengeDetailResponse(
             id = challenge.id,
             groupId = group.id,
@@ -126,6 +142,13 @@ class ChallengeService(
             verificationCriteria = challenge.verificationCriteria,
             startDate = challenge.startDate,
             endDate = challenge.endDate,
+            durationDays = durationDays,
+            periodType = challenge.periodType,
+            targetFrequency = challenge.targetFrequency,
+            totalTargetCount = initCalc.totalTargetCount,
+            totalCompletedCount = 0,
+            progressRate = 0,
+            currentPeriod = initCalc.currentPeriod?.toDto(),
             status = challenge.status(today),
             isCreator = true,
             isParticipating = true,
@@ -174,6 +197,8 @@ class ChallengeService(
             description = challenge.description,
             verificationCriteria = challenge.verificationCriteria,
             durationDays = durationDays,
+            periodType = challenge.periodType,
+            targetFrequency = challenge.targetFrequency,
             suggestedStartDate = suggestedStartDate,
             suggestedEndDate = suggestedEndDate,
             suggestedPenaltyAmount = suggestedPenalty
@@ -220,6 +245,8 @@ class ChallengeService(
             newTitle = request.title,
             newDescription = request.description,
             newVerificationCriteria = request.verificationCriteria,
+            newPeriodType = request.periodType,
+            newTargetFrequency = request.targetFrequency,
             today = today
         )
         val savedChallenge = challengeRepository.save(newChallenge)
@@ -253,6 +280,17 @@ class ChallengeService(
             isCreator = true
         )
 
+        val durationDays = ChronoUnit.DAYS.between(savedChallenge.startDate, savedChallenge.endDate).toInt() + 1
+        val initCalc = ChallengePeriodCalculator.calculate(
+            savedChallenge.startDate,
+            savedChallenge.endDate,
+            savedChallenge.startDate,
+            savedChallenge.periodType,
+            savedChallenge.targetFrequency,
+            emptySet(),
+            today
+        )
+
         return ChallengeDetailResponse(
             id = savedChallenge.id,
             groupId = group.id,
@@ -264,6 +302,13 @@ class ChallengeService(
             verificationCriteria = savedChallenge.verificationCriteria,
             startDate = savedChallenge.startDate,
             endDate = savedChallenge.endDate,
+            durationDays = durationDays,
+            periodType = savedChallenge.periodType,
+            targetFrequency = savedChallenge.targetFrequency,
+            totalTargetCount = initCalc.totalTargetCount,
+            totalCompletedCount = 0,
+            progressRate = 0,
+            currentPeriod = initCalc.currentPeriod?.toDto(),
             status = savedChallenge.status(today),
             isCreator = true,
             isParticipating = true,
@@ -316,6 +361,8 @@ class ChallengeService(
                 ParticipantStatus.ACTIVE
             )
 
+            val durationDays = ChronoUnit.DAYS.between(challenge.startDate, challenge.endDate).toInt() + 1
+
             ChallengeSummaryResponse(
                 id = challenge.id,
                 groupId = challenge.groupId,
@@ -324,6 +371,9 @@ class ChallengeService(
                 verificationCriteria = challenge.verificationCriteria,
                 startDate = challenge.startDate,
                 endDate = challenge.endDate,
+                durationDays = durationDays,
+                periodType = challenge.periodType,
+                targetFrequency = challenge.targetFrequency,
                 status = status,
                 participantCount = participantCount,
                 isParticipating = myParticipant != null,
@@ -363,13 +413,17 @@ class ChallengeService(
         val allRecords = dailyRecordRepository?.findAllByChallengeId(challengeId).orEmpty()
         val participantResponses = participants.map { p ->
             val user = userMap[p.userId]
-            val totalDays = 1 + ChronoUnit.DAYS.between(
-                p.startDate,
-                challenge.endDate
+            val pRecords = allRecords.filter { it.challengeParticipantId == p.id && it.status == DailyRecordStatus.COMPLETED }
+            val pCompletedDates = pRecords.map { it.date }.toSet()
+            val pCalc = ChallengePeriodCalculator.calculate(
+                challengeStartDate = challenge.startDate,
+                challengeEndDate = challenge.endDate,
+                participantStartDate = p.startDate,
+                periodType = challenge.periodType,
+                targetFrequency = challenge.targetFrequency,
+                completedDates = pCompletedDates,
+                today = today
             )
-            val completedCount =
-                allRecords.count { it.challengeParticipantId == p.id && it.status == DailyRecordStatus.COMPLETED }
-            val completionRate = if (totalDays > 0) ((completedCount.toDouble() / totalDays) * 100).toInt() else 0
 
             ChallengeParticipantResponse(
                 id = p.id,
@@ -379,7 +433,7 @@ class ChallengeService(
                 penaltyAmount = p.penaltyAmount,
                 startDate = p.startDate,
                 status = p.status,
-                completionRate = completionRate,
+                completionRate = pCalc.progressRate,
                 joinedAt = p.joinedAt,
                 isCreator = p.userId == challenge.creatorUserId
             )
@@ -388,6 +442,23 @@ class ChallengeService(
         val myParticipant = participants.find { it.userId == userId }
         val isCreator = challenge.creatorUserId == userId
         val isParticipating = myParticipant != null
+
+        val myRecords = myParticipant?.let { p ->
+            allRecords.filter { it.challengeParticipantId == p.id && it.status == DailyRecordStatus.COMPLETED }
+        }.orEmpty()
+        val myCompletedDates = myRecords.map { it.date }.toSet()
+        val myEffectiveStart = myParticipant?.startDate ?: challenge.startDate
+        val myCalc = ChallengePeriodCalculator.calculate(
+            challengeStartDate = challenge.startDate,
+            challengeEndDate = challenge.endDate,
+            participantStartDate = myEffectiveStart,
+            periodType = challenge.periodType,
+            targetFrequency = challenge.targetFrequency,
+            completedDates = myCompletedDates,
+            today = today
+        )
+
+        val durationDays = ChronoUnit.DAYS.between(challenge.startDate, challenge.endDate).toInt() + 1
 
         return ChallengeDetailResponse(
             id = challenge.id,
@@ -400,6 +471,13 @@ class ChallengeService(
             verificationCriteria = challenge.verificationCriteria,
             startDate = challenge.startDate,
             endDate = challenge.endDate,
+            durationDays = durationDays,
+            periodType = challenge.periodType,
+            targetFrequency = challenge.targetFrequency,
+            totalTargetCount = myCalc.totalTargetCount,
+            totalCompletedCount = myCalc.totalCompletedCount,
+            progressRate = myCalc.progressRate,
+            currentPeriod = myCalc.currentPeriod?.toDto(),
             status = challenge.status(today),
             isCreator = isCreator,
             isParticipating = isParticipating,
@@ -639,13 +717,17 @@ class ChallengeService(
         val user = userRepository.findById(userId).orElse(null)
 
         val allRecords = dailyRecordRepository?.findAllByChallengeId(challengeId).orEmpty()
-        val totalDays = ChronoUnit.DAYS.between(
-            participant.startDate,
-            challenge.endDate
-        ).toInt() + 1
-        val completedCount =
-            allRecords.count { it.challengeParticipantId == participant.id && it.status == DailyRecordStatus.COMPLETED }
-        val completionRate = if (totalDays > 0) ((completedCount.toDouble() / totalDays) * 100).toInt() else 0
+        val pRecords = allRecords.filter { it.challengeParticipantId == participant.id && it.status == DailyRecordStatus.COMPLETED }
+        val pCompletedDates = pRecords.map { it.date }.toSet()
+        val pCalc = ChallengePeriodCalculator.calculate(
+            challengeStartDate = challenge.startDate,
+            challengeEndDate = challenge.endDate,
+            participantStartDate = participant.startDate,
+            periodType = challenge.periodType,
+            targetFrequency = challenge.targetFrequency,
+            completedDates = pCompletedDates,
+            today = today
+        )
 
         return ChallengeParticipantResponse(
             id = participant.id,
@@ -655,7 +737,7 @@ class ChallengeService(
             penaltyAmount = participant.penaltyAmount,
             startDate = participant.startDate,
             status = participant.status,
-            completionRate = completionRate,
+            completionRate = pCalc.progressRate,
             joinedAt = participant.joinedAt,
             isCreator = userId == challenge.creatorUserId
         )
@@ -682,6 +764,8 @@ class ChallengeService(
             newVerificationCriteria = request.verificationCriteria,
             newStartDate = request.startDate,
             newEndDate = request.endDate,
+            newPeriodType = request.periodType,
+            newTargetFrequency = request.targetFrequency,
             today = today
         )
 
@@ -713,4 +797,13 @@ class ChallengeService(
         challengeParticipantRepository.deleteAllByChallengeId(challengeId)
         challengeRepository.delete(challenge)
     }
+
+    private fun ChallengePeriodInterval.toDto() = ChallengePeriodIntervalDto(
+        index = this.index,
+        startDate = this.startDate,
+        endDate = this.endDate,
+        targetCount = this.targetCount,
+        completedCount = this.completedCount,
+        isAchieved = this.isAchieved
+    )
 }
