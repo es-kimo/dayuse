@@ -28,6 +28,7 @@ class StreakCalculator(
         challengeStartDate: LocalDate,
         challengeEndDate: LocalDate,
         today: LocalDate = DateTimeUtils.todayKst(),
+        now: java.time.LocalDateTime = DateTimeUtils.nowKst(),
         historyDays: Int = 7
     ): StreakResult {
         val recordsByDate = records.associateBy { it.date }
@@ -37,7 +38,20 @@ class StreakCalculator(
         val todayRecord = recordsByDate[today]
         val isTodayCompleted = todayRecord?.status == DailyRecordStatus.COMPLETED
 
-        val baseDate = if (isTodayCompleted) today else today.minusDays(1)
+        val yesterday = today.minusDays(1)
+        val yesterdayRecord = recordsByDate[yesterday]
+        val isYesterdayCompleted = yesterdayRecord?.status == DailyRecordStatus.COMPLETED
+        val isYesterdayFailed = yesterdayRecord?.status == DailyRecordStatus.FAILED
+
+        // 익일 오전 09:00 이전 심야 유예 기간 여부 (어제 기록이 아직 실패 확정되지 않은 경우에만 유예 적용)
+        val isGracePeriod = DateTimeUtils.isNightGraceWindow(now) && !isYesterdayFailed
+
+        val baseDate = when {
+            isTodayCompleted -> today
+            isYesterdayCompleted -> yesterday
+            isGracePeriod -> today.minusDays(2) // 00:00~09:00 사이 어제 미인증 시, 어제 마감 전이므로 그저께까지의 연속 기록 유지
+            else -> yesterday
+        }
 
         var streakDays = 0
         if (baseDate >= effectiveStartDate && recordsByDate[baseDate]?.status == DailyRecordStatus.COMPLETED) {
