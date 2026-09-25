@@ -10,13 +10,34 @@ import jakarta.validation.constraints.Size
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+import com.dayuse.domain.challenge.period.PeriodSettlementStatus
+import com.dayuse.domain.dailyrecord.DepositStatus
+
 data class ChallengePeriodIntervalDto(
     val index: Int,
     val startDate: LocalDate,
     val endDate: LocalDate,
     val targetCount: Int,
     val completedCount: Int,
-    val isAchieved: Boolean
+    val isAchieved: Boolean,
+    val settlementStatus: PeriodSettlementStatus? = null,
+    val settlementId: Long? = null,
+    val missedCount: Int? = null,
+    val penaltyAmountPerMiss: Int? = null,
+    val totalPenaltyAmount: Int? = null,
+    val depositStatus: DepositStatus? = null
+)
+
+data class PeriodSettlementResponse(
+    val periodIndex: Int,
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val targetCount: Int,
+    val completedCount: Int,
+    val missedCount: Int,
+    val penaltyAmountPerMiss: Int,
+    val totalPenaltyAmount: Int,
+    val status: PeriodSettlementStatus
 )
 
 data class CreateParticipantRequest(
@@ -182,6 +203,7 @@ data class ChallengeDetailResponse(
     val totalCompletedCount: Int = 0,
     val progressRate: Int = 0,
     val currentPeriod: ChallengePeriodIntervalDto? = null,
+    val intervals: List<ChallengePeriodIntervalDto>? = null,
     val status: ChallengeStatus,
     val isCreator: Boolean,
     val isParticipating: Boolean,

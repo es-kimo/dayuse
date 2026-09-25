@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { recordsApi } from '../api/records';
-import type { ChallengeDetail, ChallengeCalendarResponse, CalendarDailyRecordItem } from '../types';
+import type { ChallengeDetail, ChallengeCalendarResponse, CalendarDailyRecordItem, ChallengePeriodInterval } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import { ChallengeCalendarSection } from '../components/ChallengeCalendarSection';
+import { ChallengePeriodSection } from '../components/ChallengePeriodSection';
+import { PeriodSettlementModal } from '../components/PeriodSettlementModal';
 import { VerificationModal } from '../components/VerificationModal';
 import { MidJoinBottomSheet } from '../components/MidJoinBottomSheet';
 import { useAuth } from '../context/AuthContext';
@@ -43,6 +45,7 @@ export const ChallengeDetailPage: React.FC = () => {
   const [showPenaltyModal, setShowPenaltyModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
+  const [selectedPeriodForConfirm, setSelectedPeriodForConfirm] = useState<ChallengePeriodInterval | null>(null);
   const [verificationTarget, setVerificationTarget] = useState<{
     recordId?: number;
     isLate: boolean;
@@ -405,6 +408,15 @@ export const ChallengeDetailPage: React.FC = () => {
         )}
       </div>
 
+      {/* 주차별(구간별) 달성 및 정산 현황 */}
+      {challenge.periodType === 'WEEKLY_N' && challenge.intervals && (
+        <ChallengePeriodSection
+          intervals={challenge.intervals}
+          isParticipating={challenge.isParticipating}
+          onOpenConfirmModal={(interval) => setSelectedPeriodForConfirm(interval)}
+        />
+      )}
+
       {/* 날짜별 수행 히스토리 달력 */}
       <ChallengeCalendarSection
         calendarData={calendarData}
@@ -746,6 +758,21 @@ export const ChallengeDetailPage: React.FC = () => {
           title={challenge.title}
           userNickname={user?.nickname || '참여자'}
           onClose={() => setShowStreakModal(false)}
+        />
+      )}
+
+      {/* 구간 미수행 정산 확정 모달 */}
+      {selectedPeriodForConfirm && challenge && (
+        <PeriodSettlementModal
+          groupId={challenge.groupId}
+          challengeId={challenge.id}
+          interval={selectedPeriodForConfirm}
+          isOpen={!!selectedPeriodForConfirm}
+          onClose={() => setSelectedPeriodForConfirm(null)}
+          onSuccess={async () => {
+            await fetchChallenge();
+            await fetchCalendar();
+          }}
         />
       )}
     </MobileLayout>

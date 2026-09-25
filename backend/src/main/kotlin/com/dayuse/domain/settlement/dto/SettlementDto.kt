@@ -40,7 +40,14 @@ data class UnpaidRecordItemResponse(
     val challengeTitle: String,
     val date: LocalDate,
     val penaltyAmount: Int,
-    val status: DailyRecordStatus
+    val status: DailyRecordStatus?,
+    val isPeriod: Boolean = false,
+    val periodIndex: Int? = null,
+    val periodStartDate: LocalDate? = null,
+    val periodEndDate: LocalDate? = null,
+    val targetCount: Int? = null,
+    val completedCount: Int? = null,
+    val missedCount: Int? = null
 )
 
 data class CreateDepositReportRequest(
@@ -54,8 +61,8 @@ data class CreateDepositReportRequest(
     @field:Min(value = 1, message = "신고 총액은 0원보다 커야 합니다.")
     val totalAmount: Int,
 
-    @field:NotEmpty(message = "입금할 미수행 기록을 1개 이상 선택해 주세요.")
-    val dailyRecordIds: List<Long>
+    val dailyRecordIds: List<Long> = emptyList(),
+    val periodSettlementIds: List<Long> = emptyList()
 )
 
 data class RejectDepositReportRequest(
@@ -72,11 +79,19 @@ data class CancelConfirmationRequest(
 
 data class DepositReportItemResponse(
     val id: Long,
-    val dailyRecordId: Long,
-    val date: LocalDate,
+    val dailyRecordId: Long?,
+    val periodSettlementId: Long? = null,
+    val date: LocalDate?,
     val challengeId: Long,
     val challengeTitle: String,
-    val penaltyAmount: Int
+    val penaltyAmount: Int,
+    val isPeriod: Boolean = false,
+    val periodIndex: Int? = null,
+    val periodStartDate: LocalDate? = null,
+    val periodEndDate: LocalDate? = null,
+    val targetCount: Int? = null,
+    val completedCount: Int? = null,
+    val missedCount: Int? = null
 )
 
 data class DepositAuditLogResponse(

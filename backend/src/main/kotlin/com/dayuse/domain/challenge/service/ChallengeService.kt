@@ -37,6 +37,10 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import com.dayuse.domain.challenge.dto.PeriodSettlementResponse
+import com.dayuse.domain.challenge.period.ChallengePeriodSettlement
+import com.dayuse.domain.challenge.period.ChallengePeriodSettlementRepository
+import com.dayuse.domain.challenge.period.PeriodSettlementStatus
 import kotlin.Long
 
 @Service
@@ -48,7 +52,8 @@ class ChallengeService(
     private val groupMemberRepository: GroupMemberRepository,
     private val userRepository: UserRepository,
     private val dailyRecordService: DailyRecordService? = null,
-    private val dailyRecordRepository: DailyRecordRepository? = null
+    private val dailyRecordRepository: DailyRecordRepository? = null,
+    private val challengePeriodSettlementRepository: ChallengePeriodSettlementRepository? = null
 ) {
 
     @Transactional
@@ -183,6 +188,7 @@ class ChallengeService(
             totalCompletedCount = 0,
             progressRate = 0,
             currentPeriod = initCalc.currentPeriod?.toDto(),
+            intervals = initCalc.intervals.map { it.toDto() },
             status = challenge.status(today),
             isCreator = true,
             isParticipating = true,
@@ -343,6 +349,7 @@ class ChallengeService(
             totalCompletedCount = 0,
             progressRate = 0,
             currentPeriod = initCalc.currentPeriod?.toDto(),
+            intervals = initCalc.intervals.map { it.toDto() },
             status = savedChallenge.status(today),
             isCreator = true,
             isParticipating = true,
@@ -492,6 +499,39 @@ class ChallengeService(
             today = today
         )
 
+        val mySettlements = myParticipant?.let { p ->
+            challengePeriodSettlementRepository?.findAllByChallengeParticipantId(p.id).orEmpty()
+        }.orEmpty().associateBy { it.periodIndex }
+
+        val intervalDtos = myCalc.intervals.map { interval ->
+            val settlement = mySettlements[interval.index]
+            val status = when {
+                settlement != null -> settlement.status
+                today > interval.endDate -> if (interval.isAchieved) PeriodSettlementStatus.ACHIEVED else PeriodSettlementStatus.NEEDS_CONFIRMATION
+                else -> PeriodSettlementStatus.IN_PROGRESS
+            }
+            val missed = settlement?.missedCount ?: if (status == PeriodSettlementStatus.NEEDS_CONFIRMATION) interval.remainingTarget else 0
+            val penaltyPerMiss = settlement?.penaltyAmountPerMiss ?: (myParticipant?.penaltyAmount ?: 0)
+            val totalPenalty = settlement?.totalPenaltyAmount ?: (missed * penaltyPerMiss)
+
+            ChallengePeriodIntervalDto(
+                index = interval.index,
+                startDate = interval.startDate,
+                endDate = interval.endDate,
+                targetCount = interval.targetCount,
+                completedCount = interval.completedCount,
+                isAchieved = interval.isAchieved,
+                settlementStatus = status,
+                settlementId = settlement?.id,
+                missedCount = missed,
+                penaltyAmountPerMiss = penaltyPerMiss,
+                totalPenaltyAmount = totalPenalty,
+                depositStatus = settlement?.depositStatus
+            )
+        }
+        val currentPeriodDto = intervalDtos.find { today in it.startDate..it.endDate }
+            ?: if (today < myEffectiveStart) intervalDtos.firstOrNull() else intervalDtos.lastOrNull()
+
         val durationDays = ChronoUnit.DAYS.between(challenge.startDate, challenge.endDate).toInt() + 1
 
         return ChallengeDetailResponse(
@@ -511,7 +551,8 @@ class ChallengeService(
             totalTargetCount = myCalc.totalTargetCount,
             totalCompletedCount = myCalc.totalCompletedCount,
             progressRate = myCalc.progressRate,
-            currentPeriod = myCalc.currentPeriod?.toDto(),
+            currentPeriod = currentPeriodDto,
+            intervals = intervalDtos,
             status = challenge.status(today),
             isCreator = isCreator,
             isParticipating = isParticipating,
@@ -830,6 +871,114 @@ class ChallengeService(
 
         challengeParticipantRepository.deleteAllByChallengeId(challengeId)
         challengeRepository.delete(challenge)
+    }
+
+    @Transactional
+    fun confirmPeriod(
+        groupId: Long,
+        challengeId: Long,
+        periodIndex: Int,
+        userId: Long,
+        today: LocalDate = DateTimeUtils.todayKst()
+    ): PeriodSettlementResponse {
+        groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+            ?: throw ForbiddenException("해당 모임의 멤버만 구간 결과를 확정할 수 있습니다.")
+
+        val challenge = challengeRepository.findById(challengeId).orElseThrow {
+            ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
+        }
+
+        if (challenge.groupId != groupId) {
+            throw BadRequestException("해당 모임의 챌린지가 아닙니다.")
+        }
+
+        val participant = challengeParticipantRepository.findByChallengeIdAndUserIdAndStatus(
+            challengeId,
+            userId,
+            ParticipantStatus.ACTIVE
+        ) ?: throw ForbiddenException("해당 챌린지의 참여자만 구간 결과를 확정할 수 있습니다.")
+
+        val allRecords = dailyRecordRepository?.findAllByChallengeId(challengeId).orEmpty()
+        val myRecords = allRecords.filter { it.challengeParticipantId == participant.id && it.status == DailyRecordStatus.COMPLETED }
+        val myCompletedDates = myRecords.map { it.date }.toSet()
+        val myEffectiveStart = participant.startDate
+
+        val calc = ChallengePeriodCalculator.calculate(
+            challengeStartDate = challenge.startDate,
+            challengeEndDate = challenge.endDate,
+            participantStartDate = myEffectiveStart,
+            periodType = challenge.periodType,
+            targetFrequency = challenge.targetFrequency,
+            completedDates = myCompletedDates,
+            today = today
+        )
+
+        val interval = calc.intervals.find { it.index == periodIndex }
+            ?: throw ResourceNotFoundException("해당 구간을 찾을 수 없습니다. (구간 번호: $periodIndex)")
+
+        if (today <= interval.endDate) {
+            throw BadRequestException("아직 진행 중인 구간은 미수행으로 확정할 수 없습니다.")
+        }
+
+        if (interval.isAchieved) {
+            throw BadRequestException("목표를 달성한 구간은 미수행 확정 대상이 아닙니다.")
+        }
+
+        val existing = challengePeriodSettlementRepository?.findByChallengeParticipantIdAndPeriodIndex(
+            participant.id,
+            periodIndex
+        )
+
+        if (existing != null && existing.status == PeriodSettlementStatus.CONFIRMED_FAILED) {
+            return PeriodSettlementResponse(
+                periodIndex = existing.periodIndex,
+                startDate = existing.startDate,
+                endDate = existing.endDate,
+                targetCount = existing.targetCount,
+                completedCount = existing.completedCount,
+                missedCount = existing.missedCount,
+                penaltyAmountPerMiss = existing.penaltyAmountPerMiss,
+                totalPenaltyAmount = existing.totalPenaltyAmount,
+                status = existing.status
+            )
+        }
+
+        val missedCount = maxOf(0, interval.targetCount - interval.completedCount)
+        val penaltyAmountPerMiss = participant.penaltyAmount
+        val totalPenaltyAmount = missedCount * penaltyAmountPerMiss
+
+        val settlement = existing ?: ChallengePeriodSettlement(
+            challengeId = challenge.id,
+            challengeParticipantId = participant.id,
+            userId = userId,
+            groupId = groupId,
+            periodIndex = periodIndex,
+            startDate = interval.startDate,
+            endDate = interval.endDate,
+            targetCount = interval.targetCount,
+            completedCount = interval.completedCount,
+            missedCount = missedCount,
+            penaltyAmountPerMiss = penaltyAmountPerMiss,
+            totalPenaltyAmount = totalPenaltyAmount,
+            status = PeriodSettlementStatus.CONFIRMED_FAILED,
+            depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID,
+            confirmedAt = java.time.LocalDateTime.now()
+        )
+
+        settlement.confirmFailed(penaltyAmountPerMiss)
+        val saved = challengePeriodSettlementRepository?.save(settlement) ?: settlement
+
+        return PeriodSettlementResponse(
+            periodIndex = saved.periodIndex,
+            startDate = saved.startDate,
+            endDate = saved.endDate,
+            targetCount = saved.targetCount,
+            completedCount = saved.completedCount,
+            missedCount = saved.missedCount,
+            penaltyAmountPerMiss = saved.penaltyAmountPerMiss,
+            totalPenaltyAmount = saved.totalPenaltyAmount,
+            status = saved.status
+        )
     }
 
     private fun ChallengePeriodInterval.toDto() = ChallengePeriodIntervalDto(

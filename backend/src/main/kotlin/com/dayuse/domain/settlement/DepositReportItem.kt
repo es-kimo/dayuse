@@ -8,17 +8,14 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 
 @Entity
 @Table(
     name = "deposit_report_items",
     indexes = [
         Index(name = "idx_deposit_report_item_report_id", columnList = "depositReportId"),
-        Index(name = "idx_deposit_report_item_record_id", columnList = "dailyRecordId")
-    ],
-    uniqueConstraints = [
-        UniqueConstraint(name = "uk_deposit_report_item_report_record", columnNames = ["depositReportId", "dailyRecordId"])
+        Index(name = "idx_deposit_report_item_record_id", columnList = "dailyRecordId"),
+        Index(name = "idx_deposit_report_item_period_id", columnList = "periodSettlementId")
     ]
 )
 class DepositReportItem(
@@ -26,7 +23,11 @@ class DepositReportItem(
 
     depositReportId: Long = 0L,
 
-    dailyRecordId: Long = 0L
+    @Column(nullable = true)
+    var dailyRecordId: Long? = null,
+
+    @Column(nullable = true)
+    var periodSettlementId: Long? = null
 ) : BaseTimeEntity() {
 
     @Id
@@ -36,9 +37,5 @@ class DepositReportItem(
 
     @Column(nullable = false)
     var depositReportId: Long = depositReportId
-        protected set
-
-    @Column(nullable = false)
-    var dailyRecordId: Long = dailyRecordId
         protected set
 }

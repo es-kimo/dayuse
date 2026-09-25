@@ -52,6 +52,7 @@ export interface AuthResponse {
 
 export type ChallengeStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED';
 export type PeriodType = 'DAILY' | 'WEEKLY_N';
+export type PeriodSettlementStatus = 'IN_PROGRESS' | 'ACHIEVED' | 'NEEDS_CONFIRMATION' | 'CONFIRMED_FAILED';
 
 export interface ChallengePeriodInterval {
   index: number;
@@ -60,6 +61,11 @@ export interface ChallengePeriodInterval {
   targetCount: number;
   completedCount: number;
   isAchieved: boolean;
+  settlementStatus?: PeriodSettlementStatus | null;
+  missedCount?: number;
+  penaltyAmountPerMiss?: number;
+  totalPenaltyAmount?: number;
+  isSettled?: boolean;
 }
 
 export interface ChallengeSummary {
@@ -132,6 +138,7 @@ export interface ChallengeDetail {
   totalCompletedCount?: number;
   progressRate?: number;
   currentPeriod?: ChallengePeriodInterval | null;
+  intervals?: ChallengePeriodInterval[] | null;
   status: ChallengeStatus;
   isCreator: boolean;
   isParticipating: boolean;
@@ -200,6 +207,16 @@ export interface TodayVerificationSummary {
   createdAt: string;
 }
 
+export interface TodayPeriodInfo {
+  index: number;
+  startDate: string;
+  endDate: string;
+  targetCount: number;
+  completedCount: number;
+  todayVerified: boolean;
+  isGoalAchieved: boolean;
+}
+
 export interface TodayAction {
   challengeId: number;
   challengeTitle: string;
@@ -211,6 +228,8 @@ export interface TodayAction {
   myVerification?: TodayVerificationSummary | null;
   groupId?: number;
   groupName?: string;
+  periodType?: PeriodType;
+  periodInfo?: TodayPeriodInfo | null;
 }
 
 export interface PresignedUrlResponse {
@@ -365,13 +384,22 @@ export interface UnpaidRecordItem {
   date: string;
   penaltyAmount: number;
   status: DailyRecordStatus;
+  periodSettlementId?: number | null;
+  isPeriod?: boolean;
+  periodIndex?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  targetCount?: number | null;
+  completedCount?: number | null;
+  missedCount?: number | null;
 }
 
 export interface CreateDepositReportPayload {
   depositorName: string;
   depositDate: string;
   totalAmount: number;
-  dailyRecordIds: number[];
+  dailyRecordIds?: number[];
+  periodSettlementIds?: number[];
 }
 
 export interface RejectDepositReportPayload {
@@ -384,8 +412,13 @@ export interface CancelConfirmationPayload {
 
 export interface DepositReportItemDetail {
   id: number;
-  dailyRecordId: number;
-  date: string;
+  dailyRecordId?: number | null;
+  periodSettlementId?: number | null;
+  isPeriod?: boolean;
+  periodIndex?: number | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  date?: string | null;
   challengeId: number;
   challengeTitle: string;
   penaltyAmount: number;
