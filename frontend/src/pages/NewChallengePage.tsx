@@ -700,7 +700,7 @@ export const NewChallengePage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
               <Coins className="w-4 h-4 text-amber-500" />
-              <span>1일 미수행 약정 금액</span>
+              <span>{periodType === 'WEEKLY_N' ? '미수행 1회당 약정 금액' : '1일 미수행 약정 금액'}</span>
             </div>
             <span className="text-xs font-bold text-amber-600">
               {penaltyAmount.toLocaleString()}원
@@ -737,8 +737,8 @@ export const NewChallengePage: React.FC = () => {
           </div>
           <p className="text-[11px] text-slate-400">
             {isCustomPenaltyPerMember
-              ? '생성자 본인 및 별도 지정하지 않은 참가자의 기본 약정 금액입니다.'
-              : '모든 참가자에게 동일하게 적용되는 1일 미수행 약정 금액입니다.'}
+              ? `생성자 본인 및 별도 지정하지 않은 참가자의 ${periodType === 'WEEKLY_N' ? '미수행 1회당' : '1일'} 기본 약정 금액입니다.`
+              : `모든 참가자에게 동일하게 적용되는 ${periodType === 'WEEKLY_N' ? '미수행 1회당' : '1일 미수행'} 약정 금액입니다.`}
           </p>
         </div>
 
@@ -1029,7 +1029,7 @@ export const NewChallengePage: React.FC = () => {
                         {p.nickname} {p.isCreator && '(생성자)'}
                       </span>
                       <span className="font-semibold text-amber-700">
-                        {p.penaltyAmount.toLocaleString()}원 / 일
+                        {p.penaltyAmount.toLocaleString()}원 / {periodType === 'WEEKLY_N' ? '회' : '일'}
                       </span>
                     </div>
                   ))}

@@ -22,13 +22,17 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import com.dayuse.domain.challenge.dto.PeriodSettlementResponse
+import com.dayuse.domain.today.dto.ChallengeTodayTodoResponse
+import com.dayuse.domain.today.service.TodayService
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/v1/groups/{groupId}/challenges")
 class GroupChallengeController(
-    private val challengeService: ChallengeService
+    private val challengeService: ChallengeService,
+    private val todayService: TodayService? = null
 ) {
 
     @PostMapping
@@ -79,6 +83,28 @@ class GroupChallengeController(
         @CurrentUserId userId: Long
     ): ResponseEntity<JoinPreviewResponse> {
         val response = challengeService.getJoinPreview(challengeId, userId)
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/{challengeId}/periods/{periodIndex}/confirm")
+    fun confirmPeriod(
+        @PathVariable groupId: Long,
+        @PathVariable challengeId: Long,
+        @PathVariable periodIndex: Int,
+        @CurrentUserId userId: Long
+    ): ResponseEntity<PeriodSettlementResponse> {
+        val response = challengeService.confirmPeriod(groupId, challengeId, periodIndex, userId)
+        return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/{challengeId}/today-todo")
+    fun getTodayTodo(
+        @PathVariable groupId: Long,
+        @PathVariable challengeId: Long,
+        @CurrentUserId userId: Long
+    ): ResponseEntity<ChallengeTodayTodoResponse> {
+        val response = todayService?.getChallengeTodayTodo(groupId, challengeId, userId)
+            ?: throw IllegalStateException("TodayService is not available")
         return ResponseEntity.ok(response)
     }
 }

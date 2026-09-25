@@ -65,4 +65,8 @@ export const challengesApi = {
     const res = await apiClient.patch<ChallengeParticipant>(`/challenges/${challengeId}/participants/me`, payload);
     return res.data;
   },
+
+  confirmPeriod: async (groupId: number, challengeId: number, periodIndex: number): Promise<void> => {
+    await apiClient.post(`/groups/${groupId}/challenges/${challengeId}/periods/${periodIndex}/confirm`);
+  },
 };

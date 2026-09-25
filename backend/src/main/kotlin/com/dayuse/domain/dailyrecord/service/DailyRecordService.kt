@@ -38,7 +38,8 @@ class DailyRecordService(
     private val groupMemberRepository: GroupMemberRepository,
     private val userRepository: UserRepository,
     private val verificationRepository: VerificationRepository,
-    private val presignedUrlService: PresignedUrlService
+    private val presignedUrlService: PresignedUrlService,
+    private val challengePeriodSettlementRepository: com.dayuse.domain.challenge.period.ChallengePeriodSettlementRepository? = null
 ) {
 
     fun ensureDailyRecordsForParticipant(
@@ -139,7 +140,7 @@ class DailyRecordService(
         val unpaidPenaltyAmount = dailyRecordRepository.calculateUnpaidPenaltyAmount(
             userId,
             groupId
-        )
+        ) + (challengePeriodSettlementRepository?.calculateUnpaidPenaltyAmount(userId, groupId) ?: 0)
 
         return StatusSummaryResponse(
             groupId = groupId,

@@ -118,11 +118,15 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
 
     setSubmitting(true);
     try {
+      const dailyRecordIds = selectedRecords.filter((r) => !r.isPeriod).map((r) => r.id);
+      const periodSettlementIds = selectedRecords.filter((r) => r.isPeriod).map((r) => r.periodSettlementId ?? r.id);
+
       await settlementApi.createDepositReport(groupId, {
         depositorName: depositorName.trim(),
         depositDate,
         totalAmount,
-        dailyRecordIds: selectedRecordIds,
+        dailyRecordIds,
+        periodSettlementIds,
       });
       alert('입금 신고가 정상적으로 제출되었습니다. 모임장의 확인 대기 상태로 전환됩니다.');
       onSuccess();
@@ -241,8 +245,19 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
                           <Square className="w-4 h-4 text-slate-300 shrink-0" />
                         )}
                         <div className="min-w-0">
-                          <div className="text-xs font-bold truncate">{record.challengeTitle}</div>
-                          <div className="text-[10px] text-slate-400">{record.date}</div>
+                          <div className="text-xs font-bold truncate flex items-center gap-1">
+                            {record.isPeriod && (
+                              <span className="text-[9px] bg-purple-50 text-purple-700 px-1 py-0.2 rounded font-semibold shrink-0">
+                                주간구간
+                              </span>
+                            )}
+                            <span className="truncate">{record.challengeTitle}</span>
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            {record.isPeriod
+                              ? `${record.periodIndex}구간 (${record.startDate} ~ ${record.endDate}) · ${record.missedCount}회 미달`
+                              : record.date}
+                          </div>
                         </div>
                       </div>
 

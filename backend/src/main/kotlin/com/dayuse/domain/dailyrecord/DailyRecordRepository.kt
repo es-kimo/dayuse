@@ -97,8 +97,10 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
         """
         SELECT COUNT(r)
         FROM DailyRecord r
+        LEFT JOIN Challenge c ON r.challengeId = c.id
         WHERE r.userId = :userId
           AND r.groupId = :groupId
+          AND (c.periodType IS NULL OR c.periodType = com.dayuse.domain.challenge.PeriodType.DAILY)
           AND ($UNCHECKED_CONDITION)
     """
     )
@@ -112,8 +114,10 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
         """
         SELECT r
         FROM DailyRecord r
+        LEFT JOIN Challenge c ON r.challengeId = c.id
         WHERE r.userId = :userId
           AND r.groupId = :groupId
+          AND (c.periodType IS NULL OR c.periodType = com.dayuse.domain.challenge.PeriodType.DAILY)
           AND ($UNCHECKED_CONDITION)
         ORDER BY r.date ASC
     """

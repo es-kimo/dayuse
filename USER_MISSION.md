@@ -1,91 +1,85 @@
-# 🎓 사용자 핵심 학습 미션: 클립보드 인증 이미지 첨부 (Issue #26, F02)
+# 🎯 [이슈 27번] 주 N회 화면·정산·알림 연결 핵심 학습 미션
 
-본 이슈(GitHub Issue #26)는 **"웹 브라우저의 `paste` 이벤트에서 이미지 Blob 데이터와 일반 텍스트 데이터를 어떻게 충돌 없이 분기 처리하고, 폼의 다른 입력 필드(인증 한마디)의 포커스를 안전하게 보호할 것인가?"**, **"파일 탐색기(File Input)와 클립보드(Blob)를 하나의 통일된 파일 검증/미리보기/업로드 상태 머신으로 어떻게 구조화할 것인가?"**를 직접 고민하고 구현해보는 프론트엔드 핵심 UX/이벤트 아키텍처 학습 단계입니다.
+안녕하세요! **이슈 27번 (`[v0.3] 04. 주기별 화면·정산·알림 연결 (F05)`)** 의 인프라, 프론트엔드 UI, 엔티티, 통합 테스트 코드가 모두 구현되었습니다.
 
-AI Agent가 프론트엔드 단위 테스트 환경(`vitest`, `@testing-library/react`), 브라우저 클립보드 이벤트 시뮬레이션 단위 테스트 스위트(`useClipboardImagePaste.test.ts`), `VerificationModal` 내 단축키 힌트 뱃지, 기존 사진 교체 다이얼로그 모달, 삭제/교체 액션 UI를 모두 완성해 두었습니다.  
-이제 아래의 3가지 핵심 미션을 직접 완성하여 **RED 상태인 9개의 단위 테스트를 모두 GREEN으로 전환**해보세요!
-
----
-
-## 🎯 핵심 학습 질문 (미션을 완료하고 나면 답할 수 있게 됩니다)
-
-1. **"웹 브라우저의 `paste` 이벤트에서 이미지 Blob 데이터와 일반 텍스트 데이터를 어떻게 충돌 없이 분기 처리하고, 폼의 다른 입력 필드(인증 한마디)의 포커스를 안전하게 보호했나요?"**
-2. **"파일 탐색기를 통한 파일 선택(File Input)과 클립보드 붙여넣기(Blob)를 하나의 통일된 파일 검증/미리보기/업로드 상태 머신으로 어떻게 구조화했나요?"**
-3. **"네트워크 불안정으로 이미지 업로드가 실패했을 때, 사용자가 작성 중이던 텍스트와 첨부 상태가 유실되지 않도록 보존하고 재시도를 유도하는 안전장치는 무엇인가요?"**
+협업 학습 규칙에 따라, **이전 커밋(`HEAD~1`)에 동작하는 완전한 정답 코드가 저장**되어 있으며, 현재 브랜치에는 사용자가 직접 고민하고 구현해볼 수 있도록 **3가지 핵심 비즈니스 로직에 `TODO [사용자 미션 N]` 빈칸**이 뚫려 있습니다 (`RED` 상태).
 
 ---
 
-## 🧭 미션 목록 및 구현 가이드
-
-- **대상 파일**: [`frontend/src/hooks/useClipboardImagePaste.ts`](frontend/src/hooks/useClipboardImagePaste.ts)
-
----
-
-### 📍 [미션 1] `validateImageFile` 유틸리티 함수 구현
-- **목표**: 파일 크기 및 지원하는 이미지 확장자(MIME type)를 엄격히 검증합니다.
-- **요구사항**:
-  1. `file.size > maxSizeBytes` (기본 10MB)인 경우:
-     - `{ valid: false, error: '파일 크기는 최대 10MB 이하만 가능합니다.' }` 반환
-  2. `!allowedTypes.includes(file.type)` (기본: `image/jpeg`, `image/png`, `image/webp`)인 경우:
-     - `{ valid: false, error: 'JPG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.' }` 반환
-  3. 모든 검증을 통과한 경우:
-     - `{ valid: true }` 반환
-
----
-
-### 📍 [미션 2] `useClipboardImagePaste` 클립보드 이벤트 파싱 & 텍스트 충돌 방지 분기 처리
-- **목표**: 클립보드 이벤트에서 이미지 Blob을 안전하게 감지·추출하고, 일반 텍스트 붙여넣기와의 충돌을 완벽히 방지합니다.
-- **요구사항**:
-  1. `event.clipboardData?.items`를 배열로 순회하며 `item.kind === 'file'` 이고 `item.type.startsWith('image/')`인 이미지 항목을 필터링합니다.
-  2. **순수 텍스트 붙여넣기 처리**:
-     - 필터링된 이미지 항목이 없다면(0개) **아무런 동작도 하지 않고 즉시 return** 합니다.
-     - ⚠️ **주의**: 이때 절대 `event.preventDefault()`를 호출하면 안 됩니다! 브라우저 기본 동작이 유지되어야만 사용자가 '인증 한마디' `textarea`나 다른 텍스트 필드에 포커스한 상태에서 텍스트를 붙여넣을 때 정상 작동합니다.
-  3. **이미지가 감지된 경우**:
-     - `event.preventDefault()`를 호출하여 브라우저의 기본 붙여넣기 동작(파일 경로 텍스트 삽입 등)을 차단합니다.
-  4. **다중 이미지 방어**:
-     - 클립보드에 감지된 이미지가 2개 이상인 경우 `onError?.('사진은 1장만 등록 가능합니다. 첫 번째 사진이 첨부됩니다.')`를 호출합니다.
-  5. **File 객체 추출 & 파일명 정규화**:
-     - 첫 번째 이미지 아이템에서 `item.getAsFile()`로 `File` 객체를 추출합니다. (없을 시 `onError` 호출 후 return)
-     - 파일명이 없거나 브라우저 기본값(`image.png`, `blob`)인 경우, 타임스탬프와 확장자를 활용하여 `clipboard-${Date.now()}.${ext}` 형태의 명확한 파일명을 부여한 새 `File` 객체를 생성합니다.
-
----
-
-### 📍 [미션 3] `useClipboardImagePaste` 유효성 검사, 기존 사진 교체 확인 및 파일 적용 흐름
-- **목표**: 미션 1에서 작성한 검증 유틸리티를 적용하고, 기존 첨부 사진이 있을 때의 교체 확인 파이프라인을 완성합니다.
-- **요구사항**:
-  1. 미션 1의 `validateImageFile(file, maxSizeBytes, allowedTypes)`를 호출합니다.
-     - 유효하지 않은 경우 `onError?.(validation.error || '유효하지 않은 이미지 파일입니다.')`를 호출하고 즉시 return 합니다.
-  2. **기존 첨부 파일 존재 시 교체 확인 흐름**:
-     - `hasExistingImage && onConfirmReplace` 조건인 경우:
-       - `await onConfirmReplace(file)`을 실행합니다.
-       - 반환값이 `false`인 경우 (사용자가 취소함): 즉시 return 합니다.
-       - 반환값이 `undefined`인 경우 (커스텀 다이얼로그 모달 등으로 상태 위임): 모달의 사용자 입력에 따라 위임되므로 즉시 return 합니다.
-  3. 모든 검증과 교체 확인을 거친 후 최종적으로 `onImagePasted(file)`를 호출합니다.
-
----
-
-## 🧪 테스트 실행 및 검증 명령어
-
-아래 명령어를 터미널에서 실행하여 작성한 코드의 통과 여부를 검증하세요:
-
+## 🔍 학습 시작하기 & 정답 확인 방법
+터미널에서 다음 명령어를 실행하면 어떤 파일의 어느 부분이 빈칸으로 뚫려 있는지 한눈에 확인할 수 있습니다:
 ```bash
-# 1. 프론트엔드 디렉토리로 이동
-cd frontend
-
-# 2. 클립보드 붙여넣기 단위 테스트 실행 (9개 테스트 실패 RED ➡️ 통과 GREEN 전환 목표)
-npm test
-
-# 3. TypeScript 타입 체크 및 프로덕션 빌드 검증
-npm run build
-```
-
----
-
-## 💡 정답 비교 및 힌트 확인 방법
-
-작업을 완료하여 테스트를 모두 `GREEN`으로 만드신 후(또는 풀이 도중 막힐 때), 아래 명령어를 통해 Agent가 직전에 작성해 둔 모범 답안과 손쉽게 비교해 볼 수 있습니다:
-
-```bash
-# 직전 완성본 커밋(feat: ...)과 현재 작성 코드의 차이점 한눈에 비교하기
 git diff HEAD~1
 ```
+미션을 모두 해결한 후 테스트를 통과(`GREEN`)시키면, `git diff HEAD~1`을 다시 실행하여 본인의 풀이와 이전 커밋의 레퍼런스 정답을 비교해 볼 수 있습니다!
+
+---
+
+## 📋 핵심 미션 목록
+
+### 미션 1: `ChallengeService.kt` - 주 N회 구간 상태 머신 및 본인 확정 API
+- **대상 파일**: `backend/src/main/kotlin/com/dayuse/domain/challenge/service/ChallengeService.kt`
+- **세부 내용**:
+  1. **미션 1-A (`getChallengeDetail`)**:
+     - 주 N회 구간(`intervals`) 매핑 시, 오늘 날짜(`today`)와 구간 종료일(`interval.endDate`)을 비교하여 상태를 판정합니다:
+       - 구간이 종료(`today > interval.endDate`)되었을 때:
+         - 목표를 달성했으면 `ACHIEVED`
+         - 목표에 미달했으면 DB에 이미 확정된 내역(`ChallengePeriodSettlement`)이 존재하는지 확인:
+           - 확정 내역이 있으면 `CONFIRMED_FAILED`
+           - 확정 내역이 아직 없으면 본인 확인 대기(`NEEDS_CONFIRMATION`)
+       - 구간이 진행 중(`today <= interval.endDate`)일 때: `IN_PROGRESS`
+     - 미수행 횟수(`missedCount`)와 총 벌금(`totalPenaltyAmount`)을 정확히 산출하여 `ChallengePeriodIntervalDto`에 바인딩하세요.
+  2. **미션 1-B (`confirmPeriod`)**:
+     - 아직 진행 중인 구간(`today <= interval.endDate`)이거나 이미 목표를 달성한 구간(`interval.isAchieved`)인 경우 예외(`BadRequestException`)를 발생시킵니다.
+     - **멱등성 보장**: 이미 `CONFIRMED_FAILED`로 확정된 내역이 존재하면 중복 벌금 부과 없이 기존 확정 내역을 반환합니다.
+     - 미수행 횟수(`missedCount = maxOf(0, targetCount - completedCount)`)와 총 벌금(`missedCount * penaltyAmountPerMiss`)을 계산하고, `ChallengePeriodSettlement` 엔티티를 생성/저장(상태: `CONFIRMED_FAILED`, `depositStatus: UNPAID`)합니다.
+
+---
+
+### 미션 2: `SettlementService.kt` - 주간 구간 미수행 벌금의 입금 신고 통합
+- **대상 파일**: `backend/src/main/kotlin/com/dayuse/domain/settlement/service/SettlementService.kt`
+- **세부 내용**:
+  1. **미션 2-A (`getUnpaidRecords`)**:
+     - `challengePeriodSettlementRepository`에서 본인(`userId`)과 모임(`groupId`)의 미납(`UNPAID`) 구간 정산 내역을 조회합니다.
+     - 조회한 정산 내역을 `UnpaidRecordItemResponse(isPeriod = true, ...)` 형태로 변환하여 기존 일일 미납 기록(`dailyItems`)과 합쳐서 반환합니다.
+  2. **미션 2-B (`createDepositReport`)**:
+     - 요청에 포함된 `periodSettlementIds`에 해당하는 구간 정산 건들을 검증합니다:
+       - 본인 및 모임 소유 여부 검증
+       - `CONFIRMED_FAILED` 및 `depositStatus == UNPAID` 상태 검증
+       - 벌금액이 0보다 큰지 검증
+     - 총 신고 금액(`calculatedTotal`)에 구간 벌금 합계를 합산 검증합니다.
+     - 구간 정산 건들의 `depositStatus`를 `WAITING_CONFIRMATION`으로 전이시킵니다.
+     - `DepositReportItem` 생성 시 `periodSettlementId`를 매핑하여 저장합니다.
+
+---
+
+### 미션 3: `NotificationSchedulerService.kt` - 주 N회 웹 푸시 발송 조건 복합 판정
+- **대상 파일**: `backend/src/main/kotlin/com/dayuse/domain/notification/service/NotificationSchedulerService.kt`
+- **세부 내용**:
+  - `countPendingChallenges`에서 `WEEKLY_N` 챌린지의 알림 대상을 카운트할 때:
+    - 당일 미인증이더라도, 사용자가 **해당 구간의 목표(targetCount)를 이미 달성(`curPeriod.isAchieved`)한 경우** 알림 발송 대상에서 제외(카운트 X)해야 합니다.
+    - 당일 미인증이면서 **아직 이번 구간의 목표 횟수를 다 채우지 못한 경우에만** `pendingCount`를 1 증가시키세요.
+
+---
+
+## 🧪 테스트 실행 명령어
+미션을 수행하면서 다음 통합 테스트를 실행해 상태를 점검할 수 있습니다:
+
+```bash
+cd backend
+./gradlew test --tests ChallengePeriodSettlementIntegrationTest
+```
+
+테스트가 모두 통과(`GREEN`, 3 tests completed, 0 failed)하면 전체 백엔드 테스트를 확인합니다:
+```bash
+./gradlew test
+```
+
+프론트엔드 빌드 및 단위 테스트 확인:
+```bash
+cd ../frontend
+npm run build
+npm test -- --run
+```
+
+모든 테스트가 통과하면 완성입니다! 화이팅! 🚀
