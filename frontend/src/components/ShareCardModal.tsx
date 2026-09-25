@@ -403,9 +403,9 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
             className="w-[270px] h-[480px] rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col justify-between p-5 relative shadow-xl border border-white/10"
           >
             {/* 상단 서비스 브랜딩 */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <DayuLogo variant="horizontal" theme="mono-white" className="h-4.5 w-auto" />
-              <span className="text-[10px] text-slate-400 font-mono tracking-wider">dayuse.kr</span>
+            <div className="flex items-center justify-between border-b border-white/10 pb-3 gap-2 min-w-0">
+              <DayuLogo variant="horizontal" theme="mono-white" className="h-4 w-auto max-w-[120px] object-contain shrink-0" />
+              <span className="text-[10px] text-slate-400 font-mono tracking-wider shrink-0">dayuse.kr</span>
             </div>
 
             {/* 카드 중앙 본문 */}

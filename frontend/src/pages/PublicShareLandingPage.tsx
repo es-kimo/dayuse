@@ -113,9 +113,9 @@ export const PublicShareLandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-between p-4 py-8 max-w-md mx-auto relative">
       {/* 상단 브랜딩 헤더 */}
-      <div className="w-full flex items-center justify-between mb-4 px-2">
-        <DayuLogo variant="horizontal" theme="mono-white" className="h-6 w-auto" />
-        <span className="text-[11px] text-slate-400 font-mono">dayuse.kr</span>
+      <div className="w-full flex items-center justify-between mb-4 px-2 gap-2 min-w-0">
+        <DayuLogo variant="horizontal" theme="mono-white" className="h-5 w-auto max-w-[130px] object-contain shrink-0" />
+        <span className="text-[11px] text-slate-400 font-mono shrink-0">dayuse.kr</span>
       </div>
 
       {/* 9:16 공유 카드 본체 */}
@@ -124,9 +124,9 @@ export const PublicShareLandingPage: React.FC = () => {
         style={{ aspectRatio: '9/16' }}
       >
         {/* 카드 상단 */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <DayuLogo variant="horizontal" theme="mono-white" className="h-4 w-auto" />
-          <span className="text-[9px] text-slate-400 font-mono">shared card</span>
+        <div className="flex items-center justify-between border-b border-white/10 pb-3 gap-2 min-w-0">
+          <DayuLogo variant="horizontal" theme="mono-white" className="h-4 w-auto max-w-[110px] object-contain shrink-0" />
+          <span className="text-[9px] text-slate-400 font-mono shrink-0">shared card</span>
         </div>
 
         {/* 카드 중앙 내용 */}
