@@ -280,8 +280,8 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
         try {
           await navigator.share({
             files: [file],
-            title: `dayuse | ${title}`,
-            text: `${userNickname}님의 dayuse 공유 카드`,
+            title: `데이유즈 | ${title}`,
+            text: `${userNickname}님의 데이유즈 공유 카드`,
           });
           return;
         } catch (shareErr: any) {
@@ -323,7 +323,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       if (
         isKakaoReady() &&
         shareToKakao({
-          title: `dayuse | ${title}`,
+          title: `데이유즈 | ${title}`,
           description: shareDescription,
           imageUrl: buildOgImageUrl(shareToken),
           linkUrl,
@@ -335,7 +335,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       // 카카오 SDK를 못 쓰는 환경: 네이티브 공유 시트에서 카카오톡을 고르게 한다.
       if (canShareLink()) {
         navigator
-          .share({ title: `dayuse | ${title}`, text: shareDescription, url: linkUrl })
+          .share({ title: `데이유즈 | ${title}`, text: shareDescription, url: linkUrl })
           .catch((shareErr: any) => {
             if (shareErr?.name === 'AbortError') return;
             console.warn('네이티브 공유 실패, 링크 복사로 전환:', shareErr);

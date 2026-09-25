@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "dayuse - 목표는 각자, 꾸준함은 함께",
-  "short_name": "dayuse",
+  "name": "데이유즈 — 목표는 각자, 꾸준함은 함께",
+  "short_name": "데이유즈",
   "description": "친구들과 각자의 챌린지를 인증하고 기록해요. 매일 습관을 만들고 보증금을 정산하는 스마트한 소모임 서비스",
   "start_url": "/today",
   "scope": "/",

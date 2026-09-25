@@ -104,7 +104,7 @@ export const PublicShareLandingPage: React.FC = () => {
           onClick={() => navigate('/')}
           className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition"
         >
-          dayuse 홈으로 이동
+          데이유즈 홈으로 이동
         </button>
       </div>
     );
@@ -229,7 +229,7 @@ export const PublicShareLandingPage: React.FC = () => {
         </button>
 
         <p className="text-[11px] text-slate-500 text-center">
-          dayuse에서 친구들과 함께 습관을 만들고 보증금을 정산해보세요
+          데이유즈에서 친구들과 함께 습관을 만들고 보증금을 정산해보세요
         </p>
       </div>
 

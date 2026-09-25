@@ -223,7 +223,7 @@ export const NotificationSettingsPage: React.FC = () => {
             <div className="flex-1">
               <h4 className="text-sm font-semibold text-amber-900">iOS 홈 화면 추가 필요</h4>
               <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                아이폰에서는 홈 화면에 추가된 dayuse 앱에서만 알림을 수신할 수 있습니다.
+                아이폰에서는 홈 화면에 추가된 데이유즈 앱에서만 알림을 수신할 수 있습니다.
               </p>
               <button
                 onClick={() => setShowIosGuide(true)}

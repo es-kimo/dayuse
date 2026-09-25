@@ -13,7 +13,7 @@ export const Header: React.FC = () => {
       <Link
         to="/groups"
         className="flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md py-0.5"
-        title="dayuse 홈"
+        title="데이유즈 홈"
       >
         <DayuLogo variant="horizontal" className="h-7 w-auto" />
       </Link>

@@ -65,7 +65,7 @@ export const IosInstallGuideModal: React.FC<IosInstallGuideModalProps> = ({
                 3
               </div>
               <div className="text-sm text-slate-700">
-                홈 화면에 생성된 <strong>dayuse 아이콘</strong>으로 실행하면 매일 알림을 받으실 수 있습니다!
+                홈 화면에 생성된 <strong>데이유즈 아이콘</strong>으로 실행하면 매일 알림을 받으실 수 있습니다!
               </div>
             </div>
           </div>
