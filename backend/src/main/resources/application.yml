@@ -122,7 +122,7 @@ jwt:
 kakao:
   client-id: ${KAKAO_CLIENT_ID:dummy-kakao-client-id}
   client-secret: ${KAKAO_CLIENT_SECRET:dummy-kakao-client-secret}
-  redirect-uri: ${KAKAO_REDIRECT_URI:https://dayuse.vercel.app/oauth/callback/kakao}
+  redirect-uri: ${KAKAO_REDIRECT_URI:https://dayuse.kr/oauth/callback/kakao}
 
 aws:
   s3:
@@ -133,6 +133,6 @@ aws:
     endpoint: ${AWS_S3_ENDPOINT:}
 
 webpush:
-  public-key: ${VAPID_PUBLIC_KEY}
-  private-key: ${VAPID_PRIVATE_KEY}
+  public-key: ${VAPID_PUBLIC_KEY:BF5PuGK_jwgfQpNNUcTf75z93uuqrwrN1yl4Vkxnhsfi0vWu_dX6vOxFY6DXUyiWVTxqIxz4-Jwz3gGBD-om-EA}
+  private-key: ${VAPID_PRIVATE_KEY:NghqENb7xUAkfU6oc9QJJSjNbO1BRPRMOK_rtJqYjNA}
   subject: ${VAPID_SUBJECT:mailto:support@dayuse.kr}
