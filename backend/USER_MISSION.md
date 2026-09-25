@@ -1,87 +1,77 @@
-# 🎯 사용자 핵심 학습 미션 가이드 (Issue #15: 미인증 웹 푸시 F04)
+# 🎓 사용자 핵심 학습 미션: 기간·수행 주기 설정과 집계 (Issue #24, F03–F04)
 
-이 문서는 사용자가 직접 설계하고 구현해 보아야 하는 **3가지 핵심 학습 미션** 안내서입니다.
-구현 후 `cd backend && ./gradlew test --tests "com.dayuse.domain.notification.*"`를 실행하면 본인의 코드가 올바르게 동작하는지 즉시 검증할 수 있습니다.
+본 이슈(GitHub Issue #24)는 **"챌린지의 가변 기간(1일~365일)과 참여자별 개별 시작일이 주어졌을 때, 7일 단위 구간 분할 및 짧은 마지막 구간의 목표(`min(N, 남은 일수)`)를 순수 도메인 로직으로 어떻게 우아하게 모델링하고, 초과 인증의 차기 구간 이월 방지 규칙을 완료율 산출에서 어떻게 정합성 있게 보장할 것인가?"**를 직접 고민하고 구현해보는 핵심 학습 단계입니다.
 
-💡 **정답/레퍼런스 코드가 궁금할 땐?**
-언제든지 `git diff HEAD~1`을 실행하면 이전 완성본 커밋의 레퍼런스 구현을 바로 확인하고 비교할 수 있습니다!
-
----
-
-## 🎓 이 이슈를 끝내고 답할 수 있게 될 핵심 질문
-1. **"다수의 사용자가 각자 설정한 시간(예: 21:00)에 맞춰 알림을 보낼 때, 스케줄러가 매 분 대상자를 조회하면서 발생할 수 있는 DB 부하와 당일 중복 발송 문제를 어떻게 방어했나요?"**
-2. **"W3C Web Push 표준(VAPID) 프로토콜에서 브라우저 구독 정보(Endpoint, p256dh, auth)를 DB에 어떻게 영속화하고, 만료되거나 차단된 구독(HTTP 410 Gone / 404 Not Found)을 어떻게 안전하게 정리하나요?"**
-3. **"여러 모임과 챌린지에 분산된 오늘 미인증 대기 상태를 단 1회의 알림 메시지('오늘 인증할 챌린지가 N개 남아 있어요')로 묶어 발송하고, 직전에 인증을 마친 경우를 어떻게 걸러냈나요?"**
+AI Agent가 인프라, Flyway DB 마이그레이션(`V5__add_challenge_period_and_frequency.sql`), `Challenge` 엔티티 및 DTO 확장, 서비스 레이어 연동, 프론트엔드 기간 직접 선택기 및 주 N회 선택/구간 분할 실시간 미리보기 UI, 통합 테스트를 모두 완성해 두었습니다.  
+이제 아래의 3가지 핵심 미션을 직접 완성하여 **RED 상태인 7개의 단위 테스트를 GREEN으로 전환**해보세요!
 
 ---
 
-## 📌 미션 1: `NotificationSchedulerService` 당일 미인증 챌린지 통합 집계 및 1회 발송 파이프라인 완성
-- **관련 파일**:
-  - `backend/src/main/kotlin/com/dayuse/domain/notification/service/NotificationSchedulerService.kt`
-- **목표**:
-  스케줄러가 지정된 시각에 실행될 때, 사용자가 참여 중인 여러 모임의 챌린지들을 통합 조회하여 오늘 미인증 대기 건수를 집계하고, 당일 1회만 알림이 전송되도록 보장합니다.
-- **작업 내용**:
-  1. `countPendingChallenges(userId: Long, targetDate: LocalDate)` 구현:
-     - `challengeParticipantRepository.findAllByUserIdAndStatus(userId, ParticipantStatus.ACTIVE)`로 활성 참여 목록 조회
-     - 각 참여에 대해 참여 시작일(`participant.startDate <= targetDate`) 및 챌린지 종료일(`targetDate <= challenge.endDate`) 검사
-     - `verificationRepository.findByChallengeIdAndUserIdAndTargetDate`로 오늘 인증 완료 여부 확인
-     - 아직 인증하지 않은 챌린지 건수(`pendingCount`)를 집계하여 반환
-  2. `processScheduledNotifications` 내 발송 파이프라인 구현:
-     - `pushSendLogRepository.existsByUserIdAndSendDate(userId, today)`로 오늘 이미 발송했는지 체크 -> 발송 이력이 있으면 스킵(`continue`)
-     - `countPendingChallenges(userId, today)`가 `0` 이하이면 스킵
-     - `pendingCount > 0`인 경우:
-       - `PushPayload(title = "dayuse 오늘 인증 리마인더", body = "오늘 인증할 챌린지가 ${pendingCount}개 남아 있어요! 잊지 말고 인증해 주세요.", url = "/today")` 생성
-       - `notificationPushService.sendPushToUser(userId, payload)` 호출
-       - `pushSendLogRepository.save(PushSendLog(userId = userId, sendDate = today, pendingChallengeCount = pendingCount, sentAt = targetDateTime))` 저장
-       - 동시에 다른 스레드나 노드에서 동일 사용자에 대해 저장 시도가 일어날 경우 `uk_user_send_date` DB 유니크 제약 충돌(`DataIntegrityViolationException`)이 발생하므로 이를 `catch`하여 안전하게 방어
-- **검증 테스트**: `NotificationIntegrationTest > 스케줄러는 미인증 챌린지가 남아 있는 대상자에게만 단 1회의 알림을 발송하고 PushSendLog를 남긴다()`
+## 🎯 핵심 학습 질문 (미션을 완료하고 나면 답할 수 있게 됩니다)
+1. **"챌린지의 전체 기간과 참여자의 개별 시작일이 주어졌을 때, 7일 단위의 구간(Period Interval)과 짧은 마지막 구간의 목표(`min(N, 남은 일수)`)를 순수 도메인 로직으로 어떻게 우아하게 모델링했나요?"**
+2. **"하루 최대 1회 인증 제한과 구간 초과 달성분의 차기 구간 이월 방지 규칙을 완료율 산출 로직에서 어떻게 정합성 있게 보장했나요?"**
+3. **"기존의 14일 매일형 챌린지 및 과거 일일 기록(DailyRecord)과의 하위 호환성을 깨뜨리지 않고 스키마와 계산 파이프라인을 확장한 전략은 무엇인가요?"**
 
 ---
 
-## 📌 미션 2: `NotificationPushService` 만료 엔드포인트(410 Gone / 404 Not Found) 자동 비활성화 파이프라인
-- **관련 파일**:
-  - `backend/src/main/kotlin/com/dayuse/domain/notification/service/NotificationPushService.kt`
-- **목표**:
-  사용자가 브라우저 설정에서 사이트 권한을 초기화하거나 기기 알림을 차단/삭제한 경우, 푸시 서비스(Google FCM, Apple APNs 등)는 `410 Gone` 또는 `404 Not Found` 응답을 반환합니다. 이를 감지하여 유효하지 않은 구독(`PushSubscription`)을 DB에서 즉시 비활성화(`isActive = false`)하는 자가 치유(Self-healing) 파이프라인을 구축합니다.
-- **작업 내용**:
-  `NotificationPushService.kt`의 `sendPushToUser` 메서드 내부 루프를 구현합니다:
-  - `webPushClient.send(...)` 결과인 `result`를 확인
-  - `result.isSuccess`인 경우: `successCount++`
-  - `result.isExpired` (HTTP 410 또는 404)인 경우:
-    - 만료된 엔드포인트이므로 `subscription.deactivate()`를 호출하여 `isActive = false`로 상태를 갱신
-    - 로그 기록: `log.info("만료된 웹 푸시 구독 비활성화 처리: subscriptionId={}, endpoint={}", subscription.id, subscription.endpoint)`
-- **검증 테스트**: `NotificationIntegrationTest > 만료된 엔드포인트(410 Gone) 응답 수신 시 구독 엔티티가 즉시 비활성화된다()`
+## 🧭 미션 목록 및 구현 가이드
+
+### 📍 [미션 1] `ChallengePeriodInterval.kt` 값 객체 계산 속성 구현
+- **파일**: [`ChallengePeriodInterval.kt`](src/main/kotlin/com/dayuse/domain/challenge/period/ChallengePeriodInterval.kt)
+- **목표**: 구간 내 달성 여부(`isAchieved`), 잔여 목표 횟수(`remainingTarget`), 초과 달성 이월 방지용 유효 인증 횟수(`effectiveCompletedCount`)를 구현합니다.
+- **구현 항목**:
+  1. `isAchieved`: 구간 내 실제 유효 인증 횟수가 구간 목표치 이상인지 여부 (`completedCount >= targetCount`)
+  2. `remainingTarget`: 달성까지 남은 목표 횟수 (음수가 되지 않도록 최소 0: `maxOf(0, targetCount - completedCount)`)
+  3. `effectiveCompletedCount`: 한 구간에서 목표치를 초과하여 인증하더라도 다음 구간으로 이월되지 않도록 목표치까지만 인정 (`minOf(completedCount, targetCount)`)
 
 ---
 
-## 📌 미션 3: `NotificationIntegrationTest` 직전 완료 상태 재검증 단위/통합 테스트 작성
-- **관련 파일**:
-  - `backend/src/test/kotlin/com/dayuse/domain/notification/NotificationIntegrationTest.kt`
-- **목표**:
-  사용자가 21:00에 알림 설정을 해두었더라도, 21:00 직전에 이미 오늘 할 일을 모두 인증했다면 스케줄러가 불필요한 푸시 알림을 보내지 않고 스킵해야 합니다. 이 운영 정책을 보장하는 테스트 코드를 완성합니다.
-- **작업 내용**:
-  `NotificationIntegrationTest`의 `모든 챌린지 인증을 완료한 사용자는 스케줄러 발송 대상에서 제외된다` 테스트 메서드를 완성합니다:
-  1. `userNotificationSettingRepository.save(UserNotificationSetting(userId = user.id, enabled = true, reminderTime = targetTime))`으로 21:00 알림 ON 설정
-  2. `pushSubscriptionRepository.save(...)`로 활성 기기 1대 등록
-  3. `group`, `challenge`, `challengeParticipant` 생성
-  4. 오늘 날짜(`today`)로 해당 챌린지의 `Verification` 엔티티를 생성하여 `verificationRepository.save()` (인증 완료 상태 시뮬레이션)
-  5. `notificationSchedulerService.processScheduledNotifications(targetDateTime)` 실행
-  6. 단언(Assertion):
-     - `assertEquals(0, fakeWebPushClient.sentEndpoints.size)` : 푸시가 발송되지 않아야 함
-     - `assertFalse(pushSendLogRepository.existsByUserIdAndSendDate(user.id, today))` : 발송 로그도 남지 않아야 함
-- **검증 테스트**: `NotificationIntegrationTest > 모든 챌린지 인증을 완료한 사용자는 스케줄러 발송 대상에서 제외된다()`
+### 📍 [미션 2] `ChallengePeriodCalculator.kt` 주기별 구간 목표 횟수 산출 알고리즘
+- **파일**: [`ChallengePeriodCalculator.kt`](src/main/kotlin/com/dayuse/domain/challenge/period/ChallengePeriodCalculator.kt)
+- **목표**: 주기 유형(`DAILY` vs `WEEKLY_N`)에 따라 구간의 목표 횟수(`targetCount`)를 계산합니다.
+- **구현 항목**:
+  1. `periodType == PeriodType.DAILY` (매일형):
+     - 구간의 일수(`daysInInterval`)만큼 매일 인증하는 것이 목표입니다.
+  2. `periodType == PeriodType.WEEKLY_N` (주 N회):
+     - 기본적으로 주당 설정한 목표 횟수(`targetFrequency ?: 1`)가 목표입니다.
+     - 단, 마지막 구간이 7일 미만으로 짧게 남은 경우(예: 남은 일수 3일인데 주 5회 설정 시), 비율 계산이 아닌 **`minOf(targetFrequency ?: 1, daysInInterval)`**로 계산하여 남은 일수를 초과하지 않도록 보정합니다.
 
 ---
 
-## 🧪 테스트 실행 및 검증 방법
+### 📍 [미션 3] `ChallengePeriodCalculator.kt` 차기 구간 이월 방지 및 전체 완료율 계산
+- **파일**: [`ChallengePeriodCalculator.kt`](src/main/kotlin/com/dayuse/domain/challenge/period/ChallengePeriodCalculator.kt)
+- **목표**: 구간 초과 인증이 다음 구간으로 이월되지 않도록 전체 완료 횟수를 집계하고, 전체 완료율을 산출합니다.
+- **구현 항목**:
+  1. `totalCompleted`:
+     - 모든 구간의 단순 `completedCount` 합이 아니라, 미션 1에서 구현한 **`effectiveCompletedCount`의 합**으로 집계합니다. (초과 인증 이월 원천 방지)
+  2. `progressRate`:
+     - `totalTarget > 0`일 때: `((totalCompleted.toDouble() / totalTarget) * 100).toInt()`
+     - 최대 100%를 초과하지 않도록 제한합니다 (`minOf(100, ...)`).
+
+---
+
+## 🧪 테스트 실행 및 검증 명령어
+
+아래 Gradle 테스트 명령어를 실행하여 작성한 코드의 통과 여부를 검증하세요:
+
 ```bash
-cd backend
-./gradlew test --tests "com.dayuse.domain.notification.*"
-```
-현재 빈칸 스텁 상태에서는 위 3개 미션 관련 테스트들이 **FAILED (RED)** 상태입니다:
-- `NotificationIntegrationTest > 스케줄러는 미인증 챌린지가 남아 있는 대상자에게만 단 1회의 알림을 발송하고 PushSendLog를 남긴다() FAILED`
-- `NotificationIntegrationTest > 만료된 엔드포인트(410 Gone) 응답 수신 시 구독 엔티티가 즉시 비활성화된다() FAILED`
-- `NotificationIntegrationTest > 모든 챌린지 인증을 완료한 사용자는 스케줄러 발송 대상에서 제외된다() FAILED`
+# 1. 사용자 미션 단위 테스트 검증 (7개 테스트 GREEN 전환 목표)
+./gradlew test --tests "com.dayuse.domain.challenge.period.ChallengePeriodCalculatorTest"
 
-위 3가지 미션을 완성하면 모든 테스트가 **BUILD SUCCESSFUL (GREEN)**으로 전환됩니다!
-미션을 풀면서 언제든지 `git diff HEAD~1`을 입력하여 모범 답안과 비교해 보세요.
+# 2. 챌린지 도메인 통합 테스트 검증
+./gradlew test --tests "com.dayuse.domain.challenge.ChallengeIntegrationTest"
+
+# 3. 전체 프로젝트 회귀 테스트
+./gradlew test
+```
+
+---
+
+## 💡 정답 비교 및 힌트 확인 방법
+
+작업을 완료하여 테스트를 모두 `GREEN`으로 만드신 후(또는 풀이 도중 막힐 때), 아래 명령어를 통해 Agent가 미리 작성해 둔 모범 답안과 손쉽게 비교해 볼 수 있습니다:
+
+```bash
+# 직전 완성본 커밋(feat: ...)과 현재 작성 코드의 차이점 한눈에 보기
+git diff HEAD~1
+```
