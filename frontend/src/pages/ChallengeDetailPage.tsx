@@ -8,7 +8,7 @@ import { ChallengeCalendarSection } from '../components/ChallengeCalendarSection
 import { VerificationModal } from '../components/VerificationModal';
 import { MidJoinBottomSheet } from '../components/MidJoinBottomSheet';
 import { useAuth } from '../context/AuthContext';
-import { getTodayKstString } from '../utils/date';
+import { getTodayKstString, getDurationDaysKst } from '../utils/date';
 import {
   ArrowLeft,
   Calendar,
@@ -336,7 +336,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 진행 기간 ({challenge.periodType === 'WEEKLY_N' ? `주 ${challenge.targetFrequency}회 수행` : '매일 수행'})
               </span>
               <span className="text-xs font-semibold text-slate-700">
-                {challenge.startDate} ~ {challenge.endDate} ({challenge.durationDays || 14}일간)
+                {challenge.startDate} ~ {challenge.endDate} ({getDurationDaysKst(challenge.startDate, challenge.endDate)}일간)
               </span>
             </div>
           </div>

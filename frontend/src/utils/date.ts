@@ -132,3 +132,14 @@ export const formatMonthDay = (dateStr: string): string => {
   return `${month}월 ${day}일`;
 };
 
+/**
+ * YYYY-MM-DD 형식의 두 날짜 사이의 총 일수(포함)를 계산합니다. (시작일~종료일, 1일 이상)
+ */
+export const getDurationDaysKst = (startDate: string, endDate: string): number => {
+  if (!startDate || !endDate) return 1;
+  const s = new Date(startDate).getTime();
+  const e = new Date(endDate).getTime();
+  if (isNaN(s) || isNaN(e) || e < s) return 1;
+  return Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1;
+};
+
