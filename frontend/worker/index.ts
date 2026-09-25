@@ -25,9 +25,19 @@ interface PublicShareCard {
 
 /** 공유 카드 경로만 가로챈다. 토큰은 UUID라 경로 구분자와 겹치지 않는다. */
 const SHARE_PATH = /^\/shares\/([^/]+)\/?$/;
+/** 모임 초대 경로 */
+const INVITE_PATH = /^\/invite\/([^/]+)\/?$/;
 
-/** 카드 조회가 늦어져도 페이지가 늦게 뜨지 않도록 끊는다. */
+/** 카드 및 초대 조회가 늦어져도 페이지가 늦게 뜨지 않도록 끊는다. */
 const API_TIMEOUT_MS = 2500;
+
+interface InviteInfo {
+  groupId: number;
+  groupName: string;
+  hostNickname: string;
+  memberCount: number;
+  inviteCode: string;
+}
 
 const fetchCard = async (env: Env, token: string): Promise<PublicShareCard | null> => {
   try {
@@ -40,6 +50,20 @@ const fetchCard = async (env: Env, token: string): Promise<PublicShareCard | nul
   } catch (err) {
     // 프리뷰는 있으면 좋은 것이지 페이지의 전제 조건이 아니다. 실패하면 원본을 그대로 내려준다.
     console.warn('공유 카드 조회 실패:', err);
+    return null;
+  }
+};
+
+const fetchInvite = async (env: Env, code: string): Promise<InviteInfo | null> => {
+  try {
+    const res = await fetch(`${env.API_BASE_URL}/invites/${encodeURIComponent(code)}`, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(API_TIMEOUT_MS),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as InviteInfo;
+  } catch (err) {
+    console.warn('초대 정보 조회 실패:', err);
     return null;
   }
 };
@@ -127,9 +151,10 @@ export default {
       }
     }
 
-    const match = request.method === 'GET' ? SHARE_PATH.exec(url.pathname) : null;
+    const shareMatch = request.method === 'GET' ? SHARE_PATH.exec(url.pathname) : null;
+    const inviteMatch = request.method === 'GET' ? INVITE_PATH.exec(url.pathname) : null;
 
-    if (!match) {
+    if (!shareMatch && !inviteMatch) {
       return env.ASSETS.fetch(request);
     }
 
@@ -140,20 +165,30 @@ export default {
     const page = await env.ASSETS.fetch(shell);
     if (!page.ok) return page;
 
-    const card = await fetchCard(env, match[1]);
     const canonical = url.toString();
     const origin = url.origin;
 
     let title = '페이지 안내 · dayuse';
-    let description = '존재하지 않거나 만료된 페이지입니다.';
-    let image = `${origin}/assets/brand/og-default.png`;
+    let description = '없거나 만료된 링크예요.';
+    let image = `${origin}/assets/brand/og-expired.png`;
     const robots = 'noindex, nofollow';
 
-    if (card) {
-      // 공개 허용 범위로 한정한 공유 카드 메타데이터
-      title = '챌린지 기록 · dayuse';
-      description = describe(card);
-      image = `${env.API_BASE_URL}/public/shares/${encodeURIComponent(card.token)}/og.jpg`;
+    if (shareMatch) {
+      const card = await fetchCard(env, shareMatch[1]);
+      if (card) {
+        // 공개 허용 범위로 한정한 공유 카드 메타데이터
+        title = `${card.userNickname}님의 챌린지 기록 · dayuse`;
+        description = describe(card);
+        image = `${env.API_BASE_URL}/public/shares/${encodeURIComponent(card.token)}/og.jpg`;
+      }
+    } else if (inviteMatch) {
+      const invite = await fetchInvite(env, inviteMatch[1]);
+      if (invite) {
+        // 모임 초대 메타데이터 (모임명 및 호스트 닉네임)
+        title = `${invite.groupName} 모임 초대장이 도착했어요 · dayuse`;
+        description = `${invite.hostNickname}님이 보낸 초대를 받고 친구들과 함께 챌린지를 시작해요.`;
+        image = `${origin}/assets/brand/og-invite.png`;
+      }
     }
 
     const rewritten = new HTMLRewriter()

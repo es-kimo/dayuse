@@ -7,6 +7,7 @@ import type { InviteInfo } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import { Users, AlertTriangle, ArrowRight, Loader2, CheckCircle2, Home } from 'lucide-react';
 import { DayuLogo } from '../components/brand/DayuLogo';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 export const InviteLandingPage: React.FC = () => {
   const { inviteCode } = useParams<{ inviteCode: string }>();
@@ -19,6 +20,13 @@ export const InviteLandingPage: React.FC = () => {
   const [isJoining, setIsJoining] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isAlreadyJoined, setIsAlreadyJoined] = useState<boolean>(false);
+
+  // 모임 초대장 메타데이터 관리 (만료 시 og-expired, 정상 초대 시 og-invite)
+  usePageMeta({
+    isNotFound: isInvalid,
+    customInviteGroupName: inviteInfo?.groupName,
+    customInviteHostNickname: inviteInfo?.hostNickname,
+  });
 
   useEffect(() => {
     const fetchInviteAndCheckMembership = async () => {
