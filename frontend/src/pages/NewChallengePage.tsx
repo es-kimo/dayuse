@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { MobileLayout } from '../components/MobileLayout';
@@ -14,9 +14,18 @@ import {
   Sparkles,
   X,
   Check,
+  Repeat,
+  Layers,
 } from 'lucide-react';
 import { getTodayKstString, addDaysKst } from '../utils/date';
-import type { ChallengeSummary } from '../types';
+import type { ChallengeSummary, PeriodType } from '../types';
+
+const PERIOD_PRESETS = [
+  { label: '1주 (7일)', days: 7 },
+  { label: '2주 (14일)', days: 14 },
+  { label: '3주 (21일)', days: 21 },
+  { label: '4주 (28일)', days: 28 },
+] as const;
 
 export const NewChallengePage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
@@ -30,7 +39,10 @@ export const NewChallengePage: React.FC = () => {
   const [description, setDescription] = useState('');
   const [verificationCriteria, setVerificationCriteria] = useState('');
   const [startDate, setStartDate] = useState(today);
-  const [durationDays, setDurationDays] = useState<number>(14);
+  const [endDate, setEndDate] = useState(addDaysKst(today, 13));
+  const [selectedPreset, setSelectedPreset] = useState<number | 'custom'>(14);
+  const [periodType, setPeriodType] = useState<PeriodType>('DAILY');
+  const [targetFrequency, setTargetFrequency] = useState<number>(3);
   const [penaltyAmount, setPenaltyAmount] = useState<number>(5000);
 
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
@@ -47,8 +59,54 @@ export const NewChallengePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
-  // 기간 자동 연동: startDate + (durationDays - 1)
-  const endDate = addDaysKst(startDate, Math.max(0, durationDays - 1));
+  // 총 진행 일수 계산
+  const durationDays = useMemo(() => {
+    const s = new Date(startDate).getTime();
+    const e = new Date(endDate).getTime();
+    if (isNaN(s) || isNaN(e) || e < s) return 1;
+    return Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1;
+  }, [startDate, endDate]);
+
+  // 주 N회 선택 시 7일 구간 분할 계산 (프리뷰용)
+  const previewIntervals = useMemo(() => {
+    if (periodType !== 'WEEKLY_N' || !startDate || !endDate || endDate < startDate) {
+      return [];
+    }
+    const intervals: Array<{
+      index: number;
+      startDate: string;
+      endDate: string;
+      days: number;
+      targetCount: number;
+      isShort: boolean;
+    }> = [];
+
+    let cur = startDate;
+    let idx = 1;
+
+    while (cur <= endDate) {
+      const naturalEnd = addDaysKst(cur, 6);
+      const curEnd = naturalEnd > endDate ? endDate : naturalEnd;
+      const sMs = new Date(cur).getTime();
+      const eMs = new Date(curEnd).getTime();
+      const days = Math.round((eMs - sMs) / (1000 * 60 * 60 * 24)) + 1;
+      const target = Math.min(targetFrequency, days);
+
+      intervals.push({
+        index: idx,
+        startDate: cur,
+        endDate: curEnd,
+        days,
+        targetCount: target,
+        isShort: days < 7,
+      });
+
+      cur = addDaysKst(curEnd, 1);
+      idx++;
+    }
+
+    return intervals;
+  }, [periodType, targetFrequency, startDate, endDate]);
 
   // 1. URL restartFrom 쿼리 파라미터가 있을 때 템플릿 로드
   useEffect(() => {
@@ -62,9 +120,14 @@ export const NewChallengePage: React.FC = () => {
         setTitle(template.title);
         setDescription(template.description || '');
         setVerificationCriteria(template.verificationCriteria);
-        setDurationDays(template.durationDays || 14);
         setStartDate(template.suggestedStartDate);
+        setEndDate(template.suggestedEndDate);
+        if (template.periodType) setPeriodType(template.periodType);
+        if (template.targetFrequency) setTargetFrequency(template.targetFrequency);
         setPenaltyAmount(template.suggestedPenaltyAmount || 5000);
+        const dur = Math.round((new Date(template.suggestedEndDate).getTime() - new Date(template.suggestedStartDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const matched = PERIOD_PRESETS.find((p) => p.days === dur);
+        setSelectedPreset(matched ? matched.days : 'custom');
         setIsTemplateLoaded(true);
         setActiveRestartId(restartFromId);
         setSuccessNotice('종료된 챌린지 설정을 성공적으로 불러왔습니다.');
@@ -102,25 +165,33 @@ export const NewChallengePage: React.FC = () => {
 
     try {
       if (selected.status === 'ENDED') {
-        // 종료된 챌린지는 공식 restart-template API를 활용하여 정밀 로드
         const template = await challengesApi.getRestartTemplate(Number(groupId), selected.id);
         setTitle(template.title);
         setDescription(template.description || '');
         setVerificationCriteria(template.verificationCriteria);
-        setDurationDays(template.durationDays || 14);
         setStartDate(template.suggestedStartDate);
+        setEndDate(template.suggestedEndDate);
+        const dur = Math.round((new Date(template.suggestedEndDate).getTime() - new Date(template.suggestedStartDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const matched = PERIOD_PRESETS.find((p) => p.days === dur);
+        setSelectedPreset(matched ? matched.days : 'custom');
+        if (template.periodType) setPeriodType(template.periodType);
+        if (template.targetFrequency) setTargetFrequency(template.targetFrequency);
         setPenaltyAmount(template.suggestedPenaltyAmount || 5000);
         setActiveRestartId(String(selected.id));
       } else {
-        // 진행 중/시작 전 챌린지도 설정을 복사할 수 있도록 지원
         setTitle(selected.title);
         setDescription(selected.description || '');
         setVerificationCriteria(selected.verificationCriteria);
-        setStartDate(addDaysKst(today, 1));
+        const nextStart = addDaysKst(today, 1);
+        setStartDate(nextStart);
         const startMs = new Date(selected.startDate).getTime();
         const endMs = new Date(selected.endDate).getTime();
         const days = Math.max(1, Math.round((endMs - startMs) / (1000 * 60 * 60 * 24)) + 1);
-        setDurationDays(days);
+        setEndDate(addDaysKst(nextStart, days - 1));
+        const matched = PERIOD_PRESETS.find((p) => p.days === days);
+        setSelectedPreset(matched ? matched.days : 'custom');
+        if (selected.periodType) setPeriodType(selected.periodType);
+        if (selected.targetFrequency) setTargetFrequency(selected.targetFrequency);
         if (selected.myPenaltyAmount) {
           setPenaltyAmount(selected.myPenaltyAmount);
         }
@@ -136,6 +207,29 @@ export const NewChallengePage: React.FC = () => {
       setError(err.response?.data?.message || '챌린지 설정을 불러오는데 실패했습니다.');
     } finally {
       setIsLoadingTemplate(false);
+    }
+  };
+
+  const handleSelectPreset = (days: number) => {
+    setSelectedPreset(days);
+    setEndDate(addDaysKst(startDate, days - 1));
+  };
+
+  const handleStartDateChange = (newStart: string) => {
+    setStartDate(newStart);
+    if (typeof selectedPreset === 'number') {
+      setEndDate(addDaysKst(newStart, selectedPreset - 1));
+    } else if (newStart > endDate) {
+      setEndDate(newStart);
+    }
+  };
+
+  const handleEndDateChange = (newEnd: string) => {
+    if (newEnd >= startDate) {
+      setEndDate(newEnd);
+      const diff = Math.round((new Date(newEnd).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const matched = PERIOD_PRESETS.find((p) => p.days === diff);
+      setSelectedPreset(matched ? matched.days : 'custom');
     }
   };
 
@@ -155,6 +249,14 @@ export const NewChallengePage: React.FC = () => {
       setError('시작일은 오늘 이후 날짜여야 합니다.');
       return;
     }
+    if (endDate < startDate) {
+      setError('종료일은 시작일 이후여야 합니다.');
+      return;
+    }
+    if (periodType === 'WEEKLY_N' && (targetFrequency < 1 || targetFrequency > 7)) {
+      setError('주 N회 챌린지의 목표 횟수는 1회 이상 7회 이하여야 합니다.');
+      return;
+    }
     if (penaltyAmount < 0) {
       setError('약정 금액은 0원 이상이어야 합니다.');
       return;
@@ -170,24 +272,21 @@ export const NewChallengePage: React.FC = () => {
 
     try {
       let createdChallenge;
+      const payload = {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        verificationCriteria: verificationCriteria.trim(),
+        startDate,
+        endDate,
+        periodType,
+        targetFrequency: periodType === 'WEEKLY_N' ? targetFrequency : null,
+        myPenaltyAmount: penaltyAmount,
+      };
+
       if (activeRestartId) {
-        createdChallenge = await challengesApi.restartChallenge(Number(groupId), Number(activeRestartId), {
-          title: title.trim(),
-          description: description.trim() || undefined,
-          verificationCriteria: verificationCriteria.trim(),
-          startDate,
-          endDate,
-          myPenaltyAmount: penaltyAmount,
-        });
+        createdChallenge = await challengesApi.restartChallenge(Number(groupId), Number(activeRestartId), payload);
       } else {
-        createdChallenge = await challengesApi.createChallenge(Number(groupId), {
-          title: title.trim(),
-          description: description.trim() || undefined,
-          verificationCriteria: verificationCriteria.trim(),
-          startDate,
-          endDate,
-          myPenaltyAmount: penaltyAmount,
-        });
+        createdChallenge = await challengesApi.createChallenge(Number(groupId), payload);
       }
 
       navigate(`/challenges/${createdChallenge.id}`);
@@ -275,7 +374,7 @@ export const NewChallengePage: React.FC = () => {
             maxLength={50}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="예: 매일 아침 10분 스트레칭"
+            placeholder="예: 주 3회 헬스장 가기"
             className="w-full text-base px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
           />
         </div>
@@ -298,14 +397,14 @@ export const NewChallengePage: React.FC = () => {
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
             <span>인증 기준 <span className="text-red-500">*</span></span>
-            <span className="text-[10px] text-slate-400 font-normal">매일 1회 인증</span>
+            <span className="text-[10px] text-slate-400 font-normal">1일 최대 1회 인증</span>
           </label>
           <textarea
             rows={3}
             required
             value={verificationCriteria}
             onChange={(e) => setVerificationCriteria(e.target.value)}
-            placeholder="예: 스트레칭 수행 화면 캡처 또는 운동 앱 기록 사진 1장 (자정 전까지 제출)"
+            placeholder="예: 헬스장 락커 번호표와 운동 인증 사진 1장 (자정 전까지 제출)"
             className="w-full text-base px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
           />
         </div>
@@ -315,16 +414,60 @@ export const NewChallengePage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
               <Calendar className="w-4 h-4 text-blue-600" />
-              <span>챌린지 기간 설정 ({durationDays}일간)</span>
+              <span>진행 기간 설정</span>
+              {isTemplateLoaded && (
+                <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
+                  불러온 기간
+                </span>
+              )}
             </div>
-            {isTemplateLoaded && (
-              <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
-                기존 기간 길이 유지
-              </span>
-            )}
+            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+              총 {durationDays}일간 진행
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* 추천 기간 선택 칩 */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] text-slate-500 font-medium">추천 기간</span>
+              {selectedPreset === 'custom' && (
+                <span className="text-[10px] text-slate-400">직접 설정 중</span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {PERIOD_PRESETS.map((preset) => {
+                const isSelected = selectedPreset === preset.days;
+                return (
+                  <button
+                    key={preset.days}
+                    type="button"
+                    onClick={() => handleSelectPreset(preset.days)}
+                    className={`py-2 px-2 text-[11px] rounded-lg border font-medium transition text-center whitespace-nowrap ${
+                      isSelected
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-2xs'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setSelectedPreset('custom')}
+                className={`col-span-2 py-2 px-2 text-[11px] rounded-lg border font-medium transition text-center whitespace-nowrap ${
+                  selectedPreset === 'custom'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-2xs'
+                    : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                직접 날짜 설정
+              </button>
+            </div>
+          </div>
+
+          {/* 날짜 직접 선택 피커 */}
+          <div className="grid grid-cols-2 gap-3 pt-1">
             <div className="min-w-0">
               <span className="block text-[11px] text-slate-500 mb-1">시작일</span>
               <input
@@ -332,23 +475,135 @@ export const NewChallengePage: React.FC = () => {
                 required
                 min={today}
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => handleStartDateChange(e.target.value)}
                 className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
               />
             </div>
             <div className="min-w-0">
-              <span className="block text-[11px] text-slate-500 mb-1">종료일 (자동 계산)</span>
+              <span className="block text-[11px] text-slate-500 mb-1">종료일</span>
               <input
                 type="date"
-                disabled
+                required
+                min={startDate}
                 value={endDate}
-                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
+                onChange={(e) => handleEndDateChange(e.target.value)}
+                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
               />
             </div>
           </div>
           <p className="text-[11px] text-slate-400">
-            시작일 00:00 KST부터 {durationDays}일간 매일 수행 주기로 진행됩니다.
+            {startDate}부터 {endDate}까지 {durationDays}일간 진행돼요. (최소 1일부터 자유롭게 설정 가능)
           </p>
+        </div>
+
+        {/* 수행 주기 설정 */}
+        <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+              <Repeat className="w-4 h-4 text-blue-600" />
+              <span>수행 주기 설정</span>
+            </div>
+            <span className="text-[11px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full">
+              {periodType === 'DAILY' ? '매일 1회' : `주 ${targetFrequency}회`}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setPeriodType('DAILY')}
+              className={`py-2 px-3 text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1.5 ${
+                periodType === 'DAILY'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700 font-semibold'
+                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <span>매일 (1일 1회)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPeriodType('WEEKLY_N')}
+              className={`py-2 px-3 text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1.5 ${
+                periodType === 'WEEKLY_N'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700 font-semibold'
+                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <span>주 N회</span>
+            </button>
+          </div>
+
+          {periodType === 'WEEKLY_N' && (
+            <div className="space-y-3 pt-2 border-t border-slate-100 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-600 font-medium">주당 목표 횟수</span>
+                <select
+                  value={targetFrequency}
+                  onChange={(e) => setTargetFrequency(Number(e.target.value))}
+                  className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-white font-semibold text-slate-800"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7].map((num) => (
+                    <option key={num} value={num}>
+                      주 {num}회
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                참여자 시작일부터 7일마다 N회 인증합니다. (달력 월~일 기준이 아닌 참여일 기준 7일 주기)
+              </p>
+
+              {/* 구간 분할 미리보기 */}
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-slate-700 flex items-center gap-1">
+                    <Layers className="w-3.5 h-3.5 text-blue-600" />
+                    <span>구간 분할 미리보기 ({previewIntervals.length}개 구간)</span>
+                  </span>
+                  <span className="text-blue-600 font-semibold">
+                    총 목표 {previewIntervals.reduce((sum, item) => sum + item.targetCount, 0)}회
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-0.5">
+                  {previewIntervals.map((iv) => (
+                    <div
+                      key={iv.index}
+                      className={`p-2 rounded-lg text-[11px] flex items-center justify-between border ${
+                        iv.isShort
+                          ? 'bg-amber-50/60 border-amber-200 text-amber-900'
+                          : 'bg-white border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-slate-800">{iv.index}구간</span>
+                        <span className="text-slate-400">
+                          {iv.startDate.slice(5)} ~ {iv.endDate.slice(5)} ({iv.days}일간)
+                        </span>
+                      </div>
+                      <div className="font-semibold">
+                        <span>목표 {iv.targetCount}회</span>
+                        {iv.isShort && (
+                          <span className="ml-1 text-[10px] text-amber-600 font-normal">
+                            (남은 {iv.days}일 맞춤)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {previewIntervals.some((iv) => iv.isShort) && (() => {
+                  const lastShort = previewIntervals.find((iv) => iv.isShort);
+                  return (
+                    <p className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200/70 leading-relaxed">
+                      💡 마지막 주차는 남은 기간({lastShort?.days}일)이 1주일보다 짧아, 무리하지 않도록 목표가 최대 {lastShort?.targetCount}회로 자동 조정돼요!
+                    </p>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 본인 약정 금액 설정 */}
@@ -406,7 +661,7 @@ export const NewChallengePage: React.FC = () => {
             {activeRestartId ? (
               <>
                 <RotateCcw className="w-4 h-4" />
-                <span>새로운 기간으로 다시 시작하기</span>
+                <span>새로운 조건으로 다시 시작하기</span>
               </>
             ) : (
               <span>챌린지 생성 확인</span>
@@ -433,7 +688,7 @@ export const NewChallengePage: React.FC = () => {
             </div>
 
             <p className="text-xs text-slate-500">
-              이전에 진행했던 챌린지의 제목, 인증 기준, 기간 길이를 그대로 불러옵니다.
+              이전에 진행했던 챌린지의 제목, 인증 기준, 기간 및 수행 주기를 그대로 불러옵니다.
             </p>
 
             <div className="flex-1 overflow-y-auto space-y-2 pr-0.5">
@@ -471,7 +726,7 @@ export const NewChallengePage: React.FC = () => {
                       </span>
                     </div>
                     <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                      <span>{c.startDate} ~ {c.endDate}</span>
+                      <span>{c.startDate} ~ {c.endDate} · {c.periodType === 'WEEKLY_N' ? `주 ${c.targetFrequency}회` : '매일'}</span>
                       <span className="text-blue-600 font-semibold flex items-center gap-0.5">
                         불러오기 <Check className="w-3 h-3" />
                       </span>
@@ -506,8 +761,18 @@ export const NewChallengePage: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">수행 주기</span>
-                <span className="font-semibold text-slate-800">매일 1회</span>
+                <span className="font-semibold text-slate-800">
+                  {periodType === 'WEEKLY_N' ? `주 ${targetFrequency}회` : '매일 1회'}
+                </span>
               </div>
+              {periodType === 'WEEKLY_N' && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">총 목표 횟수</span>
+                  <span className="font-semibold text-blue-600">
+                    총 {previewIntervals.reduce((sum, item) => sum + item.targetCount, 0)}회 ({previewIntervals.length}개 구간)
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-500">나의 약정 금액</span>
                 <span className="font-bold text-amber-600">{penaltyAmount.toLocaleString()}원 / 일</span>
@@ -525,7 +790,7 @@ export const NewChallengePage: React.FC = () => {
             )}
 
             <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-              ⚠️ 챌린지가 시작(시작일 00:00 KST)되면 기간 및 인증 기준 수정과 챌린지 삭제가 잠깁니다.
+              ⚠️ 챌린지가 시작(시작일 00:00 KST)되면 기간 및 수행 주기, 인증 기준 수정과 챌린지 삭제가 잠깁니다.
             </div>
 
             <div className="flex gap-2 pt-1">

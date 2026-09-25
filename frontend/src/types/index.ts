@@ -51,6 +51,16 @@ export interface AuthResponse {
 }
 
 export type ChallengeStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED';
+export type PeriodType = 'DAILY' | 'WEEKLY_N';
+
+export interface ChallengePeriodInterval {
+  index: number;
+  startDate: string;
+  endDate: string;
+  targetCount: number;
+  completedCount: number;
+  isAchieved: boolean;
+}
 
 export interface ChallengeSummary {
   id: number;
@@ -60,6 +70,9 @@ export interface ChallengeSummary {
   verificationCriteria: string;
   startDate: string;
   endDate: string;
+  durationDays?: number;
+  periodType?: PeriodType;
+  targetFrequency?: number | null;
   status: ChallengeStatus;
   participantCount: number;
   isParticipating: boolean;
@@ -112,6 +125,13 @@ export interface ChallengeDetail {
   verificationCriteria: string;
   startDate: string;
   endDate: string;
+  durationDays?: number;
+  periodType?: PeriodType;
+  targetFrequency?: number | null;
+  totalTargetCount?: number;
+  totalCompletedCount?: number;
+  progressRate?: number;
+  currentPeriod?: ChallengePeriodInterval | null;
   status: ChallengeStatus;
   isCreator: boolean;
   isParticipating: boolean;
@@ -129,6 +149,8 @@ export interface CreateChallengePayload {
   verificationCriteria: string;
   startDate: string;
   endDate?: string;
+  periodType?: PeriodType;
+  targetFrequency?: number | null;
   myPenaltyAmount: number;
 }
 
@@ -138,11 +160,12 @@ export interface ChallengeRestartTemplate {
   description?: string | null;
   verificationCriteria: string;
   durationDays: number;
+  periodType?: PeriodType;
+  targetFrequency?: number | null;
   suggestedStartDate: string;
   suggestedEndDate: string;
   suggestedPenaltyAmount: number;
 }
-
 
 export interface UpdateChallengePayload {
   title?: string;
@@ -150,6 +173,8 @@ export interface UpdateChallengePayload {
   verificationCriteria?: string;
   startDate?: string;
   endDate?: string;
+  periodType?: PeriodType;
+  targetFrequency?: number | null;
 }
 
 export interface JoinChallengePayload {

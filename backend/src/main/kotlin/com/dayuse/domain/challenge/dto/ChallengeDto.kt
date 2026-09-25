@@ -2,11 +2,21 @@ package com.dayuse.domain.challenge.dto
 
 import com.dayuse.domain.challenge.ChallengeStatus
 import com.dayuse.domain.challenge.ParticipantStatus
+import com.dayuse.domain.challenge.PeriodType
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 import java.time.LocalDate
 import java.time.LocalDateTime
+
+data class ChallengePeriodIntervalDto(
+    val index: Int,
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val targetCount: Int,
+    val completedCount: Int,
+    val isAchieved: Boolean
+)
 
 data class CreateChallengeRequest(
     @field:NotBlank(message = "챌린지 제목은 필수입니다.")
@@ -21,6 +31,10 @@ data class CreateChallengeRequest(
     val startDate: LocalDate,
 
     val endDate: LocalDate? = null,
+
+    val periodType: PeriodType = PeriodType.DAILY,
+
+    val targetFrequency: Int? = null,
 
     @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
     val myPenaltyAmount: Int = 5000
@@ -40,6 +54,10 @@ data class RestartChallengeRequest(
 
     val endDate: LocalDate? = null,
 
+    val periodType: PeriodType = PeriodType.DAILY,
+
+    val targetFrequency: Int? = null,
+
     @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
     val myPenaltyAmount: Int = 5000
 )
@@ -50,11 +68,12 @@ data class ChallengeRestartTemplateResponse(
     val description: String?,
     val verificationCriteria: String,
     val durationDays: Int,
+    val periodType: PeriodType = PeriodType.DAILY,
+    val targetFrequency: Int? = null,
     val suggestedStartDate: LocalDate,
     val suggestedEndDate: LocalDate,
     val suggestedPenaltyAmount: Int
 )
-
 
 data class UpdateChallengeRequest(
     @field:Size(max = 50, message = "챌린지 제목은 50자 이하여야 합니다.")
@@ -66,7 +85,11 @@ data class UpdateChallengeRequest(
 
     val startDate: LocalDate? = null,
 
-    val endDate: LocalDate? = null
+    val endDate: LocalDate? = null,
+
+    val periodType: PeriodType? = null,
+
+    val targetFrequency: Int? = null
 )
 
 data class JoinChallengeRequest(
@@ -106,6 +129,9 @@ data class ChallengeSummaryResponse(
     val verificationCriteria: String,
     val startDate: LocalDate,
     val endDate: LocalDate,
+    val durationDays: Int = 14,
+    val periodType: PeriodType = PeriodType.DAILY,
+    val targetFrequency: Int? = null,
     val status: ChallengeStatus,
     val participantCount: Int,
     val isParticipating: Boolean,
@@ -138,6 +164,13 @@ data class ChallengeDetailResponse(
     val verificationCriteria: String,
     val startDate: LocalDate,
     val endDate: LocalDate,
+    val durationDays: Int = 14,
+    val periodType: PeriodType = PeriodType.DAILY,
+    val targetFrequency: Int? = null,
+    val totalTargetCount: Int = 14,
+    val totalCompletedCount: Int = 0,
+    val progressRate: Int = 0,
+    val currentPeriod: ChallengePeriodIntervalDto? = null,
     val status: ChallengeStatus,
     val isCreator: Boolean,
     val isParticipating: Boolean,

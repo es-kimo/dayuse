@@ -398,4 +398,87 @@ class ChallengeIntegrationTest {
             status { isBadRequest() }
         }
     }
+
+    @Test
+    fun `DoD 11 주 3회 가변 기간(10일) 챌린지 생성 시 정상 등록되고 상세 조회 시 구간 정보가 올바르게 반환된다`() {
+        val today = DateTimeUtils.todayKst()
+        val request = CreateChallengeRequest(
+            title = "주 3회 10일 운동 챌린지",
+            description = "꾸준히 운동하기",
+            verificationCriteria = "운동 사진 1장",
+            startDate = today.plusDays(1),
+            endDate = today.plusDays(10), // 10일간 진행
+            periodType = PeriodType.WEEKLY_N,
+            targetFrequency = 3,
+            myPenaltyAmount = 5000
+        )
+
+        mockMvc.post("/api/v1/groups/${group.id}/challenges") {
+            header("Authorization", hostToken)
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(request)
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.title") { value("주 3회 10일 운동 챌린지") }
+            jsonPath("$.durationDays") { value(10) }
+            jsonPath("$.periodType") { value("WEEKLY_N") }
+            jsonPath("$.targetFrequency") { value(3) }
+            jsonPath("$.totalTargetCount") { value(6) } // 7일(3회) + 3일(min(3, 3)=3회) = 6회
+            jsonPath("$.totalCompletedCount") { value(0) }
+            jsonPath("$.progressRate") { value(0) }
+            jsonPath("$.currentPeriod.index") { value(1) }
+            jsonPath("$.currentPeriod.targetCount") { value(3) }
+        }
+    }
+
+    @Test
+    fun `DoD 12 주 N회 챌린지 생성 시 targetFrequency가 1미만 또는 7초과이면 400 에러를 반환한다`() {
+        val today = DateTimeUtils.todayKst()
+        val invalidRequest = CreateChallengeRequest(
+            title = "비정상 목표 횟수 챌린지",
+            verificationCriteria = "기준",
+            startDate = today.plusDays(1),
+            endDate = today.plusDays(14),
+            periodType = PeriodType.WEEKLY_N,
+            targetFrequency = 8 // 8회 초과
+        )
+
+        mockMvc.post("/api/v1/groups/${group.id}/challenges") {
+            header("Authorization", hostToken)
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(invalidRequest)
+        }.andExpect {
+            status { isBadRequest() }
+        }
+    }
+
+    @Test
+    fun `DoD 13 챌린지가 시작된 후에는 기간이나 수행 주기를 변경할 수 없다 (400 Bad Request)`() {
+        val today = DateTimeUtils.todayKst()
+        val challenge = challengeService.createChallenge(
+            groupId = group.id,
+            userId = hostUser.id,
+            request = CreateChallengeRequest(
+                title = "시작 후 기간 변경 시도",
+                verificationCriteria = "기준",
+                startDate = today, // 오늘 시작
+                endDate = today.plusDays(13),
+                periodType = PeriodType.DAILY
+            ),
+            today = today
+        )
+
+        val updateRequest = UpdateChallengeRequest(
+            periodType = PeriodType.WEEKLY_N,
+            targetFrequency = 3
+        )
+
+        mockMvc.patch("/api/v1/challenges/${challenge.id}") {
+            header("Authorization", hostToken)
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(updateRequest)
+        }.andExpect {
+            status { isBadRequest() }
+        }
+    }
 }
