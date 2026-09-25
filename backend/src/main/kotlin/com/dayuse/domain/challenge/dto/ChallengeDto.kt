@@ -3,6 +3,7 @@ package com.dayuse.domain.challenge.dto
 import com.dayuse.domain.challenge.ChallengeStatus
 import com.dayuse.domain.challenge.ParticipantStatus
 import com.dayuse.domain.challenge.PeriodType
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
@@ -16,6 +17,13 @@ data class ChallengePeriodIntervalDto(
     val targetCount: Int,
     val completedCount: Int,
     val isAchieved: Boolean
+)
+
+data class CreateParticipantRequest(
+    val userId: Long,
+
+    @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
+    val penaltyAmount: Int = 5000
 )
 
 data class CreateChallengeRequest(
@@ -37,7 +45,10 @@ data class CreateChallengeRequest(
     val targetFrequency: Int? = null,
 
     @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
-    val myPenaltyAmount: Int = 5000
+    val myPenaltyAmount: Int = 5000,
+
+    @field:Valid
+    val participants: List<CreateParticipantRequest>? = null
 )
 
 data class RestartChallengeRequest(

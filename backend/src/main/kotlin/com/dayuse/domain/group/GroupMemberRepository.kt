@@ -7,5 +7,6 @@ interface GroupMemberRepository : JpaRepository<GroupMember, Long> {
     fun existsByGroupIdAndUserId(groupId: Long, userId: Long): Boolean
     fun findAllByUserId(userId: Long): List<GroupMember>
     fun findAllByGroupId(groupId: Long): List<GroupMember>
+    fun findAllByGroupIdAndUserIdIn(groupId: Long, userIds: Collection<Long>): List<GroupMember>
     fun countByGroupId(groupId: Long): Long
 }

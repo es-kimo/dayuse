@@ -11,6 +11,7 @@ import com.dayuse.domain.challenge.dto.ChallengePeriodIntervalDto
 import com.dayuse.domain.challenge.dto.ChallengeRestartTemplateResponse
 import com.dayuse.domain.challenge.dto.ChallengeSummaryResponse
 import com.dayuse.domain.challenge.dto.CreateChallengeRequest
+import com.dayuse.domain.challenge.dto.CreateParticipantRequest
 import com.dayuse.domain.challenge.dto.JoinChallengeRequest
 import com.dayuse.domain.challenge.dto.JoinOptionDto
 import com.dayuse.domain.challenge.dto.JoinPreviewResponse
@@ -76,6 +77,28 @@ class ChallengeService(
             throw BadRequestException("종료일은 시작일 이후여야 합니다.")
         }
 
+        // 참가자 목록 정규화 및 검증
+        val participantsList = if (request.participants.isNullOrEmpty()) {
+            listOf(CreateParticipantRequest(userId = userId, penaltyAmount = request.myPenaltyAmount))
+        } else {
+            val userIds = request.participants.map { it.userId }
+            if (userIds.size != userIds.toSet().size) {
+                throw BadRequestException("중복된 참가자가 포함되어 있습니다.")
+            }
+            if (request.participants.none { it.userId == userId }) {
+                request.participants + CreateParticipantRequest(userId = userId, penaltyAmount = request.myPenaltyAmount)
+            } else {
+                request.participants
+            }
+        }
+
+        // 모임 멤버십 일괄 검증 (All-or-Nothing 무결성 보장)
+        val targetUserIds = participantsList.map { it.userId }.toSet()
+        val existingMembers = groupMemberRepository.findAllByGroupIdAndUserIdIn(groupId, targetUserIds)
+        if (existingMembers.size != targetUserIds.size) {
+            throw BadRequestException("모임에 속하지 않은 회원이 포함되어 있습니다.")
+        }
+
         val challenge = challengeRepository.save(
             Challenge(
                 groupId = groupId,
@@ -90,35 +113,46 @@ class ChallengeService(
             )
         )
 
-        // 🎓 생각해보기:
-        // - 챌린지 엔티티 생성과 생성자 참여자 엔티티 생성을 단일 @Transactional 안에서 묶어야 하는 이유는 무엇일까요?
-        val creatorParticipant = challengeParticipantRepository.save(
-            ChallengeParticipant(
-                challengeId = challenge.id,
-                userId = userId,
-                penaltyAmount = request.myPenaltyAmount,
-                startDate = challenge.startDate,
-                status = ParticipantStatus.ACTIVE
+        // 복수 참가자 일괄 등록 및 데일리 레코드 초기화
+        val savedParticipants = participantsList.map { participantReq ->
+            challengeParticipantRepository.save(
+                ChallengeParticipant(
+                    challengeId = challenge.id,
+                    userId = participantReq.userId,
+                    penaltyAmount = participantReq.penaltyAmount,
+                    startDate = challenge.startDate,
+                    status = ParticipantStatus.ACTIVE
+                )
             )
-        )
-        dailyRecordService?.ensureDailyRecordsForParticipant(
-            creatorParticipant,
-            challenge,
-            today
-        )
-        val creatorUser = userRepository.findById(userId).orElse(null)
-        val participantResponse = ChallengeParticipantResponse(
-            id = creatorParticipant.id,
-            userId = userId,
-            nickname = creatorUser?.nickname ?: "참여자",
-            profileImageUrl = creatorUser?.profileImageUrl,
-            penaltyAmount = creatorParticipant.penaltyAmount,
-            startDate = creatorParticipant.startDate,
-            status = creatorParticipant.status,
-            completionRate = 0,
-            joinedAt = creatorParticipant.joinedAt,
-            isCreator = true
-        )
+        }
+
+        savedParticipants.forEach { participant ->
+            dailyRecordService?.ensureDailyRecordsForParticipant(
+                participant,
+                challenge,
+                today
+            )
+        }
+
+        val usersById = userRepository.findAllById(targetUserIds).associateBy { it.id }
+        val creatorUser = usersById[userId]
+        val creatorParticipant = savedParticipants.first { it.userId == userId }
+
+        val participantResponses = savedParticipants.map { participant ->
+            val user = usersById[participant.userId]
+            ChallengeParticipantResponse(
+                id = participant.id,
+                userId = participant.userId,
+                nickname = user?.nickname ?: "참여자",
+                profileImageUrl = user?.profileImageUrl,
+                penaltyAmount = participant.penaltyAmount,
+                startDate = participant.startDate,
+                status = participant.status,
+                completionRate = 0,
+                joinedAt = participant.joinedAt,
+                isCreator = participant.userId == userId
+            )
+        }
 
         val durationDays = ChronoUnit.DAYS.between(challenge.startDate, challenge.endDate).toInt() + 1
         val initCalc = ChallengePeriodCalculator.calculate(
@@ -157,7 +191,7 @@ class ChallengeService(
             canCancel = false,
             canDelete = challenge.canDelete(today),
             canModifyFull = challenge.canModifyFullConditions(today),
-            participants = listOf(participantResponse)
+            participants = participantResponses
         )
     }
 
