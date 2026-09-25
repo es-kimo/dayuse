@@ -31,36 +31,36 @@ export const GroupStatusSummaryBanner: React.FC<GroupStatusSummaryBannerProps> =
   const hasUnpaid = summary.unpaidPenaltyAmount > 0;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs">
+    <div className="bg-card rounded-lg border border-line p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         {/* 미확인 기록 영역 */}
         <div className="flex items-start gap-2.5">
           <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+            className={`w-9 h-9 rounded-md flex items-center justify-center shrink-0 ${
               hasUnchecked
-                ? 'bg-amber-50 text-amber-600 border border-amber-200/60'
-                : 'bg-emerald-50 text-emerald-600 border border-emerald-200/60'
+                ? 'bg-warning-bg text-warning border border-warning-border'
+                : 'bg-success-bg text-success border border-success-border'
             }`}
           >
             {hasUnchecked ? (
-              <HelpCircle className="w-5 h-5" />
+              <HelpCircle className="w-5 h-5 text-warning-icon" />
             ) : (
-              <CheckCircle2 className="w-5 h-5" />
+              <CheckCircle2 className="w-5 h-5 text-success-icon" />
             )}
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-slate-800">
+              <span className="text-body-sm font-semibold text-ink">
                 미확인 기록{' '}
-                <span className={hasUnchecked ? 'text-amber-600' : 'text-slate-600'}>
+                <span className={hasUnchecked ? 'text-warning' : 'text-ink-secondary'}>
                   {summary.uncheckedCount}건
                 </span>
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-caption text-ink-muted mt-0.5">
               {hasUnchecked
                 ? '지난 날짜 인증 누락 (익일 09시 전 등록 시 정상)'
-                : '모든 지난 기록이 완료되었습니다'}
+                : '지난 기록을 모두 확인했어요'}
             </p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export const GroupStatusSummaryBanner: React.FC<GroupStatusSummaryBannerProps> =
         {hasUnchecked && (
           <button
             onClick={onOpenUncheckedSheet}
-            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1 shrink-0"
+            className="px-3 py-1.5 bg-warning hover:bg-amber-800 active:bg-amber-900 text-white text-xs font-semibold rounded-md shadow-xs transition flex items-center gap-1 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
           >
             <span>정리하기</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -78,14 +78,14 @@ export const GroupStatusSummaryBanner: React.FC<GroupStatusSummaryBannerProps> =
       </div>
 
       {/* 미납 벌금 요약 바 */}
-      <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-        <span className="text-slate-500 text-[11px] font-medium flex items-center gap-1">
-          <AlertCircle className="w-3.5 h-3.5 text-slate-400" />
-          미수행 확정 벌금 (미납)
+      <div className="mt-3 pt-3 border-t border-line flex items-center justify-between text-caption">
+        <span className="text-ink-muted font-medium flex items-center gap-1">
+          <AlertCircle className="w-3.5 h-3.5 text-ink-muted" />
+          정산할 금액
         </span>
         <span
           className={`font-bold ${
-            hasUnpaid ? 'text-red-600 text-sm' : 'text-slate-700'
+            hasUnpaid ? 'text-danger text-sm' : 'text-ink'
           }`}
         >
           {summary.unpaidPenaltyAmount.toLocaleString()}원

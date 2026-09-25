@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, AlertCircle, ArrowRight, Sparkles, Calendar, Bell } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ArrowRight, Calendar, Bell } from 'lucide-react';
 import { MobileLayout } from '../components/MobileLayout';
 import { VerificationModal } from '../components/VerificationModal';
+import { DayuExpression } from '../components/brand/DayuExpression';
 import { todayApi } from '../api/today';
 import type { TodayAction } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -43,17 +44,17 @@ export const TodayPage: React.FC = () => {
         {/* 상단 타이틀 & 알림 설정 바로가기 */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-blue-600" />
+            <h1 className="text-xl font-bold text-ink flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
               오늘의 할 일
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              참여 중인 모든 모임의 오늘 인증 현황입니다.
+            <p className="text-caption text-ink-muted mt-0.5">
+              참여 중인 모임의 오늘 인증 현황이에요
             </p>
           </div>
           <button
             onClick={() => navigate('/settings/notifications')}
-            className="p-2 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-slate-100 transition-colors"
+            className="p-2 rounded-xl text-ink-secondary hover:text-primary hover:bg-sunken transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             title="알림 설정"
           >
             <Bell className="w-5 h-5" />
@@ -61,48 +62,44 @@ export const TodayPage: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="py-16 flex flex-col items-center justify-center gap-2 text-slate-400">
-            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs">오늘 할 일을 불러오는 중...</p>
+          <div className="py-16 flex flex-col items-center justify-center gap-2 text-ink-muted">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-body-sm">오늘 할 일을 불러오는 중...</p>
           </div>
         ) : actions.length === 0 ? (
-          <div className="py-16 text-center bg-white border border-slate-200 rounded-2xl p-6 space-y-3">
-            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
-              <Calendar className="w-6 h-6" />
-            </div>
-            <h3 className="text-sm font-bold text-slate-800">오늘 진행 중인 챌린지가 없어요</h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              모임에 참여하거나 새로운 챌린지를 만들어 함께 습관을 시작해 보세요!
+          <div className="py-12 text-center bg-card border border-line rounded-lg p-6 space-y-3">
+            <DayuExpression expression="rest" color="blue" className="w-16 h-16 mx-auto mb-2" />
+            <h3 className="text-title-sm text-ink">오늘은 인증할 챌린지가 없어요</h3>
+            <p className="text-body-sm text-ink-muted leading-relaxed max-w-xs mx-auto">
+              새 챌린지를 만들어 보세요
             </p>
             <button
               onClick={() => navigate('/groups')}
-              className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition"
+              className="mt-2 inline-flex items-center gap-1.5 h-btn-sm px-4 bg-primary hover:bg-primary-hover active:bg-primary-active text-white text-xs font-semibold rounded-md transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-muted"
             >
-              내 모임 보러가기 <ArrowRight className="w-3.5 h-3.5" />
+              챌린지 만들기 <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         ) : (
           <div className="space-y-6">
             {/* 요약 배너 */}
             {pendingActions.length === 0 ? (
-              <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5" />
-                </div>
+              <div className="p-4 bg-success-bg border border-success-border rounded-lg flex items-center gap-3">
+                <DayuExpression expression="done" color="blue" className="w-10 h-10 shrink-0" />
                 <div>
-                  <h3 className="text-sm font-bold text-emerald-900">오늘 인증을 모두 완료했어요! 🎉</h3>
-                  <p className="text-xs text-emerald-700 mt-0.5">
+                  <h3 className="text-title-sm text-success">오늘 인증을 모두 완료했어요! 🎉</h3>
+                  <p className="text-caption text-success mt-0.5 opacity-90">
                     멋진 하루를 완성하셨습니다. 내일도 꾸준히 이어가 봐요!
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between">
+              <div className="p-4 bg-primary-subtle border border-primary-muted rounded-lg flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-blue-900">
+                  <h3 className="text-title-sm text-ink">
                     인증할 챌린지가 {pendingActions.length}개 남아 있어요!
                   </h3>
-                  <p className="text-xs text-blue-700 mt-0.5">
+                  <p className="text-caption text-primary font-medium mt-0.5">
                     오늘이 지나기 전에 사진을 찍어 인증을 완료해 주세요.
                   </p>
                 </div>
@@ -183,17 +180,17 @@ export const TodayPage: React.FC = () => {
                               {action.groupName}
                             </span>
                           )}
-                          <h3 className="text-xs font-bold text-slate-800">
+                          <h3 className="text-body-sm font-semibold text-ink">
                             {action.challengeTitle}
                           </h3>
                           {action.myVerification?.comment && (
-                            <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                            <p className="text-caption text-ink-muted line-clamp-1 mt-0.5">
                               "{action.myVerification.comment}"
                             </p>
                           )}
                         </div>
                       </div>
-                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg shrink-0">
+                      <span className="text-label text-success bg-success-bg border border-success-border px-2 py-1 rounded-md shrink-0 font-semibold">
                         인증 완료
                       </span>
                     </div>

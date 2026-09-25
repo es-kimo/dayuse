@@ -5,7 +5,7 @@ import { groupsApi } from '../api/groups';
 import type { GroupSummary } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import { EmptyState } from '../components/EmptyState';
-import { Users, Plus, ChevronRight, Crown, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Plus, ChevronRight, Crown, Link as LinkIcon, Loader2 } from 'lucide-react';
 
 export const GroupsPage: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -71,19 +71,19 @@ export const GroupsPage: React.FC = () => {
       {/* 초대 코드로 가입 입력 바 */}
       <form onSubmit={handleJoinByCode} className="mb-4 flex gap-2">
         <div className="relative flex-1">
-          <LinkIcon className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <LinkIcon className="w-4 h-4 text-ink-muted absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             id="invite-input"
             type="text"
             placeholder="초대 코드 또는 링크 입력"
             value={inviteInput}
             onChange={(e) => setInviteInput(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-base bg-white border border-slate-200 rounded-lg outline-none focus:border-blue-500"
+            className="w-full pl-9 pr-3 py-2 text-body-sm bg-card border border-line rounded-md outline-none focus:border-primary focus:ring-2 focus:ring-primary-muted text-ink placeholder:text-ink-muted"
           />
         </div>
         <button
           type="submit"
-          className="min-h-[38px] px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg active:scale-95 transition"
+          className="min-h-[38px] px-3.5 py-2 bg-ink hover:bg-night text-white text-xs font-semibold rounded-md active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           가입
         </button>
@@ -91,9 +91,9 @@ export const GroupsPage: React.FC = () => {
 
       {groups.length === 0 ? (
         <EmptyState
-          icon={Users}
-          title="아직 참여 중인 모임이 없습니다."
-          description="새로운 비공개 모임을 만들거나 전달받은 초대 코드로 가입해 보세요."
+          expression="default"
+          title="아직 참여한 모임이 없어요"
+          description="모임을 만들거나 초대 코드로 들어가 보세요"
           actionText="모임 만들기"
           onAction={() => navigate('/groups/new')}
           secondaryActionText="초대 코드로 가입"
@@ -108,26 +108,26 @@ export const GroupsPage: React.FC = () => {
             <div
               key={group.id}
               onClick={() => navigate(`/groups/${group.id}`)}
-              className="bg-white border border-slate-200 hover:border-blue-300 rounded-xl p-4 flex items-center justify-between cursor-pointer transition shadow-xs hover:shadow-sm"
+              className="bg-card border border-line hover:border-primary-muted rounded-md p-4 flex items-center justify-between cursor-pointer transition shadow-sm hover:shadow"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base">
+                <div className="w-10 h-10 rounded-md bg-primary-subtle text-primary flex items-center justify-center font-bold text-base">
                   {group.name.slice(0, 1)}
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h2 className="font-semibold text-sm text-slate-800">{group.name}</h2>
+                    <h2 className="font-semibold text-body-sm text-ink">{group.name}</h2>
                     {group.role === 'HOST' && (
-                      <span className="flex items-center gap-0.5 text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
+                      <span className="flex items-center gap-0.5 text-[10px] bg-warning-bg text-warning border border-warning-border px-1.5 py-0.5 rounded-full font-semibold">
                         <Crown className="w-2.5 h-2.5" />
                         모임장
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">멤버 {group.memberCount}명</p>
+                  <p className="text-caption text-ink-muted mt-0.5">멤버 {group.memberCount}명</p>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-slate-300" />
+              <ChevronRight className="w-5 h-5 text-ink-disabled" />
             </div>
           ))}
         </div>

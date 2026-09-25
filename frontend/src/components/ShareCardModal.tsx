@@ -27,6 +27,7 @@ import {
   Loader2,
   Sparkles,
 } from 'lucide-react';
+import { DayuLogo } from './brand/DayuLogo';
 
 interface ShareCardModalProps {
   cardType: ShareCardType;
@@ -403,12 +404,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
           >
             {/* 상단 서비스 브랜딩 */}
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-1.5">
-                <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center font-black text-xs text-white shadow-xs">
-                  D
-                </div>
-                <span className="font-extrabold tracking-tight text-sm text-white">dayuse</span>
-              </div>
+              <DayuLogo variant="horizontal" theme="mono-white" className="h-4.5 w-auto" />
               <span className="text-[10px] text-slate-400 font-mono tracking-wider">dayuse.kr</span>
             </div>
 

@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   X,
 } from 'lucide-react';
+import { DayuLogo } from '../components/brand/DayuLogo';
 
 export const PublicShareLandingPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -113,12 +114,7 @@ export const PublicShareLandingPage: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-between p-4 py-8 max-w-md mx-auto relative">
       {/* 상단 브랜딩 헤더 */}
       <div className="w-full flex items-center justify-between mb-4 px-2">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center font-black text-xs text-white">
-            D
-          </div>
-          <span className="font-extrabold tracking-tight text-base">dayuse</span>
-        </div>
+        <DayuLogo variant="horizontal" theme="mono-white" className="h-6 w-auto" />
         <span className="text-[11px] text-slate-400 font-mono">dayuse.kr</span>
       </div>
 
@@ -129,12 +125,7 @@ export const PublicShareLandingPage: React.FC = () => {
       >
         {/* 카드 상단 */}
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center font-bold text-[10px] text-white">
-              D
-            </div>
-            <span className="font-bold text-xs tracking-tight">dayuse</span>
-          </div>
+          <DayuLogo variant="horizontal" theme="mono-white" className="h-4 w-auto" />
           <span className="text-[9px] text-slate-400 font-mono">shared card</span>
         </div>
 
