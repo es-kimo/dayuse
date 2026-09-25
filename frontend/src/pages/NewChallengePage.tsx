@@ -25,7 +25,6 @@ const PERIOD_PRESETS = [
   { label: '2주 (14일)', days: 14 },
   { label: '3주 (21일)', days: 21 },
   { label: '4주 (28일)', days: 28 },
-  { label: '1달 (30일)', days: 30 },
 ] as const;
 
 export const NewChallengePage: React.FC = () => {
@@ -435,7 +434,7 @@ export const NewChallengePage: React.FC = () => {
                 <span className="text-[10px] text-slate-400">직접 설정 중</span>
               )}
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               {PERIOD_PRESETS.map((preset) => {
                 const isSelected = selectedPreset === preset.days;
                 return (
@@ -443,7 +442,7 @@ export const NewChallengePage: React.FC = () => {
                     key={preset.days}
                     type="button"
                     onClick={() => handleSelectPreset(preset.days)}
-                    className={`py-1.5 px-2 text-[11px] rounded-lg border font-medium transition text-center ${
+                    className={`py-2 px-2 text-[11px] rounded-lg border font-medium transition text-center whitespace-nowrap ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-2xs'
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -456,13 +455,13 @@ export const NewChallengePage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedPreset('custom')}
-                className={`py-1.5 px-2 text-[11px] rounded-lg border font-medium transition text-center ${
+                className={`col-span-2 py-2 px-2 text-[11px] rounded-lg border font-medium transition text-center whitespace-nowrap ${
                   selectedPreset === 'custom'
                     ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-2xs'
                     : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                직접 설정
+                직접 날짜 설정
               </button>
             </div>
           </div>
