@@ -1,0 +1,37 @@
+/* dayuse theme for Tailwind CSS v4 — @import "tailwindcss"; @import "./tokens/theme.css"; */
+@theme {
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-active: #1E40AF;
+  --color-primary-subtle: #EFF6FF;
+  --color-primary-muted: #DBEAFE;
+  --color-night: #020617;
+  --color-page: #F8FAFC;
+  --color-card: #FFFFFF;
+  --color-sunken: #F1F5F9;
+  --color-line: #E2E8F0;
+  --color-line-strong: #CBD5E1;
+  --color-ink: #1E293B;
+  --color-ink-secondary: #475569;
+  --color-ink-muted: #64748B;
+  --color-ink-disabled: #94A3B8;
+  --color-success: #047857; --color-success-icon: #059669; --color-success-bg: #ECFDF5; --color-success-border: #A7F3D0;
+  --color-warning: #B45309; --color-warning-icon: #D97706; --color-warning-bg: #FFFBEB; --color-warning-border: #FDE68A;
+  --color-danger: #B91C1C;  --color-danger-icon: #DC2626;  --color-danger-bg: #FEF2F2;  --color-danger-border: #FECACA;
+  --color-streak: #F59E0B;
+
+  --font-sans: Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+
+  --text-display: 32px;  --text-display--line-height: 40px;  --text-display--letter-spacing: -0.02em;  --text-display--font-weight: 800;
+  --text-title-lg: 24px; --text-title-lg--line-height: 32px; --text-title-lg--letter-spacing: -0.02em; --text-title-lg--font-weight: 700;
+  --text-title-md: 20px; --text-title-md--line-height: 28px; --text-title-md--letter-spacing: -0.01em; --text-title-md--font-weight: 700;
+  --text-title-sm: 17px; --text-title-sm--line-height: 24px; --text-title-sm--letter-spacing: -0.01em; --text-title-sm--font-weight: 600;
+  --text-body: 16px;     --text-body--line-height: 24px;
+  --text-body-sm: 14px;  --text-body-sm--line-height: 20px;
+  --text-caption: 13px;  --text-caption--line-height: 18px;  --text-caption--font-weight: 500;
+  --text-label: 12px;    --text-label--line-height: 16px;    --text-label--font-weight: 600;
+
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px; --radius-2xl: 24px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-sheet: 0 -8px 24px rgba(15, 23, 42, 0.08);
+}

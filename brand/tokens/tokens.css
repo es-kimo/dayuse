@@ -1,0 +1,56 @@
+/* dayuse design tokens v1.0 (BR-02) — CSS custom properties.
+   Pretendard (SIL OFL 1.1): https://github.com/orioncactus/pretendard
+   @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css"); */
+:root {
+  /* brand */
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-active: #1E40AF;
+  --color-primary-subtle: #EFF6FF;
+  --color-primary-muted: #DBEAFE;
+  --color-on-primary: #FFFFFF;
+  --color-night: #020617;
+
+  /* surface & border */
+  --color-page: #F8FAFC;
+  --color-card: #FFFFFF;
+  --color-sunken: #F1F5F9;
+  --color-overlay: rgba(15, 23, 42, 0.48);
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+  --color-focus: #2563EB;
+
+  /* text */
+  --color-text: #1E293B;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748B;
+  --color-text-disabled: #94A3B8;
+  --color-text-inverse: #FFFFFF;
+
+  /* semantic */
+  --color-success: #047857;  --color-success-icon: #059669; --color-success-bg: #ECFDF5; --color-success-border: #A7F3D0;
+  --color-warning: #B45309;  --color-warning-icon: #D97706; --color-warning-bg: #FFFBEB; --color-warning-border: #FDE68A;
+  --color-danger:  #B91C1C;  --color-danger-icon:  #DC2626; --color-danger-bg:  #FEF2F2; --color-danger-border:  #FECACA;
+  --color-streak: #F59E0B;
+
+  /* type */
+  --font-sans: Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+
+  /* radius */
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px; --radius-2xl: 24px; --radius-full: 9999px;
+
+  /* shadow — cards use borders; no coloured glows */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-sheet: 0 -8px 24px rgba(15, 23, 42, 0.08);
+}
+
+/* type scale utilities */
+.t-display  { font: 800 32px/40px var(--font-sans); letter-spacing: -0.02em; }
+.t-title-lg { font: 700 24px/32px var(--font-sans); letter-spacing: -0.02em; }
+.t-title-md { font: 700 20px/28px var(--font-sans); letter-spacing: -0.01em; }
+.t-title-sm { font: 600 17px/24px var(--font-sans); letter-spacing: -0.01em; }
+.t-body     { font: 400 16px/24px var(--font-sans); }
+.t-body-sm  { font: 400 14px/20px var(--font-sans); }
+.t-caption  { font: 500 13px/18px var(--font-sans); }
+.t-label    { font: 600 12px/16px var(--font-sans); }
+.t-num      { font-variant-numeric: tabular-nums; }
