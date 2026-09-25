@@ -20,6 +20,14 @@ import {
 import { getTodayKstString, addDaysKst } from '../utils/date';
 import type { ChallengeSummary, PeriodType } from '../types';
 
+const PERIOD_PRESETS = [
+  { label: '1주 (7일)', days: 7 },
+  { label: '2주 (14일)', days: 14 },
+  { label: '3주 (21일)', days: 21 },
+  { label: '4주 (28일)', days: 28 },
+  { label: '1달 (30일)', days: 30 },
+] as const;
+
 export const NewChallengePage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const [searchParams] = useSearchParams();
@@ -33,6 +41,7 @@ export const NewChallengePage: React.FC = () => {
   const [verificationCriteria, setVerificationCriteria] = useState('');
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(addDaysKst(today, 13));
+  const [selectedPreset, setSelectedPreset] = useState<number | 'custom'>(14);
   const [periodType, setPeriodType] = useState<PeriodType>('DAILY');
   const [targetFrequency, setTargetFrequency] = useState<number>(3);
   const [penaltyAmount, setPenaltyAmount] = useState<number>(5000);
@@ -117,6 +126,9 @@ export const NewChallengePage: React.FC = () => {
         if (template.periodType) setPeriodType(template.periodType);
         if (template.targetFrequency) setTargetFrequency(template.targetFrequency);
         setPenaltyAmount(template.suggestedPenaltyAmount || 5000);
+        const dur = Math.round((new Date(template.suggestedEndDate).getTime() - new Date(template.suggestedStartDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const matched = PERIOD_PRESETS.find((p) => p.days === dur);
+        setSelectedPreset(matched ? matched.days : 'custom');
         setIsTemplateLoaded(true);
         setActiveRestartId(restartFromId);
         setSuccessNotice('종료된 챌린지 설정을 성공적으로 불러왔습니다.');
@@ -160,6 +172,9 @@ export const NewChallengePage: React.FC = () => {
         setVerificationCriteria(template.verificationCriteria);
         setStartDate(template.suggestedStartDate);
         setEndDate(template.suggestedEndDate);
+        const dur = Math.round((new Date(template.suggestedEndDate).getTime() - new Date(template.suggestedStartDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const matched = PERIOD_PRESETS.find((p) => p.days === dur);
+        setSelectedPreset(matched ? matched.days : 'custom');
         if (template.periodType) setPeriodType(template.periodType);
         if (template.targetFrequency) setTargetFrequency(template.targetFrequency);
         setPenaltyAmount(template.suggestedPenaltyAmount || 5000);
@@ -174,6 +189,8 @@ export const NewChallengePage: React.FC = () => {
         const endMs = new Date(selected.endDate).getTime();
         const days = Math.max(1, Math.round((endMs - startMs) / (1000 * 60 * 60 * 24)) + 1);
         setEndDate(addDaysKst(nextStart, days - 1));
+        const matched = PERIOD_PRESETS.find((p) => p.days === days);
+        setSelectedPreset(matched ? matched.days : 'custom');
         if (selected.periodType) setPeriodType(selected.periodType);
         if (selected.targetFrequency) setTargetFrequency(selected.targetFrequency);
         if (selected.myPenaltyAmount) {
@@ -194,9 +211,16 @@ export const NewChallengePage: React.FC = () => {
     }
   };
 
+  const handleSelectPreset = (days: number) => {
+    setSelectedPreset(days);
+    setEndDate(addDaysKst(startDate, days - 1));
+  };
+
   const handleStartDateChange = (newStart: string) => {
     setStartDate(newStart);
-    if (newStart > endDate) {
+    if (typeof selectedPreset === 'number') {
+      setEndDate(addDaysKst(newStart, selectedPreset - 1));
+    } else if (newStart > endDate) {
       setEndDate(newStart);
     }
   };
@@ -204,6 +228,9 @@ export const NewChallengePage: React.FC = () => {
   const handleEndDateChange = (newEnd: string) => {
     if (newEnd >= startDate) {
       setEndDate(newEnd);
+      const diff = Math.round((new Date(newEnd).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const matched = PERIOD_PRESETS.find((p) => p.days === diff);
+      setSelectedPreset(matched ? matched.days : 'custom');
     }
   };
 
@@ -388,16 +415,60 @@ export const NewChallengePage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
               <Calendar className="w-4 h-4 text-blue-600" />
-              <span>진행 기간 설정 (총 {durationDays}일간)</span>
+              <span>진행 기간 설정</span>
+              {isTemplateLoaded && (
+                <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
+                  불러온 기간
+                </span>
+              )}
             </div>
-            {isTemplateLoaded && (
-              <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
-                기존 기간 반영
-              </span>
-            )}
+            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+              총 {durationDays}일간 진행
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* 추천 기간 선택 칩 */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] text-slate-500 font-medium">추천 기간</span>
+              {selectedPreset === 'custom' && (
+                <span className="text-[10px] text-slate-400">직접 설정 중</span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+              {PERIOD_PRESETS.map((preset) => {
+                const isSelected = selectedPreset === preset.days;
+                return (
+                  <button
+                    key={preset.days}
+                    type="button"
+                    onClick={() => handleSelectPreset(preset.days)}
+                    className={`py-1.5 px-2 text-[11px] rounded-lg border font-medium transition text-center ${
+                      isSelected
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-2xs'
+                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setSelectedPreset('custom')}
+                className={`py-1.5 px-2 text-[11px] rounded-lg border font-medium transition text-center ${
+                  selectedPreset === 'custom'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-2xs'
+                    : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                직접 설정
+              </button>
+            </div>
+          </div>
+
+          {/* 날짜 직접 선택 피커 */}
+          <div className="grid grid-cols-2 gap-3 pt-1">
             <div className="min-w-0">
               <span className="block text-[11px] text-slate-500 mb-1">시작일</span>
               <input
@@ -422,7 +493,7 @@ export const NewChallengePage: React.FC = () => {
             </div>
           </div>
           <p className="text-[11px] text-slate-400">
-            시작일 00:00 KST부터 종료일 23:59 KST까지 {durationDays}일간 진행됩니다. (1일부터 자유롭게 설정 가능)
+            {startDate}부터 {endDate}까지 {durationDays}일간 진행돼요. (최소 1일부터 자유롭게 설정 가능)
           </p>
         </div>
 
@@ -515,7 +586,7 @@ export const NewChallengePage: React.FC = () => {
                         <span>목표 {iv.targetCount}회</span>
                         {iv.isShort && (
                           <span className="ml-1 text-[10px] text-amber-600 font-normal">
-                            (남은 {iv.days}일 조정)
+                            (남은 {iv.days}일 맞춤)
                           </span>
                         )}
                       </div>
@@ -523,11 +594,14 @@ export const NewChallengePage: React.FC = () => {
                   ))}
                 </div>
 
-                {previewIntervals.some((iv) => iv.isShort) && (
-                  <p className="text-[10px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-100">
-                    💡 마지막 구간이 7일 미만일 경우 목표 횟수는 min({targetFrequency}, 남은 일수)로 자동 조정됩니다.
-                  </p>
-                )}
+                {previewIntervals.some((iv) => iv.isShort) && (() => {
+                  const lastShort = previewIntervals.find((iv) => iv.isShort);
+                  return (
+                    <p className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200/70 leading-relaxed">
+                      💡 마지막 주차는 남은 기간({lastShort?.days}일)이 1주일보다 짧아, 무리하지 않도록 목표가 최대 {lastShort?.targetCount}회로 자동 조정돼요!
+                    </p>
+                  );
+                })()}
               </div>
             </div>
           )}
