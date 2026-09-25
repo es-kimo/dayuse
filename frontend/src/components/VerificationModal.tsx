@@ -5,6 +5,7 @@ import { recordsApi } from '../api/records';
 import type { TodayAction, VerificationDetail } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { ShareCardModal } from './ShareCardModal';
+import { useClipboardImagePaste, validateImageFile } from '../hooks/useClipboardImagePaste';
 import {
   getTodayKstString,
   addDaysKst,
@@ -24,6 +25,9 @@ import {
   Clock,
   Moon,
   Sun,
+  Clipboard,
+  Repeat,
+  Trash2,
 } from 'lucide-react';
 
 interface VerificationModalProps {
@@ -44,6 +48,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pendingReplaceFile, setPendingReplaceFile] = useState<File | null>(null);
   const [comment, setComment] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -74,38 +79,57 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
   const [selectedTargetDate, setSelectedTargetDate] = useState<string>(initialTargetDate);
 
-  // 모달 오픈 시 배경 스크롤 방지
+  // 모달 오픈 시 배경 스크롤 방지 및 언마운트 시 ObjectURL 해제
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = originalOverflow;
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
-  }, []);
+  }, [previewUrl]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    if (!selected) return;
-
-    // 10MB 검증
-    if (selected.size > 10 * 1024 * 1024) {
-      setErrorMessage('파일 크기는 최대 10MB 이하만 가능합니다.');
+  // 새로운 파일 적용 파이프라인 (검증, 미리보기 URL 생성, 메모리 해제)
+  const applyNewFile = (newFile: File) => {
+    const validation = validateImageFile(newFile);
+    if (!validation.valid) {
+      setErrorMessage(validation.error || '유효하지 않은 이미지 파일입니다.');
       return;
     }
 
-    // 포맷 검증 (JPG, PNG, WebP)
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(selected.type)) {
-      setErrorMessage('JPG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다.');
-      return;
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
     }
 
     setErrorMessage(null);
     setCanRetry(false);
-    setFile(selected);
+    setFile(newFile);
 
-    const url = URL.createObjectURL(selected);
+    const url = URL.createObjectURL(newFile);
     setPreviewUrl(url);
+  };
+
+  // 클립보드 붙여넣기 훅 연동
+  useClipboardImagePaste({
+    enabled: !isSubmitting && !createdVerification,
+    hasExistingImage: !!file,
+    onImagePasted: (pastedFile) => {
+      applyNewFile(pastedFile);
+    },
+    onError: (msg) => {
+      setErrorMessage(msg);
+    },
+    onConfirmReplace: (newFile) => {
+      setPendingReplaceFile(newFile);
+    },
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+    applyNewFile(selected);
   };
 
   const handleRemovePhoto = () => {
@@ -120,6 +144,17 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
     if (galleryInputRef.current) {
       galleryInputRef.current.value = '';
     }
+  };
+
+  const handleConfirmReplace = () => {
+    if (pendingReplaceFile) {
+      applyNewFile(pendingReplaceFile);
+      setPendingReplaceFile(null);
+    }
+  };
+
+  const handleCancelReplace = () => {
+    setPendingReplaceFile(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -224,7 +259,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-5 shadow-2xl flex flex-col">
+      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-y-auto p-5 shadow-2xl flex flex-col relative">
         {/* 상단 헤더 */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
@@ -351,24 +386,57 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             />
 
             {previewUrl ? (
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200 aspect-4/3 bg-slate-900 group">
-                <img
-                  src={previewUrl}
-                  alt="인증 사진 미리보기"
-                  className="w-full h-full object-cover"
-                />
+              <div className="space-y-2">
+                <div className="relative rounded-2xl overflow-hidden border border-slate-200 aspect-4/3 bg-slate-900 group">
+                  <img
+                    src={previewUrl}
+                    alt="인증 사진 미리보기"
+                    className="w-full h-full object-cover"
+                  />
+                  {!isSubmitting && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition shadow-md"
+                        title="사진 삭제"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 첨부 완료 후 교체 / 삭제 액션 바 */}
                 {!isSubmitting && (
-                  <button
-                    type="button"
-                    onClick={handleRemovePhoto}
-                    className="absolute top-3 right-3 p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition shadow-md"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[11px] text-slate-500 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      사진이 첨부되었습니다
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => galleryInputRef.current?.click()}
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 py-1 px-2 hover:bg-blue-50 rounded-lg transition"
+                      >
+                        <Repeat className="w-3.5 h-3.5" />
+                        사진 변경
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="text-[11px] font-semibold text-rose-500 hover:text-rose-600 flex items-center gap-1 py-1 px-2 hover:bg-rose-50 rounded-lg transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        삭제
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <div className="grid grid-cols-2 gap-3">
                   {/* 카메라 촬영 버튼 */}
                   <button
@@ -402,6 +470,17 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                     </div>
                   </button>
                 </div>
+
+                {/* 클립보드 붙여넣기 안내 힌트 뱃지 */}
+                <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-2.5 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                  <Clipboard className="w-3.5 h-3.5 text-blue-600" />
+                  <span>캡처한 이미지를</span>
+                  <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-semibold text-slate-700 shadow-2xs">Ctrl+V</kbd>
+                  <span>(또는</span>
+                  <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-semibold text-slate-700 shadow-2xs">⌘+V</kbd>
+                  <span>)로 바로 붙여넣을 수 있습니다.</span>
+                </div>
+
                 <p className="text-center text-[10px] text-slate-400">
                   JPG, PNG, WebP 형식 (최대 10MB)
                 </p>
@@ -477,6 +556,39 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             </button>
           </div>
         </form>
+
+        {/* 기존 사진 존재 시 클립보드 붙여넣기 사진 교체 확인 다이얼로그 */}
+        {pendingReplaceFile && (
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-2xs rounded-t-3xl sm:rounded-2xl z-20 flex items-center justify-center p-5 animate-in fade-in duration-150">
+            <div className="bg-white rounded-2xl p-5 shadow-xl max-w-xs w-full text-center space-y-3">
+              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                <Repeat className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-slate-800">기존 첨부된 사진을 변경하시겠습니까?</h4>
+                <p className="text-[11px] text-slate-500">
+                  클립보드에서 새로 감지된 이미지로 사진이 교체됩니다.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleCancelReplace}
+                  className="flex-1 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
+                >
+                  유지하기
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmReplace}
+                  className="flex-1 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-xs"
+                >
+                  변경하기
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>,
     document.body
