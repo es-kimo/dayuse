@@ -27,6 +27,7 @@ import {
   Loader2,
   Sparkles,
 } from 'lucide-react';
+import { DayuLogo } from './brand/DayuLogo';
 
 interface ShareCardModalProps {
   cardType: ShareCardType;
@@ -279,8 +280,8 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
         try {
           await navigator.share({
             files: [file],
-            title: `dayuse | ${title}`,
-            text: `${userNickname}님의 dayuse 공유 카드`,
+            title: `데이유즈 | ${title}`,
+            text: `${userNickname}님의 데이유즈 공유 카드`,
           });
           return;
         } catch (shareErr: any) {
@@ -322,7 +323,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       if (
         isKakaoReady() &&
         shareToKakao({
-          title: `dayuse | ${title}`,
+          title: `데이유즈 | ${title}`,
           description: shareDescription,
           imageUrl: buildOgImageUrl(shareToken),
           linkUrl,
@@ -334,7 +335,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       // 카카오 SDK를 못 쓰는 환경: 네이티브 공유 시트에서 카카오톡을 고르게 한다.
       if (canShareLink()) {
         navigator
-          .share({ title: `dayuse | ${title}`, text: shareDescription, url: linkUrl })
+          .share({ title: `데이유즈 | ${title}`, text: shareDescription, url: linkUrl })
           .catch((shareErr: any) => {
             if (shareErr?.name === 'AbortError') return;
             console.warn('네이티브 공유 실패, 링크 복사로 전환:', shareErr);
@@ -402,14 +403,9 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
             className="w-[270px] h-[480px] rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col justify-between p-5 relative shadow-xl border border-white/10"
           >
             {/* 상단 서비스 브랜딩 */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-1.5">
-                <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center font-black text-xs text-white shadow-xs">
-                  D
-                </div>
-                <span className="font-extrabold tracking-tight text-sm text-white">dayuse</span>
-              </div>
-              <span className="text-[10px] text-slate-400 font-mono tracking-wider">dayuse.kr</span>
+            <div className="flex items-center justify-between border-b border-white/10 pb-3 gap-2 min-w-0">
+              <DayuLogo variant="horizontal" theme="mono-white" className="h-4 w-auto max-w-[120px] object-contain shrink-0" />
+              <span className="text-[10px] text-slate-400 font-mono tracking-wider shrink-0">dayuse.kr</span>
             </div>
 
             {/* 카드 중앙 본문 */}

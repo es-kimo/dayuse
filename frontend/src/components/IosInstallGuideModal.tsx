@@ -35,7 +35,7 @@ export const IosInstallGuideModal: React.FC<IosInstallGuideModalProps> = ({
           </p>
 
           <div className="space-y-4 mb-6">
-            <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+            <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-md">
               <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                 1
               </div>
@@ -51,7 +51,7 @@ export const IosInstallGuideModal: React.FC<IosInstallGuideModalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+            <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-md">
               <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                 2
               </div>
@@ -60,19 +60,19 @@ export const IosInstallGuideModal: React.FC<IosInstallGuideModalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+            <div className="flex items-start gap-3 p-3 bg-slate-50 rounded-md">
               <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                 3
               </div>
               <div className="text-sm text-slate-700">
-                홈 화면에 생성된 <strong>dayuse 아이콘</strong>으로 실행하면 매일 알림을 받으실 수 있습니다!
+                홈 화면에 생성된 <strong>데이유즈 아이콘</strong>으로 실행하면 매일 알림을 받으실 수 있습니다!
               </div>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+            className="w-full py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
           >
             확인했어요
           </button>

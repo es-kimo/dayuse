@@ -50,7 +50,7 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
         {todayActions.map((action) => (
           <div
             key={action.challengeId}
-            className={`bg-white border rounded-2xl p-3.5 shadow-xs transition flex items-center justify-between gap-3 ${
+            className={`bg-white border rounded-lg p-3.5 shadow-xs transition flex items-center justify-between gap-3 ${
               action.isCompletedToday ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200'
             }`}
           >
@@ -102,7 +102,7 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
                   <img
                     src={action.myVerification.imageUrl}
                     alt="오늘 인증 사진"
-                    className="w-11 h-11 rounded-xl object-cover border border-emerald-200 shadow-2xs"
+                    className="w-11 h-11 rounded-md object-cover border border-emerald-200 shadow-2xs"
                     crossOrigin="anonymous"
                   />
                 )}
@@ -110,7 +110,7 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
             ) : (
               <button
                 onClick={() => onOpenVerificationModal(action)}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-medium rounded-xl flex items-center gap-1 shadow-xs shrink-0 transition"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-medium rounded-md flex items-center gap-1 shadow-xs shrink-0 transition"
               >
                 <Camera className="w-3.5 h-3.5" />
                 <span>{action.periodInfo?.isGoalAchieved ? '추가인증' : '인증하기'}</span>

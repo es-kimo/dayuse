@@ -401,7 +401,7 @@ export const NewChallengePage: React.FC = () => {
                 navigate(`/groups/${groupId}?tab=challenges`);
               }
             }}
-            className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
+            className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
             aria-label="뒤로가기"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -415,7 +415,7 @@ export const NewChallengePage: React.FC = () => {
         <button
           type="button"
           onClick={handleOpenHistoryModal}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-semibold transition active:scale-95"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md text-xs font-semibold transition active:scale-95"
         >
           <History className="w-3.5 h-3.5" />
           <span>기존 내용 불러오기</span>
@@ -423,14 +423,14 @@ export const NewChallengePage: React.FC = () => {
       </div>
 
       {isLoadingTemplate && (
-        <div className="p-4 mb-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs flex items-center justify-center gap-2">
+        <div className="p-4 mb-4 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-xs flex items-center justify-center gap-2">
           <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
           <span>이전 챌린지 설정을 불러오는 중입니다...</span>
         </div>
       )}
 
       {successNotice && (
-        <div className="p-3 mb-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+        <div className="p-3 mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center justify-between gap-2 animate-in fade-in">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{successNotice}</span>
@@ -445,7 +445,7 @@ export const NewChallengePage: React.FC = () => {
       )}
 
       {error && (
-        <div className="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs flex items-center gap-2">
+        <div className="p-3 mb-4 rounded-md bg-red-50 border border-red-200 text-red-600 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -464,7 +464,7 @@ export const NewChallengePage: React.FC = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="예: 주 3회 헬스장 가기"
-            className="w-full text-base px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
+            className="w-full text-base px-3 py-2.5 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
           />
         </div>
 
@@ -478,7 +478,7 @@ export const NewChallengePage: React.FC = () => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="모임원들에게 챌린지의 목표나 규칙을 소개해 주세요."
-            className="w-full text-base px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
+            className="w-full text-base px-3 py-2.5 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
           />
         </div>
 
@@ -494,12 +494,12 @@ export const NewChallengePage: React.FC = () => {
             value={verificationCriteria}
             onChange={(e) => setVerificationCriteria(e.target.value)}
             placeholder="예: 헬스장 락커 번호표와 운동 인증 사진 1장 (자정 전까지 제출)"
-            className="w-full text-base px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
+            className="w-full text-base px-3 py-2.5 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
           />
         </div>
 
         {/* 기간 설정 */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3">
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
               <Calendar className="w-4 h-4 text-blue-600" />
@@ -531,7 +531,7 @@ export const NewChallengePage: React.FC = () => {
                     key={preset.days}
                     type="button"
                     onClick={() => handleSelectPreset(preset.days)}
-                    className={`py-2 px-2 text-[11px] rounded-lg border font-medium transition text-center whitespace-nowrap ${
+                    className={`py-2 px-2 text-[11px] rounded-md border font-medium transition text-center whitespace-nowrap ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-2xs'
                         : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -544,7 +544,7 @@ export const NewChallengePage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedPreset('custom')}
-                className={`col-span-2 py-2 px-2 text-[11px] rounded-lg border font-medium transition text-center whitespace-nowrap ${
+                className={`col-span-2 py-2 px-2 text-[11px] rounded-md border font-medium transition text-center whitespace-nowrap ${
                   selectedPreset === 'custom'
                     ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-2xs'
                     : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -565,7 +565,7 @@ export const NewChallengePage: React.FC = () => {
                 min={today}
                 value={startDate}
                 onChange={(e) => handleStartDateChange(e.target.value)}
-                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
+                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
               />
             </div>
             <div className="min-w-0">
@@ -576,7 +576,7 @@ export const NewChallengePage: React.FC = () => {
                 min={startDate}
                 value={endDate}
                 onChange={(e) => handleEndDateChange(e.target.value)}
-                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
+                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
               />
             </div>
           </div>
@@ -586,7 +586,7 @@ export const NewChallengePage: React.FC = () => {
         </div>
 
         {/* 수행 주기 설정 */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3">
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
               <Repeat className="w-4 h-4 text-blue-600" />
@@ -601,7 +601,7 @@ export const NewChallengePage: React.FC = () => {
             <button
               type="button"
               onClick={() => setPeriodType('DAILY')}
-              className={`py-2 px-3 text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-3 text-xs rounded-md border font-medium transition flex items-center justify-center gap-1.5 ${
                 periodType === 'DAILY'
                   ? 'border-blue-500 bg-blue-50 text-blue-700 font-semibold'
                   : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -612,7 +612,7 @@ export const NewChallengePage: React.FC = () => {
             <button
               type="button"
               onClick={() => setPeriodType('WEEKLY_N')}
-              className={`py-2 px-3 text-xs rounded-lg border font-medium transition flex items-center justify-center gap-1.5 ${
+              className={`py-2 px-3 text-xs rounded-md border font-medium transition flex items-center justify-center gap-1.5 ${
                 periodType === 'WEEKLY_N'
                   ? 'border-blue-500 bg-blue-50 text-blue-700 font-semibold'
                   : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -629,7 +629,7 @@ export const NewChallengePage: React.FC = () => {
                 <select
                   value={targetFrequency}
                   onChange={(e) => setTargetFrequency(Number(e.target.value))}
-                  className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-white font-semibold text-slate-800"
+                  className="text-xs px-2.5 py-1.5 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white font-semibold text-slate-800"
                 >
                   {[1, 2, 3, 4, 5, 6, 7].map((num) => (
                     <option key={num} value={num}>
@@ -643,7 +643,7 @@ export const NewChallengePage: React.FC = () => {
               </p>
 
               {/* 구간 분할 미리보기 */}
-              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-2">
+              <div className="bg-slate-50 rounded-md p-3 border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-semibold text-slate-700 flex items-center gap-1">
                     <Layers className="w-3.5 h-3.5 text-blue-600" />
@@ -658,7 +658,7 @@ export const NewChallengePage: React.FC = () => {
                   {previewIntervals.map((iv) => (
                     <div
                       key={iv.index}
-                      className={`p-2 rounded-lg text-[11px] flex items-center justify-between border ${
+                      className={`p-2 rounded-md text-[11px] flex items-center justify-between border ${
                         iv.isShort
                           ? 'bg-amber-50/60 border-amber-200 text-amber-900'
                           : 'bg-white border-slate-200 text-slate-700'
@@ -685,7 +685,7 @@ export const NewChallengePage: React.FC = () => {
                 {previewIntervals.some((iv) => iv.isShort) && (() => {
                   const lastShort = previewIntervals.find((iv) => iv.isShort);
                   return (
-                    <p className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200/70 leading-relaxed">
+                    <p className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-md border border-amber-200/70 leading-relaxed">
                       💡 마지막 주차는 남은 기간({lastShort?.days}일)이 1주일보다 짧아, 무리하지 않도록 목표가 최대 {lastShort?.targetCount}회로 자동 조정돼요!
                     </p>
                   );
@@ -696,7 +696,7 @@ export const NewChallengePage: React.FC = () => {
         </div>
 
         {/* 본인 및 기본 약정 금액 설정 */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3">
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
               <Coins className="w-4 h-4 text-amber-500" />
@@ -713,7 +713,7 @@ export const NewChallengePage: React.FC = () => {
                 key={amt}
                 type="button"
                 onClick={() => setPenaltyAmount(amt)}
-                className={`flex-1 py-1.5 text-xs rounded-lg border transition ${
+                className={`flex-1 py-1.5 text-xs rounded-md border transition ${
                   penaltyAmount === amt
                     ? 'border-amber-500 bg-amber-50 text-amber-800 font-semibold'
                     : 'border-slate-200 bg-slate-50 text-slate-600'
@@ -732,7 +732,7 @@ export const NewChallengePage: React.FC = () => {
               step={1000}
               value={penaltyAmount}
               onChange={(e) => setPenaltyAmount(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
+              className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
             />
           </div>
           <p className="text-[11px] text-slate-400">
@@ -743,7 +743,7 @@ export const NewChallengePage: React.FC = () => {
         </div>
 
         {/* 함께할 모임원 선택 리스트 & 참가자별 약정금 설정 */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3">
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
               <Users className="w-4 h-4 text-blue-600" />
@@ -776,7 +776,7 @@ export const NewChallengePage: React.FC = () => {
                   <div
                     key={member.userId}
                     onClick={() => !isCreator && handleToggleMember(member.userId)}
-                    className={`p-3 rounded-xl border transition ${
+                    className={`p-3 rounded-md border transition ${
                       isCreator ? 'cursor-default' : 'cursor-pointer'
                     } ${
                       isSelected
@@ -845,7 +845,7 @@ export const NewChallengePage: React.FC = () => {
                               const val = Math.max(0, parseInt(e.target.value) || 0);
                               handleMemberPenaltyChange(member.userId, val);
                             }}
-                            className="w-20 text-xs px-2 py-1 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-white font-bold text-right text-amber-700"
+                            className="w-20 text-xs px-2 py-1 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white font-bold text-right text-amber-700"
                           />
                           <span className="text-[11px] text-slate-600">원</span>
                         </div>
@@ -881,7 +881,7 @@ export const NewChallengePage: React.FC = () => {
 
         {/* 당일 시작 챌린지 즉시 확정 경고 */}
         {startDate === today && (
-          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2 animate-in fade-in">
+          <div className="p-3 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2 animate-in fade-in">
             <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
             <div className="leading-relaxed">
               <span className="font-semibold block">⚠️ 오늘 시작하는 챌린지 주의</span>
@@ -895,7 +895,7 @@ export const NewChallengePage: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold text-xs rounded-xl shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold text-xs rounded-md shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
           >
             {activeRestartId ? (
               <>
@@ -946,7 +946,7 @@ export const NewChallengePage: React.FC = () => {
                     key={c.id}
                     type="button"
                     onClick={() => handleSelectHistoryChallenge(c)}
-                    className="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 transition group"
+                    className="w-full text-left p-3 rounded-md border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 transition group"
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-slate-800 group-hover:text-blue-600 line-clamp-1">
@@ -989,7 +989,7 @@ export const NewChallengePage: React.FC = () => {
               </h2>
             </div>
 
-            <div className="bg-slate-50 rounded-xl p-3.5 space-y-2 text-xs border border-slate-200">
+            <div className="bg-slate-50 rounded-md p-3.5 space-y-2 text-xs border border-slate-200">
               <div className="flex justify-between">
                 <span className="text-slate-500">챌린지명</span>
                 <span className="font-semibold text-slate-800 truncate max-w-[180px]">{title}</span>
@@ -1022,7 +1022,7 @@ export const NewChallengePage: React.FC = () => {
               {/* 참가자별 약정금 명단 요약 */}
               <div className="pt-2 border-t border-slate-200 space-y-1">
                 <span className="text-[11px] text-slate-500 block font-medium">참가자별 약정 금액:</span>
-                <div className="max-h-28 overflow-y-auto space-y-1 bg-white p-2 rounded-lg border border-slate-200/80">
+                <div className="max-h-28 overflow-y-auto space-y-1 bg-white p-2 rounded-md border border-slate-200/80">
                   {participantsList.map((p) => (
                     <div key={p.userId} className="flex justify-between text-[11px]">
                       <span className="text-slate-700 truncate max-w-[140px]">
@@ -1043,17 +1043,17 @@ export const NewChallengePage: React.FC = () => {
             </div>
 
             {activeRestartId && (
-              <div className="text-[11px] text-blue-700 bg-blue-50 p-2.5 rounded-lg border border-blue-200">
+              <div className="text-[11px] text-blue-700 bg-blue-50 p-2.5 rounded-md border border-blue-200">
                 ℹ️ 기존 챌린지의 과거 기록(인증 사진 등)은 새 챌린지로 복사되지 않으며 이번에 설정한 참가자 명단으로 새롭게 시작됩니다.
               </div>
             )}
 
             {startDate === today ? (
-              <div className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200 leading-relaxed font-medium">
+              <div className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-md border border-amber-200 leading-relaxed font-medium">
                 ⚠️ 오늘 시작하는 챌린지는 생성 즉시 조건이 확정되어 취소/수정이 불가합니다.
               </div>
             ) : (
-              <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+              <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-md border border-amber-200">
                 ⚠️ 챌린지가 시작(시작일 00:00 KST)되면 기간 및 수행 주기, 인증 기준 수정과 챌린지 삭제가 잠깁니다.
               </div>
             )}
@@ -1063,7 +1063,7 @@ export const NewChallengePage: React.FC = () => {
                 type="button"
                 onClick={() => setShowConfirmModal(false)}
                 disabled={isSubmitting}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition"
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition"
               >
                 다시 수정
               </button>
@@ -1071,7 +1071,7 @@ export const NewChallengePage: React.FC = () => {
                 type="button"
                 onClick={handleConfirmSubmit}
                 disabled={isSubmitting}
-                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1 shadow-xs transition"
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1 shadow-xs transition"
               >
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

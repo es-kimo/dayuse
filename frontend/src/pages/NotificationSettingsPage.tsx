@@ -202,7 +202,7 @@ export const NotificationSettingsPage: React.FC = () => {
           <div className="flex items-center gap-2 mb-2">
             <button
               onClick={() => navigate(-1)}
-              className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg transition"
+              className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md transition"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -218,12 +218,12 @@ export const NotificationSettingsPage: React.FC = () => {
 
         {/* iOS 환경 안내 배너 */}
         {iosNeedsInstall && (
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-3">
             <Smartphone className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div className="flex-1">
               <h4 className="text-sm font-semibold text-amber-900">iOS 홈 화면 추가 필요</h4>
               <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                아이폰에서는 홈 화면에 추가된 dayuse 앱에서만 알림을 수신할 수 있습니다.
+                아이폰에서는 홈 화면에 추가된 데이유즈 앱에서만 알림을 수신할 수 있습니다.
               </p>
               <button
                 onClick={() => setShowIosGuide(true)}
@@ -237,7 +237,7 @@ export const NotificationSettingsPage: React.FC = () => {
 
         {/* 브라우저 미지원 배너 */}
         {!supported && !iosEnv && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div className="text-xs text-red-700 leading-relaxed">
               현재 브라우저는 웹 푸시 알림을 지원하지 않습니다. Chrome, Safari(iOS 16.4+ 홈화면), 또는 최신 모바일 브라우저를 사용해 주세요.
@@ -252,7 +252,7 @@ export const NotificationSettingsPage: React.FC = () => {
         ) : settings ? (
           <div className="space-y-4">
             {/* 알림 받기 토글 카드 */}
-            <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xs flex items-center justify-between">
+            <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs flex items-center justify-between">
               <div>
                 <span className="font-semibold text-sm text-slate-900">미인증 챌린지 알림 받기</span>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -277,7 +277,7 @@ export const NotificationSettingsPage: React.FC = () => {
             </div>
 
             {/* 알림 시간 설정 카드 */}
-            <div className={`p-4 bg-white border border-slate-200 rounded-2xl shadow-xs space-y-3 transition-opacity ${
+            <div className={`p-4 bg-white border border-slate-200 rounded-lg shadow-xs space-y-3 transition-opacity ${
               settings.enabled ? 'opacity-100' : 'opacity-50 pointer-events-none'
             }`}>
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
@@ -292,7 +292,7 @@ export const NotificationSettingsPage: React.FC = () => {
                 value={settings.reminderTime}
                 disabled={!settings.enabled || saving}
                 onChange={(e) => handleTimeChange(e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm font-medium text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               >
                 {timeOptions.map((time) => (
                   <option key={time} value={time}>
@@ -303,7 +303,7 @@ export const NotificationSettingsPage: React.FC = () => {
             </div>
 
             {/* 테스트 알림 전송 버튼 */}
-            <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xs space-y-3">
+            <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="font-semibold text-sm text-slate-900">테스트 알림 보내보기</span>
@@ -317,7 +317,7 @@ export const NotificationSettingsPage: React.FC = () => {
                 type="button"
                 disabled={testing || !settings.hasActiveSubscription || deviceOutOfSync}
                 onClick={handleTestPush}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="w-4 h-4" />
                 {testing ? '발송 중...' : '테스트 알림 발송'}
@@ -336,7 +336,7 @@ export const NotificationSettingsPage: React.FC = () => {
             </div>
 
             {/* 안내사항 */}
-            <div className="p-4 bg-slate-50 rounded-2xl text-xs text-slate-500 space-y-1.5 leading-relaxed">
+            <div className="p-4 bg-slate-50 rounded-lg text-xs text-slate-500 space-y-1.5 leading-relaxed">
               <div className="font-semibold text-slate-700">💡 알림 안내사항</div>
               <div>• 오늘 인증해야 할 챌린지를 모두 완료한 날에는 알림이 오지 않습니다.</div>
               <div>• 친구들의 이름이나 금액 정보는 알림에 노출되지 않으며 건수만 요약됩니다.</div>

@@ -53,7 +53,7 @@ export const PeriodSettlementModal: React.FC<PeriodSettlementModalProps> = ({
         </button>
 
         <div className="flex items-center gap-2 mb-3">
-          <div className="p-2 rounded-xl bg-amber-50 text-amber-600 border border-amber-200">
+          <div className="p-2 rounded-md bg-amber-50 text-amber-600 border border-amber-200">
             <AlertCircle className="w-5 h-5" />
           </div>
           <div>
@@ -66,7 +66,7 @@ export const PeriodSettlementModal: React.FC<PeriodSettlementModalProps> = ({
           </div>
         </div>
 
-        <div className="bg-slate-50 rounded-xl p-3.5 space-y-2 mb-4 text-xs">
+        <div className="bg-slate-50 rounded-md p-3.5 space-y-2 mb-4 text-xs">
           <div className="flex justify-between items-center text-slate-600">
             <span>목표 횟수</span>
             <span className="font-semibold text-slate-800">{interval.targetCount}회</span>
@@ -87,12 +87,12 @@ export const PeriodSettlementModal: React.FC<PeriodSettlementModalProps> = ({
           </div>
         </div>
 
-        <p className="text-xs text-slate-500 mb-4 bg-amber-50/50 p-2.5 rounded-lg border border-amber-100">
+        <p className="text-xs text-slate-500 mb-4 bg-amber-50/50 p-2.5 rounded-md border border-amber-100">
           💡 미수행 확정 시 정산 내역에 반영되어 입금 신고를 진행할 수 있습니다.
         </p>
 
         {error && (
-          <div className="mb-3 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700">
+          <div className="mb-3 p-2.5 rounded-md bg-rose-50 border border-rose-200 text-xs text-rose-700">
             {error}
           </div>
         )}
@@ -102,7 +102,7 @@ export const PeriodSettlementModal: React.FC<PeriodSettlementModalProps> = ({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="flex-1 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50"
+            className="flex-1 py-2.5 border border-slate-200 rounded-md text-xs font-semibold text-slate-600 hover:bg-slate-50"
           >
             닫기
           </button>
@@ -110,7 +110,7 @@ export const PeriodSettlementModal: React.FC<PeriodSettlementModalProps> = ({
             type="button"
             onClick={handleConfirm}
             disabled={submitting}
-            className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-xl text-xs font-semibold transition shadow-xs flex items-center justify-center gap-1.5"
+            className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-md text-xs font-semibold transition shadow-xs flex items-center justify-center gap-1.5"
           >
             {submitting ? '처리 중...' : '미수행 확정하기'}
           </button>

@@ -158,7 +158,7 @@ export const SettlementManagePage: React.FC = () => {
               navigate(`/groups/${groupId}`);
             }
           }}
-          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
+          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
           aria-label="뒤로가기"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -212,7 +212,7 @@ export const SettlementManagePage: React.FC = () => {
           <Loader2 className="w-7 h-7 text-blue-600 animate-spin" />
         </div>
       ) : reports.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-2xl text-center my-6">
+        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-lg text-center my-6">
           <div className="w-12 h-12 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center mb-3">
             {activeTab === 'WAITING_CONFIRMATION' && <Clock className="w-6 h-6" />}
             {activeTab === 'CONFIRMED' && <CheckCircle2 className="w-6 h-6" />}
@@ -236,7 +236,7 @@ export const SettlementManagePage: React.FC = () => {
             return (
               <div
                 key={report.id}
-                className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3"
+                className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs space-y-3"
               >
                 {/* 상단 프로필 및 금액 */}
                 <div className="flex items-start justify-between gap-2">
@@ -273,7 +273,7 @@ export const SettlementManagePage: React.FC = () => {
 
                 {/* 반려 사유 or 확인 취소 사유 안내 */}
                 {report.rejectReason && (
-                  <div className="bg-red-50 border border-red-200/80 rounded-xl p-2.5 text-xs text-red-700 space-y-0.5">
+                  <div className="bg-red-50 border border-red-200/80 rounded-md p-2.5 text-xs text-red-700 space-y-0.5">
                     <div className="font-bold flex items-center gap-1 text-[11px]">
                       <XCircle className="w-3.5 h-3.5" />
                       <span>반려 사유</span>
@@ -283,7 +283,7 @@ export const SettlementManagePage: React.FC = () => {
                 )}
 
                 {report.cancelReason && (
-                  <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-2.5 text-xs text-amber-800 space-y-0.5">
+                  <div className="bg-amber-50 border border-amber-200/80 rounded-md p-2.5 text-xs text-amber-800 space-y-0.5">
                     <div className="font-bold flex items-center gap-1 text-[11px]">
                       <AlertTriangle className="w-3.5 h-3.5" />
                       <span>확인 취소 사유</span>
@@ -303,7 +303,7 @@ export const SettlementManagePage: React.FC = () => {
                   </button>
 
                   {isExpanded && (
-                    <div className="mt-2 space-y-1 bg-slate-50 rounded-xl p-2.5">
+                    <div className="mt-2 space-y-1 bg-slate-50 rounded-md p-2.5">
                       {report.items.map((item) => (
                         <div
                           key={item.id}
@@ -327,13 +327,13 @@ export const SettlementManagePage: React.FC = () => {
                   <div className="flex gap-2 pt-1">
                     <button
                       onClick={() => handleOpenRejectModal(report.id)}
-                      className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition"
+                      className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition"
                     >
                       반려
                     </button>
                     <button
                       onClick={() => handleConfirm(report.id)}
-                      className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition"
+                      className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md shadow-xs transition"
                     >
                       입금 승인
                     </button>
@@ -347,7 +347,7 @@ export const SettlementManagePage: React.FC = () => {
                     </span>
                     <button
                       onClick={() => handleOpenCancelModal(report.id)}
-                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-[11px] font-semibold rounded-lg transition"
+                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-[11px] font-semibold rounded-md transition"
                     >
                       승인 취소
                     </button>
@@ -384,7 +384,7 @@ export const SettlementManagePage: React.FC = () => {
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="예: 계좌 입금 내역이 확인되지 않습니다."
                   rows={3}
-                  className="w-full text-base p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white resize-none"
+                  className="w-full text-base p-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white resize-none"
                   required
                 />
               </div>
@@ -393,14 +393,14 @@ export const SettlementManagePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setRejectTargetId(null)}
-                  className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg"
+                  className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
                   disabled={rejecting}
-                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1"
+                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1"
                 >
                   {rejecting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>반려 확정</span>
@@ -426,7 +426,7 @@ export const SettlementManagePage: React.FC = () => {
             </div>
 
             <form onSubmit={handleCancelSubmit} className="space-y-3">
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700 flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                 <p className="text-[11px] leading-relaxed">
                   ⚠️ 이미 승인된 건을 취소하면 <strong>모임 누적 확인액에서 즉시 차감</strong>되며, 포함된 기록들이 <strong>다시 미납 상태로 복귀</strong>합니다.
@@ -440,7 +440,7 @@ export const SettlementManagePage: React.FC = () => {
                   onChange={(e) => setCancelReason(e.target.value)}
                   placeholder="예: 입금자명 오인으로 인한 실수 승인 취소"
                   rows={3}
-                  className="w-full text-base p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white resize-none"
+                  className="w-full text-base p-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white resize-none"
                   required
                 />
               </div>
@@ -449,14 +449,14 @@ export const SettlementManagePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCancelTargetId(null)}
-                  className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg"
+                  className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md"
                 >
                   닫기
                 </button>
                 <button
                   type="submit"
                   disabled={cancelling}
-                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1"
+                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1"
                 >
                   {cancelling && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>취소 확인</span>

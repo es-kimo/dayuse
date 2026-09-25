@@ -306,7 +306,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedTargetDate(yesterdayKst)}
-                  className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between ${
+                  className={`p-2.5 rounded-md border text-left transition flex flex-col justify-between ${
                     selectedTargetDate === yesterdayKst
                       ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-900 shadow-xs'
                       : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
@@ -330,7 +330,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedTargetDate(todayKst)}
-                  className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between ${
+                  className={`p-2.5 rounded-md border text-left transition flex flex-col justify-between ${
                     selectedTargetDate === todayKst
                       ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-900 shadow-xs'
                       : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
@@ -360,7 +360,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           )}
 
           {/* 인증 기준 안내 */}
-          <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3 text-[11px] text-blue-900 leading-relaxed">
+          <div className="bg-blue-50/70 border border-blue-100 rounded-md p-3 text-[11px] text-blue-900 leading-relaxed">
             <span className="font-bold">인증 기준:</span> {action.verificationCriteria}
           </div>
 
@@ -387,7 +387,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
             {previewUrl ? (
               <div className="space-y-2">
-                <div className="relative rounded-2xl overflow-hidden border border-slate-200 aspect-4/3 bg-slate-900 group">
+                <div className="relative rounded-lg overflow-hidden border border-slate-200 aspect-4/3 bg-slate-900 group">
                   <img
                     src={previewUrl}
                     alt="인증 사진 미리보기"
@@ -418,7 +418,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                       <button
                         type="button"
                         onClick={() => galleryInputRef.current?.click()}
-                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 py-1 px-2 hover:bg-blue-50 rounded-lg transition"
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 py-1 px-2 hover:bg-blue-50 rounded-md transition"
                       >
                         <Repeat className="w-3.5 h-3.5" />
                         사진 변경
@@ -426,7 +426,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                       <button
                         type="button"
                         onClick={handleRemovePhoto}
-                        className="text-[11px] font-semibold text-rose-500 hover:text-rose-600 flex items-center gap-1 py-1 px-2 hover:bg-rose-50 rounded-lg transition"
+                        className="text-[11px] font-semibold text-rose-500 hover:text-rose-600 flex items-center gap-1 py-1 px-2 hover:bg-rose-50 rounded-md transition"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         삭제
@@ -443,7 +443,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                     type="button"
                     onClick={() => !isSubmitting && cameraInputRef.current?.click()}
                     disabled={isSubmitting}
-                    className="p-4 border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-2xl flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-blue-50/30 transition active:scale-98 cursor-pointer"
+                    className="p-4 border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-md flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-blue-50/30 transition active:scale-98 cursor-pointer"
                   >
                     <div className="w-11 h-11 rounded-full bg-blue-100/80 text-blue-600 flex items-center justify-center">
                       <Camera className="w-5 h-5" />
@@ -459,7 +459,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                     type="button"
                     onClick={() => !isSubmitting && galleryInputRef.current?.click()}
                     disabled={isSubmitting}
-                    className="p-4 border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-2xl flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition active:scale-98 cursor-pointer"
+                    className="p-4 border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-md flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition active:scale-98 cursor-pointer"
                   >
                     <div className="w-11 h-11 rounded-full bg-indigo-100/80 text-indigo-600 flex items-center justify-center">
                       <ImageIcon className="w-5 h-5" />
@@ -472,7 +472,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 </div>
 
                 {/* 클립보드 붙여넣기 안내 힌트 뱃지 */}
-                <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-2.5 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                <div className="bg-slate-50/80 border border-slate-200/80 rounded-md p-2.5 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
                   <Clipboard className="w-3.5 h-3.5 text-blue-600" />
                   <span>캡처한 이미지를</span>
                   <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-semibold text-slate-700 shadow-2xs">Ctrl+V</kbd>
@@ -500,13 +500,13 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               disabled={isSubmitting}
               placeholder="오늘 실천한 소감이나 인증 한마디를 남겨보세요."
               rows={2}
-              className="w-full text-base p-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-blue-500 transition resize-none text-slate-800 placeholder:text-slate-400"
+              className="w-full text-base p-3 bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:border-blue-500 transition resize-none text-slate-800 placeholder:text-slate-400"
             />
           </div>
 
           {/* 에러 메시지 */}
           {errorMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-red-600 text-[11px]">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2 text-red-600 text-[11px]">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <div className="flex-1">
                 <span>{errorMessage}</span>
@@ -525,14 +525,14 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-xl text-xs font-medium hover:bg-slate-50 transition"
+              className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-md text-xs font-medium hover:bg-slate-50 transition"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={!file || isSubmitting}
-              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition active:scale-98"
+              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-md text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition active:scale-98"
             >
               {isSubmitting ? (
                 <>
@@ -574,14 +574,14 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 <button
                   type="button"
                   onClick={handleCancelReplace}
-                  className="flex-1 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
+                  className="flex-1 py-2 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition"
                 >
                   유지하기
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmReplace}
-                  className="flex-1 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-xs"
+                  className="flex-1 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition shadow-xs"
                 >
                   변경하기
                 </button>

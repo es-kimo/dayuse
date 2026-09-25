@@ -191,7 +191,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
               </button>
             </div>
           ) : (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-2 text-xs text-red-700">
+            <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-center gap-2 text-xs text-red-700">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>모임 계좌가 아직 등록되지 않아 입금 신고를 진행할 수 없습니다.</span>
             </div>
@@ -219,7 +219,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
                 <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
               </div>
             ) : records.length === 0 ? (
-              <div className="p-6 text-center border border-dashed border-slate-200 rounded-xl">
+              <div className="p-6 text-center border border-dashed border-slate-200 rounded-md">
                 <Coins className="w-7 h-7 text-emerald-500 mx-auto mb-1.5" />
                 <p className="text-xs font-bold text-slate-800">미납된 벌금이 없습니다.</p>
                 <p className="text-[11px] text-slate-500 mt-1">성실하게 챌린지를 완주하고 계시네요! 🎉</p>
@@ -232,7 +232,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
                     <div
                       key={record.id}
                       onClick={() => handleToggleRecord(record.id)}
-                      className={`min-h-[44px] p-2.5 rounded-xl border flex items-center justify-between cursor-pointer transition select-none ${
+                      className={`min-h-[44px] p-2.5 rounded-md border flex items-center justify-between cursor-pointer transition select-none ${
                         isChecked
                           ? 'bg-blue-50/50 border-blue-300 text-slate-800'
                           : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
@@ -283,7 +283,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
                 value={depositorName}
                 onChange={(e) => setDepositorName(e.target.value)}
                 placeholder="통장에 표시된 입금자명 (예: 홍길동)"
-                className="w-full text-base px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white"
+                className="w-full text-base px-3 py-2 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white"
                 required
               />
             </div>
@@ -297,13 +297,13 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
                 type="date"
                 value={depositDate}
                 onChange={(e) => setDepositDate(e.target.value)}
-                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white"
+                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white"
                 required
               />
             </div>
 
             {/* 실시간 합계 확인 카드 */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
+            <div className="bg-slate-50 border border-slate-200 rounded-md p-3 flex items-center justify-between">
               <div>
                 <span className="text-xs font-bold text-slate-700">신고 총액 (자동 계산)</span>
                 <p className="text-[10px] text-slate-400">선택한 기록 {selectedRecordIds.length}건 합계</p>
@@ -320,7 +320,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 min-h-[44px] py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition"
+            className="flex-1 min-h-[44px] py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition"
           >
             취소
           </button>
@@ -328,7 +328,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
             type="button"
             onClick={handleSubmit}
             disabled={submitting || !account || selectedRecordIds.length === 0}
-            className={`flex-1 min-h-[44px] py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition ${
+            className={`flex-1 min-h-[44px] py-2.5 rounded-md text-xs font-bold flex items-center justify-center gap-1 transition ${
               account && selectedRecordIds.length > 0 && !submitting
                 ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'

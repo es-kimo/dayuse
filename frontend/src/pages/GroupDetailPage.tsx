@@ -367,7 +367,7 @@ export const GroupDetailPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate('/groups')}
-            className="px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-medium"
+            className="px-4 py-2 bg-slate-800 text-white rounded-md text-xs font-medium"
           >
             내 모임 목록으로 돌아가기
           </button>
@@ -383,7 +383,7 @@ export const GroupDetailPage: React.FC = () => {
           <h2 className="text-lg font-bold text-slate-800 mb-1">모임을 찾을 수 없습니다</h2>
           <button
             onClick={() => navigate('/groups')}
-            className="mt-4 px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-medium"
+            className="mt-4 px-4 py-2 bg-slate-800 text-white rounded-md text-xs font-medium"
           >
             내 모임 목록으로
           </button>
@@ -398,7 +398,7 @@ export const GroupDetailPage: React.FC = () => {
       <div className="flex items-center gap-2 mb-4">
         <button
           onClick={() => navigate('/groups')}
-          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
+          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -519,7 +519,7 @@ export const GroupDetailPage: React.FC = () => {
 
             <button
               onClick={() => navigate(`/groups/${group.id}/challenges/new`)}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg flex items-center gap-1 shadow-xs shrink-0 transition"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md flex items-center gap-1 shadow-xs shrink-0 transition"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>챌린지 만들기</span>
@@ -532,7 +532,7 @@ export const GroupDetailPage: React.FC = () => {
               <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
             </div>
           ) : challenges.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-2xl text-center my-4">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-lg text-center my-4">
               <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-3">
                 <Trophy className="w-6 h-6" />
               </div>
@@ -542,14 +542,14 @@ export const GroupDetailPage: React.FC = () => {
               </p>
               <button
                 onClick={() => navigate(`/groups/${group.id}/challenges/new`)}
-                className="min-h-[44px] px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition shadow-xs active:scale-95 flex items-center gap-1.5"
+                className="min-h-[44px] px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition shadow-xs active:scale-95 flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
                 <span>새 챌린지 만들기</span>
               </button>
             </div>
           ) : filteredChallenges.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-2xl text-center my-4">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-lg text-center my-4">
               <p className="text-xs text-slate-400">해당 상태의 챌린지가 없습니다.</p>
             </div>
           ) : (
@@ -558,7 +558,7 @@ export const GroupDetailPage: React.FC = () => {
                 <div
                   key={c.id}
                   onClick={() => navigate(`/challenges/${c.id}`)}
-                  className="bg-white border border-slate-200 hover:border-blue-300 rounded-2xl p-4 shadow-xs transition cursor-pointer active:scale-[0.99] space-y-2.5"
+                  className="bg-white border border-slate-200 hover:border-blue-300 rounded-lg p-4 shadow-xs transition cursor-pointer active:scale-[0.99] space-y-2.5"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
@@ -620,7 +620,7 @@ export const GroupDetailPage: React.FC = () => {
       {activeTab === 'members' && (
         <div className="space-y-4 flex-1">
           {/* 초대 링크 관리 카드 */}
-          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+          <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-700">모임 초대 링크</span>
               {group.isHost && (
@@ -643,11 +643,11 @@ export const GroupDetailPage: React.FC = () => {
                 type="text"
                 readOnly
                 value={inviteUrl}
-                className="flex-1 text-base bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-600 truncate outline-none select-all"
+                className="flex-1 text-base bg-slate-50 border border-slate-200 rounded-md px-2.5 py-2 text-slate-600 truncate outline-none select-all"
               />
               <button
                 onClick={handleCopyLink}
-                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg flex items-center gap-1 shadow-xs transition active:scale-95"
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md flex items-center gap-1 shadow-xs transition active:scale-95"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? '복사됨' : '복사'}</span>
@@ -656,7 +656,7 @@ export const GroupDetailPage: React.FC = () => {
           </div>
 
           {/* 모임 멤버 목록 */}
-          <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <div className="bg-white border border-slate-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xs font-semibold text-slate-700">모임 멤버 ({group.members.length}명)</h2>
             </div>

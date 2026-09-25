@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   X,
 } from 'lucide-react';
+import { DayuLogo } from '../components/brand/DayuLogo';
 
 export const PublicShareLandingPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -101,9 +102,9 @@ export const PublicShareLandingPage: React.FC = () => {
         </p>
         <button
           onClick={() => navigate('/')}
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition"
+          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-xs font-semibold transition"
         >
-          dayuse 홈으로 이동
+          데이유즈 홈으로 이동
         </button>
       </div>
     );
@@ -112,14 +113,9 @@ export const PublicShareLandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-between p-4 py-8 max-w-md mx-auto relative">
       {/* 상단 브랜딩 헤더 */}
-      <div className="w-full flex items-center justify-between mb-4 px-2">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center font-black text-xs text-white">
-            D
-          </div>
-          <span className="font-extrabold tracking-tight text-base">dayuse</span>
-        </div>
-        <span className="text-[11px] text-slate-400 font-mono">dayuse.kr</span>
+      <div className="w-full flex items-center justify-between mb-4 px-2 gap-2 min-w-0">
+        <DayuLogo variant="horizontal" theme="mono-white" className="h-5 w-auto max-w-[130px] object-contain shrink-0" />
+        <span className="text-[11px] text-slate-400 font-mono shrink-0">dayuse.kr</span>
       </div>
 
       {/* 9:16 공유 카드 본체 */}
@@ -128,14 +124,9 @@ export const PublicShareLandingPage: React.FC = () => {
         style={{ aspectRatio: '9/16' }}
       >
         {/* 카드 상단 */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center font-bold text-[10px] text-white">
-              D
-            </div>
-            <span className="font-bold text-xs tracking-tight">dayuse</span>
-          </div>
-          <span className="text-[9px] text-slate-400 font-mono">shared card</span>
+        <div className="flex items-center justify-between border-b border-white/10 pb-3 gap-2 min-w-0">
+          <DayuLogo variant="horizontal" theme="mono-white" className="h-4 w-auto max-w-[110px] object-contain shrink-0" />
+          <span className="text-[9px] text-slate-400 font-mono shrink-0">shared card</span>
         </div>
 
         {/* 카드 중앙 내용 */}
@@ -157,7 +148,7 @@ export const PublicShareLandingPage: React.FC = () => {
             </div>
 
             {card.comment && (
-              <div className="bg-white/5 border border-white/10 rounded-xl p-3.5">
+              <div className="bg-white/5 border border-white/10 rounded-md p-3.5">
                 <p className="text-xs text-slate-200 line-clamp-3 leading-relaxed">
                   "{card.comment}"
                 </p>
@@ -180,7 +171,7 @@ export const PublicShareLandingPage: React.FC = () => {
             </div>
 
             {/* 최근 일자별 기록 타일 */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
               <div className="flex items-center justify-between text-[11px] text-slate-400 mb-2.5 font-medium">
                 <span>최근 기록</span>
                 <span>성공 여부</span>
@@ -225,7 +216,7 @@ export const PublicShareLandingPage: React.FC = () => {
         <button
           onClick={handleJoinCta}
           disabled={checkingMembership}
-          className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 active:scale-95 disabled:opacity-50"
+          className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 active:scale-95 disabled:opacity-50"
         >
           {checkingMembership ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -238,7 +229,7 @@ export const PublicShareLandingPage: React.FC = () => {
         </button>
 
         <p className="text-[11px] text-slate-500 text-center">
-          dayuse에서 친구들과 함께 습관을 만들고 보증금을 정산해보세요
+          데이유즈에서 친구들과 함께 습관을 만들고 보증금을 정산해보세요
         </p>
       </div>
 
@@ -267,7 +258,7 @@ export const PublicShareLandingPage: React.FC = () => {
 
             <button
               onClick={() => setShowInviteRequiredModal(false)}
-              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition"
+              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md text-xs font-semibold transition"
             >
               확인
             </button>
