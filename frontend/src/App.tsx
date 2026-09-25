@@ -16,6 +16,7 @@ import { SettlementManagePage } from './pages/SettlementManagePage';
 import { PublicShareLandingPage } from './pages/PublicShareLandingPage';
 import { TodayPage } from './pages/TodayPage';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
+import { PageMetaTracker } from './components/PageMetaTracker';
 import { preloadKakao } from './utils/kakao';
 import { registerServiceWorker } from './utils/webPush';
 
@@ -30,6 +31,7 @@ export const App: React.FC = () => {
     <ErrorBoundary>
       <ToastProvider>
         <BrowserRouter>
+          <PageMetaTracker />
           <AuthProvider>
             <Routes>
               <Route path="/" element={<Navigate to="/groups" replace />} />
