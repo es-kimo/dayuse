@@ -24,12 +24,14 @@ jobs:
             git fetch origin && git checkout main && git pull origin main
             docker compose -f docker-compose.prod.yml up -d --build backend
             docker image prune -f
+            echo "==> Waiting 15s for Spring Boot to start..."
+            sleep 15
             echo "==> Checking backend container status..."
             docker compose -f docker-compose.prod.yml ps
             echo "==> Checking backend logs..."
-            docker logs --tail 40 dayuse-prod-backend
-            echo "==> Testing internal endpoint inside VM..."
-            curl -I http://localhost:8080/api/v1/challenges || true
+            docker logs --tail 30 dayuse-prod-backend
+            echo "==> Testing internal endpoint on port 80..."
+            curl -I http://localhost:80/api/v1/challenges || true
             echo "==> Backend deployment completed successfully!"
 
   deploy-frontend:
