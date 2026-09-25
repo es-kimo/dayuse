@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { DayuLogo } from '../components/brand/DayuLogo';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 export const PublicShareLandingPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -23,6 +24,13 @@ export const PublicShareLandingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [historyItems, setHistoryItems] = useState<StreakHistoryItem[]>([]);
+
+  // 비공개 정보 격리 및 404/만료 안전 폴백 메타데이터 관리
+  usePageMeta({
+    isNotFound: notFound,
+    customShareDescription: card ? '챌린지 수행 기록을 확인해보세요.' : undefined,
+    customShareImage: card && token ? `/api/v1/public/shares/${encodeURIComponent(token)}/og.jpg` : undefined,
+  });
 
   // 비모임원 가입 제한 모달 상태
   const [showInviteRequiredModal, setShowInviteRequiredModal] = useState(false);

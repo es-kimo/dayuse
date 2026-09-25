@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /$
+Allow: /about
+Disallow: /groups/
+Disallow: /challenges/
+Disallow: /verify/
+Disallow: /invite/
+Disallow: /share/
+Disallow: /shares/
+Disallow: /api/

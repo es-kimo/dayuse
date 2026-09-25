@@ -137,19 +137,24 @@ export default {
     // 같은 경로가 200과 307로 갈린다.
     const shell = new Request(new URL('/index.html', url), { method: 'GET' });
 
-    const card = await fetchCard(env, match[1]);
-    if (!card) {
-      // 없거나 해제된 카드는 SPA가 알아서 안내 화면을 그린다.
-      return env.ASSETS.fetch(shell);
-    }
-
     const page = await env.ASSETS.fetch(shell);
     if (!page.ok) return page;
 
-    const title = `dayuse | ${card.title}`;
-    const description = describe(card);
-    const image = `${env.API_BASE_URL}/public/shares/${encodeURIComponent(card.token)}/og.jpg`;
+    const card = await fetchCard(env, match[1]);
     const canonical = url.toString();
+    const origin = url.origin;
+
+    let title = '페이지 안내 · dayuse';
+    let description = '존재하지 않거나 만료된 페이지입니다.';
+    let image = `${origin}/assets/brand/og-default.png`;
+    const robots = 'noindex, nofollow';
+
+    if (card) {
+      // 공개 허용 범위로 한정한 공유 카드 메타데이터
+      title = '챌린지 기록 · dayuse';
+      description = describe(card);
+      image = `${env.API_BASE_URL}/public/shares/${encodeURIComponent(card.token)}/og.jpg`;
+    }
 
     const rewritten = new HTMLRewriter()
       .on('title', new TextSetter(title))
@@ -170,6 +175,7 @@ export default {
         new AttributeSetter(
           {
             description,
+            robots,
             'twitter:title': title,
             'twitter:description': description,
             'twitter:image': image,
