@@ -22,12 +22,13 @@ import {
   Download,
   Share2,
   Copy,
-  Flame,
   Calendar,
   Loader2,
   Sparkles,
+  Check,
 } from 'lucide-react';
 import { DayuLogo } from './brand/DayuLogo';
+import { DayuExpression } from './brand/DayuExpression';
 
 interface ShareCardModalProps {
   cardType: ShareCardType;
@@ -103,6 +104,14 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       }
     }
   }, [initialHistoryJson]);
+
+  // 달성률 계산 (유효 기간 데이터 기준)
+  const inPeriodItems = historyItems.filter((item) => item.inPeriod);
+  const completedCount = inPeriodItems.filter((item) => item.completed).length;
+  const totalDays = inPeriodItems.length;
+  const hasAchievementData = totalDays > 0;
+  const achievementRate = hasAchievementData ? Math.round((completedCount / totalDays) * 100) : 0;
+  const recent7Items = historyItems.slice(-7);
 
   /** 공유 토큰 발급. 동시에 여러 번 눌러도 요청은 한 번만 나간다. */
   const requestShareToken = useCallback((): Promise<string> => {
@@ -400,12 +409,12 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
         <div className="w-full flex justify-center py-1">
           <div
             ref={cardRef}
-            className="w-[270px] h-[480px] rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col justify-between p-5 relative shadow-xl border border-white/10"
+            className="w-[270px] min-h-[480px] rounded-3xl overflow-hidden bg-[#0F172A] text-white flex flex-col justify-between p-5 relative shadow-xl border border-[#1E293B]"
           >
             {/* 상단 서비스 브랜딩 */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-3 gap-2 min-w-0">
-              <DayuLogo variant="horizontal" theme="mono-white" className="h-4 w-auto max-w-[120px] object-contain shrink-0" />
-              <span className="text-[10px] text-slate-400 font-mono tracking-wider shrink-0">dayuse.kr</span>
+            <div className="flex items-center justify-between border-b border-[#1E293B]/60 pb-3 gap-2 min-w-0">
+              <DayuLogo variant="horizontal" theme="dark" className="h-5 w-auto max-w-[120px] object-contain shrink-0" />
+              <span className="text-[10px] text-[#94A3B8] font-mono tracking-wider shrink-0">dayuse.kr</span>
             </div>
 
             {/* 카드 중앙 본문 */}
@@ -417,7 +426,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
             ) : cardType === 'TODAY_VERIFICATION' ? (
               /* 오늘의 인증 카드 중앙 */
               <div className="flex-1 flex flex-col justify-center py-3 space-y-3">
-                <div className="rounded-xl overflow-hidden aspect-square bg-slate-800 border border-white/10 shadow-md">
+                <div className="rounded-xl overflow-hidden aspect-square bg-slate-800 border border-[#1E293B] shadow-md">
                   {cardImageSrc ? (
                     /* crossOrigin을 두지 않는다. 캡처용 이미지는 이미 data URL로 심었고,
                        치환에 실패한 경우엔 CORS 없이도 미리보기는 보여야 한다. */
@@ -431,7 +440,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
 
                 {comment && (
                   /* backdrop-blur는 캡처(foreignObject)에서 무시돼 미리보기와 결과가 달라진다. */
-                  <div className="bg-white/10 border border-white/10 rounded-xl p-3">
+                  <div className="bg-[#1E293B]/50 border border-[#1E293B] rounded-xl p-3">
                     <p className="text-xs text-slate-200 line-clamp-2 leading-relaxed">
                       "{comment}"
                     </p>
@@ -440,59 +449,77 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
               </div>
             ) : (
               /* 연속 기록(Streak) 카드 중앙 */
-              <div className="flex-1 flex flex-col justify-center py-4 text-center space-y-5">
-                <div className="inline-flex flex-col items-center justify-center">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/20 mb-2">
-                    <Flame className="w-10 h-10 text-white" />
-                  </div>
-                  <div className="text-3xl font-black text-white tracking-tight">
-                    {streakDays}
-                    <span className="text-lg font-bold text-amber-400 ml-1">일 연속</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 font-medium mt-0.5">
-                    매일매일 꾸준한 성장 중!
-                  </p>
+              <div className="flex-1 flex flex-col justify-center py-3 text-center">
+                {/* 대표 그래픽: 흰 원 속 해냈어요 데이유 */}
+                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md mx-auto mb-2">
+                  <DayuExpression expression="done" color="blue" className="w-10 h-10 object-contain" />
                 </div>
 
-                {/* 최근 일자별 기록 잔디/타일 */}
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 mb-2 font-medium">
-                    <span>최근 기록</span>
-                    <span>성공 여부</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-1.5">
-                    {historyItems.map((item, idx) => (
-                      <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                        <div
-                          className={`w-full aspect-square rounded-md flex items-center justify-center text-[10px] font-bold transition-all ${
-                            item.completed
-                              ? 'bg-blue-500 text-white shadow-xs'
-                              : item.inPeriod
-                              ? 'bg-slate-800 text-slate-500 border border-slate-700'
-                              : 'bg-slate-800/40 text-slate-600'
-                          }`}
-                        >
-                          {item.completed ? '✓' : ''}
-                        </div>
-                        <span className="text-[8px] text-slate-400">
-                          {item.date.slice(8)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                {/* 연속 일수 타이포그래피 */}
+                <div className="text-3xl font-extrabold text-white tracking-tight tabular-nums flex items-baseline justify-center">
+                  {streakDays}
+                  <span className="text-base font-bold text-[#93C5FD] ml-1 font-sans">일 연속</span>
                 </div>
+                <p className="text-[10px] text-[#CBD5E1] font-normal mt-0.5 mb-3">
+                  목표를 향해 꾸준히 달리는 중이에요
+                </p>
+
+                {/* 달성률 (데이터가 있을 때만 노출) */}
+                {hasAchievementData && (
+                  <div className="w-full mb-3 text-left">
+                    <div className="flex items-center justify-between text-[10px] mb-1">
+                      <span className="text-[#94A3B8] font-medium">이번 챌린지 달성률</span>
+                      <span className="text-white font-bold tabular-nums">
+                        {completedCount} / {totalDays}일 · {achievementRate}%
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-[#1E293B] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, Math.max(0, achievementRate))}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 최근 7일 기록 칸 */}
+                {recent7Items.length > 0 && (
+                  <div className="w-full mb-2">
+                    <div className="text-[10px] text-[#94A3B8] font-medium mb-1.5 text-left">
+                      최근 7일
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {recent7Items.map((item, idx) => (
+                        <div key={idx} className="flex flex-col items-center gap-1">
+                          <div
+                            className={`w-full aspect-square max-w-[28px] rounded-md flex items-center justify-center ${
+                              item.completed
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-transparent border border-[#1E293B]'
+                            }`}
+                          >
+                            {item.completed && <Check className="w-3 h-3 text-white stroke-[2.5]" />}
+                          </div>
+                          <span className="text-[8px] text-[#94A3B8] tabular-nums font-mono">
+                            {item.date ? item.date.slice(8) : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
             {/* 하단 작성자 & 챌린지 정보 */}
-            <div className="border-t border-white/10 pt-3">
-              <div className="text-[11px] text-blue-400 font-bold truncate mb-0.5">
+            <div className="border-t border-[#1E293B]/60 pt-2.5 text-left">
+              <div className="text-[11px] font-bold text-[#60A5FA] truncate mb-0.5">
                 {title}
               </div>
               <div className="flex items-center justify-between text-xs text-slate-300">
-                <span className="font-semibold">{userNickname}</span>
+                <span className="font-semibold text-white">{userNickname}</span>
                 {targetDate && (
-                  <span className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
+                  <span className="text-[10px] text-[#94A3B8] flex items-center gap-1 font-mono">
                     <Calendar className="w-3 h-3" />
                     {targetDate}
                   </span>
