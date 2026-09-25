@@ -45,6 +45,7 @@ export const ChallengeDetailPage: React.FC = () => {
   const [verificationTarget, setVerificationTarget] = useState<{
     recordId?: number;
     isLate: boolean;
+    targetDate?: string;
   } | null>(null);
 
   // 폼 입력 상태
@@ -174,6 +175,7 @@ export const ChallengeDetailPage: React.FC = () => {
     setVerificationTarget({
       recordId: isLate ? record.id : undefined,
       isLate,
+      targetDate: record.date,
     });
   };
 
@@ -686,6 +688,7 @@ export const ChallengeDetailPage: React.FC = () => {
             verificationCriteria: challenge.verificationCriteria,
           }}
           recordId={verificationTarget.recordId}
+          targetDate={verificationTarget.targetDate}
           onClose={() => setVerificationTarget(null)}
           onSuccess={handleVerificationSuccess}
         />

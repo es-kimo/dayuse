@@ -99,3 +99,36 @@ export const addDaysKst = (dateStr: string, days: number): string => {
   const dd = String(d.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${dd}`;
 };
+
+/**
+ * KST 기준 현재 시간(0~23)을 반환합니다.
+ */
+export const getKstHour = (date: Date = new Date()): number => {
+  const str = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul',
+    hour: 'numeric',
+    hour12: false,
+  }).format(date);
+  return parseInt(str, 10);
+};
+
+/**
+ * 현재 시각이 심야/새벽 유예 기간(00:00 ~ 09:00 KST)에 해당하는지 여부를 반환합니다.
+ */
+export const isNightGraceWindow = (date: Date = new Date()): boolean => {
+  const hour = getKstHour(date);
+  return hour >= 0 && hour < 9;
+};
+
+/**
+ * YYYY-MM-DD 날짜를 "M월 D일" 형식으로 포맷팅합니다. (예: "9월 23일")
+ */
+export const formatMonthDay = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length < 3) return dateStr;
+  const month = parseInt(parts[1], 10);
+  const day = parseInt(parts[2], 10);
+  return `${month}월 ${day}일`;
+};
+

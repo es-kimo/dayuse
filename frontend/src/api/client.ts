@@ -12,6 +12,7 @@ export const absoluteApiUrl = (path: string): string =>
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -59,10 +60,13 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // 2. 네트워크 에러 및 연결 실패 처리 (토스트 및 재시도 제공)
-    if (!error.response || error.code === 'ERR_NETWORK') {
+    // 2. 네트워크 에러 및 타임아웃/연결 실패 처리 (토스트 및 재시도 제공)
+    if (!error.response || error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
+      const isTimeout = error.code === 'ECONNABORTED';
       triggerGlobalToast({
-        message: '서버와 연결이 불안정합니다. 네트워크를 확인해 주세요.',
+        message: isTimeout
+          ? '요청 시간이 초과되었습니다. 네트워크 연결 상태를 확인해 주세요.'
+          : '서버와 연결이 불안정합니다. 네트워크를 확인해 주세요.',
         type: 'error',
         action: originalRequest
           ? {
