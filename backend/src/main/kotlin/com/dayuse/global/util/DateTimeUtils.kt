@@ -20,4 +20,11 @@ object DateTimeUtils {
         val deadline = targetDate.plusDays(1).atTime(9, 0)
         return submittedAt.isAfter(deadline)
     }
+
+    /**
+     * 현재 시각이 심야/새벽 유예 기간(00:00 ~ 09:00 KST)에 해당하는지 여부를 반환합니다.
+     */
+    fun isNightGraceWindow(now: LocalDateTime = nowKst()): Boolean {
+        return now.hour in 0..8
+    }
 }

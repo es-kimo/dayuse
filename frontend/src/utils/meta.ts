@@ -19,10 +19,16 @@ export interface ResolveMetaOptions {
   customShareImage?: string;
   /** 공유 카드 공개 허용 커스텀 설명 (비공개 리소스에는 무시됨) */
   customShareDescription?: string;
+  /** 모임 초대 링크 커스텀 모임명 (공개 초대 라우트 전용) */
+  customInviteGroupName?: string;
+  /** 모임 초대 링크 커스텀 호스트 닉네임 (공개 초대 라우트 전용) */
+  customInviteHostNickname?: string;
 }
 
 export const BRAND_DEFAULT_OG = '/assets/brand/og-default.png';
 export const BRAND_SHARE_OG = '/assets/brand/og-share.png';
+export const BRAND_INVITE_OG = '/assets/brand/og-invite.png';
+export const BRAND_EXPIRED_OG = '/assets/brand/og-expired.png';
 
 /**
  * 정의된 페이지 유형별 기본 메타데이터 정책 매핑 (BR-04)
@@ -66,8 +72,8 @@ export const PAGE_META_PRESETS: Record<string, PageMeta> = {
   },
   INVITE: {
     title: '모임 초대 · dayuse',
-    description: 'dayuse 모임에 초대되었습니다.',
-    ogImage: BRAND_DEFAULT_OG,
+    description: '친구들과 각자의 챌린지를 함께 시작해요.',
+    ogImage: BRAND_INVITE_OG,
     robots: 'noindex, nofollow',
   },
   SHARE: {
@@ -78,8 +84,8 @@ export const PAGE_META_PRESETS: Record<string, PageMeta> = {
   },
   NOT_FOUND: {
     title: '페이지 안내 · dayuse',
-    description: '존재하지 않거나 만료된 페이지입니다.',
-    ogImage: BRAND_DEFAULT_OG,
+    description: '없거나 만료된 링크예요.',
+    ogImage: BRAND_EXPIRED_OG,
     robots: 'noindex, nofollow',
   },
 };
@@ -137,7 +143,19 @@ export function resolvePageMeta(pathname: string, options: ResolveMetaOptions = 
 
   // 7. 모임 초대 수락 화면
   if (normalizedPath.startsWith('/invite/')) {
-    return { ...PAGE_META_PRESETS.INVITE };
+    const title = options.customInviteGroupName
+      ? `${options.customInviteGroupName} 모임 초대장이 도착했어요 · dayuse`
+      : PAGE_META_PRESETS.INVITE.title;
+    const description = options.customInviteHostNickname
+      ? `${options.customInviteHostNickname}님이 보낸 초대를 받고 친구들과 함께 챌린지를 시작해요.`
+      : PAGE_META_PRESETS.INVITE.description;
+
+    return {
+      title,
+      description,
+      ogImage: BRAND_INVITE_OG,
+      robots: 'noindex, nofollow',
+    };
   }
 
   // 8. 공개 공유 카드 (v0.2)

@@ -4,6 +4,8 @@ import {
   updateDocumentMeta,
   BRAND_DEFAULT_OG,
   BRAND_SHARE_OG,
+  BRAND_INVITE_OG,
+  BRAND_EXPIRED_OG,
 } from './meta';
 
 describe('Page Metadata Engine (BR-04, BR-05)', () => {
@@ -67,11 +69,22 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
       expect(verifyMeta.robots).toBe('noindex, nofollow');
     });
 
-    it('모임 초대 수락 경로는 "모임 초대 · dayuse" 타이틀과 noindex, nofollow를 갖는다', () => {
+    it('모임 초대 수락 경로는 "모임 초대 · dayuse" 타이틀과 noindex, nofollow, og-invite를 갖는다', () => {
       const inviteMeta = resolvePageMeta('/invite/INVITE_ABC_123');
       expect(inviteMeta.title).toBe('모임 초대 · dayuse');
-      expect(inviteMeta.description).toBe('dayuse 모임에 초대되었습니다.');
+      expect(inviteMeta.description).toBe('친구들과 각자의 챌린지를 함께 시작해요.');
+      expect(inviteMeta.ogImage).toBe(BRAND_INVITE_OG);
       expect(inviteMeta.robots).toBe('noindex, nofollow');
+    });
+
+    it('모임 초대 경로에 모임명과 호스트 닉네임이 주어지면 동적 타이틀과 설명을 반영한다', () => {
+      const inviteMeta = resolvePageMeta('/invite/INVITE_ABC_123', {
+        customInviteGroupName: '알고리즘 스터디',
+        customInviteHostNickname: '코딩왕',
+      });
+      expect(inviteMeta.title).toBe('알고리즘 스터디 모임 초대장이 도착했어요 · dayuse');
+      expect(inviteMeta.description).toBe('코딩왕님이 보낸 초대를 받고 친구들과 함께 챌린지를 시작해요.');
+      expect(inviteMeta.ogImage).toBe(BRAND_INVITE_OG);
     });
 
     it('공개 공유 카드는 "챌린지 기록 · dayuse" 타이틀과 noindex, nofollow를 갖는다', () => {
@@ -85,7 +98,8 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
     it('정의되지 않은 잘못된 경로는 404 안내 메타데이터로 폴백된다', () => {
       const unknownMeta = resolvePageMeta('/some/random/missing/route');
       expect(unknownMeta.title).toBe('페이지 안내 · dayuse');
-      expect(unknownMeta.description).toBe('존재하지 않거나 만료된 페이지입니다.');
+      expect(unknownMeta.description).toBe('없거나 만료된 링크예요.');
+      expect(unknownMeta.ogImage).toBe(BRAND_EXPIRED_OG);
       expect(unknownMeta.robots).toBe('noindex, nofollow');
     });
   });
@@ -107,7 +121,7 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
       expect(meta.ogImage).not.toContain('malicious');
     });
 
-    it('비공개 챌린지 및 초대 경로에서도 주입된 정보가 메타데이터에 반영되지 않는다', () => {
+    it('비공개 챌린지 경로에서도 주입된 정보가 메타데이터에 반영되지 않는다', () => {
       const hostileOptions = {
         customShareDescription: '특정 비공개 스터디 제목',
         customShareImage: 'https://example.com/leak.jpg',
@@ -117,10 +131,6 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
       expect(challengeMeta.title).toBe('챌린지 · dayuse');
       expect(challengeMeta.description).toBe('친구들과 각자의 챌린지를 인증하고 기록해요.');
       expect(challengeMeta.ogImage).toBe(BRAND_DEFAULT_OG);
-
-      const inviteMeta = resolvePageMeta('/invite/SECRET_CODE', hostileOptions);
-      expect(inviteMeta.title).toBe('모임 초대 · dayuse');
-      expect(inviteMeta.description).toBe('dayuse 모임에 초대되었습니다.');
     });
   });
 
@@ -128,7 +138,8 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
     it('공유 카드라도 isNotFound: true 인 경우 즉시 404 안내 메타데이터로 폴백된다', () => {
       const meta = resolvePageMeta('/shares/EXPIRED_TOKEN', { isNotFound: true });
       expect(meta.title).toBe('페이지 안내 · dayuse');
-      expect(meta.description).toBe('존재하지 않거나 만료된 페이지입니다.');
+      expect(meta.description).toBe('없거나 만료된 링크예요.');
+      expect(meta.ogImage).toBe(BRAND_EXPIRED_OG);
       expect(meta.robots).toBe('noindex, nofollow');
     });
 
@@ -138,7 +149,8 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
         customShareDescription: '과거 홍길동님의 7일 연속 인증',
       });
       expect(meta.title).toBe('페이지 안내 · dayuse');
-      expect(meta.description).toBe('존재하지 않거나 만료된 페이지입니다.');
+      expect(meta.description).toBe('없거나 만료된 링크예요.');
+      expect(meta.ogImage).toBe(BRAND_EXPIRED_OG);
       expect(meta.description).not.toContain('홍길동');
     });
   });

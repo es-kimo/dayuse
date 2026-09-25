@@ -41,4 +41,22 @@ class DateTimeUtilsTest {
         val twoDaysLater = LocalDateTime.of(2026, 9, 23, 14, 0, 0)
         assertTrue(DateTimeUtils.isLateVerification(targetDate, twoDaysLater))
     }
+
+    @Test
+    fun `심야 유예 시간 판별 테스트 (00시~09시 이전 참, 09시 이후 거짓)`() {
+        // 자정 00:00:00 -> 참
+        assertTrue(DateTimeUtils.isNightGraceWindow(LocalDateTime.of(2026, 9, 22, 0, 0, 0)))
+
+        // 새벽 04:30:00 -> 참
+        assertTrue(DateTimeUtils.isNightGraceWindow(LocalDateTime.of(2026, 9, 22, 4, 30, 0)))
+
+        // 아침 08:59:59 -> 참
+        assertTrue(DateTimeUtils.isNightGraceWindow(LocalDateTime.of(2026, 9, 22, 8, 59, 59)))
+
+        // 아침 09:00:00 -> 거짓
+        assertFalse(DateTimeUtils.isNightGraceWindow(LocalDateTime.of(2026, 9, 22, 9, 0, 0)))
+
+        // 낮 14:00:00 -> 거짓
+        assertFalse(DateTimeUtils.isNightGraceWindow(LocalDateTime.of(2026, 9, 22, 14, 0, 0)))
+    }
 }

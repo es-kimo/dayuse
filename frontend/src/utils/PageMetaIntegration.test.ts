@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { resolvePageMeta, updateDocumentMeta, BRAND_DEFAULT_OG, BRAND_SHARE_OG } from './meta';
+import {
+  resolvePageMeta,
+  updateDocumentMeta,
+  BRAND_DEFAULT_OG,
+  BRAND_SHARE_OG,
+  BRAND_INVITE_OG,
+  BRAND_EXPIRED_OG,
+} from './meta';
 
 describe('PageMetaIntegration (BR-04, BR-05, BR-06 Integration)', () => {
   beforeEach(() => {
@@ -55,8 +62,9 @@ describe('PageMetaIntegration (BR-04, BR-05, BR-06 Integration)', () => {
     updateDocumentMeta(inviteMeta);
 
     expect(document.title).toBe('모임 초대 · dayuse');
-    expect(getMeta('meta[name="description"]')).toBe('dayuse 모임에 초대되었습니다.');
+    expect(getMeta('meta[name="description"]')).toBe('친구들과 각자의 챌린지를 함께 시작해요.');
     expect(getMeta('meta[name="robots"]')).toBe('noindex, nofollow');
+    expect(getMeta('meta[property="og:image"]')).toContain(BRAND_INVITE_OG);
   });
 
   it('공개 공유 카드(/shares/uuid)는 noindex를 유지하면서 커스텀 설명과 공유 전용 OG 이미지를 정상 반영한다', () => {
@@ -77,9 +85,9 @@ describe('PageMetaIntegration (BR-04, BR-05, BR-06 Integration)', () => {
     updateDocumentMeta(notFoundMeta);
 
     expect(document.title).toBe('페이지 안내 · dayuse');
-    expect(getMeta('meta[name="description"]')).toBe('존재하지 않거나 만료된 페이지입니다.');
+    expect(getMeta('meta[name="description"]')).toBe('없거나 만료된 링크예요.');
     expect(getMeta('meta[name="robots"]')).toBe('noindex, nofollow');
-    expect(getMeta('meta[property="og:image"]')).toContain(BRAND_DEFAULT_OG);
+    expect(getMeta('meta[property="og:image"]')).toContain(BRAND_EXPIRED_OG);
   });
 
   it('기존 메타 태그가 이미 존재하는 경우 중복 태그를 생성하지 않고 content 속성만 갱신한다', () => {

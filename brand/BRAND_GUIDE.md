@@ -277,6 +277,24 @@ Tailwind 클래스 조합 예시는 `design/brand/tokens/tailwind.preset.js` 하
 |---|---|
 | `assets/brand/og-default.png` | 모든 페이지 기본 (밝은 배경 · 한글 로고 · 응원하는 데이유) |
 | `assets/brand/og-share.png` | 공개 공유 카드 링크 (어두운 배경 · 해냈어요 데이유) |
+| `assets/brand/og-invite.png` | 모임 초대 링크 (초대장 봉투에서 나오는 응원 데이유) |
+| `assets/brand/og-expired.png` | 만료·삭제된 공유/초대 링크, 404 (쉬어가는 데이유) |
+
+**라우트별 OG 정책**
+
+| 경로 | 공유 | 제목 · 설명 | 이미지 | robots |
+|---|---|---|---|---|
+| `/` | 공개 | 데이유즈 · 목표는 각자, 꾸준함은 함께 / 친구들과 각자의 챌린지를 인증하고 기록해요. | og-default | index |
+| `/login` `/signup` | 비공개 권장 | 로그인 · 데이유즈 / 친구들과 각자의 챌린지를 시작해 보세요. | og-default | noindex |
+| `/invite/:code` | 핵심 공유 | {모임명} 모임 초대장이 도착했어요 · 데이유즈 / {닉네임}님이 보낸 초대를 받고 친구들과 함께 챌린지를 시작해요. | og-invite | noindex |
+| `/shares/:token` | 핵심 공유 | {닉네임}님의 챌린지 기록 · 데이유즈 / {N}일 연속 인증했어요. 친구의 도전을 응원해 주세요. | og-share (동적 이미지 도입 전) | noindex |
+| `/groups/:id` | 보안 | 모임 · 데이유즈 (모임명·계좌 노출 금지) / 기본 설명 | og-default | noindex |
+| `/challenges/:id` | 보안 | 챌린지 · 데이유즈 (챌린지명·멤버 노출 금지) / 기본 설명 | og-default | noindex |
+| `/today` `/verify/*` | 개인화 | 인증 · 데이유즈 / 기본 설명 | og-default | noindex |
+| 만료 · 404 | 외부 노출 | 페이지 안내 · 데이유즈 / 없거나 만료된 링크예요. | og-expired | noindex |
+
+- 제목 규칙: `{페이지 내용} · 데이유즈`. 모임명·닉네임은 공개 링크(초대·공유)에서만 넣고, 비공개 라우트에서는 넣지 않아요.
+- 이미지는 정적 파일이라 문구가 고정이에요. 모임명·연속 일수 같은 값은 `og:title`·`og:description`으로만 전달해요.
 
 ```html
 <meta property="og:site_name" content="데이유즈">
@@ -363,7 +381,7 @@ frontend/public/assets/brand/          ← 서비스가 실제로 불러오는 �
   wordmark.svg / .png                  한글 워드마크 ‘데이유즈’
   expressions/dayu-{default|done|cheer|rest}-{blue|white}.svg
   sns-profile-512.png · sns-profile-1024.png · sns-profile-white-*.png
-  og-default.png · og-share.png        (+ 같은 이름 .svg 원본)
+  og-default.png · og-share.png · og-invite.png · og-expired.png   (+ 같은 이름 .svg 원본)
 ```
 
 - 원본을 바꾸면 스크립트로 다시 내보내고 `assets/brand/`를 통째로 교체해요. 프로덕션 파일을 손으로 고치지 않아요.
