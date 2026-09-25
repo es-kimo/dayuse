@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Lock,
   Flame,
+  RotateCcw,
 } from 'lucide-react';
 import { ShareCardModal } from '../components/ShareCardModal';
 
@@ -485,11 +486,17 @@ export const ChallengeDetailPage: React.FC = () => {
               </div>
             )}
           </div>
+        ) : challenge.status === 'ENDED' ? (
+          <button
+            onClick={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>이 챌린지 다시 시작하기</span>
+          </button>
         ) : (
           <div className="text-center py-2 text-xs text-slate-400">
-            {challenge.status === 'ENDED'
-              ? '챌린지가 종료되어 참여가 마감되었습니다.'
-              : '현재 참여할 수 없는 상태입니다.'}
+            현재 참여할 수 없는 상태입니다.
           </div>
         )}
       </div>

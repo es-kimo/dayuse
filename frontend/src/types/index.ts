@@ -132,6 +132,18 @@ export interface CreateChallengePayload {
   myPenaltyAmount: number;
 }
 
+export interface ChallengeRestartTemplate {
+  challengeId: number;
+  title: string;
+  description?: string | null;
+  verificationCriteria: string;
+  durationDays: number;
+  suggestedStartDate: string;
+  suggestedEndDate: string;
+  suggestedPenaltyAmount: number;
+}
+
+
 export interface UpdateChallengePayload {
   title?: string;
   description?: string;

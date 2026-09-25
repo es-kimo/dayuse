@@ -167,11 +167,55 @@ class Challenge(
             throw BadRequestException("제목은 1자 이상 50자 이하여야 합니다.")
         }
 
-        // 3. 검증을 모두 통과한 뒤 반영
         this.title = nextTitle
         this.description = nextDescription
         this.verificationCriteria = nextCriteria
         this.startDate = nextStartDate
         this.endDate = nextEndDate
     }
+
+    companion object {
+        fun recreateFrom(
+            source: Challenge,
+            newStartDate: LocalDate,
+            newEndDate: LocalDate,
+            creatorUserId: Long,
+            newTitle: String? = null,
+            newDescription: String? = null,
+            newVerificationCriteria: String? = null,
+            today: LocalDate = DateTimeUtils.todayKst()
+        ): Challenge {
+            if (!source.isEnded(today)) {
+                throw BadRequestException("종료된 챌린지만 다시 시작할 수 있습니다.")
+            }
+            if (newStartDate < today) {
+                throw BadRequestException("시작일은 오늘 이후 날짜여야 합니다.")
+            }
+            if (newEndDate < newStartDate) {
+                throw BadRequestException("종료일은 시작일 이후여야 합니다.")
+            }
+
+            val finalTitle = (newTitle ?: source.title).trim()
+            if (finalTitle.isBlank() || finalTitle.length > 50) {
+                throw BadRequestException("제목은 1자 이상 50자 이하여야 합니다.")
+            }
+
+            val finalCriteria = (newVerificationCriteria ?: source.verificationCriteria).trim()
+            if (finalCriteria.isBlank()) {
+                throw BadRequestException("인증 기준은 필수 항목입니다.")
+            }
+
+            return Challenge(
+                id = 0L,
+                groupId = source.groupId,
+                creatorUserId = creatorUserId,
+                title = finalTitle,
+                description = newDescription ?: source.description,
+                verificationCriteria = finalCriteria,
+                startDate = newStartDate,
+                endDate = newEndDate
+            )
+        }
+    }
 }
+

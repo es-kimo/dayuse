@@ -7,11 +7,13 @@ import com.dayuse.domain.challenge.ChallengeRepository
 import com.dayuse.domain.challenge.ParticipantStatus
 import com.dayuse.domain.challenge.dto.ChallengeDetailResponse
 import com.dayuse.domain.challenge.dto.ChallengeParticipantResponse
+import com.dayuse.domain.challenge.dto.ChallengeRestartTemplateResponse
 import com.dayuse.domain.challenge.dto.ChallengeSummaryResponse
 import com.dayuse.domain.challenge.dto.CreateChallengeRequest
 import com.dayuse.domain.challenge.dto.JoinChallengeRequest
 import com.dayuse.domain.challenge.dto.JoinOptionDto
 import com.dayuse.domain.challenge.dto.JoinPreviewResponse
+import com.dayuse.domain.challenge.dto.RestartChallengeRequest
 import com.dayuse.domain.challenge.dto.StartDateType
 import com.dayuse.domain.challenge.dto.UpdateChallengeRequest
 import com.dayuse.domain.challenge.dto.UpdatePenaltyAmountRequest
@@ -132,6 +134,144 @@ class ChallengeService(
             canCancel = false,
             canDelete = challenge.canDelete(today),
             canModifyFull = challenge.canModifyFullConditions(today),
+            participants = listOf(participantResponse)
+        )
+    }
+
+    fun getRestartTemplate(
+        groupId: Long,
+        challengeId: Long,
+        userId: Long,
+        today: LocalDate = DateTimeUtils.todayKst()
+    ): ChallengeRestartTemplateResponse {
+        groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+            ?: throw ForbiddenException("해당 모임의 멤버만 챌린지를 다시 시작할 수 있습니다.")
+
+        val challenge = challengeRepository.findById(challengeId).orElseThrow {
+            ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
+        }
+
+        if (challenge.groupId != groupId) {
+            throw BadRequestException("해당 모임의 챌린지가 아닙니다.")
+        }
+
+        if (!challenge.isEnded(today)) {
+            throw BadRequestException("종료된 챌린지만 다시 시작할 수 있습니다.")
+        }
+
+        val durationDays = ChronoUnit.DAYS.between(challenge.startDate, challenge.endDate).toInt() + 1
+        val suggestedStartDate = today.plusDays(1)
+        val suggestedEndDate = suggestedStartDate.plusDays((durationDays - 1).toLong())
+
+        // 이전 참여 벌금 금액 조회: 현재 챌린지 참여 이력 우선 -> 없으면 사용자의 가장 최근 참여 이력 -> 없으면 기본 5,000원
+        val suggestedPenalty = challengeParticipantRepository.findByChallengeIdAndUserId(challengeId, userId)?.penaltyAmount
+            ?: challengeParticipantRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)?.penaltyAmount
+            ?: 5000
+
+        return ChallengeRestartTemplateResponse(
+            challengeId = challenge.id,
+            title = challenge.title,
+            description = challenge.description,
+            verificationCriteria = challenge.verificationCriteria,
+            durationDays = durationDays,
+            suggestedStartDate = suggestedStartDate,
+            suggestedEndDate = suggestedEndDate,
+            suggestedPenaltyAmount = suggestedPenalty
+        )
+    }
+
+    @Transactional
+    fun restartChallenge(
+        groupId: Long,
+        challengeId: Long,
+        userId: Long,
+        request: RestartChallengeRequest,
+        today: LocalDate = DateTimeUtils.todayKst()
+    ): ChallengeDetailResponse {
+        groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+            ?: throw ForbiddenException("해당 모임의 멤버만 챌린지를 다시 시작할 수 있습니다.")
+
+        val group = groupRepository.findById(groupId).orElseThrow {
+            ResourceNotFoundException("모임을 찾을 수 없습니다. (ID: $groupId)")
+        }
+
+        val sourceChallenge = challengeRepository.findById(challengeId).orElseThrow {
+            ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
+        }
+
+        if (sourceChallenge.groupId != groupId) {
+            throw BadRequestException("해당 모임의 챌린지가 아닙니다.")
+        }
+
+        if (!sourceChallenge.isEnded(today)) {
+            throw BadRequestException("종료된 챌린지만 다시 시작할 수 있습니다.")
+        }
+
+        val calculatedEndDate = request.endDate ?: run {
+            val originalDuration = ChronoUnit.DAYS.between(sourceChallenge.startDate, sourceChallenge.endDate)
+            request.startDate.plusDays(originalDuration)
+        }
+
+        val newChallenge = Challenge.recreateFrom(
+            source = sourceChallenge,
+            newStartDate = request.startDate,
+            newEndDate = calculatedEndDate,
+            creatorUserId = userId,
+            newTitle = request.title,
+            newDescription = request.description,
+            newVerificationCriteria = request.verificationCriteria,
+            today = today
+        )
+        val savedChallenge = challengeRepository.save(newChallenge)
+
+        val creatorParticipant = challengeParticipantRepository.save(
+            ChallengeParticipant(
+                challengeId = savedChallenge.id,
+                userId = userId,
+                penaltyAmount = request.myPenaltyAmount,
+                startDate = savedChallenge.startDate,
+                status = ParticipantStatus.ACTIVE
+            )
+        )
+        dailyRecordService?.ensureDailyRecordsForParticipant(
+            creatorParticipant,
+            savedChallenge,
+            today
+        )
+
+        val creatorUser = userRepository.findById(userId).orElse(null)
+        val participantResponse = ChallengeParticipantResponse(
+            id = creatorParticipant.id,
+            userId = userId,
+            nickname = creatorUser?.nickname ?: "참여자",
+            profileImageUrl = creatorUser?.profileImageUrl,
+            penaltyAmount = creatorParticipant.penaltyAmount,
+            startDate = creatorParticipant.startDate,
+            status = creatorParticipant.status,
+            completionRate = 0,
+            joinedAt = creatorParticipant.joinedAt,
+            isCreator = true
+        )
+
+        return ChallengeDetailResponse(
+            id = savedChallenge.id,
+            groupId = group.id,
+            groupName = group.name,
+            creatorUserId = userId,
+            creatorNickname = creatorUser?.nickname ?: "생성자",
+            title = savedChallenge.title,
+            description = savedChallenge.description,
+            verificationCriteria = savedChallenge.verificationCriteria,
+            startDate = savedChallenge.startDate,
+            endDate = savedChallenge.endDate,
+            status = savedChallenge.status(today),
+            isCreator = true,
+            isParticipating = true,
+            myPenaltyAmount = creatorParticipant.penaltyAmount,
+            canJoin = false,
+            canCancel = false,
+            canDelete = savedChallenge.canDelete(today),
+            canModifyFull = savedChallenge.canModifyFullConditions(today),
             participants = listOf(participantResponse)
         )
     }

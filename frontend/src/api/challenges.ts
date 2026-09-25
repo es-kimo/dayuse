@@ -2,6 +2,7 @@ import { apiClient } from './client';
 import type {
   ChallengeDetail,
   ChallengeParticipant,
+  ChallengeRestartTemplate,
   ChallengeSummary,
   CreateChallengePayload,
   JoinChallengePayload,
@@ -14,6 +15,16 @@ export const challengesApi = {
   getGroupChallenges: async (groupId: number, status?: string): Promise<ChallengeSummary[]> => {
     const params = status && status !== 'ALL' ? { status } : undefined;
     const res = await apiClient.get<ChallengeSummary[]>(`/groups/${groupId}/challenges`, { params });
+    return res.data;
+  },
+
+  getRestartTemplate: async (groupId: number, challengeId: number): Promise<ChallengeRestartTemplate> => {
+    const res = await apiClient.get<ChallengeRestartTemplate>(`/groups/${groupId}/challenges/${challengeId}/restart-template`);
+    return res.data;
+  },
+
+  restartChallenge: async (groupId: number, challengeId: number, payload: CreateChallengePayload): Promise<ChallengeDetail> => {
+    const res = await apiClient.post<ChallengeDetail>(`/groups/${groupId}/challenges/${challengeId}/restart`, payload);
     return res.data;
   },
 
