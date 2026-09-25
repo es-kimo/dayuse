@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
+import { groupsApi } from '../api/groups';
+import { useAuth } from '../context/AuthContext';
 import { MobileLayout } from '../components/MobileLayout';
 import {
   ArrowLeft,
@@ -16,9 +18,11 @@ import {
   Check,
   Repeat,
   Layers,
+  Users,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { getTodayKstString, addDaysKst } from '../utils/date';
-import type { ChallengeSummary, PeriodType } from '../types';
+import type { ChallengeSummary, PeriodType, GroupMember, CreateChallengePayload } from '../types';
 
 const PERIOD_PRESETS = [
   { label: '1주 (7일)', days: 7 },
@@ -31,6 +35,7 @@ export const NewChallengePage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
 
   const restartFromId = searchParams.get('restartFrom');
   const today = getTodayKstString();
@@ -44,6 +49,13 @@ export const NewChallengePage: React.FC = () => {
   const [periodType, setPeriodType] = useState<PeriodType>('DAILY');
   const [targetFrequency, setTargetFrequency] = useState<number>(3);
   const [penaltyAmount, setPenaltyAmount] = useState<number>(5000);
+
+  // 모임원 다중 선택 및 참가자별 벌금 상태
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<Set<number>>(new Set());
+  const [memberPenalties, setMemberPenalties] = useState<Record<number, number>>({});
+  const [isCustomPenaltyPerMember, setIsCustomPenaltyPerMember] = useState(false);
 
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
   const [isTemplateLoaded, setIsTemplateLoaded] = useState(false);
@@ -141,6 +153,79 @@ export const NewChallengePage: React.FC = () => {
 
     loadTemplate();
   }, [groupId, restartFromId]);
+
+  // 1-1. 모임원 목록 조회
+  useEffect(() => {
+    if (!groupId) return;
+    const fetchGroupMembers = async () => {
+      setIsLoadingMembers(true);
+      try {
+        const detail = await groupsApi.getGroupDetail(Number(groupId));
+        setGroupMembers(detail.members || []);
+      } catch (err) {
+        console.error('Failed to load group members:', err);
+      } finally {
+        setIsLoadingMembers(false);
+      }
+    };
+    fetchGroupMembers();
+  }, [groupId]);
+
+  const handleToggleMember = (userId: number) => {
+    if (userId === currentUser?.id) return; // 생성자는 필수 참여
+    setSelectedMemberIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+        if (memberPenalties[userId] === undefined) {
+          setMemberPenalties((p) => ({ ...p, [userId]: penaltyAmount }));
+        }
+      }
+      return next;
+    });
+  };
+
+  const handleMemberPenaltyChange = (userId: number, amount: number) => {
+    setMemberPenalties((prev) => ({ ...prev, [userId]: Math.max(0, amount) }));
+  };
+
+  // 최종 등록 대상 참가자 목록
+  const participantsList = useMemo(() => {
+    const list: Array<{
+      userId: number;
+      nickname: string;
+      profileImageUrl?: string | null;
+      penaltyAmount: number;
+      isCreator: boolean;
+    }> = [];
+
+    // 1. 생성자 본인 (필수 참여)
+    const creatorMember = groupMembers.find((m) => m.userId === currentUser?.id);
+    list.push({
+      userId: currentUser?.id || 0,
+      nickname: creatorMember?.nickname || currentUser?.nickname || '생성자 (나)',
+      profileImageUrl: creatorMember?.profileImageUrl || currentUser?.profileImageUrl,
+      penaltyAmount: penaltyAmount,
+      isCreator: true,
+    });
+
+    // 2. 추가 선택된 모임원들
+    groupMembers.forEach((m) => {
+      if (m.userId !== currentUser?.id && selectedMemberIds.has(m.userId)) {
+        list.push({
+          userId: m.userId,
+          nickname: m.nickname,
+          profileImageUrl: m.profileImageUrl,
+          penaltyAmount: isCustomPenaltyPerMember ? (memberPenalties[m.userId] ?? penaltyAmount) : penaltyAmount,
+          isCreator: false,
+        });
+      }
+    });
+
+    return list;
+  }, [groupMembers, currentUser, selectedMemberIds, memberPenalties, penaltyAmount, isCustomPenaltyPerMember]);
 
   // 2. 모임 내 기존 챌린지 목록 조회 (불러오기 모달용)
   const handleOpenHistoryModal = async () => {
@@ -272,7 +357,7 @@ export const NewChallengePage: React.FC = () => {
 
     try {
       let createdChallenge;
-      const payload = {
+      const payload: CreateChallengePayload = {
         title: title.trim(),
         description: description.trim() || undefined,
         verificationCriteria: verificationCriteria.trim(),
@@ -281,6 +366,10 @@ export const NewChallengePage: React.FC = () => {
         periodType,
         targetFrequency: periodType === 'WEEKLY_N' ? targetFrequency : null,
         myPenaltyAmount: penaltyAmount,
+        participants: participantsList.map((p) => ({
+          userId: p.userId,
+          penaltyAmount: p.penaltyAmount,
+        })),
       };
 
       if (activeRestartId) {
@@ -606,12 +695,12 @@ export const NewChallengePage: React.FC = () => {
           )}
         </div>
 
-        {/* 본인 약정 금액 설정 */}
+        {/* 본인 및 기본 약정 금액 설정 */}
         <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
               <Coins className="w-4 h-4 text-amber-500" />
-              <span>나의 1일 미수행 약정 금액</span>
+              <span>1일 미수행 약정 금액</span>
             </div>
             <span className="text-xs font-bold text-amber-600">
               {penaltyAmount.toLocaleString()}원
@@ -647,9 +736,159 @@ export const NewChallengePage: React.FC = () => {
             />
           </div>
           <p className="text-[11px] text-slate-400">
-            생성자는 챌린지 생성과 동시에 위 약정 금액으로 자동 참여됩니다.
+            {isCustomPenaltyPerMember
+              ? '생성자 본인 및 별도 지정하지 않은 참가자의 기본 약정 금액입니다.'
+              : '모든 참가자에게 동일하게 적용되는 1일 미수행 약정 금액입니다.'}
           </p>
         </div>
+
+        {/* 함께할 모임원 선택 리스트 & 참가자별 약정금 설정 */}
+        <div className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+              <Users className="w-4 h-4 text-blue-600" />
+              <span>함께할 모임원 선택</span>
+            </div>
+            <span className="text-[11px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full">
+              나 포함 총 {participantsList.length}명 참여
+            </span>
+          </div>
+
+          <p className="text-[11px] text-slate-400">
+            생성자는 필수 참여되며, 모임원을 터치하여 함께 도전할 멤버를 선택하세요.
+          </p>
+
+          {isLoadingMembers ? (
+            <div className="py-6 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+              <span>모임원 목록을 불러오는 중...</span>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-0.5">
+              {groupMembers.map((member) => {
+                const isCreator = member.userId === currentUser?.id;
+                const isSelected = isCreator || selectedMemberIds.has(member.userId);
+                const currentPenalty = isCreator
+                  ? penaltyAmount
+                  : (isCustomPenaltyPerMember ? (memberPenalties[member.userId] ?? penaltyAmount) : penaltyAmount);
+
+                return (
+                  <div
+                    key={member.userId}
+                    onClick={() => !isCreator && handleToggleMember(member.userId)}
+                    className={`p-3 rounded-xl border transition ${
+                      isCreator ? 'cursor-default' : 'cursor-pointer'
+                    } ${
+                      isSelected
+                        ? 'border-blue-400 bg-blue-50/40 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2.5">
+                      {/* 좌측: 체크박스 + 프로필 + 닉네임 */}
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          disabled={isCreator}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={() => !isCreator && handleToggleMember(member.userId)}
+                          className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 disabled:opacity-60 cursor-pointer"
+                        />
+                        {member.profileImageUrl ? (
+                          <img
+                            src={member.profileImageUrl}
+                            alt={member.nickname}
+                            className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-100"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs text-slate-600 font-bold shrink-0">
+                            {member.nickname.slice(0, 1)}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex items-center gap-1.5">
+                          <span className="text-xs font-semibold text-slate-800 truncate">
+                            {member.nickname}
+                          </span>
+                          {isCreator && (
+                            <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium shrink-0">
+                              생성자 (필수)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 우측: 약정금 뱃지 */}
+                      {isSelected && (
+                        <span className="text-[11px] font-semibold text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded-md shrink-0">
+                          {currentPenalty.toLocaleString()}원
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 참가자별 개별 약정금 설정 필드 (토글 ON일 때만 서브 행으로 표시) */}
+                    {isCustomPenaltyPerMember && isSelected && !isCreator && (
+                      <div
+                        className="mt-2.5 pt-2 border-t border-blue-100 flex items-center justify-between animate-in fade-in"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span className="text-[11px] text-slate-500 font-medium">
+                          개별 약정 금액
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min={0}
+                            step={1000}
+                            value={currentPenalty}
+                            onChange={(e) => {
+                              const val = Math.max(0, parseInt(e.target.value) || 0);
+                              handleMemberPenaltyChange(member.userId, val);
+                            }}
+                            className="w-20 text-xs px-2 py-1 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 bg-white font-bold text-right text-amber-700"
+                          />
+                          <span className="text-[11px] text-slate-600">원</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 참가자별 약정 금액 다르게 설정 토글 스위치 */}
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+              <span>참가자별로 금액 다르게 설정하기</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsCustomPenaltyPerMember(!isCustomPenaltyPerMember)}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isCustomPenaltyPerMember ? 'bg-blue-600' : 'bg-slate-200'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                  isCustomPenaltyPerMember ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* 당일 시작 챌린지 즉시 확정 경고 */}
+        {startDate === today && (
+          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2 animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+            <div className="leading-relaxed">
+              <span className="font-semibold block">⚠️ 오늘 시작하는 챌린지 주의</span>
+              오늘 시작하는 챌린지는 생성 즉시 조건이 확정되어 취소/수정이 불가합니다.
+            </div>
+          </div>
+        )}
 
         {/* 제출 버튼 */}
         <div className="pt-2">
@@ -773,10 +1012,30 @@ export const NewChallengePage: React.FC = () => {
                   </span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span className="text-slate-500">나의 약정 금액</span>
-                <span className="font-bold text-amber-600">{penaltyAmount.toLocaleString()}원 / 일</span>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">최종 참여 인원</span>
+                <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  나 포함 총 {participantsList.length}명
+                </span>
               </div>
+
+              {/* 참가자별 약정금 명단 요약 */}
+              <div className="pt-2 border-t border-slate-200 space-y-1">
+                <span className="text-[11px] text-slate-500 block font-medium">참가자별 약정 금액:</span>
+                <div className="max-h-28 overflow-y-auto space-y-1 bg-white p-2 rounded-lg border border-slate-200/80">
+                  {participantsList.map((p) => (
+                    <div key={p.userId} className="flex justify-between text-[11px]">
+                      <span className="text-slate-700 truncate max-w-[140px]">
+                        {p.nickname} {p.isCreator && '(생성자)'}
+                      </span>
+                      <span className="font-semibold text-amber-700">
+                        {p.penaltyAmount.toLocaleString()}원 / 일
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="pt-1 border-t border-slate-200">
                 <span className="text-[11px] text-slate-500 block mb-0.5">인증 기준 안내:</span>
                 <p className="text-[11px] text-slate-700 whitespace-pre-wrap">{verificationCriteria}</p>
@@ -785,13 +1044,19 @@ export const NewChallengePage: React.FC = () => {
 
             {activeRestartId && (
               <div className="text-[11px] text-blue-700 bg-blue-50 p-2.5 rounded-lg border border-blue-200">
-                ℹ️ 기존 챌린지의 과거 기록(참여자, 인증 사진 등)은 새 챌린지로 복사되지 않으며 생성자 본인만 새롭게 참여됩니다.
+                ℹ️ 기존 챌린지의 과거 기록(인증 사진 등)은 새 챌린지로 복사되지 않으며 이번에 설정한 참가자 명단으로 새롭게 시작됩니다.
               </div>
             )}
 
-            <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-              ⚠️ 챌린지가 시작(시작일 00:00 KST)되면 기간 및 수행 주기, 인증 기준 수정과 챌린지 삭제가 잠깁니다.
-            </div>
+            {startDate === today ? (
+              <div className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200 leading-relaxed font-medium">
+                ⚠️ 오늘 시작하는 챌린지는 생성 즉시 조건이 확정되어 취소/수정이 불가합니다.
+              </div>
+            ) : (
+              <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                ⚠️ 챌린지가 시작(시작일 00:00 KST)되면 기간 및 수행 주기, 인증 기준 수정과 챌린지 삭제가 잠깁니다.
+              </div>
+            )}
 
             <div className="flex gap-2 pt-1">
               <button

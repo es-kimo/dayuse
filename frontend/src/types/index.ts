@@ -143,6 +143,11 @@ export interface ChallengeDetail {
   participants: ChallengeParticipant[];
 }
 
+export interface CreateParticipantPayload {
+  userId: number;
+  penaltyAmount: number;
+}
+
 export interface CreateChallengePayload {
   title: string;
   description?: string;
@@ -152,6 +157,7 @@ export interface CreateChallengePayload {
   periodType?: PeriodType;
   targetFrequency?: number | null;
   myPenaltyAmount: number;
+  participants?: CreateParticipantPayload[];
 }
 
 export interface ChallengeRestartTemplate {
