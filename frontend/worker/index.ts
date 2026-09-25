@@ -91,6 +91,42 @@ class TextSetter {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    // 1. API 리버스 프록시: 클라이언트 요청을 백엔드로 직접 포워딩하여 Same-Origin 보장
+    if (url.pathname.startsWith('/api/')) {
+      const backendBase = new URL(env.API_BASE_URL);
+      const targetUrl = new URL(url.pathname + url.search, backendBase.origin);
+
+      const headers = new Headers(request.headers);
+      headers.set('X-Forwarded-Host', url.host);
+      headers.set('X-Forwarded-Proto', url.protocol.replace(':', ''));
+
+      const isBodyAllowed = !['GET', 'HEAD'].includes(request.method);
+      const proxyRequest = new Request(targetUrl.toString(), {
+        method: request.method,
+        headers,
+        body: isBodyAllowed ? request.body : null,
+        redirect: 'follow',
+      });
+
+      try {
+        return await fetch(proxyRequest);
+      } catch (err) {
+        console.error('API 프록시 호출 실패:', err);
+        return new Response(
+          JSON.stringify({
+            status: 502,
+            error: 'BAD_GATEWAY',
+            message: '백엔드 서버와 통신할 수 없습니다. 잠시 후 다시 시도해 주세요.',
+          }),
+          {
+            status: 502,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+
     const match = request.method === 'GET' ? SHARE_PATH.exec(url.pathname) : null;
 
     if (!match) {

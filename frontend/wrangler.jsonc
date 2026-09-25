@@ -10,9 +10,8 @@
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
 
-    // 기본값은 자산 라우팅이 먼저라 Worker가 아예 호출되지 않는다.
-    // 공유 카드 경로만 Worker를 먼저 태운다.
-    "run_worker_first": ["/shares/*"]
+    // 공유 카드 경로 및 API 프록시 경로만 Worker를 먼저 태운다.
+    "run_worker_first": ["/shares/*", "/api/*"]
   },
 
   // 공개 API 주소라 비밀값이 아니다. 로컬에서는 --var 로 덮어쓴다.
