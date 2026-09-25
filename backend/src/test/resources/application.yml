@@ -30,3 +30,8 @@ aws:
     region: ap-northeast-2
     access-key: test-access-key
     secret-key: test-secret-key
+
+webpush:
+  public-key: test-vapid-public-key-for-unit-test
+  private-key: test-vapid-private-key-for-unit-test
+  subject: mailto:test@dayuse.kr

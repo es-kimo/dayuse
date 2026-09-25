@@ -133,6 +133,6 @@ aws:
     endpoint: ${AWS_S3_ENDPOINT:}
 
 webpush:
-  public-key: ${VAPID_PUBLIC_KEY:BF5PuGK_jwgfQpNNUcTf75z93uuqrwrN1yl4Vkxnhsfi0vWu_dX6vOxFY6DXUyiWVTxqIxz4-Jwz3gGBD-om-EA}
-  private-key: ${VAPID_PRIVATE_KEY:NghqENb7xUAkfU6oc9QJJSjNbO1BRPRMOK_rtJqYjNA}
+  public-key: ${VAPID_PUBLIC_KEY}
+  private-key: ${VAPID_PRIVATE_KEY}
   subject: ${VAPID_SUBJECT:mailto:support@dayuse.kr}

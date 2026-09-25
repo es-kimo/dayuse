@@ -5,10 +5,10 @@ import org.springframework.stereotype.Component
 
 @Component
 class WebPushProperties(
-    @Value("\${webpush.public-key:BF5PuGK_jwgfQpNNUcTf75z93uuqrwrN1yl4Vkxnhsfi0vWu_dX6vOxFY6DXUyiWVTxqIxz4-Jwz3gGBD-om-EA}")
+    @Value("\${webpush.public-key}")
     val publicKey: String,
 
-    @Value("\${webpush.private-key:NghqENb7xUAkfU6oc9QJJSjNbO1BRPRMOK_rtJqYjNA}")
+    @Value("\${webpush.private-key}")
     val privateKey: String,
 
     @Value("\${webpush.subject:mailto:support@dayuse.kr}")
