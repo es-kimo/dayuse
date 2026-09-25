@@ -58,7 +58,10 @@ class SettlementService(
         groupId: Long,
         userId: Long
     ): GroupAccountResponse? {
-        validateMember(groupId, userId)
+        validateMember(
+            groupId,
+            userId
+        )
         val account = groupAccountRepository.findByGroupId(groupId) ?: return null
         return toAccountResponse(account)
     }
@@ -68,7 +71,10 @@ class SettlementService(
         userId: Long,
         request: GroupAccountRequest
     ): GroupAccountResponse {
-        validateHost(groupId, userId)
+        validateHost(
+            groupId,
+            userId
+        )
         if (!groupRepository.existsById(groupId)) {
             throw ResourceNotFoundException("모임을 찾을 수 없습니다. (ID: $groupId)")
         }
@@ -91,18 +97,24 @@ class SettlementService(
         groupId: Long,
         userId: Long
     ): List<UnpaidRecordItemResponse> {
-        validateMember(groupId, userId)
-        val dailyRecords = dailyRecordRepository.findUnpaidRecordsForDeposit(userId, groupId)
+        validateMember(
+            groupId,
+            userId
+        )
+        val dailyRecords = dailyRecordRepository.findUnpaidRecordsForDeposit(
+            userId,
+            groupId
+        )
 
-        // TODO [사용자 미션 2-A]: 주 N회 구간 미수행 확정 벌금 조회 및 UnpaidRecordItemResponse 매핑
-        // challengePeriodSettlementRepository에서 userId, groupId에 해당하는 미납(UNPAID) 정산 건들을 조회하고,
-        // UnpaidRecordItemResponse(isPeriod = true, periodIndex, periodStartDate, ...) 목록으로 변환하여
-        // dailyItems와 합쳐서 반환하세요.
-        val periodSettlements = emptyList<com.dayuse.domain.challenge.period.ChallengePeriodSettlement>()
+        val periodSettlements = challengePeriodSettlementRepository?.findUnpaidSettlementsForDeposit(
+            userId,
+            groupId
+        ).orEmpty()
 
         if (dailyRecords.isEmpty() && periodSettlements.isEmpty()) return emptyList()
 
-        val allChallengeIds = (dailyRecords.map { it.challengeId } + periodSettlements.map { it.challengeId }).distinct()
+        val allChallengeIds =
+            (dailyRecords.map { it.challengeId } + periodSettlements.map { it.challengeId }).distinct()
         val challenges = challengeRepository.findAllById(allChallengeIds).associateBy { it.id }
 
         val dailyItems = dailyRecords.map { record ->
@@ -117,7 +129,25 @@ class SettlementService(
             )
         }
 
-        return dailyItems
+        val periodItems = periodSettlements.map { s ->
+            UnpaidRecordItemResponse(
+                id = s.id,
+                challengeId = s.challengeId,
+                challengeTitle = challenges[s.challengeId]?.title ?: "알 수 없는 챌린지",
+                date = s.endDate,
+                penaltyAmount = s.totalPenaltyAmount,
+                status = null,
+                isPeriod = true,
+                periodIndex = s.periodIndex,
+                periodStartDate = s.startDate,
+                periodEndDate = s.endDate,
+                targetCount = s.targetCount,
+                completedCount = s.completedCount,
+                missedCount = s.missedCount
+            )
+        }
+
+        return dailyItems + periodItems
     }
 
     fun createDepositReport(
@@ -125,7 +155,10 @@ class SettlementService(
         userId: Long,
         request: CreateDepositReportRequest
     ): DepositReportDetailResponse {
-        validateMember(groupId, userId)
+        validateMember(
+            groupId,
+            userId
+        )
 
         if (!groupAccountRepository.existsByGroupId(groupId)) {
             throw BadRequestException("모임 계좌가 등록되지 않아 입금 신고를 진행할 수 없습니다. (ACCOUNT_NOT_REGISTERED)")
@@ -137,7 +170,8 @@ class SettlementService(
             throw BadRequestException("입금할 미수행 기록을 1개 이상 선택해 주세요.")
         }
 
-        val records = if (distinctDailyIds.isNotEmpty()) dailyRecordRepository.findAllByIdInWithLock(distinctDailyIds) else emptyList()
+        val records =
+            if (distinctDailyIds.isNotEmpty()) dailyRecordRepository.findAllByIdInWithLock(distinctDailyIds) else emptyList()
         if (records.size != distinctDailyIds.size) {
             throw BadRequestException("존재하지 않거나 유효하지 않은 미수행 기록이 포함되어 있습니다.")
         }
@@ -164,18 +198,29 @@ class SettlementService(
             }
         }
 
-        // TODO [사용자 미션 2-B]: 주 N회 구간 정산 건(periodSettlements)에 대한 입금 신고 검증 및 상태 전이
-        // 1. periodSettlements의 소유자(userId, groupId), 상태(CONFIRMED_FAILED), depositStatus(UNPAID), 벌금액(> 0)을 검증하세요.
-        // 2. calculatedTotal 합산에 periodSettlements의 totalPenaltyAmount를 포함하세요.
-        // 3. 입금 신고 제출 시 periodSettlements의 depositStatus를 WAITING_CONFIRMATION으로 전이하세요.
-        // 4. DepositReportItem 생성 시 periodSettlementId를 매핑하여 items에 포함하세요.
-        val calculatedTotal = records.sumOf { it.penaltyAmount }
+        for (s in periodSettlements) {
+            if (s.userId != userId || s.groupId != groupId) {
+                throw ForbiddenException("본인의 모임 미수행 구간만 신고할 수 있습니다.")
+            }
+            if (s.status != PeriodSettlementStatus.CONFIRMED_FAILED) {
+                throw BadRequestException("미수행 확정된 구간만 입금 신고할 수 있습니다.")
+            }
+            if (s.depositStatus != DepositStatus.UNPAID) {
+                throw BadRequestException("이미 입금 확인 대기 중이거나 완료된 구간이 포함되어 있습니다.")
+            }
+            if (s.totalPenaltyAmount <= 0) {
+                throw BadRequestException("약정 벌금이 0원인 구간은 입금 대상에서 원천 제외됩니다.")
+            }
+        }
+
+        val calculatedTotal = records.sumOf { it.penaltyAmount } + periodSettlements.sumOf { it.totalPenaltyAmount }
         if (calculatedTotal != request.totalAmount) {
             throw BadRequestException("선택한 미수행 기록 벌금 합계(${calculatedTotal}원)와 신고 금액(${request.totalAmount}원)이 일치하지 않습니다.")
         }
 
         // 1. 상태 전이: WAITING_CONFIRMATION
         records.forEach { it.depositStatus = DepositStatus.WAITING_CONFIRMATION }
+        periodSettlements.forEach { it.depositStatus = DepositStatus.WAITING_CONFIRMATION }
 
         // 2. DepositReport 엔티티 생성
         val report = depositReportRepository.save(
@@ -194,6 +239,11 @@ class SettlementService(
             DepositReportItem(
                 depositReportId = report.id,
                 dailyRecordId = it.id
+            )
+        } + periodSettlements.map {
+            DepositReportItem(
+                depositReportId = report.id,
+                periodSettlementId = it.id
             )
         }
         val savedItems = depositReportItemRepository.saveAll(items)
@@ -263,7 +313,10 @@ class SettlementService(
             )
         )
 
-        return getReportDetail(report.id, userId)
+        return getReportDetail(
+            report.id,
+            userId
+        )
     }
 
     @Transactional(readOnly = true)
@@ -272,10 +325,16 @@ class SettlementService(
         userId: Long,
         status: DepositReportStatus?
     ): List<DepositReportDetailResponse> {
-        validateMember(groupId, userId)
+        validateMember(
+            groupId,
+            userId
+        )
 
         val reports = if (status != null) {
-            depositReportRepository.findAllByGroupIdAndStatusOrderByCreatedAtDesc(groupId, status)
+            depositReportRepository.findAllByGroupIdAndStatusOrderByCreatedAtDesc(
+                groupId,
+                status
+            )
         } else {
             depositReportRepository.findAllByGroupIdOrderByCreatedAtDesc(groupId)
         }
@@ -290,9 +349,11 @@ class SettlementService(
         val records = dailyRecordRepository.findAllById(allRecordIds).associateBy { it.id }
 
         val allPeriodIds = allItems.mapNotNull { it.periodSettlementId }.distinct()
-        val periodSettlements = challengePeriodSettlementRepository?.findAllById(allPeriodIds).orEmpty().associateBy { it.id }
+        val periodSettlements =
+            challengePeriodSettlementRepository?.findAllById(allPeriodIds).orEmpty().associateBy { it.id }
 
-        val allChallengeIds = (records.values.map { it.challengeId } + periodSettlements.values.map { it.challengeId }).distinct()
+        val allChallengeIds =
+            (records.values.map { it.challengeId } + periodSettlements.values.map { it.challengeId }).distinct()
         val challenges = challengeRepository.findAllById(allChallengeIds).associateBy { it.id }
 
         val userIds = (reports.map { it.userId } + reports.mapNotNull { it.processedByUserId }).distinct()
@@ -366,7 +427,10 @@ class SettlementService(
         val report = depositReportRepository.findById(reportId)
             .orElseThrow { ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)") }
 
-        validateHost(report.groupId, hostUserId)
+        validateHost(
+            report.groupId,
+            hostUserId
+        )
 
         if (report.status != DepositReportStatus.WAITING_CONFIRMATION) {
             throw BadRequestException("확인 대기(WAITING_CONFIRMATION) 상태의 입금 신고만 승인할 수 있습니다.")
@@ -398,7 +462,10 @@ class SettlementService(
             )
         )
 
-        return getReportDetail(report.id, hostUserId)
+        return getReportDetail(
+            report.id,
+            hostUserId
+        )
     }
 
     fun rejectDepositReport(
@@ -409,7 +476,10 @@ class SettlementService(
         val report = depositReportRepository.findById(reportId)
             .orElseThrow { ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)") }
 
-        validateHost(report.groupId, hostUserId)
+        validateHost(
+            report.groupId,
+            hostUserId
+        )
 
         if (report.status != DepositReportStatus.WAITING_CONFIRMATION) {
             throw BadRequestException("확인 대기(WAITING_CONFIRMATION) 상태의 입금 신고만 반려할 수 있습니다.")
@@ -421,7 +491,10 @@ class SettlementService(
         }
 
         // 1. 신고 반려 처리
-        report.rejectByHost(hostUserId, reason)
+        report.rejectByHost(
+            hostUserId,
+            reason
+        )
 
         // 2. 연관된 DailyRecord 및 PeriodSettlement depositStatus를 UNPAID로 원복
         val items = depositReportItemRepository.findAllByDepositReportId(report.id)
@@ -447,7 +520,10 @@ class SettlementService(
             )
         )
 
-        return getReportDetail(report.id, hostUserId)
+        return getReportDetail(
+            report.id,
+            hostUserId
+        )
     }
 
     fun cancelConfirmation(
@@ -458,7 +534,10 @@ class SettlementService(
         val report = depositReportRepository.findByIdWithLock(reportId)
             ?: throw ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)")
 
-        validateHost(report.groupId, hostUserId)
+        validateHost(
+            report.groupId,
+            hostUserId
+        )
 
         if (report.status != DepositReportStatus.CONFIRMED) {
             throw BadRequestException("확인 완료(CONFIRMED) 상태의 입금 건만 확인을 취소할 수 있습니다.")
@@ -469,7 +548,10 @@ class SettlementService(
             throw BadRequestException("확인 취소 사유를 입력해 주세요.")
         }
 
-        report.cancelConfirmationByHost(hostUserId, reason)
+        report.cancelConfirmationByHost(
+            hostUserId,
+            reason
+        )
 
         val items = depositReportItemRepository.findAllByDepositReportId(report.id)
         val dailyRecordIds = items.mapNotNull { it.dailyRecordId }
@@ -493,7 +575,10 @@ class SettlementService(
             )
         )
 
-        return getReportDetail(report.id, hostUserId)
+        return getReportDetail(
+            report.id,
+            hostUserId
+        )
     }
 
     @Transactional(readOnly = true)
@@ -504,13 +589,17 @@ class SettlementService(
         val report = depositReportRepository.findById(reportId)
             .orElseThrow { ResourceNotFoundException("입금 신고를 찾을 수 없습니다. (ID: $reportId)") }
 
-        validateMember(report.groupId, userId)
+        validateMember(
+            report.groupId,
+            userId
+        )
 
         val items = depositReportItemRepository.findAllByDepositReportId(report.id)
         val dailyRecordIds = items.mapNotNull { it.dailyRecordId }
         val periodSettlementIds = items.mapNotNull { it.periodSettlementId }
 
-        val records = if (dailyRecordIds.isNotEmpty()) dailyRecordRepository.findAllById(dailyRecordIds) else emptyList()
+        val records =
+            if (dailyRecordIds.isNotEmpty()) dailyRecordRepository.findAllById(dailyRecordIds) else emptyList()
         val periodSettlements = if (periodSettlementIds.isNotEmpty()) {
             challengePeriodSettlementRepository?.findAllById(periodSettlementIds).orEmpty()
         } else emptyList()
@@ -519,7 +608,8 @@ class SettlementService(
         val challenges = challengeRepository.findAllById(challengeIds).associateBy { it.id }
 
         val auditLogs = depositAuditLogRepository.findAllByDepositReportIdOrderByCreatedAtAsc(report.id)
-        val userIds = (listOf(report.userId) + listOfNotNull(report.processedByUserId) + auditLogs.map { it.actorUserId }).distinct()
+        val userIds =
+            (listOf(report.userId) + listOfNotNull(report.processedByUserId) + auditLogs.map { it.actorUserId }).distinct()
         val userMap = userRepository.findAllById(userIds).associateBy { it.id }
 
         return toDetailResponse(
@@ -538,14 +628,23 @@ class SettlementService(
         groupId: Long,
         userId: Long
     ): SettlementSummaryResponse {
-        validateMember(groupId, userId)
+        validateMember(
+            groupId,
+            userId
+        )
 
         val unpaidAmount = dailyRecordRepository.calculateGroupUnpaidPenaltyAmount(groupId) +
                 (challengePeriodSettlementRepository?.calculateGroupUnpaidPenaltyAmount(groupId) ?: 0)
         val waitingAmount = depositReportRepository.calculateWaitingAmount(groupId)
         val confirmedAmount = depositReportRepository.calculateConfirmedAmount(groupId)
-        val myUnpaidAmount = dailyRecordRepository.calculateUnpaidPenaltyAmount(userId, groupId) +
-                (challengePeriodSettlementRepository?.calculateUnpaidPenaltyAmount(userId, groupId) ?: 0)
+        val myUnpaidAmount = dailyRecordRepository.calculateUnpaidPenaltyAmount(
+            userId,
+            groupId
+        ) +
+                (challengePeriodSettlementRepository?.calculateUnpaidPenaltyAmount(
+                    userId,
+                    groupId
+                ) ?: 0)
 
         val account = groupAccountRepository.findByGroupId(groupId)
 
@@ -560,15 +659,27 @@ class SettlementService(
         )
     }
 
-    private fun validateMember(groupId: Long, userId: Long) {
-        val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
+    private fun validateMember(
+        groupId: Long,
+        userId: Long
+    ) {
+        val isMember = groupMemberRepository.existsByGroupIdAndUserId(
+            groupId,
+            userId
+        )
         if (!isMember) {
             throw ForbiddenException("해당 모임의 멤버만 정산 정보를 조회하거나 처리할 수 있습니다.")
         }
     }
 
-    private fun validateHost(groupId: Long, userId: Long) {
-        val membership = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+    private fun validateHost(
+        groupId: Long,
+        userId: Long
+    ) {
+        val membership = groupMemberRepository.findByGroupIdAndUserId(
+            groupId,
+            userId
+        )
             ?: throw ForbiddenException("해당 모임의 멤버가 아닙니다.")
         if (membership.role != GroupRole.HOST) {
             throw ForbiddenException("모임장(HOST)만 정산 관리 작업을 수행할 수 있습니다.")

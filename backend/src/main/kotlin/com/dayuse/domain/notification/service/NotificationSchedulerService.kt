@@ -3,6 +3,8 @@ package com.dayuse.domain.notification.service
 import com.dayuse.domain.challenge.ChallengeParticipantRepository
 import com.dayuse.domain.challenge.ChallengeRepository
 import com.dayuse.domain.challenge.ParticipantStatus
+import com.dayuse.domain.challenge.PeriodType
+import com.dayuse.domain.challenge.period.ChallengePeriodCalculator
 import com.dayuse.domain.notification.PushSendLog
 import com.dayuse.domain.notification.PushSendLogRepository
 import com.dayuse.domain.notification.UserNotificationSettingRepository
@@ -140,14 +142,28 @@ class NotificationSchedulerService(
                 ) != null
 
                 if (!hasVerified) {
-                    if (challenge.periodType == com.dayuse.domain.challenge.PeriodType.DAILY) {
+                    if (challenge.periodType == PeriodType.DAILY) {
                         pendingCount++
-                    } else if (challenge.periodType == com.dayuse.domain.challenge.PeriodType.WEEKLY_N) {
-                        // TODO [사용자 미션 3]: 주 N회 챌린지에 대한 웹 푸시 발송 여부 복합 판정
-                        // 1. 당일 미인증이더라도, 이번 주간 구간(currentPeriod)의 목표(targetCount)를 이미 달성(isAchieved)했다면
-                        //    알림 발송 대상에서 제외(pendingCount 증가 X)해야 합니다.
-                        // 2. 당일 미인증이고 아직 이번 구간 목표를 달성하지 못했을 때만 pendingCount를 1 증가시키세요.
-                        pendingCount++ // 임시: 주간 목표 달성 여부 무시하고 무조건 카운트
+                    } else if (challenge.periodType == PeriodType.WEEKLY_N) {
+                        val completedRecords = dailyRecordRepository?.findAllByChallengeParticipantId(participant.id)
+                            ?.filter { it.status == com.dayuse.domain.dailyrecord.DailyRecordStatus.COMPLETED }
+                            ?.map { it.date }
+                            ?.toSet() ?: emptySet()
+
+                        val calc = ChallengePeriodCalculator.calculate(
+                            challengeStartDate = challenge.startDate,
+                            challengeEndDate = challenge.endDate,
+                            participantStartDate = participant.startDate,
+                            periodType = challenge.periodType,
+                            targetFrequency = challenge.targetFrequency,
+                            completedDates = completedRecords,
+                            today = targetDate
+                        )
+
+                        val curPeriod = calc.currentPeriod
+                        if (curPeriod != null && !curPeriod.isAchieved) {
+                            pendingCount++;
+                        }
                     }
                 }
             }
