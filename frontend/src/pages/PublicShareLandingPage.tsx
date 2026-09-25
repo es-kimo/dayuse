@@ -102,7 +102,7 @@ export const PublicShareLandingPage: React.FC = () => {
         </p>
         <button
           onClick={() => navigate('/')}
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition"
+          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-xs font-semibold transition"
         >
           데이유즈 홈으로 이동
         </button>
@@ -148,7 +148,7 @@ export const PublicShareLandingPage: React.FC = () => {
             </div>
 
             {card.comment && (
-              <div className="bg-white/5 border border-white/10 rounded-xl p-3.5">
+              <div className="bg-white/5 border border-white/10 rounded-md p-3.5">
                 <p className="text-xs text-slate-200 line-clamp-3 leading-relaxed">
                   "{card.comment}"
                 </p>
@@ -171,7 +171,7 @@ export const PublicShareLandingPage: React.FC = () => {
             </div>
 
             {/* 최근 일자별 기록 타일 */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
               <div className="flex items-center justify-between text-[11px] text-slate-400 mb-2.5 font-medium">
                 <span>최근 기록</span>
                 <span>성공 여부</span>
@@ -216,7 +216,7 @@ export const PublicShareLandingPage: React.FC = () => {
         <button
           onClick={handleJoinCta}
           disabled={checkingMembership}
-          className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 active:scale-95 disabled:opacity-50"
+          className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 active:scale-95 disabled:opacity-50"
         >
           {checkingMembership ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -258,7 +258,7 @@ export const PublicShareLandingPage: React.FC = () => {
 
             <button
               onClick={() => setShowInviteRequiredModal(false)}
-              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition"
+              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md text-xs font-semibold transition"
             >
               확인
             </button>

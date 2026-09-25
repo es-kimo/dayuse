@@ -41,7 +41,7 @@ export const ProfilePage: React.FC = () => {
       <div className="flex items-center gap-2 mb-6">
         <button
           onClick={() => navigate('/groups')}
-          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
+          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -67,7 +67,7 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           {/* 닉네임 수정 폼 */}
-          <form onSubmit={handleUpdate} className="bg-white border border-slate-200 rounded-xl p-4">
+          <form onSubmit={handleUpdate} className="bg-white border border-slate-200 rounded-lg p-4">
             <label className="block text-xs font-semibold text-slate-600 mb-2">
               닉네임 설정
             </label>
@@ -80,12 +80,12 @@ export const ProfilePage: React.FC = () => {
                   setErrorMsg('');
                 }}
                 maxLength={20}
-                className="flex-1 px-3 py-2 text-base bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white transition"
+                className="flex-1 px-3 py-2 text-base bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white transition"
               />
               <button
                 type="submit"
                 disabled={isUpdating || nickname.trim() === user?.nickname}
-                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-medium rounded-lg transition active:scale-95 flex items-center gap-1"
+                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-medium rounded-md transition active:scale-95 flex items-center gap-1"
               >
                 {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : '저장'}
               </button>
@@ -101,13 +101,13 @@ export const ProfilePage: React.FC = () => {
           </form>
 
           {/* 알림 설정 메뉴 */}
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
             <button
               onClick={() => navigate('/settings/notifications')}
               className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
@@ -127,7 +127,7 @@ export const ProfilePage: React.FC = () => {
         {/* 로그아웃 버튼 */}
         <button
           onClick={logout}
-          className="w-full py-3 border border-slate-200 bg-white hover:bg-red-50 hover:border-red-200 text-red-600 font-medium rounded-xl text-xs flex items-center justify-center gap-2 transition"
+          className="w-full py-3 border border-slate-200 bg-white hover:bg-red-50 hover:border-red-200 text-red-600 font-medium rounded-md text-xs flex items-center justify-center gap-2 transition"
         >
           <LogOut className="w-4 h-4" />
           <span>로그아웃</span>

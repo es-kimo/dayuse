@@ -54,7 +54,7 @@ export const TodayPage: React.FC = () => {
           </div>
           <button
             onClick={() => navigate('/settings/notifications')}
-            className="p-2 rounded-xl text-ink-secondary hover:text-primary hover:bg-sunken transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="p-2 rounded-md text-ink-secondary hover:text-primary hover:bg-sunken transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             title="알림 설정"
           >
             <Bell className="w-5 h-5" />
@@ -117,7 +117,7 @@ export const TodayPage: React.FC = () => {
                   {pendingActions.map((action) => (
                     <div
                       key={action.challengeId}
-                      className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xs hover:border-blue-300 transition space-y-3"
+                      className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs hover:border-blue-300 transition space-y-3"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div>
@@ -132,14 +132,14 @@ export const TodayPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="bg-slate-50 border border-slate-100 rounded-xl p-2.5 text-xs text-slate-600">
+                      <div className="bg-slate-50 border border-slate-100 rounded-md p-2.5 text-xs text-slate-600">
                         <span className="font-semibold text-slate-700">인증 기준: </span>
                         {action.verificationCriteria}
                       </div>
 
                       <button
                         onClick={() => setSelectedAction(action)}
-                        className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition flex items-center justify-center gap-1.5 shadow-xs"
+                        className="w-full py-2.5 bg-blue-600 text-white rounded-md text-xs font-bold hover:bg-blue-700 transition flex items-center justify-center gap-1.5 shadow-xs"
                       >
                         사진 찍고 인증하기
                       </button>
@@ -160,17 +160,17 @@ export const TodayPage: React.FC = () => {
                   {completedActions.map((action) => (
                     <div
                       key={action.challengeId}
-                      className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 opacity-90"
+                      className="p-4 bg-slate-50 border border-slate-200/80 rounded-lg flex items-center justify-between gap-3 opacity-90"
                     >
                       <div className="flex items-center gap-3">
                         {action.myVerification?.imageUrl ? (
                           <img
                             src={action.myVerification.imageUrl}
                             alt="인증 사진"
-                            className="w-12 h-12 rounded-xl object-cover border border-slate-200"
+                            className="w-12 h-12 rounded-md object-cover border border-slate-200"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center font-bold text-xs">
+                          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-md flex items-center justify-center font-bold text-xs">
                             완료
                           </div>
                         )}

@@ -15,12 +15,12 @@ export const GroupStatusSummaryBanner: React.FC<GroupStatusSummaryBannerProps> =
 }) => {
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex items-center justify-between animate-pulse">
+      <div className="bg-white rounded-lg border border-slate-200/80 p-4 shadow-xs flex items-center justify-between animate-pulse">
         <div className="space-y-2">
           <div className="h-4 w-28 bg-slate-200 rounded" />
           <div className="h-3 w-40 bg-slate-100 rounded" />
         </div>
-        <div className="h-7 w-20 bg-slate-200 rounded-lg" />
+        <div className="h-7 w-20 bg-slate-200 rounded-md" />
       </div>
     );
   }

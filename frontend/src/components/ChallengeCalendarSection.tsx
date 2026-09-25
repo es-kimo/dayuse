@@ -68,7 +68,7 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
     : '인증하기';
 
   return (
-    <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition gap-2">
+    <div className="flex items-center justify-between p-2.5 rounded-md bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition gap-2">
       {/* 좌측: 날짜 + (완료 시) 사진 및 코멘트 */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-xs font-semibold text-slate-700 shrink-0">
@@ -78,7 +78,7 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
           <img
             src={record.imageUrl}
             alt="인증 사진"
-            className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
+            className="w-7 h-7 rounded-sm object-cover border border-slate-200 shrink-0"
           />
         )}
         {record.comment && (
@@ -103,7 +103,7 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
         {canVerify && onStartVerify && (
           <button
             onClick={() => onStartVerify(record, isLate)}
-            className={`px-2 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition active:scale-95 shadow-xs shrink-0 ${
+            className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition active:scale-95 shadow-xs shrink-0 ${
               isLate
                 ? isGracePeriod
                   ? 'bg-amber-500 hover:bg-amber-600 text-white'
@@ -130,7 +130,7 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
 
   if (loading) {
     return (
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col items-center justify-center text-slate-400 gap-2 mb-4">
+      <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-xs flex flex-col items-center justify-center text-slate-400 gap-2 mb-4">
         <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
         <span className="text-xs">달력 데이터를 불러오는 중...</span>
       </div>
@@ -199,7 +199,7 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs mb-5 space-y-4">
+    <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs mb-5 space-y-4">
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
           <Calendar className="w-4 h-4 text-blue-600" />
@@ -211,7 +211,7 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
       </div>
 
       {/* 상태 범례 (상태 가이드) */}
-      <div className="flex flex-wrap gap-1.5 text-[10px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+      <div className="flex flex-wrap gap-1.5 text-[10px] bg-slate-50 p-2.5 rounded-md border border-slate-100">
         <span className="font-semibold text-slate-600 mr-1">상태:</span>
         <span className="inline-flex items-center gap-0.5 text-emerald-700 font-medium">
           <CheckCircle2 className="w-3 h-3" /> 완료
@@ -243,7 +243,7 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
               <button
                 key={p.userId}
                 onClick={() => setSelectedUserId(p.userId)}
-                className={`px-3 py-1.5 rounded-xl font-medium shrink-0 flex items-center gap-1.5 transition ${
+                className={`px-3 py-1.5 rounded-md font-medium shrink-0 flex items-center gap-1.5 transition ${
                   isSelected
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'

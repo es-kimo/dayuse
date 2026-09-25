@@ -269,7 +269,7 @@ export const ChallengeDetailPage: React.FC = () => {
               navigate(`/groups/${challenge.groupId}?tab=challenges`);
             }
           }}
-          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
+          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
           aria-label="뒤로가기"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -279,7 +279,7 @@ export const ChallengeDetailPage: React.FC = () => {
           {challenge.isParticipating && (
             <button
               onClick={() => setShowStreakModal(true)}
-              className="px-2.5 py-1 text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 rounded-lg transition flex items-center gap-1 text-[11px] font-bold"
+              className="px-2.5 py-1 text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 rounded-md transition flex items-center gap-1 text-[11px] font-bold"
               title="연속 기록 공유 카드 만들기"
             >
               <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
@@ -289,7 +289,7 @@ export const ChallengeDetailPage: React.FC = () => {
           {challenge.isCreator && challenge.status === 'NOT_STARTED' && (
             <button
               onClick={handleDeleteChallenge}
-              className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg transition"
+              className="p-1.5 text-slate-400 hover:text-red-600 rounded-md transition"
               title="챌린지 삭제"
             >
               <Trash2 className="w-4 h-4" />
@@ -301,7 +301,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 setShowEditModal(true);
                 setActionError(null);
               }}
-              className="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg transition"
+              className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md transition"
               title="챌린지 수정"
             >
               <Edit3 className="w-4 h-4" />
@@ -311,7 +311,7 @@ export const ChallengeDetailPage: React.FC = () => {
       </div>
 
       {/* 챌린지 기본 정보 헤더 */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4 shadow-xs">
+      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4 shadow-xs">
         <div className="flex items-start justify-between gap-2 mb-2">
           <h1 className="text-base font-bold text-slate-800 leading-snug">{challenge.title}</h1>
         </div>
@@ -329,9 +329,9 @@ export const ChallengeDetailPage: React.FC = () => {
 
       {/* 진행 기간 & 인증 기준 */}
       <div className="space-y-3 mb-5">
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 flex items-center justify-between shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
               <Calendar className="w-4 h-4" />
             </div>
             <div>
@@ -347,7 +347,7 @@ export const ChallengeDetailPage: React.FC = () => {
 
         {/* 주 N회 또는 매일형 현재 구간 달성 현황 */}
         {challenge.currentPeriod && (
-          <div className="bg-blue-50/80 border border-blue-200 rounded-xl p-3.5 space-y-2.5 shadow-xs">
+          <div className="bg-blue-50/80 border border-blue-200 rounded-md p-3.5 space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-blue-900 flex items-center gap-1.5">
                 <Repeat className="w-3.5 h-3.5 text-blue-600" />
@@ -386,19 +386,19 @@ export const ChallengeDetailPage: React.FC = () => {
           </div>
         )}
 
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>인증 기준</span>
           </div>
-          <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg whitespace-pre-wrap border border-slate-100">
+          <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-md whitespace-pre-wrap border border-slate-100">
             {challenge.verificationCriteria}
           </p>
         </div>
 
         {/* 시작 후 잠금 알림 안내 배너 */}
         {challenge.status !== 'NOT_STARTED' && (
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px] text-slate-600 flex items-start gap-2">
+          <div className="bg-slate-50 border border-slate-200 rounded-md p-3 text-[11px] text-slate-600 flex items-start gap-2">
             <Lock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold block text-slate-700">챌린지 진행/수정 잠금 적용 중</span>
@@ -426,7 +426,7 @@ export const ChallengeDetailPage: React.FC = () => {
       />
 
       {/* 참여자 카드 목록 */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex-1 shadow-xs mb-20">
+      <div className="bg-white border border-slate-200 rounded-lg p-4 flex-1 shadow-xs mb-20">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
             <Users className="w-4 h-4 text-blue-600" />
@@ -497,7 +497,7 @@ export const ChallengeDetailPage: React.FC = () => {
               setShowJoinModal(true);
               setActionError(null);
             }}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-md shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
           >
             <Coins className="w-4 h-4" />
             <span>{(() => {
@@ -523,7 +523,7 @@ export const ChallengeDetailPage: React.FC = () => {
                     setShowPenaltyModal(true);
                     setActionError(null);
                   }}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition"
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-md transition"
                 >
                   약정 금액 변경
                 </button>
@@ -531,14 +531,14 @@ export const ChallengeDetailPage: React.FC = () => {
                   <button
                     onClick={handleLeave}
                     disabled={actionLoading}
-                    className="py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs rounded-xl transition"
+                    className="py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs rounded-md transition"
                   >
                     참여 취소
                   </button>
                 )}
               </>
             ) : (
-              <div className="flex-1 py-2.5 bg-slate-50 border border-slate-200 text-slate-500 font-medium text-xs rounded-xl flex items-center justify-center gap-1.5">
+              <div className="flex-1 py-2.5 bg-slate-50 border border-slate-200 text-slate-500 font-medium text-xs rounded-md flex items-center justify-center gap-1.5">
                 <Lock className="w-3.5 h-3.5 text-slate-400" />
                 <span>수행 진행 중 (약정·취소 고정)</span>
               </div>
@@ -547,7 +547,7 @@ export const ChallengeDetailPage: React.FC = () => {
         ) : challenge.status === 'ENDED' ? (
           <button
             onClick={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-md shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
           >
             <RotateCcw className="w-4 h-4" />
             <span>이 챌린지 다시 시작하기</span>
@@ -580,7 +580,7 @@ export const ChallengeDetailPage: React.FC = () => {
             </p>
 
             {actionError && (
-              <div className="p-2.5 rounded-lg bg-red-50 text-red-600 text-[11px] flex items-center gap-1.5">
+              <div className="p-2.5 rounded-md bg-red-50 text-red-600 text-[11px] flex items-center gap-1.5">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{actionError}</span>
               </div>
@@ -593,7 +593,7 @@ export const ChallengeDetailPage: React.FC = () => {
                     key={amt}
                     type="button"
                     onClick={() => setJoinPenalty(amt)}
-                    className={`flex-1 py-1.5 text-xs rounded-lg border transition ${
+                    className={`flex-1 py-1.5 text-xs rounded-md border transition ${
                       joinPenalty === amt
                         ? 'border-amber-500 bg-amber-50 text-amber-800 font-semibold'
                         : 'border-slate-200 bg-slate-50 text-slate-600'
@@ -609,7 +609,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 step={1000}
                 value={joinPenalty}
                 onChange={(e) => setJoinPenalty(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
+                className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -618,7 +618,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 type="button"
                 onClick={() => setShowPenaltyModal(false)}
                 disabled={actionLoading}
-                className="flex-1 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
+                className="flex-1 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-md"
               >
                 취소
               </button>
@@ -626,7 +626,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 type="button"
                 onClick={handleUpdatePenalty}
                 disabled={actionLoading}
-                className="flex-1 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1"
+                className="flex-1 py-2 bg-blue-600 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1"
               >
                 {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : '변경 완료'}
               </button>
@@ -647,7 +647,7 @@ export const ChallengeDetailPage: React.FC = () => {
             </h2>
 
             {actionError && (
-              <div className="p-2.5 rounded-lg bg-red-50 text-red-600 text-[11px] flex items-center gap-1.5">
+              <div className="p-2.5 rounded-md bg-red-50 text-red-600 text-[11px] flex items-center gap-1.5">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                 <span>{actionError}</span>
               </div>
@@ -661,7 +661,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 maxLength={50}
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500"
+                className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -671,7 +671,7 @@ export const ChallengeDetailPage: React.FC = () => {
                 rows={2}
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
-                className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
 
@@ -684,7 +684,7 @@ export const ChallengeDetailPage: React.FC = () => {
                     required
                     value={editCriteria}
                     onChange={(e) => setEditCriteria(e.target.value)}
-                    className="w-full text-base px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+                    className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -694,7 +694,7 @@ export const ChallengeDetailPage: React.FC = () => {
                       type="date"
                       value={editStartDate}
                       onChange={(e) => setEditStartDate(e.target.value)}
-                      className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-1.5 rounded-lg border border-slate-200"
+                      className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-1.5 rounded-md border border-slate-200"
                     />
                   </div>
                   <div className="min-w-0">
@@ -703,13 +703,13 @@ export const ChallengeDetailPage: React.FC = () => {
                       type="date"
                       value={editEndDate}
                       onChange={(e) => setEditEndDate(e.target.value)}
-                      className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-1.5 rounded-lg border border-slate-200"
+                      className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-1.5 rounded-md border border-slate-200"
                     />
                   </div>
                 </div>
               </>
             ) : (
-              <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-500">
+              <div className="p-2.5 rounded-md bg-slate-50 border border-slate-200 text-[11px] text-slate-500">
                 🔒 챌린지 시작 후에는 제목과 설명만 수정할 수 있습니다. (기간 및 인증 기준 잠김)
               </div>
             )}
@@ -719,14 +719,14 @@ export const ChallengeDetailPage: React.FC = () => {
                 type="button"
                 onClick={() => setShowEditModal(false)}
                 disabled={actionLoading}
-                className="flex-1 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl"
+                className="flex-1 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-md"
               >
                 취소
               </button>
               <button
                 type="submit"
                 disabled={actionLoading}
-                className="flex-1 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1"
+                className="flex-1 py-2 bg-blue-600 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1"
               >
                 {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : '수정 저장'}
               </button>

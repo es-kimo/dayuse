@@ -61,7 +61,7 @@ export const GroupsPage: React.FC = () => {
         <h1 className="text-xl font-bold text-slate-800">내 모임</h1>
         <button
           onClick={() => navigate('/groups/new')}
-          className="flex items-center gap-1 text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition active:scale-95"
+          className="flex items-center gap-1 text-xs px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm transition active:scale-95"
         >
           <Plus className="w-4 h-4" />
           모임 만들기
@@ -108,7 +108,7 @@ export const GroupsPage: React.FC = () => {
             <div
               key={group.id}
               onClick={() => navigate(`/groups/${group.id}`)}
-              className="bg-card border border-line hover:border-primary-muted rounded-md p-4 flex items-center justify-between cursor-pointer transition shadow-sm hover:shadow"
+              className="bg-card border border-line hover:border-primary-muted rounded-lg p-4 flex items-center justify-between cursor-pointer transition shadow-sm hover:shadow"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-md bg-primary-subtle text-primary flex items-center justify-center font-bold text-base">

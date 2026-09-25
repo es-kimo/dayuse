@@ -153,7 +153,7 @@ export const InviteLandingPage: React.FC = () => {
           </p>
 
           {/* 모임 정보 요약 카드 */}
-          <div className="w-full bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-around shadow-xs mb-4">
+          <div className="w-full bg-white border border-slate-200 rounded-lg p-4 flex items-center justify-around shadow-xs mb-4">
             <div className="text-center">
               <span className="text-[11px] text-slate-400 block mb-1">현재 멤버</span>
               <span className="text-base font-bold text-slate-800 flex items-center justify-center gap-1">
@@ -164,7 +164,7 @@ export const InviteLandingPage: React.FC = () => {
           </div>
 
           {isAlreadyJoined && (
-            <div className="w-full p-3.5 bg-emerald-50/70 border border-emerald-100 rounded-xl mb-4 text-left flex items-start gap-2.5">
+            <div className="w-full p-3.5 bg-emerald-50/70 border border-emerald-100 rounded-md mb-4 text-left flex items-start gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <div className="text-xs text-emerald-900 leading-relaxed">
                 <p className="font-semibold mb-0.5">이미 가입된 멤버입니다</p>
@@ -176,7 +176,7 @@ export const InviteLandingPage: React.FC = () => {
           )}
 
           {errorMessage && !isAlreadyJoined && (
-            <div className="w-full p-3 bg-red-50 text-red-600 text-xs rounded-lg mb-4 text-center">
+            <div className="w-full p-3 bg-red-50 text-red-600 text-xs rounded-md mb-4 text-center">
               {errorMessage}
             </div>
           )}
@@ -187,7 +187,7 @@ export const InviteLandingPage: React.FC = () => {
             <>
               <button
                 onClick={() => navigate(`/groups/${inviteInfo.groupId}`)}
-                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>모임 홈으로 바로 가기</span>

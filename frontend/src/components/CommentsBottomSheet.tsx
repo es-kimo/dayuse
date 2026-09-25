@@ -79,7 +79,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
           </h2>
           <button
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-xl transition"
+            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-md transition"
             aria-label="닫기"
           >
             <X className="w-5 h-5" />
@@ -131,7 +131,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
                   <button
                     onClick={() => handleDelete(comment.id)}
                     disabled={deletingId === comment.id}
-                    className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 transition opacity-80 shrink-0 rounded-lg active:scale-95"
+                    className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 transition opacity-80 shrink-0 rounded-md active:scale-95"
                     title="댓글 삭제"
                     aria-label="댓글 삭제"
                   >
@@ -155,12 +155,12 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
             onChange={(e) => setContent(e.target.value.slice(0, 300))}
             disabled={submitting}
             placeholder="응원과 격려의 댓글을 남겨보세요..."
-            className="flex-1 text-base min-h-[44px] px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-blue-500 transition text-slate-800 placeholder:text-slate-400"
+            className="flex-1 text-base min-h-[44px] px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:border-blue-500 transition text-slate-800 placeholder:text-slate-400"
           />
           <button
             type="submit"
             disabled={!content.trim() || submitting}
-            className="w-11 h-11 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white rounded-xl transition shadow-xs shrink-0 flex items-center justify-center"
+            className="w-11 h-11 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white rounded-md transition shadow-xs shrink-0 flex items-center justify-center"
             aria-label="댓글 전송"
           >
             {submitting ? (

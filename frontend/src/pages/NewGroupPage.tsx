@@ -40,7 +40,7 @@ export const NewGroupPage: React.FC = () => {
       <div className="flex items-center gap-2 mb-6">
         <button
           onClick={() => navigate('/groups')}
-          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-lg"
+          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -48,7 +48,7 @@ export const NewGroupPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col justify-between">
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
           <label className="block text-xs font-semibold text-slate-600 mb-2">
             모임 이름 <span className="text-red-500">*</span>
           </label>
@@ -61,7 +61,7 @@ export const NewGroupPage: React.FC = () => {
               if (error) setError('');
             }}
             maxLength={50}
-            className="w-full px-3.5 py-2.5 text-base bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:bg-white transition"
+            className="w-full px-3.5 py-2.5 text-base bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white transition"
           />
           <div className="flex justify-between items-center mt-2 text-[11px] text-slate-400">
             <span>생성자는 자동으로 모임장(HOST)이 됩니다.</span>
@@ -74,7 +74,7 @@ export const NewGroupPage: React.FC = () => {
         <button
           type="submit"
           disabled={isSubmitting || !name.trim()}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-medium rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
+          className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-medium rounded-md text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
         >
           {isSubmitting ? (
             <>

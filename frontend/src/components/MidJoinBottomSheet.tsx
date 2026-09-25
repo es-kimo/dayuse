@@ -211,7 +211,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                       key={amt}
                       type="button"
                       onClick={() => setPenaltyAmount(amt)}
-                      className={`flex-1 py-2 text-xs rounded-xl border font-semibold transition ${
+                      className={`flex-1 py-2 text-xs rounded-md border font-semibold transition ${
                         penaltyAmount === amt
                           ? 'border-blue-600 bg-blue-50 text-blue-700'
                           : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -229,14 +229,14 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                     step={1000}
                     value={penaltyAmount}
                     onChange={(e) => setPenaltyAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full text-sm font-semibold px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 pr-8"
+                    className="w-full text-sm font-semibold px-3 py-2.5 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 pr-8"
                   />
                   <span className="absolute right-3 top-2.5 text-xs text-slate-400">원</span>
                 </div>
               </div>
 
               {/* 요약 안내 카드 */}
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2">
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-100 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-500">본인 수행 일수</span>
                   <span className="font-bold text-slate-800">{totalDays}일</span>
@@ -270,7 +270,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition"
+            className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition"
           >
             취소
           </button>
@@ -278,7 +278,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
             type="button"
             onClick={handleJoin}
             disabled={submitting || loading || !preview}
-            className="flex-2 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
+            className="flex-2 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-md transition flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
           >
             {submitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
