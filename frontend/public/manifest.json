@@ -1,16 +1,28 @@
 {
-  "name": "dayuse - 매일 함께하는 챌린지와 정산",
+  "id": "/",
+  "name": "dayuse - 매일 함께하는 소모임 챌린지와 정산",
   "short_name": "dayuse",
+  "description": "매일 습관을 인증하고 보증금을 정산하는 스마트한 소모임 챌린지 서비스",
   "start_url": "/today",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f8fafc",
   "theme_color": "#3b82f6",
+  "lang": "ko-KR",
+  "categories": ["lifestyle", "productivity", "social"],
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "192x192 512x512",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

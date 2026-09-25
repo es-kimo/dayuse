@@ -1,12 +1,82 @@
-// dayuse Web Push Service Worker
+// dayuse Web Push & PWA Service Worker (v0.2.0)
+
+const CACHE_NAME = 'dayuse-static-v0.2.0';
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/favicon.svg'
+];
 
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('기본 정적 자산 프리캐시 건너뜀:', err);
+      });
+    })
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys
+          .filter((key) => key.startsWith('dayuse-') && key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      );
+    }).then(() => self.clients.claim())
+  );
 });
+
+// fetch 이벤트: API 요청은 네트워크 전용, 정적 자산은 캐시 우선/폴백
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+
+  // GET 요청이 아니거나 API 경로는 캐시를 타지 않고 항상 네트워크로 통신
+  if (request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // http/https 스킴만 캐싱
+  if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // HTML 페이지 탐색 요청 (SPA 네비게이션)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).catch(() => {
+        return caches.match('/index.html') || caches.match('/');
+      })
+    );
+    return;
+  }
+
+  // 정적 리소스 (JS, CSS, 이미지, 폰트)
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      const fetchPromise = fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => cachedResponse);
+
+      return cachedResponse || fetchPromise;
+    })
+  );
+});
+
+// --- 웹 푸시 알림 핸들러 ---
 
 self.addEventListener('push', (event) => {
   let data = {
