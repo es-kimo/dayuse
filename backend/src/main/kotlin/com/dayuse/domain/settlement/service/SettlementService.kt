@@ -93,7 +93,12 @@ class SettlementService(
     ): List<UnpaidRecordItemResponse> {
         validateMember(groupId, userId)
         val dailyRecords = dailyRecordRepository.findUnpaidRecordsForDeposit(userId, groupId)
-        val periodSettlements = challengePeriodSettlementRepository?.findUnpaidSettlementsForDeposit(userId, groupId).orEmpty()
+
+        // TODO [사용자 미션 2-A]: 주 N회 구간 미수행 확정 벌금 조회 및 UnpaidRecordItemResponse 매핑
+        // challengePeriodSettlementRepository에서 userId, groupId에 해당하는 미납(UNPAID) 정산 건들을 조회하고,
+        // UnpaidRecordItemResponse(isPeriod = true, periodIndex, periodStartDate, ...) 목록으로 변환하여
+        // dailyItems와 합쳐서 반환하세요.
+        val periodSettlements = emptyList<com.dayuse.domain.challenge.period.ChallengePeriodSettlement>()
 
         if (dailyRecords.isEmpty() && periodSettlements.isEmpty()) return emptyList()
 
@@ -112,25 +117,7 @@ class SettlementService(
             )
         }
 
-        val periodItems = periodSettlements.map { s ->
-            UnpaidRecordItemResponse(
-                id = s.id,
-                challengeId = s.challengeId,
-                challengeTitle = challenges[s.challengeId]?.title ?: "알 수 없는 챌린지",
-                date = s.endDate,
-                penaltyAmount = s.totalPenaltyAmount,
-                status = null,
-                isPeriod = true,
-                periodIndex = s.periodIndex,
-                periodStartDate = s.startDate,
-                periodEndDate = s.endDate,
-                targetCount = s.targetCount,
-                completedCount = s.completedCount,
-                missedCount = s.missedCount
-            )
-        }
-
-        return dailyItems + periodItems
+        return dailyItems
     }
 
     fun createDepositReport(
@@ -177,29 +164,18 @@ class SettlementService(
             }
         }
 
-        for (s in periodSettlements) {
-            if (s.userId != userId || s.groupId != groupId) {
-                throw ForbiddenException("본인의 모임 미수행 구간만 신고할 수 있습니다.")
-            }
-            if (s.status != PeriodSettlementStatus.CONFIRMED_FAILED) {
-                throw BadRequestException("미수행 확정된 구간만 입금 신고할 수 있습니다.")
-            }
-            if (s.depositStatus != DepositStatus.UNPAID) {
-                throw BadRequestException("이미 입금 확인 대기 중이거나 완료된 구간이 포함되어 있습니다.")
-            }
-            if (s.totalPenaltyAmount <= 0) {
-                throw BadRequestException("약정 벌금이 0원인 구간은 입금 대상에서 원천 제외됩니다.")
-            }
-        }
-
-        val calculatedTotal = records.sumOf { it.penaltyAmount } + periodSettlements.sumOf { it.totalPenaltyAmount }
+        // TODO [사용자 미션 2-B]: 주 N회 구간 정산 건(periodSettlements)에 대한 입금 신고 검증 및 상태 전이
+        // 1. periodSettlements의 소유자(userId, groupId), 상태(CONFIRMED_FAILED), depositStatus(UNPAID), 벌금액(> 0)을 검증하세요.
+        // 2. calculatedTotal 합산에 periodSettlements의 totalPenaltyAmount를 포함하세요.
+        // 3. 입금 신고 제출 시 periodSettlements의 depositStatus를 WAITING_CONFIRMATION으로 전이하세요.
+        // 4. DepositReportItem 생성 시 periodSettlementId를 매핑하여 items에 포함하세요.
+        val calculatedTotal = records.sumOf { it.penaltyAmount }
         if (calculatedTotal != request.totalAmount) {
             throw BadRequestException("선택한 미수행 기록 벌금 합계(${calculatedTotal}원)와 신고 금액(${request.totalAmount}원)이 일치하지 않습니다.")
         }
 
         // 1. 상태 전이: WAITING_CONFIRMATION
         records.forEach { it.depositStatus = DepositStatus.WAITING_CONFIRMATION }
-        periodSettlements.forEach { it.depositStatus = DepositStatus.WAITING_CONFIRMATION }
 
         // 2. DepositReport 엔티티 생성
         val report = depositReportRepository.save(
@@ -218,11 +194,6 @@ class SettlementService(
             DepositReportItem(
                 depositReportId = report.id,
                 dailyRecordId = it.id
-            )
-        } + periodSettlements.map {
-            DepositReportItem(
-                depositReportId = report.id,
-                periodSettlementId = it.id
             )
         }
         val savedItems = depositReportItemRepository.saveAll(items)

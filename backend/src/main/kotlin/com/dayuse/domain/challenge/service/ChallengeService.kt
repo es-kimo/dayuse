@@ -503,17 +503,13 @@ class ChallengeService(
             challengePeriodSettlementRepository?.findAllByChallengeParticipantId(p.id).orEmpty()
         }.orEmpty().associateBy { it.periodIndex }
 
+        // TODO [사용자 미션 1-A]: 주 N회 구간별 정산 상태(settlementStatus) 및 미달 벌금 산출
+        // - 구간이 종료(today > interval.endDate)되었고 목표 미달인 경우:
+        //   DB에 이미 확정된 내역(ChallengePeriodSettlement)이 있으면 그 상태(CONFIRMED_FAILED),
+        //   없으면 본인 확인 대기(NEEDS_CONFIRMATION) 상태로 매핑하세요.
+        // - 미수행 횟수(missedCount)와 총 벌금(totalPenaltyAmount)을 정확히 계산하세요.
         val intervalDtos = myCalc.intervals.map { interval ->
             val settlement = mySettlements[interval.index]
-            val status = when {
-                settlement != null -> settlement.status
-                today > interval.endDate -> if (interval.isAchieved) PeriodSettlementStatus.ACHIEVED else PeriodSettlementStatus.NEEDS_CONFIRMATION
-                else -> PeriodSettlementStatus.IN_PROGRESS
-            }
-            val missed = settlement?.missedCount ?: if (status == PeriodSettlementStatus.NEEDS_CONFIRMATION) interval.remainingTarget else 0
-            val penaltyPerMiss = settlement?.penaltyAmountPerMiss ?: (myParticipant?.penaltyAmount ?: 0)
-            val totalPenalty = settlement?.totalPenaltyAmount ?: (missed * penaltyPerMiss)
-
             ChallengePeriodIntervalDto(
                 index = interval.index,
                 startDate = interval.startDate,
@@ -521,11 +517,11 @@ class ChallengeService(
                 targetCount = interval.targetCount,
                 completedCount = interval.completedCount,
                 isAchieved = interval.isAchieved,
-                settlementStatus = status,
+                settlementStatus = settlement?.status ?: PeriodSettlementStatus.IN_PROGRESS,
                 settlementId = settlement?.id,
-                missedCount = missed,
-                penaltyAmountPerMiss = penaltyPerMiss,
-                totalPenaltyAmount = totalPenalty,
+                missedCount = 0,
+                penaltyAmountPerMiss = myParticipant?.penaltyAmount ?: 0,
+                totalPenaltyAmount = 0,
                 depositStatus = settlement?.depositStatus
             )
         }
@@ -913,72 +909,12 @@ class ChallengeService(
             today = today
         )
 
-        val interval = calc.intervals.find { it.index == periodIndex }
-            ?: throw ResourceNotFoundException("해당 구간을 찾을 수 없습니다. (구간 번호: $periodIndex)")
-
-        if (today <= interval.endDate) {
-            throw BadRequestException("아직 진행 중인 구간은 미수행으로 확정할 수 없습니다.")
-        }
-
-        if (interval.isAchieved) {
-            throw BadRequestException("목표를 달성한 구간은 미수행 확정 대상이 아닙니다.")
-        }
-
-        val existing = challengePeriodSettlementRepository?.findByChallengeParticipantIdAndPeriodIndex(
-            participant.id,
-            periodIndex
-        )
-
-        if (existing != null && existing.status == PeriodSettlementStatus.CONFIRMED_FAILED) {
-            return PeriodSettlementResponse(
-                periodIndex = existing.periodIndex,
-                startDate = existing.startDate,
-                endDate = existing.endDate,
-                targetCount = existing.targetCount,
-                completedCount = existing.completedCount,
-                missedCount = existing.missedCount,
-                penaltyAmountPerMiss = existing.penaltyAmountPerMiss,
-                totalPenaltyAmount = existing.totalPenaltyAmount,
-                status = existing.status
-            )
-        }
-
-        val missedCount = maxOf(0, interval.targetCount - interval.completedCount)
-        val penaltyAmountPerMiss = participant.penaltyAmount
-        val totalPenaltyAmount = missedCount * penaltyAmountPerMiss
-
-        val settlement = existing ?: ChallengePeriodSettlement(
-            challengeId = challenge.id,
-            challengeParticipantId = participant.id,
-            userId = userId,
-            groupId = groupId,
-            periodIndex = periodIndex,
-            startDate = interval.startDate,
-            endDate = interval.endDate,
-            targetCount = interval.targetCount,
-            completedCount = interval.completedCount,
-            missedCount = missedCount,
-            penaltyAmountPerMiss = penaltyAmountPerMiss,
-            totalPenaltyAmount = totalPenaltyAmount,
-            status = PeriodSettlementStatus.CONFIRMED_FAILED,
-            depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID,
-            confirmedAt = java.time.LocalDateTime.now()
-        )
-
-        settlement.confirmFailed(penaltyAmountPerMiss)
-        val saved = challengePeriodSettlementRepository?.save(settlement) ?: settlement
-
-        return PeriodSettlementResponse(
-            periodIndex = saved.periodIndex,
-            startDate = saved.startDate,
-            endDate = saved.endDate,
-            targetCount = saved.targetCount,
-            completedCount = saved.completedCount,
-            missedCount = saved.missedCount,
-            penaltyAmountPerMiss = saved.penaltyAmountPerMiss,
-            totalPenaltyAmount = saved.totalPenaltyAmount,
-            status = saved.status
-        )
+        // TODO [사용자 미션 1-B]: 주 N회 구간 미수행 확정 및 벌금 부과 상태 전이 (confirmPeriod)
+        // 1. interval 검증: 오늘이 구간 종료일 이전이거나(today <= interval.endDate), 이미 목표를 달성한 경우(interval.isAchieved) 예외 발생
+        // 2. 멱등성: 이미 CONFIRMED_FAILED 상태인 ChallengePeriodSettlement가 존재하면 기존 응답 반환
+        // 3. 미수행 횟수 = maxOf(0, targetCount - completedCount), 총 벌금 = missedCount * penaltyAmountPerMiss
+        // 4. ChallengePeriodSettlement 생성 또는 confirmFailed(penaltyAmountPerMiss) 호출 후 저장
+        throw NotImplementedError("TODO [사용자 미션 1-B]: 주 N회 구간 미수행 확정 로직을 구현하세요.")
     }
 
     private fun ChallengePeriodInterval.toDto() = ChallengePeriodIntervalDto(
