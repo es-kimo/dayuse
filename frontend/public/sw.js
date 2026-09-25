@@ -1,11 +1,16 @@
-// dayuse Web Push & PWA Service Worker (v0.2.0)
+// dayuse Web Push & PWA Service Worker (v0.4.0)
 
-const CACHE_NAME = 'dayuse-static-v0.2.0';
+const CACHE_NAME = 'dayuse-static-v0.4.0';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.svg'
+  '/favicon.ico',
+  '/favicon.svg',
+  '/apple-touch-icon.png',
+  '/assets/brand/logo-combination.svg',
+  '/assets/brand/og-default.png',
+  '/assets/brand/symbol.svg'
 ];
 
 self.addEventListener('install', (event) => {
