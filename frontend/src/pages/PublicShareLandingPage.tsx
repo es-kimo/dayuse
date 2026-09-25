@@ -5,14 +5,15 @@ import { challengesApi } from '../api/challenges';
 import { useAuth } from '../context/AuthContext';
 import type { PublicShareCardResponse, StreakHistoryItem } from '../types';
 import {
-  Flame,
   Loader2,
   AlertCircle,
   ArrowRight,
   ShieldAlert,
   X,
+  Check,
 } from 'lucide-react';
 import { DayuLogo } from '../components/brand/DayuLogo';
+import { DayuExpression } from '../components/brand/DayuExpression';
 import { usePageMeta } from '../hooks/usePageMeta';
 
 export const PublicShareLandingPage: React.FC = () => {
@@ -31,6 +32,14 @@ export const PublicShareLandingPage: React.FC = () => {
     customShareDescription: card ? '챌린지 수행 기록을 확인해보세요.' : undefined,
     customShareImage: card && token ? `/api/v1/public/shares/${encodeURIComponent(token)}/og.jpg` : undefined,
   });
+
+  // 달성률 계산 (유효 기간 데이터 기준)
+  const inPeriodItems = historyItems.filter((item) => item.inPeriod);
+  const completedCount = inPeriodItems.filter((item) => item.completed).length;
+  const totalDays = inPeriodItems.length;
+  const hasAchievementData = totalDays > 0;
+  const achievementRate = hasAchievementData ? Math.round((completedCount / totalDays) * 100) : 0;
+  const recent7Items = historyItems.slice(-7);
 
   // 비모임원 가입 제한 모달 상태
   const [showInviteRequiredModal, setShowInviteRequiredModal] = useState(false);
@@ -119,28 +128,19 @@ export const PublicShareLandingPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-between p-4 py-8 max-w-md mx-auto relative">
-      {/* 상단 브랜딩 헤더 */}
-      <div className="w-full flex items-center justify-between mb-4 px-2 gap-2 min-w-0">
-        <DayuLogo variant="horizontal" theme="mono-white" className="h-5 w-auto max-w-[130px] object-contain shrink-0" />
-        <span className="text-[11px] text-slate-400 font-mono shrink-0">dayuse.kr</span>
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col items-center justify-between p-4 py-8 max-w-md mx-auto relative font-sans">
+      {/* 상단 브랜딩 바: 로고 (좌) · 도메인 (우) */}
+      <div className="w-full max-w-[340px] flex items-center justify-between mb-4 px-1 gap-2 min-w-0">
+        <DayuLogo variant="horizontal" theme="dark" className="h-7 w-auto object-contain shrink-0" />
+        <span className="text-xs text-[#94A3B8] font-mono tracking-wider shrink-0">dayuse.kr</span>
       </div>
 
-      {/* 9:16 공유 카드 본체 */}
-      <div
-        className="w-full max-w-[320px] rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col justify-between p-6 shadow-2xl border border-white/10 my-auto"
-        style={{ aspectRatio: '9/16' }}
-      >
-        {/* 카드 상단 */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-3 gap-2 min-w-0">
-          <DayuLogo variant="horizontal" theme="mono-white" className="h-4 w-auto max-w-[110px] object-contain shrink-0" />
-          <span className="text-[9px] text-slate-400 font-mono shrink-0">shared card</span>
-        </div>
-
+      {/* 공유 카드 본체 */}
+      <div className="w-full max-w-[340px] rounded-3xl bg-[#0F172A] border border-[#1E293B] p-6 flex flex-col justify-between my-auto relative shadow-2xl">
         {/* 카드 중앙 내용 */}
         {card.cardType === 'TODAY_VERIFICATION' ? (
           <div className="flex-1 flex flex-col justify-center py-4 space-y-4">
-            <div className="rounded-2xl overflow-hidden aspect-square bg-slate-800 border border-white/10 shadow-lg">
+            <div className="rounded-2xl overflow-hidden aspect-square bg-slate-800 border border-[#1E293B] shadow-lg">
               {card.imageUrl ? (
                 <img
                   src={card.imageUrl}
@@ -156,7 +156,7 @@ export const PublicShareLandingPage: React.FC = () => {
             </div>
 
             {card.comment && (
-              <div className="bg-white/5 border border-white/10 rounded-md p-3.5">
+              <div className="bg-[#1E293B]/50 border border-[#1E293B] rounded-xl p-3.5">
                 <p className="text-xs text-slate-200 line-clamp-3 leading-relaxed">
                   "{card.comment}"
                 </p>
@@ -164,67 +164,85 @@ export const PublicShareLandingPage: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="flex-1 flex flex-col justify-center py-6 text-center space-y-6">
-            <div className="inline-flex flex-col items-center justify-center">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500 to-red-500 flex items-center justify-center shadow-xl shadow-orange-500/25 mb-3">
-                <Flame className="w-12 h-12 text-white" />
-              </div>
-              <div className="text-4xl font-black text-white tracking-tight">
-                {card.streakDays}
-                <span className="text-xl font-bold text-amber-400 ml-1.5">일 연속</span>
-              </div>
-              <p className="text-xs text-slate-300 font-medium mt-1">
-                목표를 향해 꾸준히 달리는 중!
-              </p>
+          <div className="flex-1 flex flex-col justify-center py-2 text-center">
+            {/* 대표 그래픽: 흰 원 속 해냈어요 데이유 */}
+            <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-md mx-auto mb-4">
+              <DayuExpression expression="done" color="blue" className="w-14 h-14 object-contain" />
             </div>
 
-            {/* 최근 일자별 기록 타일 */}
-            <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-              <div className="flex items-center justify-between text-[11px] text-slate-400 mb-2.5 font-medium">
-                <span>최근 기록</span>
-                <span>성공 여부</span>
-              </div>
-              <div className="flex items-center justify-between gap-1.5">
-                {historyItems.map((item, idx) => (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-1.5">
-                    <div
-                      className={`w-full aspect-square rounded-lg flex items-center justify-center text-xs font-bold ${
-                        item.completed
-                          ? 'bg-blue-500 text-white shadow-xs'
-                          : item.inPeriod
-                          ? 'bg-slate-800 text-slate-500 border border-slate-700'
-                          : 'bg-slate-800/40 text-slate-600'
-                      }`}
-                    >
-                      {item.completed ? '✓' : ''}
-                    </div>
-                    <span className="text-[9px] text-slate-400">
-                      {item.date.slice(8)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            {/* 연속 일수 타이포그래피 */}
+            <div className="text-[44px] leading-tight font-extrabold text-white tracking-tight tabular-nums flex items-baseline justify-center">
+              {card.streakDays}
+              <span className="text-xl font-bold text-[#93C5FD] ml-1.5 font-sans">일 연속</span>
             </div>
+            <p className="text-xs text-[#CBD5E1] font-normal mt-1 mb-5">
+              목표를 향해 꾸준히 달리는 중이에요
+            </p>
+
+            {/* 달성률 (데이터가 있을 때만 노출) */}
+            {hasAchievementData && (
+              <div className="w-full mb-5 text-left">
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-[#94A3B8] font-medium">이번 챌린지 달성률</span>
+                  <span className="text-white font-bold tabular-nums">
+                    {completedCount} / {totalDays}일 · {achievementRate}%
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-[#1E293B] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min(100, Math.max(0, achievementRate))}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 최근 7일 기록 칸 */}
+            {recent7Items.length > 0 && (
+              <div className="w-full mb-6">
+                <div className="text-xs text-[#94A3B8] font-medium mb-2.5 text-left">
+                  최근 7일
+                </div>
+                <div className="grid grid-cols-7 gap-2">
+                  {recent7Items.map((item, idx) => (
+                    <div key={idx} className="flex flex-col items-center gap-1.5">
+                      <div
+                        className={`w-full aspect-square max-w-[34px] rounded-lg flex items-center justify-center transition ${
+                          item.completed
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'bg-transparent border border-[#1E293B]'
+                        }`}
+                      >
+                        {item.completed && <Check className="w-4 h-4 text-white stroke-[2.5]" />}
+                      </div>
+                      <span className="text-[10px] text-[#94A3B8] tabular-nums font-mono">
+                        {item.date ? item.date.slice(8) : ''}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* 카드 하단 */}
-        <div className="border-t border-white/10 pt-3">
-          <div className="text-xs text-blue-400 font-bold truncate mb-0.5">
+        {/* 카드 하단 정보 */}
+        <div className="text-left pt-3 border-t border-[#1E293B]/60">
+          <div className="text-xs font-bold text-[#60A5FA] truncate mb-0.5">
             {card.title}
           </div>
-          <div className="text-sm font-semibold text-slate-200">
+          <div className="text-[17px] font-semibold text-white">
             {card.userNickname}
           </div>
         </div>
       </div>
 
-      {/* 하단 고정 CTA */}
-      <div className="w-full mt-6 space-y-2">
+      {/* 하단 CTA 바 */}
+      <div className="w-full max-w-[340px] mt-6 space-y-2">
         <button
           onClick={handleJoinCta}
           disabled={checkingMembership}
-          className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 active:scale-95 disabled:opacity-50"
+          className="w-full h-[52px] bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
         >
           {checkingMembership ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -236,8 +254,8 @@ export const PublicShareLandingPage: React.FC = () => {
           )}
         </button>
 
-        <p className="text-[11px] text-slate-500 text-center">
-          데이유즈에서 친구들과 함께 습관을 만들고 보증금을 정산해보세요
+        <p className="text-xs text-[#94A3B8] text-center mt-2.5">
+          데이유즈에서 친구들과 각자의 챌린지를 인증하고 기록해요.
         </p>
       </div>
 
