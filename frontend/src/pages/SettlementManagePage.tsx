@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { DepositReportDetail, DepositReportStatus } from '../types';
 import { settlementApi } from '../api/settlement';
 import { groupsApi } from '../api/groups';
 import { MobileLayout } from '../components/MobileLayout';
+import { Button, FormField, Textarea } from '../components/ui';
 import {
   ArrowLeft,
   Loader2,
@@ -32,10 +33,14 @@ export const SettlementManagePage: React.FC = () => {
   const [rejectTargetId, setRejectTargetId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejecting, setRejecting] = useState(false);
+  const [rejectError, setRejectError] = useState('');
+  const rejectReasonRef = useRef<HTMLTextAreaElement>(null);
 
   const [cancelTargetId, setCancelTargetId] = useState<number | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+  const cancelReasonRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (groupId) {
@@ -95,13 +100,17 @@ export const SettlementManagePage: React.FC = () => {
   const handleOpenRejectModal = (reportId: number) => {
     setRejectTargetId(reportId);
     setRejectReason('');
+    setRejectError('');
   };
 
   const handleRejectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rejectTargetId) return;
+    setRejectError('');
+
     if (!rejectReason.trim()) {
-      alert('반려 사유를 입력해 주세요.');
+      setRejectError('반려 사유를 입력해 주세요.');
+      rejectReasonRef.current?.focus();
       return;
     }
 
@@ -113,7 +122,8 @@ export const SettlementManagePage: React.FC = () => {
       fetchReports();
     } catch (err: any) {
       console.error('Failed to reject deposit report:', err);
-      alert(err.response?.data?.message || '입금 반려 처리에 실패했습니다.');
+      // 서버 오류 시 사용자 입력값 보존
+      setRejectError(err.response?.data?.message || '입금 반려 처리에 실패했습니다. 다시 시도해 주세요.');
     } finally {
       setRejecting(false);
     }
@@ -122,13 +132,17 @@ export const SettlementManagePage: React.FC = () => {
   const handleOpenCancelModal = (reportId: number) => {
     setCancelTargetId(reportId);
     setCancelReason('');
+    setCancelError('');
   };
 
   const handleCancelSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cancelTargetId) return;
+    setCancelError('');
+
     if (!cancelReason.trim()) {
-      alert('확인 취소 사유를 입력해 주세요.');
+      setCancelError('확인 취소 사유를 입력해 주세요.');
+      cancelReasonRef.current?.focus();
       return;
     }
 
@@ -140,7 +154,8 @@ export const SettlementManagePage: React.FC = () => {
       fetchReports();
     } catch (err: any) {
       console.error('Failed to cancel confirmation:', err);
-      alert(err.response?.data?.message || '확인 취소 처리에 실패했습니다.');
+      // 서버 오류 시 사용자 입력값 보존
+      setCancelError(err.response?.data?.message || '확인 취소 처리에 실패했습니다. 다시 시도해 주세요.');
     } finally {
       setCancelling(false);
     }
@@ -373,38 +388,48 @@ export const SettlementManagePage: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleRejectSubmit} className="space-y-3">
+            <form onSubmit={handleRejectSubmit} noValidate className="space-y-3">
               <p className="text-xs text-slate-500">
                 반려 시 모임원에게 사유가 전달되며, 연결된 미수행 기록은 다시 미납으로 원복됩니다.
               </p>
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">반려 사유 (필수)</label>
-                <textarea
+
+              <FormField label="반려 사유" required error={rejectError} id="reject-reason-input">
+                <Textarea
+                  ref={rejectReasonRef}
+                  id="reject-reason-input"
                   value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
+                  onChange={(e) => {
+                    setRejectReason(e.target.value);
+                    if (rejectError) setRejectError('');
+                  }}
                   placeholder="예: 계좌 입금 내역이 확인되지 않습니다."
                   rows={3}
-                  className="w-full text-base p-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white resize-none"
+                  error={rejectError}
                   required
+                  className="resize-none"
                 />
-              </div>
+              </FormField>
 
               <div className="flex gap-2 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
+                  fullWidth
                   onClick={() => setRejectTargetId(null)}
-                  className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md"
                 >
                   취소
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={rejecting}
-                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1"
+                  variant="danger"
+                  size="md"
+                  fullWidth
+                  isLoading={rejecting}
+                  loadingText="반려 처리 중..."
                 >
-                  {rejecting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>반려 확정</span>
-                </button>
+                  반려 확정
+                </Button>
               </div>
             </form>
           </div>
@@ -418,14 +443,16 @@ export const SettlementManagePage: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold text-slate-800">승인 확인 취소 (롤백)</h3>
               <button
+                type="button"
                 onClick={() => setCancelTargetId(null)}
-                className="text-slate-400 hover:text-slate-600"
+                aria-label="닫기"
+                className="text-slate-400 hover:text-slate-600 focus-ring rounded-md p-1"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleCancelSubmit} className="space-y-3">
+            <form onSubmit={handleCancelSubmit} noValidate className="space-y-3">
               <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700 flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                 <p className="text-[11px] leading-relaxed">
@@ -433,34 +460,43 @@ export const SettlementManagePage: React.FC = () => {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">취소 사유 (필수)</label>
-                <textarea
+              <FormField label="취소 사유" required error={cancelError} id="cancel-reason-input">
+                <Textarea
+                  ref={cancelReasonRef}
+                  id="cancel-reason-input"
                   value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
+                  onChange={(e) => {
+                    setCancelReason(e.target.value);
+                    if (cancelError) setCancelError('');
+                  }}
                   placeholder="예: 입금자명 오인으로 인한 실수 승인 취소"
                   rows={3}
-                  className="w-full text-base p-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white resize-none"
+                  error={cancelError}
                   required
+                  className="resize-none"
                 />
-              </div>
+              </FormField>
 
               <div className="flex gap-2 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
+                  fullWidth
                   onClick={() => setCancelTargetId(null)}
-                  className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md"
                 >
                   닫기
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={cancelling}
-                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1"
+                  variant="danger"
+                  size="md"
+                  fullWidth
+                  isLoading={cancelling}
+                  loadingText="취소 처리 중..."
                 >
-                  {cancelling && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>취소 확인</span>
-                </button>
+                  취소 확인
+                </Button>
               </div>
             </form>
           </div>

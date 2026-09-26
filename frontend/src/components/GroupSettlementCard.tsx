@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { SettlementSummary, GroupAccountPayload } from '../types';
 import { settlementApi } from '../api/settlement';
+import { Button, FormField, Input } from './ui';
 import {
   CreditCard,
   Copy,
@@ -10,7 +11,6 @@ import {
   Settings,
   ChevronRight,
   Send,
-  Loader2,
   X,
   Wallet,
   Clock,
@@ -41,6 +41,11 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
   const [accountNumber, setAccountNumber] = useState('');
   const [accountHolder, setAccountHolder] = useState('');
   const [savingAccount, setSavingAccount] = useState(false);
+  const [accountError, setAccountError] = useState('');
+
+  const bankNameRef = useRef<HTMLInputElement>(null);
+  const accountNumberRef = useRef<HTMLInputElement>(null);
+  const accountHolderRef = useRef<HTMLInputElement>(null);
 
   const account = summary?.account;
 
@@ -56,13 +61,27 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
     setBankName(account?.bankName || '');
     setAccountNumber(account?.accountNumber || '');
     setAccountHolder(account?.accountHolder || '');
+    setAccountError('');
     setIsEditingAccount(true);
   };
 
   const handleSaveAccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bankName.trim() || !accountNumber.trim() || !accountHolder.trim()) {
-      alert('모든 계좌 정보를 입력해 주세요.');
+    setAccountError('');
+
+    if (!bankName.trim()) {
+      setAccountError('은행명을 입력해 주세요.');
+      bankNameRef.current?.focus();
+      return;
+    }
+    if (!accountNumber.trim()) {
+      setAccountError('계좌번호를 입력해 주세요.');
+      accountNumberRef.current?.focus();
+      return;
+    }
+    if (!accountHolder.trim()) {
+      setAccountError('예금주를 입력해 주세요.');
+      accountHolderRef.current?.focus();
       return;
     }
 
@@ -78,7 +97,8 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
       onRefresh();
     } catch (err: any) {
       console.error('Failed to update group account:', err);
-      alert(err.response?.data?.message || '계좌 정보 저장에 실패했습니다.');
+      // 서버 오류 시 사용자 입력값 보존
+      setAccountError(err.response?.data?.message || '계좌 정보 저장에 실패했습니다. 다시 시도해 주세요.');
     } finally {
       setSavingAccount(false);
     }
@@ -237,62 +257,82 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleSaveAccount} className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">은행명</label>
-                <input
+            <form onSubmit={handleSaveAccount} noValidate className="space-y-3">
+              {accountError && (
+                <div role="alert" aria-live="polite" className="p-2.5 rounded-md bg-danger-bg border border-danger-border text-danger text-caption font-medium flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-danger-icon" aria-hidden="true" />
+                  <span>{accountError}</span>
+                </div>
+              )}
+
+              <FormField label="은행명" required id="bank-name-input">
+                <Input
+                  ref={bankNameRef}
+                  id="bank-name-input"
                   type="text"
                   placeholder="예: 카카오뱅크, 토스뱅크, 신한은행"
                   value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
+                  onChange={(e) => {
+                    setBankName(e.target.value);
+                    if (accountError) setAccountError('');
+                  }}
                   maxLength={50}
-                  className="w-full text-base px-3 py-2 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white"
                   required
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">계좌번호</label>
-                <input
+              <FormField label="계좌번호" required id="account-number-input">
+                <Input
+                  ref={accountNumberRef}
+                  id="account-number-input"
                   type="text"
                   placeholder="예: 3333-01-1234567 (하이픈 포함 가능)"
                   value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value)}
+                  onChange={(e) => {
+                    setAccountNumber(e.target.value);
+                    if (accountError) setAccountError('');
+                  }}
                   maxLength={50}
-                  className="w-full text-base px-3 py-2 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white"
                   required
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">예금주</label>
-                <input
+              <FormField label="예금주" required id="account-holder-input">
+                <Input
+                  ref={accountHolderRef}
+                  id="account-holder-input"
                   type="text"
                   placeholder="예: 홍길동"
                   value={accountHolder}
-                  onChange={(e) => setAccountHolder(e.target.value)}
+                  onChange={(e) => {
+                    setAccountHolder(e.target.value);
+                    if (accountError) setAccountError('');
+                  }}
                   maxLength={50}
-                  className="w-full text-base px-3 py-2 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white"
                   required
                 />
-              </div>
+              </FormField>
 
               <div className="pt-2 flex gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="md"
+                  fullWidth
                   onClick={() => setIsEditingAccount(false)}
-                  className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition"
                 >
                   취소
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={savingAccount}
-                  className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1 transition"
+                  variant="primary"
+                  size="md"
+                  fullWidth
+                  isLoading={savingAccount}
+                  loadingText="저장 중..."
                 >
-                  {savingAccount && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>저장하기</span>
-                </button>
+                  저장하기
+                </Button>
               </div>
             </form>
           </div>

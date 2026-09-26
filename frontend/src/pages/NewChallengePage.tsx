@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { getTodayKstString, addDaysKst } from '../utils/date';
 import type { ChallengeSummary, PeriodType, GroupMember, CreateChallengePayload } from '../types';
+import { Button, FormField, Input, Textarea } from '../components/ui';
 
 const PERIOD_PRESETS = [
   { label: '1주 (7일)', days: 7 },
@@ -36,6 +37,8 @@ export const NewChallengePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
+  const titleInputRef = React.useRef<HTMLInputElement>(null);
+  const criteriaInputRef = React.useRef<HTMLTextAreaElement>(null);
 
   const restartFromId = searchParams.get('restartFrom');
   const today = getTodayKstString();
@@ -324,10 +327,12 @@ export const NewChallengePage: React.FC = () => {
 
     if (!title.trim()) {
       setError('챌린지 제목을 입력해주세요.');
+      titleInputRef.current?.focus();
       return;
     }
     if (!verificationCriteria.trim()) {
       setError('인증 기준을 상세히 입력해주세요.');
+      criteriaInputRef.current?.focus();
       return;
     }
     if (startDate < today) {
@@ -451,51 +456,55 @@ export const NewChallengePage: React.FC = () => {
         </div>
       )}
 
-      <form onSubmit={handleOpenConfirm} className="space-y-4 flex-1">
+      <form onSubmit={handleOpenConfirm} noValidate className="space-y-4 flex-1">
         {/* 제목 */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            챌린지 제목 <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            required
-            maxLength={50}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="예: 주 3회 헬스장 가기"
-            className="w-full text-base px-3 py-2.5 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
-          />
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs">
+          <FormField label="챌린지 제목" required id="challenge-title">
+            <Input
+              ref={titleInputRef}
+              id="challenge-title"
+              required
+              maxLength={50}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="예: 주 3회 헬스장 가기"
+            />
+          </FormField>
         </div>
 
         {/* 설명 */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            챌린지 설명 (선택)
-          </label>
-          <textarea
-            rows={2}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="모임원들에게 챌린지의 목표나 규칙을 소개해 주세요."
-            className="w-full text-base px-3 py-2.5 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
-          />
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs">
+          <FormField label="챌린지 설명 (선택)" id="challenge-desc">
+            <Textarea
+              id="challenge-desc"
+              rows={2}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="모임원들에게 챌린지의 목표나 규칙을 소개해 주세요."
+              className="resize-none"
+            />
+          </FormField>
         </div>
 
         {/* 인증 기준 */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center justify-between">
-            <span>인증 기준 <span className="text-red-500">*</span></span>
-            <span className="text-[10px] text-slate-400 font-normal">1일 최대 1회 인증</span>
-          </label>
-          <textarea
-            rows={3}
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs">
+          <FormField
+            label="인증 기준"
             required
-            value={verificationCriteria}
-            onChange={(e) => setVerificationCriteria(e.target.value)}
-            placeholder="예: 헬스장 락커 번호표와 운동 인증 사진 1장 (자정 전까지 제출)"
-            className="w-full text-base px-3 py-2.5 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white resize-none"
-          />
+            id="challenge-criteria"
+            description="1일 최대 1회 인증"
+          >
+            <Textarea
+              ref={criteriaInputRef}
+              id="challenge-criteria"
+              rows={3}
+              required
+              value={verificationCriteria}
+              onChange={(e) => setVerificationCriteria(e.target.value)}
+              placeholder="예: 헬스장 락커 번호표와 운동 인증 사진 1장 (자정 전까지 제출)"
+              className="resize-none"
+            />
+          </FormField>
         </div>
 
         {/* 기간 설정 */}
@@ -892,20 +901,16 @@ export const NewChallengePage: React.FC = () => {
 
         {/* 제출 버튼 */}
         <div className="pt-2">
-          <button
+          <Button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold text-xs rounded-md shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
+            variant="primary"
+            size="lg"
+            fullWidth
+            isLoading={isSubmitting}
+            leftIcon={activeRestartId ? <RotateCcw className="w-4 h-4" /> : undefined}
           >
-            {activeRestartId ? (
-              <>
-                <RotateCcw className="w-4 h-4" />
-                <span>새로운 조건으로 다시 시작하기</span>
-              </>
-            ) : (
-              <span>챌린지 생성 확인</span>
-            )}
-          </button>
+            {activeRestartId ? '새로운 조건으로 다시 시작하기' : '챌린지 생성 확인'}
+          </Button>
         </div>
       </form>
 

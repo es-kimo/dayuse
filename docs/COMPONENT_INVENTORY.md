@@ -9,12 +9,12 @@
 ### 1-1. 액션 · 입력 (Actions & Inputs)
 | 컴포넌트 | 사용 화면 | 현재 구현 | 목표 구현 | 전환 또는 유지 | 사유 및 점검 계획 | 완료 상태 |
 |---|---|---|---|---|---|---|
-| **Button** | 전체 화면 (로그인, 모임 생성, 챌린지 생성, 인증 등) | HTML `<button>` + Tailwind 유틸리티 클래스 | Base UI `Button` 기반 공통 래퍼 (`components/ui/Button`) | **전환** | 로딩 상태(`aria-busy="true"`), disabled 스타일 및 클릭 방지, 고대비 포커스 링 통일 | 진행 중 (DS-04) |
-| **Input** | 로그인, 모임 생성, 챌린지 생성, 정산 관리, 댓글 | HTML `<input>` + 인라인 스타일링 | Base UI `Input` 기반 공통 래퍼 (`components/ui/Input`) | **전환** | 모바일 iOS 16px 자동 확대 방지, `aria-invalid`, `aria-describedby` 에러 연결 | 진행 중 (DS-04) |
-| **Textarea** | 모임 생성/수정, 챌린지 인증 코멘트 | HTML `<textarea>` | Base UI/HTML 시맨틱 래퍼 (`components/ui/Textarea`) | **전환** | 라벨 연결, 모바일 자동 확대 방지, 에러 테두리 및 포커스 링 일관화 | 진행 중 (DS-04) |
-| **Checkbox** | 알림 설정, 약관 동의, 완료 필터 | HTML `<input type="checkbox">` | Base UI `Checkbox` (`components/ui/Checkbox`) | **전환** | 키보드 Space 토글, 명시적 레이블 연결, 고대비 포커스 링 제공 | 진행 중 (DS-04) |
-| **Select** | 정산 관리(은행 선택), 챌린지 주기 선택 | HTML `<select>` | Base UI / Accessible Native Select (`components/ui/Select`) | **전환** | 모바일 네이티브 휠/시트 UX 보존하면서 라벨 및 에러 바인딩, 키보드 탐색 보장 | 진행 중 (DS-04) |
-| **Switch** | 알림 설정 화면 (푸시 알림 ON/OFF) | Checkbox 기반 커스텀 토글 | Base UI `Switch` or Checkbox Switch 래퍼 | **전환** | `role="switch"`, `aria-checked` 상태 전달 및 터치 타깃 44px 보장 | 진행 중 (DS-04) |
+| **Button** | 전체 화면 (로그인, 모임 생성, 챌린지 생성, 인증 등) | HTML `<button>` + Tailwind 유틸리티 클래스 | Base UI `Button` 기반 공통 래퍼 (`components/ui/Button`) | **전환** | 로딩 상태(`aria-busy="true"`), disabled 스타일 및 클릭 방지, 고대비 포커스 링 통일 | 완료 (DS-04) |
+| **Input** | 로그인, 모임 생성, 챌린지 생성, 정산 관리, 댓글 | HTML `<input>` + 인라인 스타일링 | Base UI `Input` 기반 공통 래퍼 (`components/ui/Input`) | **전환** | 모바일 iOS 16px 자동 확대 방지, `aria-invalid`, `aria-describedby` 에러 연결 | 완료 (DS-04) |
+| **Textarea** | 모임 생성/수정, 챌린지 인증 코멘트 | HTML `<textarea>` | Base UI/HTML 시맨틱 래퍼 (`components/ui/Textarea`) | **전환** | 라벨 연결, 모바일 자동 확대 방지, 에러 테두리 및 포커스 링 일관화 | 완료 (DS-04) |
+| **Checkbox** | 알림 설정, 약관 동의, 완료 필터 | HTML `<input type="checkbox">` | Base UI `Checkbox` (`components/ui/Checkbox`) | **전환** | 키보드 Space 토글, 명시적 레이블 연결, 고대비 포커스 링 제공 | 완료 (DS-04) |
+| **Select** | 정산 관리(은행 선택), 챌린지 주기 선택 | HTML `<select>` | Base UI / Accessible Native Select (`components/ui/Select`) | **전환** | 모바일 네이티브 휠/시트 UX 보존하면서 라벨 및 에러 바인딩, 키보드 탐색 보장 | 완료 (DS-04) |
+| **Switch** | 알림 설정 화면 (푸시 알림 ON/OFF) | Checkbox 기반 커스텀 토글 | Base UI `Switch` or Checkbox Switch 래퍼 | **전환** | `role="switch"`, `aria-checked` 상태 전달 및 터치 타깃 44px 보장 | 완료 (DS-04) |
 
 ### 1-2. 팝업 · 오버레이 · 선택 (Overlays & Dialogs)
 | 컴포넌트 | 사용 화면 | 현재 구현 | 목표 구현 | 전환 또는 유지 | 사유 및 점검 계획 | 완료 상태 |
@@ -35,8 +35,8 @@
 ### 1-4. 안내 · 피드백 (Feedback & Status)
 | 컴포넌트 | 사용 화면 | 현재 구현 | 목표 구현 | 전환 또는 유지 | 사유 및 점검 계획 | 완료 상태 |
 |---|---|---|---|---|---|---|
-| **Field** | 모든 입력 폼 (라벨 + 제어 + 안내 + 에러) | 분산된 `<label>`, `<input>`, `<p>` | Base UI `Field` 기반 통합 컴포넌트 (`components/ui/Field`) | **전환** | 라벨-컨트롤-도움말-에러의 ARIA 연결 자동화(`htmlFor`, `aria-describedby`) | 진행 중 (DS-04) |
-| **Error Message** | 폼 검증 오류, API 에러 배너 | `<p className="text-danger">` | `Field.Error` 및 `role="alert"` 연동 | **전환** | 시각적 색상뿐 아니라 스크린 리더에서 즉시 인지되도록 연결, 첫 오류 자동 포커스 | 진행 중 (DS-04) |
+| **Field** | 모든 입력 폼 (라벨 + 제어 + 안내 + 에러) | 분산된 `<label>`, `<input>`, `<p>` | Base UI `Field` 기반 통합 컴포넌트 (`components/ui/Field`) | **전환** | 라벨-컨트롤-도움말-에러의 ARIA 연결 자동화(`htmlFor`, `aria-describedby`) | 완료 (DS-04) |
+| **Error Message** | 폼 검증 오류, API 에러 배너 | `<p className="text-danger">` | `Field.Error` 및 `role="alert"` 연동 | **전환** | 시각적 색상뿐 아니라 스크린 리더에서 즉시 인지되도록 연결, 첫 오류 자동 포커스 | 완료 (DS-04) |
 | **Toast** | 작업 성공/실패 알림 (`ToastContext.tsx`) | 커스텀 Portal 컴포넌트 | `aria-live="polite"` 강화 커스텀 토스트 유지/개선 | **유지 및 개선** | Base UI Toast 또는 기존 ToastContext에 `aria-live="polite"` 부여. 포커스 강탈 방지 | 진행 중 (DS-05) |
 | **Loading Spinner** | 비동기 제출, 초기 데이터 페칭 | Lucide `Loader2` spin 아이콘 | 시맨틱 `aria-busy="true"` + 스크린 리더 텍스트 래퍼 | **유지 및 개선** | 시각적 스피너에 `role="status"` 및 숨김 텍스트("로딩 중...") 보강 | 완료 (유지) |
 | **Empty State** | 모임/챌린지/인증 없음 (`EmptyState.tsx`) | 커스텀 프레젠테이션 컴포넌트 | 시맨틱 프레젠테이션 유지 | **유지** | 단순 프레젠테이션 UI이므로 Base UI 래핑 불필요. 명도 대비 및 버튼 규격 확인 | 완료 (유지) |
