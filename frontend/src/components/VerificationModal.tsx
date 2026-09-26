@@ -501,14 +501,25 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                   </button>
                 </div>
 
-                {/* 클립보드 붙여넣기 안내 힌트 뱃지 */}
-                <div className="bg-slate-50/80 border border-slate-200/80 rounded-md p-2.5 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
-                  <Clipboard className="w-3.5 h-3.5 text-blue-600" />
-                  <span>캡처한 이미지를</span>
-                  <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-semibold text-slate-700 shadow-2xs">Ctrl+V</kbd>
-                  <span>(또는</span>
-                  <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-semibold text-slate-700 shadow-2xs">⌘+V</kbd>
-                  <span>)로 바로 붙여넣을 수 있습니다.</span>
+                {/*
+                  클립보드 붙여넣기 안내 힌트 뱃지.
+
+                  한 줄 flex에 문구 조각을 나눠 담으면 좁은 화면에서 조각마다 따로 줄바꿈돼
+                  "캡처한 이미지 / 를", "(또 / 는"처럼 쪼개진다.
+                  아이콘만 flex로 떼어놓고 문구는 하나의 단락으로 흐르게 한다.
+                  키 조합은 whitespace-nowrap으로 묶어 중간에서 끊기지 않게 한다.
+                */}
+                <div className="bg-slate-50/80 border border-slate-200/80 rounded-md p-2.5 flex items-start gap-1.5 text-[11px] text-slate-500">
+                  <Clipboard className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" aria-hidden="true" />
+                  <p className="leading-relaxed">
+                    캡처한 이미지를{' '}
+                    <span className="whitespace-nowrap">
+                      <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-semibold text-slate-700 shadow-2xs">Ctrl+V</kbd>{' '}
+                      또는{' '}
+                      <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-semibold text-slate-700 shadow-2xs">⌘+V</kbd>
+                    </span>
+                    로 바로 붙여넣을 수 있습니다.
+                  </p>
                 </div>
 
                 <p className="text-center text-[10px] text-slate-400">
