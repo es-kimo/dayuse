@@ -42,7 +42,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     <BaseAlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <BaseAlertDialog.Portal>
         <BaseAlertDialog.Backdrop
-          className="fixed inset-0 z-modal bg-night/60 backdrop-blur-2xs animate-in fade-in duration-150"
+          className="fixed inset-0 z-modal bg-night/60 backdrop-blur-2xs transition-opacity duration-200 ease-out data-[starting-style]:opacity-0 data-[ending-style]:opacity-0"
           onClick={(e) => e.stopPropagation()}
         />
         <div
@@ -50,7 +50,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           <BaseAlertDialog.Popup
-            className="pointer-events-auto w-full max-w-sm bg-card rounded-2xl p-5 shadow-sheet border border-line flex flex-col max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150 focus-ring"
+            className="pointer-events-auto w-full max-w-sm bg-card rounded-2xl p-5 shadow-sheet border border-line flex flex-col max-h-[90vh] overflow-y-auto transition duration-200 ease-out data-[starting-style]:opacity-0 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[ending-style]:scale-95 focus-ring"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3 mb-4">

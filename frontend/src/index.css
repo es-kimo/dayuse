@@ -32,6 +32,26 @@
 
   /* backdrop-blur-2xs. v4 기본 blur 스케일은 xs(4px)부터라 더 옅은 단계를 직접 정의한다. */
   --blur-2xs: 2px;
+
+  /*
+   * 모션 토큰.
+   *
+   * 곡선 선택 기준: 들어오거나 나가는 것은 ease-out(빠르게 시작해서 응답이 빠르게 느껴진다),
+   * 화면 안에서 움직이거나 형태가 바뀌는 것은 ease-in-out, 아래에서 올라오는 시트는 iOS 곡선.
+   * ease-in은 사용자가 보고 있는 첫 순간을 느리게 만들기 때문에 UI에 쓰지 않는다.
+   *
+   * CSS 기본 곡선(ease, ease-out)은 의도한 모션에 쓰기엔 약해서 직접 정의한다.
+   * --default-transition-*를 함께 지정해 클래스명 없는 `transition` 유틸도 같은 기준을 따르게 한다.
+   *
+   * 지속 시간 예산(UI는 300ms 이내):
+   *   버튼 프레스 100~160ms / 툴팁·작은 팝오버 125~200ms
+   *   드롭다운·셀렉트 150~250ms / 모달·시트 200~500ms
+   */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: var(--ease-out);
 }
 
 /*
@@ -71,6 +91,40 @@
     outline: 2px solid #2563eb;
     outline-offset: 2px;
     box-shadow: 0 0 0 2px #dbeafe;
+  }
+}
+
+/*
+ * 마운트될 때 페이드로 들어오는 영역.
+ *
+ * 키프레임(animate-in) 대신 전환 + @starting-style을 쓴다.
+ * 키프레임은 중간에 다시 트리거되면 0부터 다시 시작해서 튀고,
+ * 전환은 현재 값에서 이어가기 때문에 연달아 열고 닫아도 자연스럽다.
+ */
+@utility reveal {
+  transition-property: opacity;
+  transition-duration: 150ms;
+  transition-timing-function: var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+/*
+ * 토스트 진입·이탈.
+ *
+ * 토스트는 연달아 뜨고 사라지므로 전환으로 처리해야 중간에 끊겨도 튀지 않는다.
+ * 이탈은 컴포넌트에서 opacity-0 translate-y-2를 덧붙여 같은 전환을 되돌린다.
+ */
+@utility toast-motion {
+  transition-property: opacity, translate;
+  transition-duration: 200ms;
+  transition-timing-function: var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    translate: 0 0.5rem;
   }
 }
 

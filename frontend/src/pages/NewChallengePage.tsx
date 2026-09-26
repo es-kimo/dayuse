@@ -435,7 +435,7 @@ export const NewChallengePage: React.FC = () => {
       )}
 
       {successNotice && (
-        <div className="p-3 mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+        <div className="p-3 mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center justify-between gap-2 reveal">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>{successNotice}</span>
@@ -632,7 +632,7 @@ export const NewChallengePage: React.FC = () => {
           </div>
 
           {periodType === 'WEEKLY_N' && (
-            <div className="space-y-3 pt-2 border-t border-slate-100 animate-in fade-in duration-150">
+            <div className="space-y-3 pt-2 border-t border-slate-100 reveal">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-600 font-medium">주당 목표 횟수</span>
                 <select
@@ -838,7 +838,7 @@ export const NewChallengePage: React.FC = () => {
                     {/* 참가자별 개별 약정금 설정 필드 (토글 ON일 때만 서브 행으로 표시) */}
                     {isCustomPenaltyPerMember && isSelected && !isCreator && (
                       <div
-                        className="mt-2.5 pt-2 border-t border-blue-100 flex items-center justify-between animate-in fade-in"
+                        className="mt-2.5 pt-2 border-t border-blue-100 flex items-center justify-between reveal"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <span className="text-[11px] text-slate-500 font-medium">
@@ -890,7 +890,7 @@ export const NewChallengePage: React.FC = () => {
 
         {/* 당일 시작 챌린지 즉시 확정 경고 */}
         {startDate === today && (
-          <div className="p-3 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2 animate-in fade-in">
+          <div className="p-3 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2 reveal">
             <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
             <div className="leading-relaxed">
               <span className="font-semibold block">⚠️ 오늘 시작하는 챌린지 주의</span>

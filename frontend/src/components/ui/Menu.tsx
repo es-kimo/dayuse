@@ -15,7 +15,7 @@ export const MenuPopup: React.FC<MenuPopupProps> = ({ children, className = '', 
   <BaseMenu.Portal>
     <BaseMenu.Positioner sideOffset={sideOffset} className="z-modal-top">
       <BaseMenu.Popup
-        className={`min-w-[180px] bg-card border border-line rounded-lg p-1.5 shadow-sheet focus-ring animate-in fade-in zoom-in-95 duration-100 ${className}`}
+        className={`min-w-[180px] bg-card border border-line rounded-lg p-1.5 shadow-sheet focus-ring origin-[var(--transform-origin)] transition duration-150 ease-out data-[starting-style]:opacity-0 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[ending-style]:scale-95 ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {children}

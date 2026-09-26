@@ -21,7 +21,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         <BaseTooltip.Portal>
           <BaseTooltip.Positioner sideOffset={sideOffset} className="z-modal-top">
             <BaseTooltip.Popup
-              className={`px-2.5 py-1.5 text-caption bg-night text-white rounded-md shadow-sm max-w-xs animate-in fade-in duration-100 ${className}`}
+              className={`px-2.5 py-1.5 text-caption bg-night text-white rounded-md shadow-sm max-w-xs origin-[var(--transform-origin)] transition duration-150 ease-out data-[starting-style]:opacity-0 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[ending-style]:scale-95 ${className}`}
             >
               {content}
             </BaseTooltip.Popup>

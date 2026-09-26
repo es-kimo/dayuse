@@ -15,6 +15,8 @@ export interface ToastItem {
   type: ToastType;
   action?: ToastAction;
   duration?: number;
+  /** 이탈 전환이 끝날 때까지 DOM에 남겨두기 위한 표시 */
+  exiting?: boolean;
 }
 
 interface ToastContextValue {
@@ -24,6 +26,9 @@ interface ToastContextValue {
 }
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
+
+/** index.css의 toast-motion 전환 시간과 맞춰야 한다. */
+const TOAST_EXIT_MS = 200;
 
 // 전역 비-React 영역(Axios 인터셉터 등)에서 토스트를 호출할 수 있는 이벤트 버스
 type ToastEventListener = (toast: Omit<ToastItem, 'id'>) => void;
@@ -36,8 +41,15 @@ export const triggerGlobalToast = (toast: Omit<ToastItem, 'id'>) => {
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
+  /*
+   * 이탈 전환(toast-motion, 200ms)이 끝난 뒤에 실제로 제거한다.
+   * 바로 제거하면 전환이 시작되기 전에 노드가 사라져 그냥 사라지는 것처럼 보인다.
+   */
   const hideToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, exiting: true } : t)));
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, TOAST_EXIT_MS);
   }, []);
 
   const showToast = useCallback(
@@ -115,7 +127,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return (
           <div
             key={toast.id}
-            className={`pointer-events-auto rounded-2xl p-3.5 shadow-xl border backdrop-blur-md flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-bottom-2 duration-200 ${typeStyles}`}
+            className={`pointer-events-auto rounded-2xl p-3.5 shadow-xl border backdrop-blur-md flex items-center justify-between gap-3 text-xs toast-motion ${
+              toast.exiting ? 'opacity-0 translate-y-2' : ''
+            } ${typeStyles}`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <Icon className={`w-4 h-4 shrink-0 ${iconColor}`} />
