@@ -19,17 +19,17 @@
 ### 1-2. 팝업 · 오버레이 · 선택 (Overlays & Dialogs)
 | 컴포넌트 | 사용 화면 | 현재 구현 | 목표 구현 | 전환 또는 유지 | 사유 및 점검 계획 | 완료 상태 |
 |---|---|---|---|---|---|---|
-| **Dialog (Modal)** | 인증 등록, 정산 리포트, 공유 카드, iOS 설치 안내 | React Portal + 커스텀 백드롭 div | Base UI `Dialog` 기반 공통 컴포넌트 (`components/ui/Dialog`) | **전환** | 배경 `inert` 처리, 포커스 트랩(Focus Trap), 닫힐 때 트리거 복귀, Escape 키 지원 | 진행 중 (DS-03) |
-| **Alert Dialog** | 챌린지 포기, 모임 나가기, 기록 삭제 등 위험 동작 | 브라우저 `window.confirm` 또는 일반 모달 | Base UI `AlertDialog` (`components/ui/AlertDialog`) | **전환** | `role="alertdialog"`, 파괴적 버튼 대신 [취소] 버튼에 기본 초점 부여 | 진행 중 (DS-03) |
-| **Bottom Sheet** | 댓글 목록, 중간 참여(Mid-Join), 미확인 기록 확인 | Tailwind 고정 위치 + 제스처 div | Base UI `Dialog` 기반 시트 래퍼 (`components/ui/BottomSheet`) | **전환** | 가상 키보드 오픈 시 뷰포트 오버플로우 스크롤 보장, 닫기 포커스 복귀 | 진행 중 (DS-03) |
-| **Dropdown Menu** | 헤더 우측 프로필/설정, 모임 관리 팝오버 | 단순 조건부 렌더링 div | Base UI `Menu` (`components/ui/Menu`) | **전환** | 상/하 방향키 탐색, Escape 닫기, Enter/Space 실행, 모달 이벤트 버블링 차단 | 진행 중 (DS-03) |
-| **Tooltip** | 공유 카드 점수 안내, 스트릭 규칙 안내 | 인라인 텍스트 또는 미구현 | Base UI `Tooltip` (`components/ui/Tooltip`) | **전환** | hover 전용 툴팁 금지(터치/키보드 포커스 시 표시), 필수 조작 정보는 인라인 병행 | 진행 중 (DS-03) |
+| **Dialog (Modal)** | 인증 등록, 정산 리포트, 공유 카드, iOS 설치 안내 | React Portal + 커스텀 백드롭 div | Base UI `Dialog` 기반 공통 컴포넌트 (`components/ui/Dialog`) | **전환** | 배경 `inert` 처리, 포커스 트랩(Focus Trap), 닫힐 때 트리거 복귀, Escape 키 지원 | 완료 (DS-03) |
+| **Alert Dialog** | 챌린지 포기, 모임 나가기, 기록 삭제 등 위험 동작 | 브라우저 `window.confirm` 또는 일반 모달 | Base UI `AlertDialog` (`components/ui/AlertDialog`) | **전환** | `role="alertdialog"`, 파괴적 버튼 대신 [취소] 버튼에 기본 초점 부여 | 완료 (DS-03) |
+| **Bottom Sheet** | 댓글 목록, 중간 참여(Mid-Join), 미확인 기록 확인 | Tailwind 고정 위치 + 제스처 div | Base UI `Dialog` 기반 시트 래퍼 (`components/ui/BottomSheet`) | **전환** | 가상 키보드 오픈 시 뷰포트 오버플로우 스크롤 보장, 닫기 포커스 복귀 | 완료 (DS-03) |
+| **Dropdown Menu** | 헤더 우측 프로필/설정, 모임 관리 팝오버 | 단순 조건부 렌더링 div | Base UI `Menu` (`components/ui/Menu`) | **전환** | 상/하 방향키 탐색, Escape 닫기, Enter/Space 실행, 모달 이벤트 버블링 차단 | 완료 (DS-03) |
+| **Tooltip** | 공유 카드 점수 안내, 스트릭 규칙 안내 | 인라인 텍스트 또는 미구현 | Base UI `Tooltip` (`components/ui/Tooltip`) | **전환** | hover 전용 툴팁 금지(터치/키보드 포커스 시 표시), 필수 조작 정보는 인라인 병행 | 완료 (DS-03) |
 
 ### 1-3. 화면 내 전환 및 탐색 (Navigation & Tabs)
 | 컴포넌트 | 사용 화면 | 현재 구현 | 목표 구현 | 전환 또는 유지 | 사유 및 점검 계획 | 완료 상태 |
 |---|---|---|---|---|---|---|
-| **Tabs** | 모임 목록(전체/내 모임), 챌린지 상세(진행/완료) | 버튼 배열 + active boolean 상태 | Base UI `Tabs` (`components/ui/Tabs`) | **전환** | `role="tablist"`, `role="tab"`, 좌/우 방향키 순환 탐색, `aria-selected` 지원 | 진행 중 (DS-05) |
-| **Skip Navigation** | 최상단 레이아웃 (`MobileLayout.tsx`) | 미구현 | "본문 바로가기" 링크 (`components/ui/SkipNavLink`) | **신규 도입** | 키보드 탭 시 즉시 표시되며 `<main id="main-content">`로 건너뛰어 반복 내비게이션 생략 | 진행 중 (DS-05) |
+| **Tabs** | 모임 목록(전체/내 모임), 챌린지 상세(진행/완료) | 버튼 배열 + active boolean 상태 | Base UI `Tabs` (`components/ui/Tabs`) | **전환** | `role="tablist"`, `role="tab"`, 좌/우 방향키 순환 탐색, `aria-selected` 지원 | 완료 (DS-05) |
+| **Skip Navigation** | 최상단 레이아웃 (`MobileLayout.tsx`) | 미구현 | "본문 바로가기" 링크 (`components/ui/SkipNavLink`) | **신규 도입** | 키보드 탭 시 즉시 표시되며 `<main id="main-content">`로 건너뛰어 반복 내비게이션 생략 | 완료 (DS-05) |
 | **Header Landmark** | 최상단 헤더 (`components/Header.tsx`) | HTML `<header>` | 시맨틱 `<header role="banner">` 유지 및 접근성 보강 | **유지** | 이미 시맨틱 태그 사용 중. 뒤로가기 버튼 `aria-label` 및 터치 타깃(44px) 점검 | 완료 (유지) |
 
 ### 1-4. 안내 · 피드백 (Feedback & Status)
@@ -37,7 +37,7 @@
 |---|---|---|---|---|---|---|
 | **Field** | 모든 입력 폼 (라벨 + 제어 + 안내 + 에러) | 분산된 `<label>`, `<input>`, `<p>` | Base UI `Field` 기반 통합 컴포넌트 (`components/ui/Field`) | **전환** | 라벨-컨트롤-도움말-에러의 ARIA 연결 자동화(`htmlFor`, `aria-describedby`) | 완료 (DS-04) |
 | **Error Message** | 폼 검증 오류, API 에러 배너 | `<p className="text-danger">` | `Field.Error` 및 `role="alert"` 연동 | **전환** | 시각적 색상뿐 아니라 스크린 리더에서 즉시 인지되도록 연결, 첫 오류 자동 포커스 | 완료 (DS-04) |
-| **Toast** | 작업 성공/실패 알림 (`ToastContext.tsx`) | 커스텀 Portal 컴포넌트 | `aria-live="polite"` 강화 커스텀 토스트 유지/개선 | **유지 및 개선** | Base UI Toast 또는 기존 ToastContext에 `aria-live="polite"` 부여. 포커스 강탈 방지 | 진행 중 (DS-05) |
+| **Toast** | 작업 성공/실패 알림 (`ToastContext.tsx`) | 커스텀 Portal 컴포넌트 | `aria-live="polite"` 강화 커스텀 토스트 유지/개선 | **유지 및 개선** | Base UI Toast 또는 기존 ToastContext에 `aria-live="polite"` 부여. 포커스 강탈 방지 | 완료 (DS-05) |
 | **Loading Spinner** | 비동기 제출, 초기 데이터 페칭 | Lucide `Loader2` spin 아이콘 | 시맨틱 `aria-busy="true"` + 스크린 리더 텍스트 래퍼 | **유지 및 개선** | 시각적 스피너에 `role="status"` 및 숨김 텍스트("로딩 중...") 보강 | 완료 (유지) |
 | **Empty State** | 모임/챌린지/인증 없음 (`EmptyState.tsx`) | 커스텀 프레젠테이션 컴포넌트 | 시맨틱 프레젠테이션 유지 | **유지** | 단순 프레젠테이션 UI이므로 Base UI 래핑 불필요. 명도 대비 및 버튼 규격 확인 | 완료 (유지) |
 

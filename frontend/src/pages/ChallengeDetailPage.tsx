@@ -28,8 +28,21 @@ import {
   Flame,
   RotateCcw,
   Repeat,
+  MoreVertical,
 } from 'lucide-react';
 import { ShareCardModal } from '../components/ShareCardModal';
+import {
+  Dialog,
+  ConfirmDialog,
+  Menu,
+  MenuTrigger,
+  MenuPopup,
+  MenuItem,
+  Button,
+  FormField,
+  Input,
+  Textarea,
+} from '../components/ui';
 
 export const ChallengeDetailPage: React.FC = () => {
   const { challengeId } = useParams<{ challengeId: string }>();
@@ -45,6 +58,8 @@ export const ChallengeDetailPage: React.FC = () => {
   const [showPenaltyModal, setShowPenaltyModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showStreakModal, setShowStreakModal] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedPeriodForConfirm, setSelectedPeriodForConfirm] = useState<ChallengePeriodInterval | null>(null);
   const [verificationTarget, setVerificationTarget] = useState<{
     recordId?: number;
@@ -112,10 +127,11 @@ export const ChallengeDetailPage: React.FC = () => {
 
 
   const handleLeave = async () => {
-    if (!challenge || !window.confirm('챌린지 참여를 취소하시겠습니까?')) return;
+    if (!challenge) return;
     setActionLoading(true);
     try {
       await challengesApi.leaveChallenge(challenge.id);
+      setShowLeaveConfirm(false);
       await fetchChallenge();
     } catch (err: any) {
       alert(err.response?.data?.message || '참여 취소에 실패했습니다.');
@@ -163,10 +179,11 @@ export const ChallengeDetailPage: React.FC = () => {
   };
 
   const handleDeleteChallenge = async () => {
-    if (!challenge || !window.confirm('챌린지를 정말 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.')) return;
+    if (!challenge) return;
     setActionLoading(true);
     try {
       await challengesApi.deleteChallenge(challenge.id);
+      setShowDeleteConfirm(false);
       navigate(`/groups/${challenge.groupId}`);
     } catch (err: any) {
       alert(err.response?.data?.message || '챌린지 삭제에 실패했습니다.');
@@ -286,26 +303,35 @@ export const ChallengeDetailPage: React.FC = () => {
               <span>기록 공유</span>
             </button>
           )}
-          {challenge.isCreator && challenge.status === 'NOT_STARTED' && (
-            <button
-              onClick={handleDeleteChallenge}
-              className="p-1.5 text-slate-400 hover:text-red-600 rounded-md transition"
-              title="챌린지 삭제"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
           {challenge.isCreator && (
-            <button
-              onClick={() => {
-                setShowEditModal(true);
-                setActionError(null);
-              }}
-              className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md transition"
-              title="챌린지 수정"
-            >
-              <Edit3 className="w-4 h-4" />
-            </button>
+            <Menu>
+              <MenuTrigger
+                className="p-1.5 text-ink-muted hover:text-ink rounded-md transition focus-ring min-w-[36px] min-h-[36px] inline-flex items-center justify-center cursor-pointer"
+                aria-label="챌린지 관리 메뉴"
+              >
+                <MoreVertical className="w-4 h-4" aria-hidden="true" />
+              </MenuTrigger>
+              <MenuPopup sideOffset={6}>
+                <MenuItem
+                  onSelect={() => {
+                    setShowEditModal(true);
+                    setActionError(null);
+                  }}
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span>챌린지 수정</span>
+                </MenuItem>
+                {challenge.status === 'NOT_STARTED' && (
+                  <MenuItem
+                    destructive
+                    onSelect={() => setShowDeleteConfirm(true)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>챌린지 삭제</span>
+                  </MenuItem>
+                )}
+              </MenuPopup>
+            </Menu>
           )}
         </div>
       </div>
@@ -529,7 +555,8 @@ export const ChallengeDetailPage: React.FC = () => {
                 </button>
                 {challenge.canCancel && (
                   <button
-                    onClick={handleLeave}
+                    type="button"
+                    onClick={() => setShowLeaveConfirm(true)}
                     disabled={actionLoading}
                     className="py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs rounded-md transition"
                   >
@@ -571,169 +598,193 @@ export const ChallengeDetailPage: React.FC = () => {
       />
 
       {/* 약정 금액 변경 모달 */}
-      {showPenaltyModal && (
-        <div className="fixed inset-0 z-sheet bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4">
-            <h2 className="text-sm font-bold text-slate-800">약정 금액 변경</h2>
-            <p className="text-xs text-slate-500">
-              챌린지 시작 전까지 약정 금액을 자유롭게 변경할 수 있습니다.
-            </p>
-
-            {actionError && (
-              <div className="p-2.5 rounded-md bg-red-50 text-red-600 text-[11px] flex items-center gap-1.5">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{actionError}</span>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                {[3000, 5000, 10000].map((amt) => (
-                  <button
-                    key={amt}
-                    type="button"
-                    onClick={() => setJoinPenalty(amt)}
-                    className={`flex-1 py-1.5 text-xs rounded-md border transition ${
-                      joinPenalty === amt
-                        ? 'border-amber-500 bg-amber-50 text-amber-800 font-semibold'
-                        : 'border-slate-200 bg-slate-50 text-slate-600'
-                    }`}
-                  >
-                    {amt.toLocaleString()}원
-                  </button>
-                ))}
-              </div>
-              <input
-                type="number"
-                min={0}
-                step={1000}
-                value={joinPenalty}
-                onChange={(e) => setJoinPenalty(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500"
-              />
+      <Dialog
+        open={showPenaltyModal}
+        onOpenChange={setShowPenaltyModal}
+        title="약정 금액 변경"
+        description="챌린지 시작 전까지 약정 금액을 자유롭게 변경할 수 있습니다."
+      >
+        <div className="space-y-4">
+          {actionError && (
+            <div role="alert" aria-live="polite" className="p-2.5 rounded-md bg-danger-bg text-danger text-caption font-medium flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-danger-icon" aria-hidden="true" />
+              <span>{actionError}</span>
             </div>
+          )}
 
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowPenaltyModal(false)}
-                disabled={actionLoading}
-                className="flex-1 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-md"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleUpdatePenalty}
-                disabled={actionLoading}
-                className="flex-1 py-2 bg-blue-600 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1"
-              >
-                {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : '변경 완료'}
-              </button>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              {[3000, 5000, 10000].map((amt) => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => setJoinPenalty(amt)}
+                  className={`flex-1 py-1.5 text-xs rounded-md border transition ${
+                    joinPenalty === amt
+                      ? 'border-amber-500 bg-amber-50 text-amber-800 font-semibold'
+                      : 'border-slate-200 bg-slate-50 text-slate-600'
+                  }`}
+                >
+                  {amt.toLocaleString()}원
+                </button>
+              ))}
             </div>
+            <Input
+              type="number"
+              min={0}
+              step={1000}
+              value={joinPenalty}
+              onChange={(e) => setJoinPenalty(Math.max(0, parseInt(e.target.value) || 0))}
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              fullWidth
+              onClick={() => setShowPenaltyModal(false)}
+              disabled={actionLoading}
+            >
+              취소
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              fullWidth
+              onClick={handleUpdatePenalty}
+              isLoading={actionLoading}
+              loadingText="변경 중..."
+            >
+              변경 완료
+            </Button>
           </div>
         </div>
-      )}
+      </Dialog>
 
       {/* 챌린지 수정 모달 */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-sheet bg-black/40 flex items-center justify-center p-4">
-          <form
-            onSubmit={handleUpdateChallenge}
-            className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 max-h-[90vh] overflow-y-auto"
-          >
-            <h2 className="text-sm font-bold text-slate-800">
-              {challenge.status === 'NOT_STARTED' ? '챌린지 조건 수정' : '챌린지 정보 수정'}
-            </h2>
-
-            {actionError && (
-              <div className="p-2.5 rounded-md bg-red-50 text-red-600 text-[11px] flex items-center gap-1.5">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>{actionError}</span>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">제목</label>
-              <input
-                type="text"
-                required
-                maxLength={50}
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500"
-              />
+      <Dialog
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        title={challenge.status === 'NOT_STARTED' ? '챌린지 조건 수정' : '챌린지 정보 수정'}
+        hasUnsavedChanges={Boolean(editTitle !== challenge.title || editDescription !== (challenge.description || ''))}
+      >
+        <form onSubmit={handleUpdateChallenge} noValidate className="space-y-4">
+          {actionError && (
+            <div role="alert" aria-live="polite" className="p-2.5 rounded-md bg-danger-bg text-danger text-caption font-medium flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-danger-icon" aria-hidden="true" />
+              <span>{actionError}</span>
             </div>
+          )}
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">설명</label>
-              <textarea
-                rows={2}
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 resize-none"
-              />
-            </div>
+          <FormField label="제목" required id="edit-challenge-title">
+            <Input
+              id="edit-challenge-title"
+              type="text"
+              required
+              maxLength={50}
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+            />
+          </FormField>
 
-            {challenge.status === 'NOT_STARTED' ? (
-              <>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">인증 기준</label>
-                  <textarea
-                    rows={2}
-                    required
-                    value={editCriteria}
-                    onChange={(e) => setEditCriteria(e.target.value)}
-                    className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 resize-none"
+          <FormField label="설명" id="edit-challenge-desc">
+            <Textarea
+              id="edit-challenge-desc"
+              rows={2}
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              className="resize-none"
+            />
+          </FormField>
+
+          {challenge.status === 'NOT_STARTED' ? (
+            <>
+              <FormField label="인증 기준" required id="edit-challenge-criteria">
+                <Textarea
+                  id="edit-challenge-criteria"
+                  rows={2}
+                  required
+                  value={editCriteria}
+                  onChange={(e) => setEditCriteria(e.target.value)}
+                  className="resize-none"
+                />
+              </FormField>
+              <div className="grid grid-cols-2 gap-2">
+                <FormField label="시작일" id="edit-start-date">
+                  <Input
+                    id="edit-start-date"
+                    type="date"
+                    value={editStartDate}
+                    onChange={(e) => setEditStartDate(e.target.value)}
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="min-w-0">
-                    <label className="block text-[11px] text-slate-500 mb-1">시작일</label>
-                    <input
-                      type="date"
-                      value={editStartDate}
-                      onChange={(e) => setEditStartDate(e.target.value)}
-                      className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-1.5 rounded-md border border-slate-200"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <label className="block text-[11px] text-slate-500 mb-1">종료일</label>
-                    <input
-                      type="date"
-                      value={editEndDate}
-                      onChange={(e) => setEditEndDate(e.target.value)}
-                      className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-1.5 rounded-md border border-slate-200"
-                    />
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="p-2.5 rounded-md bg-slate-50 border border-slate-200 text-[11px] text-slate-500">
-                🔒 챌린지 시작 후에는 제목과 설명만 수정할 수 있습니다. (기간 및 인증 기준 잠김)
+                </FormField>
+                <FormField label="종료일" id="edit-end-date">
+                  <Input
+                    id="edit-end-date"
+                    type="date"
+                    value={editEndDate}
+                    onChange={(e) => setEditEndDate(e.target.value)}
+                  />
+                </FormField>
               </div>
-            )}
-
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowEditModal(false)}
-                disabled={actionLoading}
-                className="flex-1 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-md"
-              >
-                취소
-              </button>
-              <button
-                type="submit"
-                disabled={actionLoading}
-                className="flex-1 py-2 bg-blue-600 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1"
-              >
-                {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : '수정 저장'}
-              </button>
+            </>
+          ) : (
+            <div className="p-2.5 rounded-md bg-sunken border border-line text-caption text-ink-muted">
+              🔒 챌린지 시작 후에는 제목과 설명만 수정할 수 있습니다. (기간 및 인증 기준 잠김)
             </div>
-          </form>
-        </div>
-      )}
+          )}
+
+          <div className="flex gap-2 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              fullWidth
+              onClick={() => setShowEditModal(false)}
+              disabled={actionLoading}
+            >
+              취소
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              fullWidth
+              isLoading={actionLoading}
+              loadingText="수정 저장 중..."
+            >
+              수정 저장
+            </Button>
+          </div>
+        </form>
+      </Dialog>
+
+      {/* 참여 취소 확인 다이얼로그 (위험 액션: 취소 버튼 기본 포커스) */}
+      <ConfirmDialog
+        open={showLeaveConfirm}
+        onOpenChange={setShowLeaveConfirm}
+        title="챌린지 참여 취소"
+        description="챌린지 참여를 취소하시겠습니까? 미인증 시 약정금이 차감될 수 있습니다."
+        confirmText="참여 취소"
+        confirmVariant="danger"
+        onConfirm={handleLeave}
+        isLoading={actionLoading}
+      />
+
+      {/* 챌린지 삭제 확인 다이얼로그 (위험 액션: 취소 버튼 기본 포커스) */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="챌린지 삭제"
+        description="챌린지를 정말 삭제하시겠습니까? 삭제 후 복구할 수 없습니다."
+        confirmText="삭제하기"
+        confirmVariant="danger"
+        onConfirm={handleDeleteChallenge}
+        isLoading={actionLoading}
+      />
 
       {/* 사진 인증 모달 (당일 인증 / 늦은 인증) */}
       {verificationTarget && challenge && (
