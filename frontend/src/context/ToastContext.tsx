@@ -86,7 +86,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const toastLayer = (
     <div
       className="fixed bottom-[max(1.5rem,calc(1rem+env(safe-area-inset-bottom)))] left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-toast pointer-events-none flex flex-col gap-2"
+      role="status"
       aria-live="polite"
+      aria-atomic="true"
     >
       {toasts.map((toast) => {
         const typeStyles = {
