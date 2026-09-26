@@ -19,9 +19,9 @@
 ### 1-2. 팝업 · 오버레이 · 선택 (Overlays & Dialogs)
 | 컴포넌트 | 사용 화면 | 현재 구현 | 목표 구현 | 전환 또는 유지 | 사유 및 점검 계획 | 완료 상태 |
 |---|---|---|---|---|---|---|
-| **Dialog (Modal)** | 인증 등록, 정산 리포트, 공유 카드, iOS 설치 안내 | React Portal + 커스텀 백드롭 div | Base UI `Dialog` 기반 공통 컴포넌트 (`components/ui/Dialog`) | **전환** | 배경 `inert` 처리, 포커스 트랩(Focus Trap), 닫힐 때 트리거 복귀, Escape 키 지원 | 완료 (DS-03) |
+| **Dialog (Modal)** | 인증 등록, 공유 카드, 정산 리포트, iOS 설치 안내, 구간 확정, 계좌 등록/수정, 반려·취소 사유, 이전 챌린지 불러오기, 최종 확인, 초대 링크 안내 | React Portal + 커스텀 백드롭 div | 제목·설명·닫기가 있는 표준형은 `components/ui/Dialog`, 외형을 화면이 직접 정하는 것은 공통 셸 `components/ui/Modal` | **전환** | 배경 `inert` 처리, 포커스 트랩(Focus Trap), 닫힐 때 트리거 복귀, Escape 키 지원. 제출 중에는 `disablePointerDismissal`로 실수 닫힘 방지 | 완료 (DS-03: 표준형 / 후속: 수제 모달 11곳 전환) |
 | **Alert Dialog** | 챌린지 포기, 모임 나가기, 기록 삭제 등 위험 동작 | 브라우저 `window.confirm` 또는 일반 모달 | Base UI `AlertDialog` (`components/ui/AlertDialog`) | **전환** | `role="alertdialog"`, 파괴적 버튼 대신 [취소] 버튼에 기본 초점 부여 | 완료 (DS-03) |
-| **Bottom Sheet** | 댓글 목록, 중간 참여(Mid-Join), 미확인 기록 확인 | Tailwind 고정 위치 + 제스처 div | Base UI `Dialog` 기반 시트 래퍼 (`components/ui/BottomSheet`) | **전환** | 가상 키보드 오픈 시 뷰포트 오버플로우 스크롤 보장, 닫기 포커스 복귀 | 완료 (DS-03) |
+| **Bottom Sheet** | 댓글 목록, 중간 참여(Mid-Join), 미확인 기록 확인 | Tailwind 고정 위치 + 제스처 div | Base UI `Dialog` 기반 시트 래퍼 (`components/ui/BottomSheet`) | **전환** | 가상 키보드 오픈 시 뷰포트 오버플로우 스크롤 보장(`dvh` + `interactive-widget=resizes-content`), 내부 스크롤에 `overscroll-behavior: contain`, 하단 입력 영역 safe-area 패딩, 닫기 포커스 복귀 | 완료 (후속) |
 | **Dropdown Menu** | 헤더 우측 프로필/설정, 모임 관리 팝오버 | 단순 조건부 렌더링 div | Base UI `Menu` (`components/ui/Menu`) | **전환** | 상/하 방향키 탐색, Escape 닫기, Enter/Space 실행, 모달 이벤트 버블링 차단 | 완료 (DS-03) |
 | **Tooltip** | 공유 카드 점수 안내, 스트릭 규칙 안내 | 인라인 텍스트 또는 미구현 | Base UI `Tooltip` (`components/ui/Tooltip`) | **전환** | hover 전용 툴팁 금지(터치/키보드 포커스 시 표시), 필수 조작 정보는 인라인 병행 | 완료 (DS-03) |
 
@@ -83,6 +83,9 @@
 7. **Loading**: 버튼 내부 텍스트 유지 또는 로딩 스피너 노출, `aria-busy="true"`, `pointer-events-none` 가드로 중복 제출 방지.
 
 ### 2-3. Z-Index 계층 체계
+`frontend/src/index.css`에서 `@utility`로만 정의한다. 컴포넌트에 `z-50`, `z-[90]` 같은 숫자를 직접 쓰지 않는다.
+공통 셸(`ui/Modal`, `ui/BottomSheet`)은 `layer` 프롭으로 이 중 하나를 고른다.
+
 ```css
 .z-header      { z-index: 20; }  /* Sticky 헤더 */
 .z-sheet       { z-index: 50; }  /* 바텀시트 */
@@ -92,6 +95,70 @@
 .z-toast       { z-index: 120; } /* 최상단 토스트 피드백 */
 ```
 
-### 2-4. 모션 및 감각 접근성 (prefers-reduced-motion)
+### 2-4. 모션 규칙 및 감각 접근성
+
+#### 곡선·시간 토큰
+`frontend/src/index.css`의 `@theme`에 정의한다. 컴포넌트에서 cubic-bezier를 직접 쓰지 않는다.
+
+```css
+--ease-out:    cubic-bezier(0.23, 1, 0.32, 1);    /* 들어오고 나가는 것 */
+--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);   /* 화면 안에서 움직이거나 형태가 바뀌는 것 */
+--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);    /* 아래에서 올라오는 시트 */
+--default-transition-duration: 150ms;              /* 클래스명 없는 `transition` 유틸의 기본값 */
+--default-transition-timing-function: var(--ease-out);
+```
+
+`ease-in`은 사용자가 보고 있는 첫 순간을 느리게 만들기 때문에 UI에 쓰지 않는다.
+
+#### 지속 시간 예산 (UI는 300ms 이내)
+| 대상 | 시간 |
+|---|---|
+| 버튼 프레스 피드백 | 100~160ms (현재 150ms) |
+| 툴팁, 작은 팝오버 | 125~200ms (현재 150ms) |
+| 드롭다운, 셀렉트, 메뉴 | 150~250ms (현재 150ms) |
+| 모달, 백드롭 | 200~500ms (현재 200ms) |
+| 바텀시트 | 200~500ms (현재 300ms) |
+
+#### 키프레임이 아니라 전환을 쓴다
+- 오버레이의 진입·이탈은 Base UI의 `data-[starting-style]` / `data-[ending-style]`에 CSS 전환을 걸어 구현한다. 키프레임은 중간에 다시 트리거되면 0부터 다시 시작해서 튀는데, 전환은 현재 값에서 이어간다.
+- 마운트될 때 페이드로 들어오는 영역은 `reveal` 유틸(`@starting-style`)을 쓴다.
+- `animate-in`, `fade-in`, `zoom-in-*`, `slide-in-from-*`(tailwindcss-animate)는 쓰지 않는다. 이 저장소에는 해당 플러그인이 없어 CSS가 생성되지 않는다.
+
+#### 물리적으로 말이 되게
+- 팝오버·메뉴·툴팁은 화면 중앙이 아니라 트리거에서 커진다: `origin-[var(--transform-origin)]` (Base UI Positioner가 심어준다).
+- 중앙 모달은 화면 중앙에 나타나므로 `transform-origin: center`가 맞다.
+- `scale(0)`에서 시작하지 않는다. 진입은 `scale-95` + `opacity-0`에서 시작한다.
+- 시트는 자기 높이만큼 아래(`translate-y-full`)에서 올라온다. 픽셀 값을 직접 쓰지 않는다.
+
+#### 애니메이션하지 않는 것
+- `width`, `height`, `top`, `left` 같은 레이아웃 속성. 진행바는 `w-full` + `origin-left` + `scaleX`로 만든다.
+- `transition-all`. 실제로 변하는 속성만 나열한다.
+- 상시 노출되는 배지·아이콘의 무한 반복(`animate-pulse`). 스켈레톤 로더와 '진행 중' 표시처럼 상태를 알리는 용도만 허용한다.
+
+#### prefers-reduced-motion
 - 시스템의 움직임 줄이기 설정(`prefers-reduced-motion: reduce`) 감지 시 모든 트랜지션 및 CSS 키프레임 애니메이션 시간을 즉시 축소(`animation-duration: 0.01ms !important`, `transition-duration: 0.01ms !important`).
 - 화면 깜빡임이나 어지럼증을 유발할 수 있는 시각 효과 제거.
+
+### 2-5. 모바일 플랫폼 기본값
+데스크톱 브라우저의 기기 에뮬레이션에서는 재현되지 않으므로 실기기에서 확인한다.
+
+| 항목 | 설정 | 이유 |
+|---|---|---|
+| 탭 하이라이트 | `html { -webkit-tap-highlight-color: transparent }` | 탭할 때마다 덮이는 회색 플래시 제거. 대신 모든 탭 대상에 `:active` 피드백을 준다 |
+| 오버스크롤 | `html`에 `overscroll-behavior: none`, 내부 스크롤에 `overscroll-contain` | 당겨서 새로고침과 시트 끝에서 페이지가 따라 움직이는 체이닝 차단 |
+| 탭 지연 | `button, a, [role=button]`에 `touch-action: manipulation` | 더블탭 확대 대기(최대 300ms) 제거 |
+| 롱프레스 | 컨트롤에만 `user-select: none`, `-webkit-touch-callout: none` | 버튼 글자 선택·콜아웃 방지. 본문 텍스트는 복사할 수 있어야 하므로 제외 |
+| 뷰포트 높이 | `100vh` 금지, `dvh` 사용 | URL 바 높이만큼 넘치거나 키보드가 올라올 때 잘리는 문제 |
+| 키보드 | viewport에 `interactive-widget=resizes-content` | 안드로이드 키보드가 레이아웃 뷰포트를 줄이도록 |
+| 안전 영역 | 헤더 상단·시트 하단에 `env(safe-area-inset-*)` | standalone PWA에서 상태바·홈 인디케이터 침범 방지 |
+| 상태바 색 | `theme-color`를 화면 최상단(헤더) 색으로, manifest `theme_color`도 동일하게 | 브랜드색을 넣으면 흰 헤더와 어긋난다 |
+| 입력 확대 | `input`, `textarea`, `select`는 16px 이상 | iOS Safari가 포커스 시 페이지를 확대하고 되돌리지 않는다. `user-scalable=no`는 접근성 위반이라 쓰지 않는다 |
+| hover | Tailwind v4가 `hover:`를 `@media (hover:hover)`로 감싼다 | 터치에서 탭 후 hover 상태가 남는 문제 |
+
+### 2-6. Tailwind CSS v4 기준
+- 브랜드 토큰은 `brand/tokens/theme.css`의 `@theme`이 단일 출처다. `frontend/src/index.css`가 이를 import한다.
+- 프론트엔드 전용 값(버튼·입력 규격, 앱 최대 폭, 모션 토큰)은 `frontend/src/index.css`의 `@theme`에 둔다.
+- `tailwind.config.js`와 `postcss.config.js`는 없다. 빌드는 `@tailwindcss/vite` 플러그인이 처리한다.
+- 커스텀 유틸리티는 `@utility`로 정의한다(`z-*`, `focus-ring`, `pt-safe`, `pb-safe`, `pb-safe-nav`, `touch-target`, `reveal`, `toast-motion`).
+- v4에서 이름이 바뀐 유틸리티: `outline-none` → `outline-hidden`, v3의 `backdrop-blur-sm`(4px) → `backdrop-blur-xs`.
+- v4 preflight가 바꾼 기본값(테두리 색 `currentColor`, 버튼 커서 `default`, placeholder 색)은 `@layer base`에서 디자인 토큰 값으로 되돌린다.
