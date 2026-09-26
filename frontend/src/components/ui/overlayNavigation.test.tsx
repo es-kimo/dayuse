@@ -8,6 +8,9 @@ import {
   BottomSheet,
   BottomSheetTitle,
   BottomSheetClose,
+  Modal,
+  ModalTitle,
+  ModalClose,
   Tabs,
   TabsList,
   TabsTab,
@@ -152,5 +155,42 @@ describe('Overlay, Navigation & Feedback Accessibility (DS-03, DS-05)', () => {
     await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything());
     });
+  });
+  it('Modal should expose role="dialog" named by its title and close on Escape', async () => {
+    const onOpenChange = vi.fn();
+
+    render(
+      <Modal open={true} onOpenChange={onOpenChange} className="bg-white p-5">
+        <>
+          <ModalTitle>입금 신고 반려</ModalTitle>
+          <ModalClose aria-label="닫기">X</ModalClose>
+          <div>모달 내용</div>
+        </>
+      </Modal>
+    );
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveAccessibleName('입금 신고 반려');
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything());
+    });
+  });
+
+  it('Modal with animateInitialOpen should still open when mounted already open', async () => {
+    // 이미 열린 상태로 마운트되는 모달은 첫 프레임만 닫힘으로 두고 바로 열린다.
+    // 그 처리가 깨지면 모달이 아예 뜨지 않으므로 별도로 확인한다.
+    render(
+      <Modal open={true} animateInitialOpen onOpenChange={vi.fn()} className="bg-white p-5">
+        <>
+          <ModalTitle>공유 카드 미리보기</ModalTitle>
+          <div>지연 오픈 내용</div>
+        </>
+      </Modal>
+    );
+
+    expect(await screen.findByText('지연 오픈 내용')).toBeInTheDocument();
+    expect(await screen.findByRole('dialog')).toHaveAccessibleName('공유 카드 미리보기');
   });
 });

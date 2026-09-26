@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { verificationsApi } from '../api/verifications';
 import { recordsApi } from '../api/records';
 import type { TodayAction, VerificationDetail } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { ShareCardModal } from './ShareCardModal';
 import { useClipboardImagePaste, validateImageFile } from '../hooks/useClipboardImagePaste';
+import { Modal, ModalTitle, ModalDescription, ModalClose } from './ui/Modal';
 import {
   getTodayKstString,
   addDaysKst,
@@ -53,6 +53,14 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [canRetry, setCanRetry] = useState<boolean>(false);
+
+  /*
+   * 부모가 이 모달을 조건부로 마운트하므로 열림 상태를 내부에서 들고 있는다.
+   * 닫을 때 바로 부모의 onClose를 부르면 노드가 즉시 사라져 이탈 전환이 못 돈다.
+   * Modal이 애니메이션 완료를 알려주면(onOpenChangeComplete) 그때 부모에 알린다.
+   */
+  const [open, setOpen] = useState<boolean>(true);
+  const requestClose = () => setOpen(false);
   const [createdVerification, setCreatedVerification] = useState<VerificationDetail | null>(null);
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
 
@@ -211,15 +219,24 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   };
 
   if (createdVerification) {
-    return createPortal(
-      <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-        <div className="bg-white w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl space-y-4">
+    return (
+      <Modal
+        open={open}
+        animateInitialOpen
+        onOpenChange={setOpen}
+        onOpenChangeComplete={(isOpen) => {
+          if (!isOpen) onSuccess();
+        }}
+        backdropClassName="bg-black/60 backdrop-blur-xs"
+        className="bg-white w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl space-y-4"
+      >
+        <>
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-slate-800">인증이 완료되었습니다! 🎉</h3>
-            <p className="text-xs text-slate-500">오늘의 멋진 도전을 기록했습니다.</p>
+            <ModalTitle className="text-base font-bold text-slate-800">인증이 완료되었습니다! 🎉</ModalTitle>
+            <ModalDescription className="text-xs text-slate-500">오늘의 멋진 도전을 기록했습니다.</ModalDescription>
           </div>
           <div className="pt-2 space-y-2">
             <button
@@ -230,7 +247,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               <span>오늘 인증 공유 카드 만들기</span>
             </button>
             <button
-              onClick={onSuccess}
+              type="button"
+              onClick={requestClose}
               className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition"
             >
               확인
@@ -251,39 +269,51 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               }}
             />
           )}
-        </div>
-      </div>,
-      document.body
+        </>
+      </Modal>
     );
   }
 
-  return createPortal(
-    <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90dvh] overflow-y-auto overscroll-contain p-5 shadow-2xl flex flex-col relative">
+  return (
+    <Modal
+      open={open}
+      animateInitialOpen
+      placement="bottom"
+      disablePointerDismissal={isSubmitting}
+      onOpenChange={setOpen}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
+      backdropClassName="bg-black/60 backdrop-blur-xs"
+      className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90dvh] overflow-y-auto overscroll-contain p-5 shadow-2xl flex flex-col relative"
+    >
+      <>
         {/* 상단 헤더 */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
-            <h2 className="text-sm font-bold text-slate-800">
+            <ModalTitle className="text-sm font-bold text-slate-800">
               {recordId
                 ? '늦은 사진 인증'
                 : isNightGrace
                 ? '심야/새벽 사진 인증'
                 : '오늘 사진 인증'}
-            </h2>
-            <p className="text-[11px] text-blue-600 font-medium truncate">{action.challengeTitle}</p>
+            </ModalTitle>
+            <ModalDescription className="text-[11px] text-blue-600 font-medium truncate">
+              {action.challengeTitle}
+            </ModalDescription>
             {recordId && (
               <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-1 inline-block">
                 {formatMonthDay(targetDate || yesterdayKst)} 대상 · 익일 오전 9시 이전 등록 시 정상 인정 (지각 제외)
               </p>
             )}
           </div>
-          <button
-            onClick={onClose}
+          <ModalClose
             disabled={isSubmitting}
-            className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+            aria-label="닫기"
+            className="touch-target text-slate-400 hover:text-slate-700 rounded-lg focus-ring disabled:opacity-50"
           >
-            <X className="w-5 h-5" />
-          </button>
+            <X className="w-5 h-5" aria-hidden="true" />
+          </ModalClose>
         </div>
 
         {/* 폼 */}
@@ -559,7 +589,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
         {/* 기존 사진 존재 시 클립보드 붙여넣기 사진 교체 확인 다이얼로그 */}
         {pendingReplaceFile && (
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-2xs rounded-t-3xl sm:rounded-2xl z-20 flex items-center justify-center p-5 animate-in fade-in duration-150">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-2xs rounded-t-3xl sm:rounded-2xl z-20 flex items-center justify-center p-5 reveal">
             <div className="bg-white rounded-2xl p-5 shadow-xl max-w-xs w-full text-center space-y-3">
               <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
                 <Repeat className="w-5 h-5" />
@@ -589,8 +619,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>,
-    document.body
+      </>
+    </Modal>
   );
 };

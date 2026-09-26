@@ -7,6 +7,7 @@ export * from './Select';
 export * from './Dialog';
 export * from './AlertDialog';
 export * from './BottomSheet';
+export * from './Modal';
 export * from './Tabs';
 export * from './Menu';
 export * from './Tooltip';

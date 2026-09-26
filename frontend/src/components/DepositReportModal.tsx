@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import type { UnpaidRecordItem, GroupAccount } from '../types';
 import { settlementApi } from '../api/settlement';
+import { Modal, ModalTitle } from './ui/Modal';
 import { useAuth } from '../context/AuthContext';
 import { getTodayKstString } from '../utils/date';
 import {
@@ -139,15 +139,23 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
-  return createPortal(
-    <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90dvh] flex flex-col shadow-xl overflow-hidden">
+  /*
+   * isOpen으로 조기 return하지 않는다. 닫히는 순간 null을 반환하면
+   * 이탈 전환이 시작되기 전에 노드가 사라진다. 닫힌 동안 내용을 렌더하지 않는 것은
+   * Modal(Base UI Portal)이 처리한다.
+   */
+  return (
+    <Modal
+      open={isOpen}
+      onOpenChange={(next) => !next && onClose()}
+      backdropClassName="bg-black/50 backdrop-blur-xs"
+      className="bg-white rounded-2xl w-full max-w-md max-h-[90dvh] flex flex-col shadow-xl overflow-hidden"
+    >
+      <>
         {/* 헤더 */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-sm font-bold text-slate-800">미수행 금액 입금 신고</h2>
+            <ModalTitle className="text-sm font-bold text-slate-800">미수행 금액 입금 신고</ModalTitle>
             <p className="text-[11px] text-slate-400">계좌로 입금 후 미수행 기록을 선택해 신고해 주세요.</p>
           </div>
           <button
@@ -338,8 +346,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
             <span>입금 신고 완료</span>
           </button>
         </div>
-      </div>
-    </div>,
-    document.body
+      </>
+    </Modal>
   );
 };

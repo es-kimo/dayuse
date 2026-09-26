@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { shareApi } from '../api/share';
+import { Modal, ModalTitle, ModalClose } from './ui/Modal';
 import { absoluteApiUrl } from '../api/client';
 import { isKakaoReady, shareToKakao } from '../utils/kakao';
 import { copyText, copyTextDeferred } from '../utils/clipboard';
@@ -80,6 +81,12 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   const [savingImage, setSavingImage] = useState(false);
   const [sharingKakao, setSharingKakao] = useState(false);
   const [copyingLink, setCopyingLink] = useState(false);
+
+  /*
+   * 부모가 이 모달을 조건부로 마운트하므로 열림 상태를 내부에서 들고 있는다.
+   * 닫힘 전환이 끝난 뒤(onOpenChangeComplete)에 부모의 onClose를 호출한다.
+   */
+  const [open, setOpen] = useState<boolean>(true);
   const [initializing, setInitializing] = useState(
     cardType === 'STREAK' && initialStreakDays === 0 && !initialHistoryJson
   );
@@ -389,21 +396,31 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       .finally(() => setCopyingLink(false));
   };
 
-  return createPortal(
-    <div className="fixed inset-0 z-modal-top w-screen h-[100dvh] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-4 flex flex-col items-center shadow-2xl relative">
+  const modal = (
+    <Modal
+      open={open}
+      animateInitialOpen
+      layer="modal-top"
+      onOpenChange={setOpen}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
+      backdropClassName="bg-black/80 backdrop-blur-xs"
+      className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-4 flex flex-col items-center shadow-2xl relative"
+    >
+      <>
         {/* 상단 닫기 버튼 */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/80 rounded-full transition z-10"
+        <ModalClose
+          aria-label="닫기"
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white bg-slate-800/80 rounded-full transition z-10 focus-ring"
         >
-          <X className="w-4 h-4" />
-        </button>
+          <X className="w-4 h-4" aria-hidden="true" />
+        </ModalClose>
 
-        <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5 self-start px-2">
-          <Sparkles className="w-4 h-4 text-amber-400" />
+        <ModalTitle className="text-white font-bold text-sm mb-3 flex items-center gap-1.5 self-start px-2">
+          <Sparkles className="w-4 h-4 text-amber-400" aria-hidden="true" />
           공유 카드 미리보기
-        </h3>
+        </ModalTitle>
 
         {/* 9:16 스토리 프리뷰 카드 영역 (270x480 → 4배 캡처 시 1080x1920) */}
         <div className="w-full flex justify-center py-1">
@@ -573,8 +590,20 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
             <span>링크 복사</span>
           </button>
         </div>
-      </div>
+      </>
+    </Modal>
+  );
 
+  /*
+   * 자동 저장·복사가 막힌 환경의 폴백 전면 화면.
+   *
+   * 모달 패널 안이 아니라 document.body로 Portal한다.
+   * 패널은 진입·이탈 전환 중 scale이 걸리는데, transform이 걸린 조상은
+   * position: fixed의 기준(containing block)이 되어 전면을 덮지 못한다.
+   * 겹침 순서는 index.css의 z-modal-over가 정한다.
+   */
+  const fallbackLayer = createPortal(
+    <>
       {/* iOS 등 자동 저장이 막힌 환경의 폴백: 이미지를 길게 눌러 저장 */}
       {longPressUrl && (
         <div className="fixed inset-0 z-modal-over bg-black/90 flex flex-col items-center justify-center p-4 gap-3">
@@ -632,7 +661,14 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
           </div>
         </div>
       )}
-    </div>,
+    </>,
     document.body
+  );
+
+  return (
+    <>
+      {modal}
+      {fallbackLayer}
+    </>
   );
 };
