@@ -40,6 +40,7 @@ import {
   Clock,
   ChevronRight,
   Home,
+  UserCheck,
 } from 'lucide-react';
 
 export const GroupDetailPage: React.FC = () => {
@@ -72,6 +73,8 @@ export const GroupDetailPage: React.FC = () => {
   };
 
   const [challengeFilter, setChallengeFilter] = useState<string>('ALL');
+  // 상태 필터와 별개의 축이라 AND로 함께 적용한다.
+  const [onlyParticipating, setOnlyParticipating] = useState<boolean>(false);
 
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [challenges, setChallenges] = useState<ChallengeSummary[]>([]);
@@ -261,9 +264,13 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
-  const filteredChallenges = challengeFilter === 'ALL'
-    ? challenges
-    : challenges.filter((c) => c.status === challengeFilter);
+  const myChallengeCount = challenges.filter((c) => c.isParticipating).length;
+
+  const filteredChallenges = challenges.filter(
+    (c) =>
+      (challengeFilter === 'ALL' || c.status === challengeFilter) &&
+      (!onlyParticipating || c.isParticipating)
+  );
 
   useEffect(() => {
     fetchGroup();
@@ -494,9 +501,18 @@ export const GroupDetailPage: React.FC = () => {
 
       {activeTab === 'challenges' && (
         <div className="space-y-4 flex-1 flex flex-col">
-          {/* 챌린지 상단 바: 새 챌린지 버튼 & 필터 */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex gap-1 overflow-x-auto">
+          {/*
+            챌린지 상단 바.
+
+            필터와 만들기 버튼을 한 줄에 두면 390px에서 폭이 모자라 마지막 필터가 잘린다.
+            가로 스크롤 안으로 숨은 필터는 있어도 못 찾으므로 줄을 나눈다.
+          */}
+          <div className="space-y-2">
+            <div
+              className="flex items-center gap-1 overflow-x-auto -mx-4 px-4"
+              role="group"
+              aria-label="챌린지 필터"
+            >
               {[
                 { label: '전체', value: 'ALL' },
                 { label: '진행 중', value: 'IN_PROGRESS' },
@@ -505,8 +521,10 @@ export const GroupDetailPage: React.FC = () => {
               ].map((f) => (
                 <button
                   key={f.value}
+                  type="button"
                   onClick={() => setChallengeFilter(f.value)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition ${
+                  aria-pressed={challengeFilter === f.value}
+                  className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition ${
                     challengeFilter === f.value
                       ? 'bg-blue-600 text-white'
                       : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -515,15 +533,35 @@ export const GroupDetailPage: React.FC = () => {
                   {f.label}
                 </button>
               ))}
+
+              <span className="w-px h-4 bg-slate-200 shrink-0 mx-0.5" aria-hidden="true" />
+
+              {/* 상태 필터와 다른 축이라 함께 적용되는 토글이다 */}
+              <button
+                type="button"
+                onClick={() => setOnlyParticipating((prev) => !prev)}
+                aria-pressed={onlyParticipating}
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1 ${
+                  onlyParticipating
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <UserCheck className="w-3 h-3" aria-hidden="true" />
+                <span>내 참여 {myChallengeCount}</span>
+              </button>
             </div>
 
-            <button
-              onClick={() => navigate(`/groups/${group.id}/challenges/new`)}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md flex items-center gap-1 shadow-xs shrink-0 transition"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>챌린지 만들기</span>
-            </button>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => navigate(`/groups/${group.id}/challenges/new`)}
+                className="min-h-[36px] px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-medium rounded-md flex items-center gap-1 shadow-xs shrink-0 transition"
+              >
+                <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>챌린지 만들기</span>
+              </button>
+            </div>
           </div>
 
           {/* 챌린지 목록 */}
@@ -550,7 +588,11 @@ export const GroupDetailPage: React.FC = () => {
             </div>
           ) : filteredChallenges.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-lg text-center my-4">
-              <p className="text-xs text-slate-400">해당 상태의 챌린지가 없습니다.</p>
+              <p className="text-xs text-slate-400">
+                {onlyParticipating
+                  ? '참여 중인 챌린지가 없습니다.'
+                  : '해당 상태의 챌린지가 없습니다.'}
+              </p>
             </div>
           ) : (
             <div className="space-y-3 pb-6">

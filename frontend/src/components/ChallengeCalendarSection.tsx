@@ -141,8 +141,14 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
     return null;
   }
 
+  /*
+   * 기본 선택은 '나'다.
+   * 참여자 목록의 첫 번째로 두면 내 기록을 보려고 매번 한 번 더 눌러야 한다.
+   * 내가 참여자가 아닌 경우(모임장이 남의 챌린지를 볼 때)에만 첫 번째로 떨어진다.
+   */
   const activeParticipant =
     calendarData.participants.find((p) => p.userId === selectedUserId) ||
+    calendarData.participants.find((p) => p.userId === currentUserId) ||
     calendarData.participants[0];
 
   const renderStatusBadge = (record: CalendarDailyRecordItem) => {
