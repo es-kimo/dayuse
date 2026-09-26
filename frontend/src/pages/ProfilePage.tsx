@@ -85,7 +85,7 @@ export const ProfilePage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isUpdating || nickname.trim() === user?.nickname}
-                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-medium rounded-md transition active:scale-95 flex items-center gap-1"
+                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-medium rounded-md transition active:scale-[0.98] flex items-center gap-1"
               >
                 {isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : '저장'}
               </button>

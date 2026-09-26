@@ -147,7 +147,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
                   <button
                     onClick={() => handleDelete(comment.id)}
                     disabled={deletingId === comment.id}
-                    className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 transition opacity-80 shrink-0 rounded-md active:scale-95"
+                    className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 transition opacity-80 shrink-0 rounded-md active:scale-[0.98]"
                     title="댓글 삭제"
                     aria-label="댓글 삭제"
                   >

@@ -542,7 +542,7 @@ export const GroupDetailPage: React.FC = () => {
               </p>
               <button
                 onClick={() => navigate(`/groups/${group.id}/challenges/new`)}
-                className="min-h-[44px] px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition shadow-xs active:scale-95 flex items-center gap-1.5"
+                className="min-h-[44px] px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition shadow-xs active:scale-[0.98] flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
                 <span>새 챌린지 만들기</span>
@@ -558,7 +558,7 @@ export const GroupDetailPage: React.FC = () => {
                 <div
                   key={c.id}
                   onClick={() => navigate(`/challenges/${c.id}`)}
-                  className="bg-white border border-slate-200 hover:border-blue-300 rounded-lg p-4 shadow-xs transition cursor-pointer active:scale-[0.99] space-y-2.5"
+                  className="bg-white border border-slate-200 hover:border-blue-300 rounded-lg p-4 shadow-xs transition cursor-pointer active:scale-[0.98] space-y-2.5"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
@@ -647,7 +647,7 @@ export const GroupDetailPage: React.FC = () => {
               />
               <button
                 onClick={handleCopyLink}
-                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md flex items-center gap-1 shadow-xs transition active:scale-95"
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md flex items-center gap-1 shadow-xs transition active:scale-[0.98]"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copied ? '복사됨' : '복사'}</span>

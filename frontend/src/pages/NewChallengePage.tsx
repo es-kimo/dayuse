@@ -420,7 +420,7 @@ export const NewChallengePage: React.FC = () => {
         <button
           type="button"
           onClick={handleOpenHistoryModal}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md text-xs font-semibold transition active:scale-95"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md text-xs font-semibold transition active:scale-[0.98]"
         >
           <History className="w-3.5 h-3.5" />
           <span>기존 내용 불러오기</span>

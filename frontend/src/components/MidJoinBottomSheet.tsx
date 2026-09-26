@@ -151,7 +151,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                           key={option.type}
                           type="button"
                           onClick={() => setSelectedType(option.type)}
-                          className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between ${
+                          className={`w-full text-left p-3.5 rounded-2xl border transition-[color,background-color,border-color,box-shadow] flex items-center justify-between ${
                             isSelected
                               ? 'border-blue-600 bg-blue-50/50 shadow-xs'
                               : 'border-slate-200 bg-white hover:border-slate-300'

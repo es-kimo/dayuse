@@ -83,7 +83,7 @@ export const LoginPage: React.FC = () => {
           onClick={handleKakaoLogin}
           disabled={isLoading}
           aria-busy={isLoading ? 'true' : undefined}
-          className="w-full max-w-xs min-h-[48px] py-3.5 px-4 bg-[#FEE500] hover:bg-[#FADA0A] text-[#191919] font-semibold rounded-md flex items-center justify-center gap-2.5 shadow-sm active:scale-95 transition focus-ring disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full max-w-xs min-h-[48px] py-3.5 px-4 bg-[#FEE500] hover:bg-[#FADA0A] text-[#191919] font-semibold rounded-md flex items-center justify-center gap-2.5 shadow-sm active:scale-[0.98] transition focus-ring disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           <MessageCircle className="w-5 h-5 fill-current shrink-0" aria-hidden="true" />
           <span>{isLoading ? '로그인 처리 중...' : '카카오로 시작하기'}</span>

@@ -492,7 +492,9 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
                     </div>
                     <div className="w-full h-1.5 bg-[#1E293B] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                        /* 캡처(html-to-image foreignObject)되는 정적 카드라 전환이 필요 없다.
+                           transform 대신 width를 유지하는 이유도 캡처 재현성 때문이다. */
+                        className="h-full bg-blue-600 rounded-full"
                         style={{ width: `${Math.min(100, Math.max(0, achievementRate))}%` }}
                       />
                     </div>
@@ -552,7 +554,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
           <button
             onClick={handleSaveImage}
             disabled={savingImage || initializing}
-            className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition active:scale-95 disabled:opacity-50"
+            className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition active:scale-[0.98] disabled:opacity-50"
           >
             {savingImage ? (
               <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
@@ -566,7 +568,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
           <button
             onClick={handleKakaoShare}
             disabled={sharingKakao || preparingLink}
-            className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 bg-[#FEE500] hover:bg-[#FDD835] text-slate-900 rounded-xl text-xs font-semibold transition active:scale-95 disabled:opacity-50"
+            className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 bg-[#FEE500] hover:bg-[#FDD835] text-slate-900 rounded-xl text-xs font-semibold transition active:scale-[0.98] disabled:opacity-50"
           >
             {sharingKakao || preparingLink ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -580,7 +582,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
           <button
             onClick={handleCopyLink}
             disabled={copyingLink || preparingLink}
-            className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition active:scale-95 disabled:opacity-50"
+            className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-medium transition active:scale-[0.98] disabled:opacity-50"
           >
             {copyingLink || preparingLink ? (
               <Loader2 className="w-4 h-4 animate-spin text-green-400" />

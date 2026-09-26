@@ -29,7 +29,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost:
     'bg-transparent text-ink-secondary hover:text-primary hover:bg-sunken active:bg-line disabled:opacity-50 disabled:pointer-events-none',
   dark:
-    'bg-ink text-white hover:bg-night active:scale-95 disabled:opacity-50 disabled:pointer-events-none shadow-xs',
+    'bg-ink text-white hover:bg-night disabled:opacity-50 disabled:pointer-events-none shadow-xs',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -64,7 +64,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         type={type}
         disabled={isActuallyDisabled}
         aria-busy={isLoading ? 'true' : undefined}
-        className={`inline-flex items-center justify-center gap-2 transition select-none cursor-pointer focus-ring disabled:cursor-not-allowed ${
+        className={`inline-flex items-center justify-center gap-2 transition duration-150 ease-out active:scale-[0.98] select-none cursor-pointer focus-ring disabled:cursor-not-allowed disabled:active:scale-100 ${
           fullWidth ? 'w-full' : ''
         } ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         {...rest}

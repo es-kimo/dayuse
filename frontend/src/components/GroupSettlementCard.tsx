@@ -233,7 +233,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
         disabled={!summary?.accountRegistered}
         className={`w-full h-btn-md py-2.5 px-4 rounded-md text-body-sm font-semibold flex items-center justify-center gap-1.5 transition focus-visible:outline-hidden focus-visible:ring-4 focus-visible:ring-primary-muted ${
           summary?.accountRegistered
-            ? 'bg-primary hover:bg-primary-hover active:bg-primary-active text-white shadow-xs active:scale-[0.99]'
+            ? 'bg-primary hover:bg-primary-hover active:bg-primary-active text-white shadow-xs active:scale-[0.98]'
             : 'bg-line text-ink-disabled cursor-not-allowed'
         }`}
       >

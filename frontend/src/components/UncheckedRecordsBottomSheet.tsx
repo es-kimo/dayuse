@@ -49,7 +49,7 @@ const UncheckedRecordCard: React.FC<UncheckedRecordCardProps> = ({
       {/* 유예 시간 카운트다운 타이머 vs 마감 경과 안내 */}
       {isGracePeriod ? (
         <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px]">
-          <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse shrink-0" />
+          <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" aria-hidden="true" />
           <span>
             정상 인정 마감까지 <b className="font-bold text-amber-700">{formattedTime}</b> 남음 (익일 09시)
           </span>
@@ -81,7 +81,7 @@ const UncheckedRecordCard: React.FC<UncheckedRecordCardProps> = ({
         <button
           onClick={() => onStartVerifyLate(record)}
           disabled={isBusy}
-          className={`flex-1 py-2 text-white rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.99] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${
+          className={`flex-1 py-2 text-white rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${
             isGracePeriod
               ? 'bg-primary hover:bg-primary-hover'
               : 'bg-warning hover:bg-amber-800'
@@ -93,7 +93,7 @@ const UncheckedRecordCard: React.FC<UncheckedRecordCardProps> = ({
         <button
           onClick={() => onMarkFailed(record.id)}
           disabled={isBusy}
-          className="flex-1 py-2 bg-slate-200 hover:bg-red-50 hover:text-red-600 text-slate-700 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.99]"
+          className="flex-1 py-2 bg-slate-200 hover:bg-red-50 hover:text-red-600 text-slate-700 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
         >
           {isBusy ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />

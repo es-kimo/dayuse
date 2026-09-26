@@ -120,7 +120,7 @@ export const PeriodSettlementModal: React.FC<PeriodSettlementModalProps> = ({
             type="button"
             onClick={handleConfirm}
             disabled={submitting}
-            className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-md text-xs font-semibold transition shadow-xs flex items-center justify-center gap-1.5"
+            className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white rounded-md text-xs font-semibold transition shadow-xs flex items-center justify-center gap-1.5"
           >
             {submitting ? '처리 중...' : '미수행 확정하기'}
           </button>

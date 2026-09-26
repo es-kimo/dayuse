@@ -127,7 +127,7 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
                 <div className="flex items-center gap-0.5">
                   <button
                     onClick={() => setShareItem(item)}
-                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 transition rounded-xl active:scale-95"
+                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 transition rounded-xl active:scale-[0.98]"
                     title="인증 공유 카드 만들기"
                     aria-label="인증 공유 카드 만들기"
                   >
@@ -136,7 +136,7 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
                   <button
                     onClick={() => handleDelete(item.id)}
                     disabled={deletingId === item.id}
-                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 transition rounded-xl active:scale-95"
+                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 transition rounded-xl active:scale-[0.98]"
                     title="인증 삭제"
                     aria-label="인증 삭제"
                   >
@@ -176,7 +176,7 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
             <div className="px-3.5 py-1.5 border-t border-slate-100 flex items-center justify-between">
               <button
                 onClick={() => onOpenComments(item.id)}
-                className="min-h-[44px] text-xs font-semibold text-slate-600 hover:text-blue-600 flex items-center gap-1.5 transition active:scale-95 py-1 px-1 -ml-1 rounded-lg"
+                className="min-h-[44px] text-xs font-semibold text-slate-600 hover:text-blue-600 flex items-center gap-1.5 transition active:scale-[0.98] py-1 px-1 -ml-1 rounded-lg"
               >
                 <MessageCircle className="w-4 h-4 text-slate-400 hover:text-blue-500" />
                 <span>댓글 {item.commentCount}개</span>

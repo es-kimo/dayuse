@@ -403,8 +403,10 @@ export const ChallengeDetailPage: React.FC = () => {
                 </div>
                 <div className="w-full bg-blue-100 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(0, challenge.progressRate))}%` }}
+                    className="bg-blue-600 h-2 w-full origin-left rounded-full transition-transform duration-300 ease-out"
+                    style={{
+                      transform: `scaleX(${Math.min(100, Math.max(0, challenge.progressRate)) / 100})`,
+                    }}
                   />
                 </div>
               </div>
@@ -523,7 +525,7 @@ export const ChallengeDetailPage: React.FC = () => {
               setShowJoinModal(true);
               setActionError(null);
             }}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-md shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-md shadow-xs transition active:scale-[0.98] flex items-center justify-center gap-1.5"
           >
             <Coins className="w-4 h-4" />
             <span>{(() => {
@@ -574,7 +576,7 @@ export const ChallengeDetailPage: React.FC = () => {
         ) : challenge.status === 'ENDED' ? (
           <button
             onClick={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-md shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-1.5"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-md shadow-xs transition active:scale-[0.98] flex items-center justify-center gap-1.5"
           >
             <RotateCcw className="w-4 h-4" />
             <span>이 챌린지 다시 시작하기</span>

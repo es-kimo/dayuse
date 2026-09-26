@@ -241,7 +241,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           <div className="pt-2 space-y-2">
             <button
               onClick={() => setShowShareModal(true)}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-blue-500/20"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-[0.98] shadow-md shadow-blue-500/20"
             >
               <Share2 className="w-4 h-4" />
               <span>오늘 인증 공유 카드 만들기</span>
@@ -473,7 +473,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                     type="button"
                     onClick={() => !isSubmitting && cameraInputRef.current?.click()}
                     disabled={isSubmitting}
-                    className="p-4 border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-md flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-blue-50/30 transition active:scale-98 cursor-pointer"
+                    className="p-4 border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-md flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-blue-50/30 transition active:scale-[0.98] cursor-pointer"
                   >
                     <div className="w-11 h-11 rounded-full bg-blue-100/80 text-blue-600 flex items-center justify-center">
                       <Camera className="w-5 h-5" />
@@ -489,7 +489,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                     type="button"
                     onClick={() => !isSubmitting && galleryInputRef.current?.click()}
                     disabled={isSubmitting}
-                    className="p-4 border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-md flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition active:scale-98 cursor-pointer"
+                    className="p-4 border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-md flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition active:scale-[0.98] cursor-pointer"
                   >
                     <div className="w-11 h-11 rounded-full bg-indigo-100/80 text-indigo-600 flex items-center justify-center">
                       <ImageIcon className="w-5 h-5" />
@@ -562,7 +562,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             <button
               type="submit"
               disabled={!file || isSubmitting}
-              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-md text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition active:scale-98"
+              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-md text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
             >
               {isSubmitting ? (
                 <>

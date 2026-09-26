@@ -191,8 +191,10 @@ export const PublicShareLandingPage: React.FC = () => {
                 </div>
                 <div className="w-full h-2 bg-[#1E293B] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-blue-600 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(0, achievementRate))}%` }}
+                    className="h-full w-full origin-left bg-blue-600 rounded-full transition-transform duration-300 ease-out"
+                    style={{
+                      transform: `scaleX(${Math.min(100, Math.max(0, achievementRate)) / 100})`,
+                    }}
                   />
                 </div>
               </div>

@@ -67,7 +67,7 @@ export const ChallengePeriodSection: React.FC<ChallengePeriodSectionProps> = ({
                   </span>
                 )}
                 {interval.settlementStatus === 'NEEDS_CONFIRMATION' && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 animate-pulse">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3 text-amber-700" />
                     결과 확인 필요
                   </span>
@@ -92,11 +92,11 @@ export const ChallengePeriodSection: React.FC<ChallengePeriodSectionProps> = ({
                 </div>
                 <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${
+                    className={`h-full w-full origin-left rounded-full transition-transform duration-300 ease-out ${
                       interval.isAchieved ? 'bg-emerald-500' : 'bg-blue-500'
                     }`}
                     style={{
-                      width: `${Math.min(100, (interval.completedCount / interval.targetCount) * 100)}%`,
+                      transform: `scaleX(${Math.min(1, interval.completedCount / interval.targetCount)})`,
                     }}
                   />
                 </div>
@@ -116,7 +116,7 @@ export const ChallengePeriodSection: React.FC<ChallengePeriodSectionProps> = ({
                     {isParticipating && (
                       <button
                         onClick={() => onOpenConfirmModal(interval)}
-                        className="px-2.5 py-1 bg-warning hover:bg-amber-800 active:scale-95 text-white text-caption font-semibold rounded-md transition shadow-xs flex items-center gap-1 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-warning"
+                        className="px-2.5 py-1 bg-warning hover:bg-amber-800 active:scale-[0.98] text-white text-caption font-semibold rounded-md transition shadow-xs flex items-center gap-1 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-warning"
                       >
                         <span>결과 확인하기</span>
                         <ChevronRight className="w-3 h-3" />

@@ -77,14 +77,14 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
                 <div className="mt-1.5 flex items-center gap-2">
                   <div className="flex-1 bg-slate-100 rounded-full h-1.5 max-w-[120px] overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${
+                      className={`h-full w-full origin-left rounded-full transition-transform duration-300 ease-out ${
                         action.periodInfo.isGoalAchieved ? 'bg-emerald-500' : 'bg-blue-500'
                       }`}
                       style={{
-                        width: `${Math.min(
-                          100,
-                          (action.periodInfo.completedCount / action.periodInfo.targetCount) * 100
-                        )}%`,
+                        transform: `scaleX(${Math.min(
+                          1,
+                          action.periodInfo.completedCount / action.periodInfo.targetCount
+                        )})`,
                       }}
                     />
                   </div>
@@ -110,7 +110,7 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
             ) : (
               <button
                 onClick={() => onOpenVerificationModal(action)}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-medium rounded-md flex items-center gap-1 shadow-xs shrink-0 transition"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-medium rounded-md flex items-center gap-1 shadow-xs shrink-0 transition"
               >
                 <Camera className="w-3.5 h-3.5" />
                 <span>{action.periodInfo?.isGoalAchieved ? '추가인증' : '인증하기'}</span>

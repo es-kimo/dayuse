@@ -93,7 +93,7 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
         {/* 유예 시간이 남은 미확인 기록인 경우 중복되는 '미확인' 뱃지 대신 '실시간 유예 타이머' 표시 */}
         {isPast && canVerifyLate && isGracePeriod ? (
           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
-            <Clock className="w-2.5 h-2.5 text-amber-600 animate-pulse" />
+            <Clock className="w-2.5 h-2.5 text-amber-600" aria-hidden="true" />
             <span>{formattedTime} 남음</span>
           </span>
         ) : (
@@ -103,7 +103,7 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
         {canVerify && onStartVerify && (
           <button
             onClick={() => onStartVerify(record, isLate)}
-            className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition active:scale-95 shadow-xs shrink-0 ${
+            className={`px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition active:scale-[0.98] shadow-xs shrink-0 ${
               isLate
                 ? isGracePeriod
                   ? 'bg-amber-500 hover:bg-amber-600 text-white'
