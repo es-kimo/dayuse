@@ -7,12 +7,15 @@ import { MobileLayout } from '../components/MobileLayout';
 import { DayuLogo } from '../components/brand/DayuLogo';
 import { MessageCircle, UserCheck } from 'lucide-react';
 
+import { Button, Select, FormField } from '../components/ui';
+
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [mockUserId, setMockUserId] = useState<string>('1');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loginError, setLoginError] = useState<string>('');
 
   useEffect(() => {
     const inviteParam = searchParams.get('invite');
@@ -46,13 +49,14 @@ export const LoginPage: React.FC = () => {
 
   const handleMockLogin = async (code: string) => {
     setIsLoading(true);
+    setLoginError('');
     try {
       const res = await authApi.loginWithKakao(code);
       login(res.accessToken, res.refreshToken, res.user);
       await handlePostLoginNavigation(navigate);
     } catch (err) {
       console.error('Mock login failed:', err);
-      alert('로그인에 실패했습니다. 백엔드 서버 상태를 확인해 주세요.');
+      setLoginError('로그인에 실패했습니다. 백엔드 서버 상태를 확인해 주세요.');
     } finally {
       setIsLoading(false);
     }
@@ -75,13 +79,21 @@ export const LoginPage: React.FC = () => {
 
         {/* 카카오 로그인 버튼 (카카오 공식 디자인 가이드 준수) */}
         <button
+          type="button"
           onClick={handleKakaoLogin}
           disabled={isLoading}
-          className="w-full max-w-xs py-3.5 px-4 bg-[#FEE500] hover:bg-[#FADA0A] text-[#191919] font-semibold rounded-md flex items-center justify-center gap-2.5 shadow-sm active:scale-95 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300"
+          aria-busy={isLoading ? 'true' : undefined}
+          className="w-full max-w-xs min-h-[48px] py-3.5 px-4 bg-[#FEE500] hover:bg-[#FADA0A] text-[#191919] font-semibold rounded-md flex items-center justify-center gap-2.5 shadow-sm active:scale-95 transition focus-ring disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
-          <MessageCircle className="w-5 h-5 fill-current" />
-          <span>카카오로 시작하기</span>
+          <MessageCircle className="w-5 h-5 fill-current shrink-0" aria-hidden="true" />
+          <span>{isLoading ? '로그인 처리 중...' : '카카오로 시작하기'}</span>
         </button>
+
+        {loginError && (
+          <div role="alert" aria-live="polite" className="mt-3 text-caption font-medium text-danger text-center max-w-xs">
+            {loginError}
+          </div>
+        )}
 
         {/* 로컬 개발/학습용 모의 로그인 영역 (개발 환경에서만 노출) */}
         {import.meta.env.DEV && (
@@ -89,25 +101,30 @@ export const LoginPage: React.FC = () => {
             <div className="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-3 text-center">
               로컬 개발·테스트용 빠른 로그인
             </div>
-            <div className="flex items-center gap-2">
-              <select
-                value={mockUserId}
-                onChange={(e) => setMockUserId(e.target.value)}
-                className="flex-1 text-body-sm bg-card border border-line rounded-md px-3 py-2 text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary-muted"
-              >
-                <option value="1">사용자 1 (모임장 테스트용)</option>
-                <option value="2">사용자 2 (초대 가입 테스트용)</option>
-                <option value="3">사용자 3 (비회원 차단 테스트용)</option>
-              </select>
-              <button
-                onClick={() => handleMockLogin(`mock-user-${mockUserId}`)}
-                disabled={isLoading}
-                className="px-3 py-2 bg-ink hover:bg-night text-white text-xs font-semibold rounded-md flex items-center gap-1 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                접속
-              </button>
-            </div>
+            <FormField label="테스트 계정 선택" id="mock-user-select" className="mb-2">
+              <div className="flex items-center gap-2">
+                <Select
+                  id="mock-user-select"
+                  value={mockUserId}
+                  onChange={(e) => setMockUserId(e.target.value)}
+                  className="flex-1"
+                >
+                  <option value="1">사용자 1 (모임장 테스트용)</option>
+                  <option value="2">사용자 2 (초대 가입 테스트용)</option>
+                  <option value="3">사용자 3 (비회원 차단 테스트용)</option>
+                </Select>
+                <Button
+                  variant="dark"
+                  size="md"
+                  onClick={() => handleMockLogin(`mock-user-${mockUserId}`)}
+                  isLoading={isLoading}
+                  className="shrink-0"
+                  leftIcon={<UserCheck className="w-4 h-4" />}
+                >
+                  접속
+                </Button>
+              </div>
+            </FormField>
           </div>
         )}
       </div>
