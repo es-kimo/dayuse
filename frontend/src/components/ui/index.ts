@@ -6,6 +6,7 @@ export * from './Checkbox';
 export * from './Select';
 export * from './Dialog';
 export * from './AlertDialog';
+export * from './BottomSheet';
 export * from './Tabs';
 export * from './Menu';
 export * from './Tooltip';

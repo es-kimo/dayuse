@@ -3,14 +3,18 @@ import { verificationsApi } from '../api/verifications';
 import type { CommentItem } from '../types';
 import { formatKstDateTime } from '../utils/date';
 import { X, Send, Trash2, Loader2, User as UserIcon } from 'lucide-react';
+import { BottomSheet, BottomSheetTitle, BottomSheetClose } from './ui/BottomSheet';
 
 interface CommentsBottomSheetProps {
-  verificationId: number;
+  isOpen: boolean;
+  /** 닫혀 있을 때는 null이다 */
+  verificationId: number | null;
   onClose: () => void;
   onCommentCountChange?: (delta: number) => void;
 }
 
 export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
+  isOpen,
   verificationId,
   onClose,
   onCommentCountChange,
@@ -21,24 +25,37 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const fetchComments = async () => {
-    try {
-      const list = await verificationsApi.getComments(verificationId);
-      setComments(list);
-    } catch (err) {
-      console.error('Failed to load comments:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  /*
+   * 시트가 열려 있을 때만 불러온다.
+   * 닫혀도 컴포넌트는 마운트된 상태로 남으므로(이탈 전환을 위해),
+   * 다시 열릴 때 이전 목록이 잠깐 보이지 않도록 loading을 먼저 세운다.
+   */
   useEffect(() => {
-    fetchComments();
-  }, [verificationId]);
+    if (!isOpen || verificationId === null) return;
+
+    let cancelled = false;
+    setLoading(true);
+
+    verificationsApi
+      .getComments(verificationId)
+      .then((list) => {
+        if (!cancelled) setComments(list);
+      })
+      .catch((err) => {
+        console.error('Failed to load comments:', err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, verificationId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() || submitting) return;
+    if (!content.trim() || submitting || verificationId === null) return;
 
     setSubmitting(true);
     try {
@@ -70,20 +87,19 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-sheet bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl h-[70dvh] max-h-[600px] flex flex-col shadow-2xl">
+    <BottomSheet open={isOpen} size="tall" onOpenChange={(next) => !next && onClose()}>
+      <>
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-          <h2 className="text-sm font-bold text-slate-800">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+          <BottomSheetTitle className="text-sm font-bold text-slate-800">
             댓글 <span className="text-blue-600 font-normal">({comments.length})</span>
-          </h2>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-md transition"
+          </BottomSheetTitle>
+          <BottomSheetClose
+            className="touch-target text-slate-400 hover:text-slate-700 rounded-md transition focus-ring"
             aria-label="닫기"
           >
-            <X className="w-5 h-5" />
-          </button>
+            <X className="w-5 h-5" aria-hidden="true" />
+          </BottomSheetClose>
         </div>
 
         {/* 댓글 목록 */}
@@ -148,7 +164,10 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
         </div>
 
         {/* 댓글 작성 폼 */}
-        <form onSubmit={handleSubmit} className="p-3 border-t border-slate-100 flex items-center gap-2">
+        <form
+          onSubmit={handleSubmit}
+          className="px-3 pt-3 pb-safe border-t border-slate-100 flex items-center gap-2 shrink-0"
+        >
           <input
             type="text"
             value={content}
@@ -170,7 +189,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
             )}
           </button>
         </form>
-      </div>
-    </div>
+      </>
+    </BottomSheet>
   );
 };

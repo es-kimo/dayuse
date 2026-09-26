@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { UncheckedRecordItem } from '../types';
+import { BottomSheet, BottomSheetTitle, BottomSheetDescription, BottomSheetClose } from './ui/BottomSheet';
 import { useGracePeriodTimer } from '../hooks/useGracePeriodTimer';
 import {
   X,
@@ -125,7 +126,11 @@ export const UncheckedRecordsBottomSheet: React.FC<UncheckedRecordsBottomSheetPr
 }) => {
   const [processingId, setProcessingId] = useState<number | null>(null);
 
-  if (!isOpen) return null;
+  /*
+   * isOpen으로 조기 return하지 않는다.
+   * 닫힐 때 바로 null을 반환하면 이탈 전환이 시작되기 전에 노드가 사라진다.
+   * 닫힌 동안 내용이 렌더되지 않는 것은 BottomSheet(Base UI Portal)가 처리한다.
+   */
 
   const handleMarkFailed = async (recordId: number) => {
     if (!window.confirm('이 날짜를 미수행으로 확정하시겠습니까?\n약정 벌금이 미납금에 부과됩니다.')) {
@@ -140,22 +145,24 @@ export const UncheckedRecordsBottomSheet: React.FC<UncheckedRecordsBottomSheetPr
   };
 
   return (
-    <div className="fixed inset-0 z-sheet bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[85dvh] flex flex-col shadow-2xl">
+    <BottomSheet open={isOpen} onOpenChange={(next) => !next && onClose()}>
+      <>
         {/* 상단 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-100">
+        <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
           <div>
-            <h2 className="text-sm font-bold text-slate-800">미확인 기록 정리</h2>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <BottomSheetTitle className="text-sm font-bold text-slate-800">
+              미확인 기록 정리
+            </BottomSheetTitle>
+            <BottomSheetDescription className="text-[11px] text-slate-500 mt-0.5">
               총 {records.length}건의 미확인 날짜가 있습니다
-            </p>
+            </BottomSheetDescription>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md transition"
+          <BottomSheetClose
+            aria-label="닫기"
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md transition focus-ring"
           >
-            <X className="w-5 h-5" />
-          </button>
+            <X className="w-5 h-5" aria-hidden="true" />
+          </BottomSheetClose>
         </div>
 
         {/* 안내 문구 */}
@@ -190,7 +197,7 @@ export const UncheckedRecordsBottomSheet: React.FC<UncheckedRecordsBottomSheetPr
             ))
           )}
         </div>
-      </div>
-    </div>
+      </>
+    </BottomSheet>
   );
 };

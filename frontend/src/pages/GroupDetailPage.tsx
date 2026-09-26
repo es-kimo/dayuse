@@ -728,13 +728,12 @@ export const GroupDetailPage: React.FC = () => {
       )}
 
       {/* 댓글 바텀시트 */}
-      {activeCommentVerificationId !== null && (
-        <CommentsBottomSheet
-          verificationId={activeCommentVerificationId}
-          onClose={() => setActiveCommentVerificationId(null)}
-          onCommentCountChange={handleCommentCountChange}
-        />
-      )}
+      <CommentsBottomSheet
+        isOpen={activeCommentVerificationId !== null}
+        verificationId={activeCommentVerificationId}
+        onClose={() => setActiveCommentVerificationId(null)}
+        onCommentCountChange={handleCommentCountChange}
+      />
 
       {/* 미수행 입금 신고 모달 */}
       <DepositReportModal

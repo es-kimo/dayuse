@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { challengesApi } from '../api/challenges';
+import { BottomSheet, BottomSheetTitle, BottomSheetDescription, BottomSheetClose } from './ui/BottomSheet';
 import type { JoinPreviewResponse, StartDateType } from '../types';
 import {
   Calendar,
@@ -57,7 +58,11 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
     fetchPreview();
   }, [challengeId, isOpen]);
 
-  if (!isOpen) return null;
+  /*
+   * isOpen으로 조기 return하지 않는다.
+   * 닫힐 때 바로 null을 반환하면 이탈 전환이 시작되기 전에 노드가 사라진다.
+   * 닫힌 동안 내용이 렌더되지 않는 것은 BottomSheet(Base UI Portal)가 처리한다.
+   */
 
   const selectedOption = preview?.options.find((o) => o.type === selectedType);
   const totalDays = selectedOption?.remainingDays || 0;
@@ -81,30 +86,34 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-sheet bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90dvh] flex flex-col overflow-hidden">
+    <BottomSheet
+      open={isOpen}
+      onOpenChange={(next) => !next && onClose()}
+      disablePointerDismissal={submitting}
+    >
+      <>
         {/* 헤더 */}
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Coins className="w-4 h-4" />
+              <Coins className="w-4 h-4" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-800">
+              <BottomSheetTitle className="text-sm font-bold text-slate-800">
                 {preview?.isStarted ? '챌린지 중도 참여 신청' : '챌린지 참여 신청'}
-              </h2>
-              <p className="text-[11px] text-slate-400">
+              </BottomSheetTitle>
+              <BottomSheetDescription className="text-[11px] text-slate-400">
                 {preview?.challengeTitle || '챌린지'}
-              </p>
+              </BottomSheetDescription>
             </div>
           </div>
-          <button
-            onClick={onClose}
+          <BottomSheetClose
             disabled={submitting}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
+            aria-label="닫기"
+            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg focus-ring disabled:opacity-50"
           >
-            <X className="w-5 h-5" />
-          </button>
+            <X className="w-5 h-5" aria-hidden="true" />
+          </BottomSheetClose>
         </div>
 
         {/* 본문 */}
@@ -290,7 +299,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
             )}
           </button>
         </div>
-      </div>
-    </div>
+      </>
+    </BottomSheet>
   );
 };

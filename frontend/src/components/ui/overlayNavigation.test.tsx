@@ -5,6 +5,9 @@ import '@testing-library/jest-dom';
 import {
   Dialog,
   ConfirmDialog,
+  BottomSheet,
+  BottomSheetTitle,
+  BottomSheetClose,
   Tabs,
   TabsList,
   TabsTab,
@@ -111,6 +114,43 @@ describe('Overlay, Navigation & Feedback Accessibility (DS-03, DS-05)', () => {
 
     await waitFor(() => {
       expect(screen.queryByText('모달 내용')).not.toBeInTheDocument();
+    });
+  });
+
+  it('BottomSheet should expose role="dialog" named by its title, close on Escape, and render nothing when closed', async () => {
+    const onOpenChange = vi.fn();
+
+    const { rerender } = render(
+      <BottomSheet open={false} onOpenChange={onOpenChange}>
+        <>
+          <BottomSheetTitle>댓글</BottomSheetTitle>
+          <BottomSheetClose aria-label="닫기">X</BottomSheetClose>
+          <div>시트 내용</div>
+        </>
+      </BottomSheet>
+    );
+
+    // 닫힌 상태에서는 내용이 마운트되지 않는다
+    expect(screen.queryByText('시트 내용')).not.toBeInTheDocument();
+
+    rerender(
+      <BottomSheet open={true} onOpenChange={onOpenChange}>
+        <>
+          <BottomSheetTitle>댓글</BottomSheetTitle>
+          <BottomSheetClose aria-label="닫기">X</BottomSheetClose>
+          <div>시트 내용</div>
+        </>
+      </BottomSheet>
+    );
+
+    const sheet = await screen.findByRole('dialog');
+    expect(sheet).toHaveAccessibleName('댓글');
+    expect(screen.getByText('시트 내용')).toBeInTheDocument();
+
+    // Escape로 닫힌다(수제 오버레이에는 없던 동작)
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(false, expect.anything());
     });
   });
 });
