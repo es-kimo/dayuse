@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { SettlementSummary, GroupAccountPayload } from '../types';
-import { settlementApi } from '../api/settlement';
-import { Button, FormField, Input, Modal, ModalTitle, ModalClose } from './ui';
+import React, { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import type { SettlementSummary, GroupAccountPayload } from "../types";
+import { settlementApi } from "../api/settlement";
+import { Button, FormField, Input, Modal, ModalTitle, ModalClose } from "./ui";
 import {
   CreditCard,
   Copy,
@@ -15,7 +15,7 @@ import {
   Wallet,
   Clock,
   CheckCircle2,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface GroupSettlementCardProps {
   groupId: number;
@@ -37,11 +37,11 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [isEditingAccount, setIsEditingAccount] = useState(false);
-  const [bankName, setBankName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [accountHolder, setAccountHolder] = useState('');
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountHolder, setAccountHolder] = useState("");
   const [savingAccount, setSavingAccount] = useState(false);
-  const [accountError, setAccountError] = useState('');
+  const [accountError, setAccountError] = useState("");
 
   const bankNameRef = useRef<HTMLInputElement>(null);
   const accountNumberRef = useRef<HTMLInputElement>(null);
@@ -58,29 +58,29 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
   };
 
   const handleOpenEditAccount = () => {
-    setBankName(account?.bankName || '');
-    setAccountNumber(account?.accountNumber || '');
-    setAccountHolder(account?.accountHolder || '');
-    setAccountError('');
+    setBankName(account?.bankName || "");
+    setAccountNumber(account?.accountNumber || "");
+    setAccountHolder(account?.accountHolder || "");
+    setAccountError("");
     setIsEditingAccount(true);
   };
 
   const handleSaveAccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAccountError('');
+    setAccountError("");
 
     if (!bankName.trim()) {
-      setAccountError('은행명을 입력해 주세요.');
+      setAccountError("은행명을 입력해 주세요.");
       bankNameRef.current?.focus();
       return;
     }
     if (!accountNumber.trim()) {
-      setAccountError('계좌번호를 입력해 주세요.');
+      setAccountError("계좌번호를 입력해 주세요.");
       accountNumberRef.current?.focus();
       return;
     }
     if (!accountHolder.trim()) {
-      setAccountError('예금주를 입력해 주세요.');
+      setAccountError("예금주를 입력해 주세요.");
       accountHolderRef.current?.focus();
       return;
     }
@@ -96,9 +96,9 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
       setIsEditingAccount(false);
       onRefresh();
     } catch (err: any) {
-      console.error('Failed to update group account:', err);
+      console.error("Failed to update group account:", err);
       // 서버 오류 시 사용자 입력값 보존
-      setAccountError(err.response?.data?.message || '계좌 정보 저장에 실패했습니다. 다시 시도해 주세요.');
+      setAccountError(err.response?.data?.message || "계좌 정보 저장에 실패했습니다. 다시 시도해 주세요.");
     } finally {
       setSavingAccount(false);
     }
@@ -149,12 +149,12 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
               onClick={handleCopyAccount}
               className={`px-2.5 py-1.5 rounded-md text-xs font-medium flex items-center gap-1 transition ${
                 copied
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                  ? "bg-emerald-600 text-white"
+                  : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
               }`}
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? '복사됨' : '복사'}</span>
+              <span>{copied ? "복사됨" : "복사"}</span>
             </button>
 
             {isHost && (
@@ -173,9 +173,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-warning-icon shrink-0" />
             <div className="text-caption text-warning">
-              {isHost
-                ? '멤버들이 입금할 계좌를 먼저 등록해 주세요'
-                : '모임장이 아직 정산 계좌를 등록하지 않았어요'}
+              {isHost ? "멤버들이 입금할 계좌를 먼저 등록해 주세요" : "모임장이 아직 정산 계좌를 등록하지 않았어요"}
             </div>
           </div>
           {isHost && (
@@ -197,7 +195,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
             <span>미납 금액</span>
           </div>
           <div className="text-sm font-bold text-red-600 mt-1">
-            {loading ? '...' : `${(summary?.unpaidAmount || 0).toLocaleString()}원`}
+            {loading ? "..." : `${(summary?.unpaidAmount || 0).toLocaleString()}원`}
           </div>
           {summary && summary.myUnpaidAmount > 0 && (
             <div className="text-[9px] text-red-400 mt-0.5 truncate">
@@ -212,17 +210,17 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
             <span>확인 대기</span>
           </div>
           <div className="text-sm font-bold text-warning mt-1">
-            {loading ? '...' : `${(summary?.waitingAmount || 0).toLocaleString()}원`}
+            {loading ? "..." : `${(summary?.waitingAmount || 0).toLocaleString()}원`}
           </div>
         </div>
 
         <div className="bg-sunken border border-line rounded-md p-2.5 flex flex-col justify-between">
           <div className="flex items-center gap-1 text-caption text-ink-muted font-medium">
             <CheckCircle2 className="w-3.5 h-3.5 text-success-icon" />
-            <span>누적 확인 완료</span>
+            <span>누적 금액</span>
           </div>
           <div className="text-sm font-bold text-success mt-1">
-            {loading ? '...' : `${(summary?.confirmedAmount || 0).toLocaleString()}원`}
+            {loading ? "..." : `${(summary?.confirmedAmount || 0).toLocaleString()}원`}
           </div>
         </div>
       </div>
@@ -233,12 +231,12 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
         disabled={!summary?.accountRegistered}
         className={`w-full h-btn-md py-2.5 px-4 rounded-md text-body-sm font-semibold flex items-center justify-center gap-1.5 transition focus-visible:outline-hidden focus-visible:ring-4 focus-visible:ring-primary-muted ${
           summary?.accountRegistered
-            ? 'bg-primary hover:bg-primary-hover active:bg-primary-active text-white shadow-xs active:scale-[0.98]'
-            : 'bg-line text-ink-disabled cursor-not-allowed'
+            ? "bg-primary hover:bg-primary-hover active:bg-primary-active text-white shadow-xs active:scale-[0.98]"
+            : "bg-line text-ink-disabled cursor-not-allowed"
         }`}
       >
         <Send className="w-3.5 h-3.5" />
-        <span>{summary?.accountRegistered ? '미수행 금액 입금 신고하기' : '계좌 등록 후 입금 신고 가능'}</span>
+        <span>{summary?.accountRegistered ? "미수행 금액 입금 신고하기" : "계좌 등록 후 입금 신고 가능"}</span>
       </button>
 
       {/* 모임장 계좌 등록/수정 모달 */}
@@ -252,19 +250,20 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
         <>
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <ModalTitle className="text-sm font-bold text-slate-800">
-              {account ? '모임 계좌 정보 수정' : '모임 계좌 신규 등록'}
+              {account ? "모임 계좌 정보 수정" : "모임 계좌 신규 등록"}
             </ModalTitle>
-            <ModalClose
-              aria-label="닫기"
-              className="text-slate-400 hover:text-slate-600 rounded-md focus-ring"
-            >
+            <ModalClose aria-label="닫기" className="text-slate-400 hover:text-slate-600 rounded-md focus-ring">
               <X className="w-4 h-4" aria-hidden="true" />
             </ModalClose>
           </div>
 
           <form onSubmit={handleSaveAccount} noValidate className="space-y-3">
             {accountError && (
-              <div role="alert" aria-live="polite" className="p-2.5 rounded-md bg-danger-bg border border-danger-border text-danger text-caption font-medium flex items-center gap-1.5">
+              <div
+                role="alert"
+                aria-live="polite"
+                className="p-2.5 rounded-md bg-danger-bg border border-danger-border text-danger text-caption font-medium flex items-center gap-1.5"
+              >
                 <AlertCircle className="w-4 h-4 shrink-0 text-danger-icon" aria-hidden="true" />
                 <span>{accountError}</span>
               </div>
@@ -279,7 +278,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
                 value={bankName}
                 onChange={(e) => {
                   setBankName(e.target.value);
-                  if (accountError) setAccountError('');
+                  if (accountError) setAccountError("");
                 }}
                 maxLength={50}
                 required
@@ -295,7 +294,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
                 value={accountNumber}
                 onChange={(e) => {
                   setAccountNumber(e.target.value);
-                  if (accountError) setAccountError('');
+                  if (accountError) setAccountError("");
                 }}
                 maxLength={50}
                 required
@@ -311,7 +310,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
                 value={accountHolder}
                 onChange={(e) => {
                   setAccountHolder(e.target.value);
-                  if (accountError) setAccountError('');
+                  if (accountError) setAccountError("");
                 }}
                 maxLength={50}
                 required
@@ -319,13 +318,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
             </FormField>
 
             <div className="pt-2 flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="md"
-                fullWidth
-                onClick={() => setIsEditingAccount(false)}
-              >
+              <Button type="button" variant="secondary" size="md" fullWidth onClick={() => setIsEditingAccount(false)}>
                 취소
               </Button>
               <Button
