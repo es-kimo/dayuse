@@ -574,7 +574,7 @@ export const NewChallengePage: React.FC = () => {
                 min={today}
                 value={startDate}
                 onChange={(e) => handleStartDateChange(e.target.value)}
-                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
+                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-slate-50"
               />
             </div>
             <div className="min-w-0">
@@ -585,7 +585,7 @@ export const NewChallengePage: React.FC = () => {
                 min={startDate}
                 value={endDate}
                 onChange={(e) => handleEndDateChange(e.target.value)}
-                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-slate-50"
+                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-slate-50"
               />
             </div>
           </div>
@@ -638,7 +638,7 @@ export const NewChallengePage: React.FC = () => {
                 <select
                   value={targetFrequency}
                   onChange={(e) => setTargetFrequency(Number(e.target.value))}
-                  className="text-xs px-2.5 py-1.5 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white font-semibold text-slate-800"
+                  className="text-xs px-2.5 py-1.5 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-white font-semibold text-slate-800"
                 >
                   {[1, 2, 3, 4, 5, 6, 7].map((num) => (
                     <option key={num} value={num}>
@@ -741,7 +741,7 @@ export const NewChallengePage: React.FC = () => {
               step={1000}
               value={penaltyAmount}
               onChange={(e) => setPenaltyAmount(Math.max(0, parseInt(e.target.value) || 0))}
-              className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white"
+              className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-white"
             />
           </div>
           <p className="text-[11px] text-slate-400">
@@ -854,7 +854,7 @@ export const NewChallengePage: React.FC = () => {
                               const val = Math.max(0, parseInt(e.target.value) || 0);
                               handleMemberPenaltyChange(member.userId, val);
                             }}
-                            className="w-20 text-xs px-2 py-1 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 bg-white font-bold text-right text-amber-700"
+                            className="w-20 text-xs px-2 py-1 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-white font-bold text-right text-amber-700"
                           />
                           <span className="text-[11px] text-slate-600">원</span>
                         </div>
@@ -875,7 +875,7 @@ export const NewChallengePage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsCustomPenaltyPerMember(!isCustomPenaltyPerMember)}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
                 isCustomPenaltyPerMember ? 'bg-blue-600' : 'bg-slate-200'
               }`}
             >

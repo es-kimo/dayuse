@@ -54,7 +54,7 @@ export const TodayPage: React.FC = () => {
           </div>
           <button
             onClick={() => navigate('/settings/notifications')}
-            className="p-2 rounded-md text-ink-secondary hover:text-primary hover:bg-sunken transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="p-2 rounded-md text-ink-secondary hover:text-primary hover:bg-sunken transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
             title="알림 설정"
           >
             <Bell className="w-5 h-5" />
@@ -75,7 +75,7 @@ export const TodayPage: React.FC = () => {
             </p>
             <button
               onClick={() => navigate('/groups')}
-              className="mt-2 inline-flex items-center gap-1.5 h-btn-sm px-4 bg-primary hover:bg-primary-hover active:bg-primary-active text-white text-xs font-semibold rounded-md transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-muted"
+              className="mt-2 inline-flex items-center gap-1.5 h-btn-sm px-4 bg-primary hover:bg-primary-hover active:bg-primary-active text-white text-xs font-semibold rounded-md transition focus-visible:outline-hidden focus-visible:ring-4 focus-visible:ring-primary-muted"
             >
               챌린지 만들기 <ArrowRight className="w-3.5 h-3.5" />
             </button>

@@ -46,7 +46,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             <button
               type="button"
               onClick={onAction}
-              className="w-full sm:flex-1 h-btn-md px-4 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-md text-body-sm font-semibold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-muted flex items-center justify-center gap-1.5"
+              className="w-full sm:flex-1 h-btn-md px-4 bg-primary hover:bg-primary-hover active:bg-primary-active text-white rounded-md text-body-sm font-semibold transition focus-visible:outline-hidden focus-visible:ring-4 focus-visible:ring-primary-muted flex items-center justify-center gap-1.5"
             >
               {actionText}
             </button>
@@ -55,7 +55,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             <button
               type="button"
               onClick={onSecondaryAction}
-              className="w-full sm:flex-1 h-btn-md px-4 bg-sunken hover:bg-line text-ink rounded-md text-body-sm font-semibold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary flex items-center justify-center gap-1.5"
+              className="w-full sm:flex-1 h-btn-md px-4 bg-sunken hover:bg-line text-ink rounded-md text-body-sm font-semibold transition active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary flex items-center justify-center gap-1.5"
             >
               {secondaryActionText}
             </button>

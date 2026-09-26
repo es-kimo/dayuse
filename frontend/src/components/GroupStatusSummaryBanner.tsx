@@ -69,7 +69,7 @@ export const GroupStatusSummaryBanner: React.FC<GroupStatusSummaryBannerProps> =
         {hasUnchecked && (
           <button
             onClick={onOpenUncheckedSheet}
-            className="px-3 py-1.5 bg-warning hover:bg-amber-800 active:bg-amber-900 text-white text-xs font-semibold rounded-md shadow-xs transition flex items-center gap-1 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
+            className="px-3 py-1.5 bg-warning hover:bg-amber-800 active:bg-amber-900 text-white text-xs font-semibold rounded-md shadow-xs transition flex items-center gap-1 shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-warning"
           >
             <span>정리하기</span>
             <ChevronRight className="w-3.5 h-3.5" />

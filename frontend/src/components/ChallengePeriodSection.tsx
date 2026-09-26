@@ -116,7 +116,7 @@ export const ChallengePeriodSection: React.FC<ChallengePeriodSectionProps> = ({
                     {isParticipating && (
                       <button
                         onClick={() => onOpenConfirmModal(interval)}
-                        className="px-2.5 py-1 bg-warning hover:bg-amber-800 active:scale-95 text-white text-caption font-semibold rounded-md transition shadow-xs flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
+                        className="px-2.5 py-1 bg-warning hover:bg-amber-800 active:scale-95 text-white text-caption font-semibold rounded-md transition shadow-xs flex items-center gap-1 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-warning"
                       >
                         <span>결과 확인하기</span>
                         <ChevronRight className="w-3 h-3" />

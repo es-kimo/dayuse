@@ -181,7 +181,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
           {isHost && (
             <button
               onClick={handleOpenEditAccount}
-              className="px-2.5 py-1 bg-warning hover:bg-amber-800 active:bg-amber-900 text-white text-[11px] font-semibold rounded-md shrink-0 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning"
+              className="px-2.5 py-1 bg-warning hover:bg-amber-800 active:bg-amber-900 text-white text-[11px] font-semibold rounded-md shrink-0 transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-warning"
             >
               계좌 등록하기
             </button>
@@ -231,7 +231,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
       <button
         onClick={onOpenDepositModal}
         disabled={!summary?.accountRegistered}
-        className={`w-full h-btn-md py-2.5 px-4 rounded-md text-body-sm font-semibold flex items-center justify-center gap-1.5 transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-muted ${
+        className={`w-full h-btn-md py-2.5 px-4 rounded-md text-body-sm font-semibold flex items-center justify-center gap-1.5 transition focus-visible:outline-hidden focus-visible:ring-4 focus-visible:ring-primary-muted ${
           summary?.accountRegistered
             ? 'bg-primary hover:bg-primary-hover active:bg-primary-active text-white shadow-xs active:scale-[0.99]'
             : 'bg-line text-ink-disabled cursor-not-allowed'

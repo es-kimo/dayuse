@@ -44,7 +44,7 @@ export interface TabsPanelProps {
 export const TabsPanel: React.FC<TabsPanelProps> = ({ value, children, className = '', ...props }) => (
   <BaseTabs.Panel
     value={value}
-    className={`mt-3 focus-ring rounded-md outline-none ${className}`}
+    className={`mt-3 focus-ring rounded-md outline-hidden ${className}`}
     {...props}
   >
     {children}

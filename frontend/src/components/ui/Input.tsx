@@ -18,7 +18,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         id={id}
         aria-invalid={isError ? 'true' : undefined}
         aria-describedby={combinedDescribedBy}
-        className={`h-input px-3.5 py-2.5 text-base text-ink bg-card rounded-md border transition outline-none focus-ring ${
+        className={`h-input px-3.5 py-2.5 text-base text-ink bg-card rounded-md border transition outline-hidden focus-ring ${
           isError
             ? 'border-danger-icon focus:border-danger focus:ring-danger/20'
             : 'border-line-strong focus:border-primary focus:ring-primary/20'

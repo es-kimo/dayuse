@@ -80,7 +80,7 @@ export const ProfilePage: React.FC = () => {
                   setErrorMsg('');
                 }}
                 maxLength={20}
-                className="flex-1 px-3 py-2 text-base bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white transition"
+                className="flex-1 px-3 py-2 text-base bg-slate-50 border border-slate-200 rounded-md outline-hidden focus:border-blue-500 focus:bg-white transition"
               />
               <button
                 type="submit"

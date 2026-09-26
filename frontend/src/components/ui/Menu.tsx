@@ -46,7 +46,7 @@ export const MenuItem: React.FC<MenuItemProps> = ({
       e.stopPropagation();
       onSelect?.();
     }}
-    className={`flex items-center gap-2 px-3 py-2 text-body-sm font-medium rounded-md cursor-pointer transition select-none outline-none focus-ring ${
+    className={`flex items-center gap-2 px-3 py-2 text-body-sm font-medium rounded-md cursor-pointer transition select-none outline-hidden focus-ring ${
       destructive
         ? 'text-danger hover:bg-danger-bg'
         : 'text-ink hover:bg-sunken hover:text-primary'

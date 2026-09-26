@@ -500,7 +500,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               disabled={isSubmitting}
               placeholder="오늘 실천한 소감이나 인증 한마디를 남겨보세요."
               rows={2}
-              className="w-full text-base p-3 bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-none focus:border-blue-500 transition resize-none text-slate-800 placeholder:text-slate-400"
+              className="w-full text-base p-3 bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-hidden focus:border-blue-500 transition resize-none text-slate-800 placeholder:text-slate-400"
             />
           </div>
 

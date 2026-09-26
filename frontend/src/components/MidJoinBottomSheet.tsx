@@ -229,7 +229,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                     step={1000}
                     value={penaltyAmount}
                     onChange={(e) => setPenaltyAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full text-sm font-semibold px-3 py-2.5 rounded-md border border-slate-200 focus:outline-none focus:border-blue-500 pr-8"
+                    className="w-full text-sm font-semibold px-3 py-2.5 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 pr-8"
                   />
                   <span className="absolute right-3 top-2.5 text-xs text-slate-400">원</span>
                 </div>

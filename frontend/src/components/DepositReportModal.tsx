@@ -283,7 +283,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
                 value={depositorName}
                 onChange={(e) => setDepositorName(e.target.value)}
                 placeholder="통장에 표시된 입금자명 (예: 홍길동)"
-                className="w-full text-base px-3 py-2 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white"
+                className="w-full text-base px-3 py-2 bg-slate-50 border border-slate-200 rounded-md outline-hidden focus:border-blue-500 focus:bg-white"
                 required
               />
             </div>
@@ -297,7 +297,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
                 type="date"
                 value={depositDate}
                 onChange={(e) => setDepositDate(e.target.value)}
-                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 bg-slate-50 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:bg-white"
+                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 bg-slate-50 border border-slate-200 rounded-md outline-hidden focus:border-blue-500 focus:bg-white"
                 required
               />
             </div>

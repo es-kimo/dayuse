@@ -390,7 +390,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-modal-top w-screen h-[100dvh] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-modal-top w-screen h-[100dvh] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-4 flex flex-col items-center shadow-2xl relative">
         {/* 상단 닫기 버튼 */}
         <button

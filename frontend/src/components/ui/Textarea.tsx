@@ -17,7 +17,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         id={id}
         aria-invalid={isError ? 'true' : undefined}
         aria-describedby={combinedDescribedBy}
-        className={`px-3.5 py-2.5 text-base text-ink bg-card rounded-md border transition outline-none focus-ring min-h-[100px] resize-y ${
+        className={`px-3.5 py-2.5 text-base text-ink bg-card rounded-md border transition outline-hidden focus-ring min-h-[100px] resize-y ${
           isError
             ? 'border-danger-icon focus:border-danger focus:ring-danger/20'
             : 'border-line-strong focus:border-primary focus:ring-primary/20'

@@ -1,6 +1,38 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+@import "../../brand/tokens/theme.css";
+
+/*
+ * 스캔 대상을 직접 지정한다(source(none) + @source).
+ *
+ * v4는 기본적으로 git 루트부터 자동 탐색하는데, 이 저장소는 루트에
+ * backend/, docs/, brand/가 함께 있어서 불필요한 파일까지 훑는다.
+ * v3 시절 tailwind.config.js의 content 배열과 같은 범위로 고정한다.
+ */
+@source "../index.html";
+@source "./**/*.{js,ts,jsx,tsx}";
+
+/*
+ * tailwind.config.js(theme.extend)에서 옮겨온 값.
+ * 브랜드 토큰은 brand/tokens/theme.css가 단일 출처이고,
+ * 여기에는 프론트엔드에서만 필요한 값만 둔다.
+ */
+@theme {
+  /* WCAG AA 대비율(4.76:1 이상) 보장을 위한 안전 명도 상향 */
+  --color-slate-400: #64748b;
+
+  /* 버튼·입력·헤더 규격. v4에서 h- 및 w- 계열은 --spacing-* 네임스페이스를 쓴다. */
+  --spacing-btn-lg: 52px;
+  --spacing-btn-md: 44px;
+  --spacing-btn-sm: 36px;
+  --spacing-input: 48px;
+  --spacing-header: 56px;
+
+  /* 앱 셸 최대 폭(max-w-app). v4에서 max-w-*는 --container-* 네임스페이스를 쓴다. */
+  --container-app: 480px;
+
+  /* backdrop-blur-2xs. v4 기본 blur 스케일은 xs(4px)부터라 더 옅은 단계를 직접 정의한다. */
+  --blur-2xs: 2px;
+}
 
 /*
  * 겹침 순서는 여기서만 정한다.
@@ -8,32 +40,60 @@
  * 컴포넌트에 z-[90] 같은 숫자를 직접 쓰면 서로 모르는 채로 어긋난다.
  * 실제로 모달을 Portal로 올리면서 토스트가 모달 뒤로 숨는 일이 있었다.
  *
- * tailwind.config.js의 theme.extend.zIndex가 아니라 이 파일에 두는 이유:
- * config에 새 키를 추가하면 돌고 있는 dev 서버가 그걸 다시 읽기 전까지
- * 클래스가 아예 생성되지 않는다. 그러면 z-index가 auto로 떨어져
- * "요소가 조용히 뒤로 숨는" 형태로 깨진다. 소스 CSS는 저장 즉시 반영된다.
- *
  * 모달과 토스트는 모두 document.body로 Portal되어 같은 루트 스택을 공유하므로
  * 아래 숫자만으로 순서가 정해진다.
  */
-@layer utilities {
-  .z-header { z-index: 20; }      /* sticky 헤더 */
-  .z-sheet { z-index: 50; }       /* 전면 오버레이·바텀시트 (아직 Portal 미적용) */
-  .z-modal { z-index: 90; }       /* Portal 모달 */
-  .z-modal-top { z-index: 100; }  /* 모달 위에 겹쳐 뜨는 모달 (공유 카드) */
-  .z-modal-over { z-index: 110; } /* 모달 안에서 다시 전면을 덮는 폴백 화면 */
-  .z-toast { z-index: 120; }      /* 항상 최상단. 어떤 모달 위에서도 보여야 한다. */
+@utility z-header {
+  z-index: 20;
+} /* sticky 헤더 */
+@utility z-sheet {
+  z-index: 50;
+} /* 바텀시트 */
+@utility z-modal {
+  z-index: 90;
+} /* Portal 모달 */
+@utility z-modal-top {
+  z-index: 100;
+} /* 모달 위에 겹쳐 뜨는 모달 (공유 카드) */
+@utility z-modal-over {
+  z-index: 110;
+} /* 모달 안에서 다시 전면을 덮는 폴백 화면 */
+@utility z-toast {
+  z-index: 120;
+} /* 항상 최상단. 어떤 모달 위에서도 보여야 한다. */
 
-  /* 공통 고대비 포커스 링 (WCAG 2.2 기준: 3:1 이상 명도 대비 보장) */
-  .focus-ring {
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-  }
-  .focus-ring:focus-visible {
+/* 공통 고대비 포커스 링 (WCAG 2.2 기준: 3:1 이상 명도 대비 보장) */
+@utility focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+
+  &:focus-visible {
     outline: 2px solid #2563eb;
     outline-offset: 2px;
     box-shadow: 0 0 0 2px #dbeafe;
   }
+}
+
+/* Safe area insets for mobile Safari and Android navigation bar */
+@utility pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+@utility pb-safe-nav {
+  padding-bottom: max(3rem, calc(2.5rem + env(safe-area-inset-bottom)));
+}
+
+@utility pt-safe {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+/* Minimum 44x44px touch target utility */
+@utility touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 :root {
@@ -47,7 +107,6 @@
   --color-text-muted: #64748b;
   --color-border-default: #e2e8f0;
   --color-border-focus: #2563eb;
-  --color-primary: #2563eb;
   --color-danger: #b91c1c;
   --color-success: #047857;
   --color-warning: #b45309;
@@ -72,9 +131,35 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* iOS Safari auto-zoom prevention: input/textarea/select must be at least 16px
-   (Note: date inputs trigger native picker sheets rather than virtual keyboard, so they don't auto-zoom) */
 @layer base {
+  /*
+   * v4 preflight 호환 처리.
+   *
+   * v4는 테두리 기본색을 gray-200에서 currentColor로, 버튼 커서를 pointer에서
+   * default로, placeholder 색을 gray-400에서 currentColor 50%로 바꿨다.
+   * 그대로 두면 `border`만 쓴 요소의 테두리가 글자색으로 나오고,
+   * 버튼 커서와 placeholder 명도가 기존과 달라진다. 디자인 토큰 값으로 되돌린다.
+   */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-line);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-ink-muted);
+  }
+
+  /* iOS Safari auto-zoom prevention: input/textarea/select must be at least 16px
+     (Note: date inputs trigger native picker sheets rather than virtual keyboard, so they don't auto-zoom) */
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="date"]):not([type="time"]):not([type="datetime-local"]),
   textarea,
   select {
@@ -124,26 +209,3 @@ body {
     cursor: pointer;
   }
 }
-
-/* Safe area insets for mobile Safari and Android navigation bar */
-.pb-safe {
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
-}
-
-.pb-safe-nav {
-  padding-bottom: max(3rem, calc(2.5rem + env(safe-area-inset-bottom)));
-}
-
-.pt-safe {
-  padding-top: max(0.5rem, env(safe-area-inset-top));
-}
-
-/* Minimum 44x44px touch target utility */
-.touch-target {
-  min-width: 44px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-

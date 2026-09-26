@@ -80,7 +80,7 @@ const UncheckedRecordCard: React.FC<UncheckedRecordCardProps> = ({
         <button
           onClick={() => onStartVerifyLate(record)}
           disabled={isBusy}
-          className={`flex-1 py-2 text-white rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+          className={`flex-1 py-2 text-white rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.99] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${
             isGracePeriod
               ? 'bg-primary hover:bg-primary-hover'
               : 'bg-warning hover:bg-amber-800'

@@ -202,7 +202,7 @@ export const InviteLandingPage: React.FC = () => {
               </button>
               <button
                 onClick={() => navigate('/groups')}
-                className="w-full py-3 bg-card hover:bg-sunken border border-line text-ink font-semibold rounded-md text-xs flex items-center justify-center gap-1.5 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="w-full py-3 bg-card hover:bg-sunken border border-line text-ink font-semibold rounded-md text-xs flex items-center justify-center gap-1.5 transition active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Home className="w-3.5 h-3.5 text-ink-muted" />
                 <span>내 모임 목록(홈)으로 가기</span>
@@ -213,7 +213,7 @@ export const InviteLandingPage: React.FC = () => {
               <button
                 onClick={handleJoin}
                 disabled={isJoining}
-                className="w-full py-3.5 bg-primary hover:bg-primary-hover active:bg-primary-active disabled:bg-line disabled:text-ink-disabled text-white font-semibold rounded-md text-body-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-muted"
+                className="w-full py-3.5 bg-primary hover:bg-primary-hover active:bg-primary-active disabled:bg-line disabled:text-ink-disabled text-white font-semibold rounded-md text-body-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95 focus-visible:outline-hidden focus-visible:ring-4 focus-visible:ring-primary-muted"
               >
                 {isJoining ? (
                   <>
@@ -229,7 +229,7 @@ export const InviteLandingPage: React.FC = () => {
               </button>
               <button
                 onClick={() => navigate('/groups')}
-                className="w-full py-3 bg-card hover:bg-sunken border border-line text-ink font-semibold rounded-md text-xs flex items-center justify-center gap-1.5 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="w-full py-3 bg-card hover:bg-sunken border border-line text-ink font-semibold rounded-md text-xs flex items-center justify-center gap-1.5 transition active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Home className="w-3.5 h-3.5 text-ink-muted" />
                 <span>홈으로 둘러보기</span>
@@ -239,14 +239,14 @@ export const InviteLandingPage: React.FC = () => {
             <>
               <button
                 onClick={handleGoToLogin}
-                className="w-full py-3.5 bg-primary hover:bg-primary-hover active:bg-primary-active text-white font-semibold rounded-md text-body-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-muted"
+                className="w-full py-3.5 bg-primary hover:bg-primary-hover active:bg-primary-active text-white font-semibold rounded-md text-body-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-95 focus-visible:outline-hidden focus-visible:ring-4 focus-visible:ring-primary-muted"
               >
                 <span>로그인하고 모임 참여하기</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <button
                 onClick={() => navigate('/groups')}
-                className="w-full py-3 bg-card hover:bg-sunken border border-line text-ink font-semibold rounded-md text-xs flex items-center justify-center gap-1.5 transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="w-full py-3 bg-card hover:bg-sunken border border-line text-ink font-semibold rounded-md text-xs flex items-center justify-center gap-1.5 transition active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <Home className="w-3.5 h-3.5 text-ink-muted" />
                 <span>홈으로 둘러보기</span>
