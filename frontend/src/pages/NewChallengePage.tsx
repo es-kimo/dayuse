@@ -663,7 +663,7 @@ export const NewChallengePage: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-0.5">
+                <div className="space-y-1.5 max-h-40 overflow-y-auto overscroll-contain pr-0.5">
                   {previewIntervals.map((iv) => (
                     <div
                       key={iv.index}
@@ -773,7 +773,7 @@ export const NewChallengePage: React.FC = () => {
               <span>모임원 목록을 불러오는 중...</span>
             </div>
           ) : (
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-0.5">
+            <div className="space-y-2 max-h-72 overflow-y-auto overscroll-contain pr-0.5">
               {groupMembers.map((member) => {
                 const isCreator = member.userId === currentUser?.id;
                 const isSelected = isCreator || selectedMemberIds.has(member.userId);
@@ -917,7 +917,7 @@ export const NewChallengePage: React.FC = () => {
       {/* 이전 챌린지 불러오기 모달 */}
       {showHistoryModal && (
         <div className="fixed inset-0 z-modal bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 max-h-[85dvh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-blue-600" />
@@ -935,7 +935,7 @@ export const NewChallengePage: React.FC = () => {
               이전에 진행했던 챌린지의 제목, 인증 기준, 기간 및 수행 주기를 그대로 불러옵니다.
             </p>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-0.5">
+            <div className="flex-1 overflow-y-auto overscroll-contain space-y-2 pr-0.5">
               {isLoadingHistory ? (
                 <div className="py-8 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
                   <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
@@ -1027,7 +1027,7 @@ export const NewChallengePage: React.FC = () => {
               {/* 참가자별 약정금 명단 요약 */}
               <div className="pt-2 border-t border-slate-200 space-y-1">
                 <span className="text-[11px] text-slate-500 block font-medium">참가자별 약정 금액:</span>
-                <div className="max-h-28 overflow-y-auto space-y-1 bg-white p-2 rounded-md border border-slate-200/80">
+                <div className="max-h-28 overflow-y-auto overscroll-contain space-y-1 bg-white p-2 rounded-md border border-slate-200/80">
                   {participantsList.map((p) => (
                     <div key={p.userId} className="flex justify-between text-[11px]">
                       <span className="text-slate-700 truncate max-w-[140px]">

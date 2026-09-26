@@ -143,7 +143,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 z-modal w-screen h-[100dvh] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-xl overflow-hidden">
+      <div className="bg-white rounded-2xl w-full max-w-md max-h-[90dvh] flex flex-col shadow-xl overflow-hidden">
         {/* 헤더 */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
           <div>
@@ -160,7 +160,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
         </div>
 
         {/* 바디 스크롤 영역 */}
-        <div className="p-4 overflow-y-auto space-y-4 flex-1">
+        <div className="p-4 overflow-y-auto overscroll-contain space-y-4 flex-1">
           {/* 입금 계좌 안내 카드 */}
           {account ? (
             <div className="bg-blue-50/60 border border-blue-200/60 rounded-xl p-3 flex items-center justify-between gap-2">
@@ -225,7 +225,7 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
                 <p className="text-[11px] text-slate-500 mt-1">성실하게 챌린지를 완주하고 계시네요! 🎉</p>
               </div>
             ) : (
-              <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              <div className="space-y-1.5 max-h-48 overflow-y-auto overscroll-contain pr-1">
                 {records.map((record) => {
                   const isChecked = selectedRecordIds.includes(record.id);
                   return (

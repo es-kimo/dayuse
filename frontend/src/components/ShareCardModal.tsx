@@ -584,7 +584,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
           <img
             src={longPressUrl}
             alt="공유 카드"
-            className="max-h-[70vh] w-auto rounded-2xl shadow-2xl"
+            className="max-h-[70dvh] w-auto rounded-2xl shadow-2xl"
           />
           <button
             onClick={() => {

@@ -100,7 +100,7 @@ export const PublicShareLandingPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+      <div className="min-h-dvh bg-slate-950 flex flex-col items-center justify-center p-4">
         <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-3" />
         <p className="text-sm text-slate-400">공유 카드를 불러오는 중입니다...</p>
       </div>
@@ -109,7 +109,7 @@ export const PublicShareLandingPage: React.FC = () => {
 
   if (notFound || !card) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
+      <div className="min-h-dvh bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
         <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-slate-500" />
         </div>
@@ -128,7 +128,7 @@ export const PublicShareLandingPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col items-center justify-between p-4 py-8 max-w-md mx-auto relative font-sans">
+    <div className="min-h-dvh bg-[#020617] text-white flex flex-col items-center justify-between p-4 py-8 max-w-md mx-auto relative font-sans">
       {/* 상단 브랜딩 바: 로고 (좌) · 도메인 (우) */}
       <div className="w-full max-w-[340px] flex items-center justify-between mb-4 px-1 gap-2 min-w-0">
         <DayuLogo variant="horizontal" theme="dark" className="h-7 w-auto object-contain shrink-0" />

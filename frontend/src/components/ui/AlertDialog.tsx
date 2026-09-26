@@ -50,7 +50,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           <BaseAlertDialog.Popup
-            className="pointer-events-auto w-full max-w-sm bg-card rounded-2xl p-5 shadow-sheet border border-line flex flex-col max-h-[90vh] overflow-y-auto transition duration-200 ease-out data-[starting-style]:opacity-0 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[ending-style]:scale-95 focus-ring"
+            className="pointer-events-auto w-full max-w-sm bg-card rounded-2xl p-5 shadow-sheet border border-line flex flex-col max-h-[90dvh] overflow-y-auto overscroll-contain transition duration-200 ease-out data-[starting-style]:opacity-0 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[ending-style]:scale-95 focus-ring"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3 mb-4">

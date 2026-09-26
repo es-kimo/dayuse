@@ -141,7 +141,7 @@ export const UncheckedRecordsBottomSheet: React.FC<UncheckedRecordsBottomSheetPr
 
   return (
     <div className="fixed inset-0 z-sheet bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[85vh] flex flex-col shadow-2xl">
+      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[85dvh] flex flex-col shadow-2xl">
         {/* 상단 헤더 */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100">
           <div>
@@ -167,7 +167,7 @@ export const UncheckedRecordsBottomSheet: React.FC<UncheckedRecordsBottomSheetPr
         </div>
 
         {/* 목록 스크롤 영역 */}
-        <div className="p-4 overflow-y-auto space-y-3 flex-1">
+        <div className="p-4 overflow-y-auto overscroll-contain space-y-3 flex-1">
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
               <Loader2 className="w-6 h-6 animate-spin text-blue-600" />

@@ -82,7 +82,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
 
   return (
     <div className="fixed inset-0 z-sheet bg-black/50 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90dvh] flex flex-col overflow-hidden">
         {/* 헤더 */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -108,7 +108,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
         </div>
 
         {/* 본문 */}
-        <div className="p-5 overflow-y-auto space-y-5 flex-1">
+        <div className="p-5 overflow-y-auto overscroll-contain space-y-5 flex-1">
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
               <Loader2 className="w-7 h-7 animate-spin text-blue-600" />

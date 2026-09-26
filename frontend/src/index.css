@@ -178,11 +178,46 @@
   }
 }
 
+/*
+ * 모바일 플랫폼 레이어.
+ *
+ * 브라우저가 기본으로 넣어주는 동작 중 앱에서는 방해가 되는 것들을 끈다.
+ * 전부 데스크톱 브라우저의 기기 에뮬레이션에서는 재현되지 않는다.
+ */
+html {
+  /* 탭할 때 iOS·안드로이드가 덮어씌우는 회색 하이라이트. :active 피드백과 충돌한다. */
+  -webkit-tap-highlight-color: transparent;
+  /* 앱 자체 스크롤 컨테이너가 있으므로 당겨서 새로고침과 페이지 전체 러버밴드를 막는다. */
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   background-color: #f8fafc;
   color: #1e293b;
   -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  /*
+   * 컨트롤은 문서가 아니다.
+   * touch-action: 더블탭 확대 대기(최대 300ms)를 건너뛰고 탭이 즉시 반응하게 한다.
+   * user-select/touch-callout: 길게 눌렀을 때 버튼 글자가 선택되거나 콜아웃이 뜨는 것을 막는다.
+   *   본문 텍스트에는 절대 걸지 않는다(주소·오류 메시지·금액은 복사할 수 있어야 한다).
+   */
+  button,
+  a,
+  [role="button"],
+  summary {
+    touch-action: manipulation;
+  }
+
+  button,
+  [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
 }
 
 @layer base {

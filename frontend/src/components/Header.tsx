@@ -9,7 +9,7 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <header role="banner" className="sticky top-0 z-header bg-card/90 backdrop-blur-xs border-b border-line px-4 py-2.5 flex items-center justify-between">
+    <header role="banner" className="sticky top-0 z-header bg-card/90 backdrop-blur-xs border-b border-line px-4 pb-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] flex items-center justify-between">
       <Link
         to="/groups"
         className="flex items-center focus-ring rounded-md py-0.5"

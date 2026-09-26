@@ -53,7 +53,7 @@ export const Dialog: React.FC<DialogProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           <BaseDialog.Popup
-            className={`pointer-events-auto w-full ${maxWidthMap[maxWidth]} bg-card rounded-2xl p-5 shadow-sheet border border-line flex flex-col max-h-[90vh] overflow-y-auto transition duration-200 ease-out data-[starting-style]:opacity-0 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[ending-style]:scale-95 focus-ring ${className}`}
+            className={`pointer-events-auto w-full ${maxWidthMap[maxWidth]} bg-card rounded-2xl p-5 shadow-sheet border border-line flex flex-col max-h-[90dvh] overflow-y-auto overscroll-contain transition duration-200 ease-out data-[starting-style]:opacity-0 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[ending-style]:scale-95 focus-ring ${className}`}
             onClick={(e) => e.stopPropagation()}
           >
             {(title || description) && (
