@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { SettlementSummary, GroupAccountPayload } from '../types';
 import { settlementApi } from '../api/settlement';
-import { Button, FormField, Input } from './ui';
+import { Button, FormField, Input, Modal, ModalTitle, ModalClose } from './ui';
 import {
   CreditCard,
   Copy,
@@ -242,102 +242,106 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
       </button>
 
       {/* 모임장 계좌 등록/수정 모달 */}
-      {isEditingAccount && (
-        <div className="fixed inset-0 z-sheet bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-slate-800">
-                {account ? '모임 계좌 정보 수정' : '모임 계좌 신규 등록'}
-              </h3>
-              <button
-                onClick={() => setIsEditingAccount(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveAccount} noValidate className="space-y-3">
-              {accountError && (
-                <div role="alert" aria-live="polite" className="p-2.5 rounded-md bg-danger-bg border border-danger-border text-danger text-caption font-medium flex items-center gap-1.5">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-danger-icon" aria-hidden="true" />
-                  <span>{accountError}</span>
-                </div>
-              )}
-
-              <FormField label="은행명" required id="bank-name-input">
-                <Input
-                  ref={bankNameRef}
-                  id="bank-name-input"
-                  type="text"
-                  placeholder="예: 카카오뱅크, 토스뱅크, 신한은행"
-                  value={bankName}
-                  onChange={(e) => {
-                    setBankName(e.target.value);
-                    if (accountError) setAccountError('');
-                  }}
-                  maxLength={50}
-                  required
-                />
-              </FormField>
-
-              <FormField label="계좌번호" required id="account-number-input">
-                <Input
-                  ref={accountNumberRef}
-                  id="account-number-input"
-                  type="text"
-                  placeholder="예: 3333-01-1234567 (하이픈 포함 가능)"
-                  value={accountNumber}
-                  onChange={(e) => {
-                    setAccountNumber(e.target.value);
-                    if (accountError) setAccountError('');
-                  }}
-                  maxLength={50}
-                  required
-                />
-              </FormField>
-
-              <FormField label="예금주" required id="account-holder-input">
-                <Input
-                  ref={accountHolderRef}
-                  id="account-holder-input"
-                  type="text"
-                  placeholder="예: 홍길동"
-                  value={accountHolder}
-                  onChange={(e) => {
-                    setAccountHolder(e.target.value);
-                    if (accountError) setAccountError('');
-                  }}
-                  maxLength={50}
-                  required
-                />
-              </FormField>
-
-              <div className="pt-2 flex gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="md"
-                  fullWidth
-                  onClick={() => setIsEditingAccount(false)}
-                >
-                  취소
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="md"
-                  fullWidth
-                  isLoading={savingAccount}
-                  loadingText="저장 중..."
-                >
-                  저장하기
-                </Button>
-              </div>
-            </form>
+      <Modal
+        open={isEditingAccount}
+        onOpenChange={setIsEditingAccount}
+        layer="sheet"
+        backdropClassName="bg-black/50"
+        className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl space-y-4"
+      >
+        <>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <ModalTitle className="text-sm font-bold text-slate-800">
+              {account ? '모임 계좌 정보 수정' : '모임 계좌 신규 등록'}
+            </ModalTitle>
+            <ModalClose
+              aria-label="닫기"
+              className="text-slate-400 hover:text-slate-600 rounded-md focus-ring"
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
+            </ModalClose>
           </div>
-        </div>
-      )}
+
+          <form onSubmit={handleSaveAccount} noValidate className="space-y-3">
+            {accountError && (
+              <div role="alert" aria-live="polite" className="p-2.5 rounded-md bg-danger-bg border border-danger-border text-danger text-caption font-medium flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-danger-icon" aria-hidden="true" />
+                <span>{accountError}</span>
+              </div>
+            )}
+
+            <FormField label="은행명" required id="bank-name-input">
+              <Input
+                ref={bankNameRef}
+                id="bank-name-input"
+                type="text"
+                placeholder="예: 카카오뱅크, 토스뱅크, 신한은행"
+                value={bankName}
+                onChange={(e) => {
+                  setBankName(e.target.value);
+                  if (accountError) setAccountError('');
+                }}
+                maxLength={50}
+                required
+              />
+            </FormField>
+
+            <FormField label="계좌번호" required id="account-number-input">
+              <Input
+                ref={accountNumberRef}
+                id="account-number-input"
+                type="text"
+                placeholder="예: 3333-01-1234567 (하이픈 포함 가능)"
+                value={accountNumber}
+                onChange={(e) => {
+                  setAccountNumber(e.target.value);
+                  if (accountError) setAccountError('');
+                }}
+                maxLength={50}
+                required
+              />
+            </FormField>
+
+            <FormField label="예금주" required id="account-holder-input">
+              <Input
+                ref={accountHolderRef}
+                id="account-holder-input"
+                type="text"
+                placeholder="예: 홍길동"
+                value={accountHolder}
+                onChange={(e) => {
+                  setAccountHolder(e.target.value);
+                  if (accountError) setAccountError('');
+                }}
+                maxLength={50}
+                required
+              />
+            </FormField>
+
+            <div className="pt-2 flex gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                fullWidth
+                onClick={() => setIsEditingAccount(false)}
+              >
+                취소
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                fullWidth
+                isLoading={savingAccount}
+                loadingText="저장 중..."
+              >
+                저장하기
+              </Button>
+            </div>
+          </form>
+        </>
+      </Modal>
     </div>
   );
 };

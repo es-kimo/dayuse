@@ -4,7 +4,7 @@ import type { DepositReportDetail, DepositReportStatus } from '../types';
 import { settlementApi } from '../api/settlement';
 import { groupsApi } from '../api/groups';
 import { MobileLayout } from '../components/MobileLayout';
-import { Button, FormField, Textarea } from '../components/ui';
+import { Button, FormField, Textarea, Modal, ModalTitle, ModalClose } from '../components/ui';
 import {
   ArrowLeft,
   Loader2,
@@ -375,133 +375,139 @@ export const SettlementManagePage: React.FC = () => {
       )}
 
       {/* 반려 사유 입력 모달 */}
-      {rejectTargetId && (
-        <div className="fixed inset-0 z-sheet bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-slate-800">입금 신고 반려</h3>
-              <button
-                onClick={() => setRejectTargetId(null)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleRejectSubmit} noValidate className="space-y-3">
-              <p className="text-xs text-slate-500">
-                반려 시 모임원에게 사유가 전달되며, 연결된 미수행 기록은 다시 미납으로 원복됩니다.
-              </p>
-
-              <FormField label="반려 사유" required error={rejectError} id="reject-reason-input">
-                <Textarea
-                  ref={rejectReasonRef}
-                  id="reject-reason-input"
-                  value={rejectReason}
-                  onChange={(e) => {
-                    setRejectReason(e.target.value);
-                    if (rejectError) setRejectError('');
-                  }}
-                  placeholder="예: 계좌 입금 내역이 확인되지 않습니다."
-                  rows={3}
-                  error={rejectError}
-                  required
-                  className="resize-none"
-                />
-              </FormField>
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="md"
-                  fullWidth
-                  onClick={() => setRejectTargetId(null)}
-                >
-                  취소
-                </Button>
-                <Button
-                  type="submit"
-                  variant="danger"
-                  size="md"
-                  fullWidth
-                  isLoading={rejecting}
-                  loadingText="반려 처리 중..."
-                >
-                  반려 확정
-                </Button>
-              </div>
-            </form>
+      <Modal
+        open={rejectTargetId !== null}
+        onOpenChange={(next) => !next && setRejectTargetId(null)}
+        layer="sheet"
+        backdropClassName="bg-black/50"
+        className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl space-y-4"
+      >
+        <>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <ModalTitle className="text-sm font-bold text-slate-800">입금 신고 반려</ModalTitle>
+            <ModalClose
+              aria-label="닫기"
+              className="text-slate-400 hover:text-slate-600 focus-ring rounded-md p-1"
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
+            </ModalClose>
           </div>
-        </div>
-      )}
+
+          <form onSubmit={handleRejectSubmit} noValidate className="space-y-3">
+            <p className="text-xs text-slate-500">
+              반려 시 모임원에게 사유가 전달되며, 연결된 미수행 기록은 다시 미납으로 원복됩니다.
+            </p>
+
+            <FormField label="반려 사유" required error={rejectError} id="reject-reason-input">
+              <Textarea
+                ref={rejectReasonRef}
+                id="reject-reason-input"
+                value={rejectReason}
+                onChange={(e) => {
+                  setRejectReason(e.target.value);
+                  if (rejectError) setRejectError('');
+                }}
+                placeholder="예: 계좌 입금 내역이 확인되지 않습니다."
+                rows={3}
+                error={rejectError}
+                required
+                className="resize-none"
+              />
+            </FormField>
+
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                fullWidth
+                onClick={() => setRejectTargetId(null)}
+              >
+                취소
+              </Button>
+              <Button
+                type="submit"
+                variant="danger"
+                size="md"
+                fullWidth
+                isLoading={rejecting}
+                loadingText="반려 처리 중..."
+              >
+                반려 확정
+              </Button>
+            </div>
+          </form>
+        </>
+      </Modal>
 
       {/* 승인 확인 취소 사유 모달 */}
-      {cancelTargetId && (
-        <div className="fixed inset-0 z-sheet bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-slate-800">승인 확인 취소 (롤백)</h3>
-              <button
-                type="button"
-                onClick={() => setCancelTargetId(null)}
-                aria-label="닫기"
-                className="text-slate-400 hover:text-slate-600 focus-ring rounded-md p-1"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <Modal
+        open={cancelTargetId !== null}
+        onOpenChange={(next) => !next && setCancelTargetId(null)}
+        layer="sheet"
+        backdropClassName="bg-black/50"
+        className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl space-y-4"
+      >
+        <>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <ModalTitle className="text-sm font-bold text-slate-800">승인 확인 취소 (롤백)</ModalTitle>
+            <ModalClose
+              aria-label="닫기"
+              className="text-slate-400 hover:text-slate-600 focus-ring rounded-md p-1"
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
+            </ModalClose>
+          </div>
+
+          <form onSubmit={handleCancelSubmit} noValidate className="space-y-3">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-relaxed">
+                ⚠️ 이미 승인된 건을 취소하면 <strong>모임 누적 확인액에서 즉시 차감</strong>되며, 포함된 기록들이 <strong>다시 미납 상태로 복귀</strong>합니다.
+              </p>
             </div>
 
-            <form onSubmit={handleCancelSubmit} noValidate className="space-y-3">
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700 flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                <p className="text-[11px] leading-relaxed">
-                  ⚠️ 이미 승인된 건을 취소하면 <strong>모임 누적 확인액에서 즉시 차감</strong>되며, 포함된 기록들이 <strong>다시 미납 상태로 복귀</strong>합니다.
-                </p>
-              </div>
+            <FormField label="취소 사유" required error={cancelError} id="cancel-reason-input">
+              <Textarea
+                ref={cancelReasonRef}
+                id="cancel-reason-input"
+                value={cancelReason}
+                onChange={(e) => {
+                  setCancelReason(e.target.value);
+                  if (cancelError) setCancelError('');
+                }}
+                placeholder="예: 입금자명 오인으로 인한 실수 승인 취소"
+                rows={3}
+                error={cancelError}
+                required
+                className="resize-none"
+              />
+            </FormField>
 
-              <FormField label="취소 사유" required error={cancelError} id="cancel-reason-input">
-                <Textarea
-                  ref={cancelReasonRef}
-                  id="cancel-reason-input"
-                  value={cancelReason}
-                  onChange={(e) => {
-                    setCancelReason(e.target.value);
-                    if (cancelError) setCancelError('');
-                  }}
-                  placeholder="예: 입금자명 오인으로 인한 실수 승인 취소"
-                  rows={3}
-                  error={cancelError}
-                  required
-                  className="resize-none"
-                />
-              </FormField>
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="md"
-                  fullWidth
-                  onClick={() => setCancelTargetId(null)}
-                >
-                  닫기
-                </Button>
-                <Button
-                  type="submit"
-                  variant="danger"
-                  size="md"
-                  fullWidth
-                  isLoading={cancelling}
-                  loadingText="취소 처리 중..."
-                >
-                  취소 확인
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <div className="flex gap-2 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                fullWidth
+                onClick={() => setCancelTargetId(null)}
+              >
+                닫기
+              </Button>
+              <Button
+                type="submit"
+                variant="danger"
+                size="md"
+                fullWidth
+                isLoading={cancelling}
+                loadingText="취소 처리 중..."
+              >
+                취소 확인
+              </Button>
+            </div>
+          </form>
+        </>
+      </Modal>
     </MobileLayout>
   );
 };

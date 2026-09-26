@@ -15,6 +15,7 @@ import {
 import { DayuLogo } from '../components/brand/DayuLogo';
 import { DayuExpression } from '../components/brand/DayuExpression';
 import { usePageMeta } from '../hooks/usePageMeta';
+import { Modal, ModalTitle, ModalDescription, ModalClose } from '../components/ui';
 
 export const PublicShareLandingPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -260,37 +261,38 @@ export const PublicShareLandingPage: React.FC = () => {
       </div>
 
       {/* 비모임원 초대 링크 필요 안내 팝업 모달 */}
-      {showInviteRequiredModal && (
-        <div className="fixed inset-0 z-sheet bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative">
-            <button
-              onClick={() => setShowInviteRequiredModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      <Modal
+        open={showInviteRequiredModal}
+        onOpenChange={setShowInviteRequiredModal}
+        layer="sheet"
+        backdropClassName="bg-black/80 backdrop-blur-xs"
+        className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl relative"
+      >
+        <>
+          <ModalClose
+            aria-label="닫기"
+            className="absolute top-4 right-4 text-slate-400 hover:text-white rounded-md focus-ring"
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
+          </ModalClose>
 
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
-              <ShieldAlert className="w-6 h-6" />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-base font-bold text-white">모임 가입이 필요합니다</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                이 챌린지는 비공개 소모임에서 진행 중입니다.<br />
-                모임원으로부터 <strong className="text-amber-400">초대 링크</strong>를 전달받아 먼저 모임에 가입해 주세요.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setShowInviteRequiredModal(false)}
-              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md text-xs font-semibold transition"
-            >
-              확인
-            </button>
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-6 h-6" aria-hidden="true" />
           </div>
-        </div>
-      )}
+
+          <div className="space-y-2">
+            <ModalTitle className="text-base font-bold text-white">모임 가입이 필요합니다</ModalTitle>
+            <ModalDescription className="text-xs text-slate-300 leading-relaxed">
+              이 챌린지는 비공개 소모임에서 진행 중입니다.<br />
+              모임원으로부터 <strong className="text-amber-400">초대 링크</strong>를 전달받아 먼저 모임에 가입해 주세요.
+            </ModalDescription>
+          </div>
+
+          <ModalClose className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md text-xs font-semibold transition focus-ring">
+            확인
+          </ModalClose>
+        </>
+      </Modal>
     </div>
   );
 };

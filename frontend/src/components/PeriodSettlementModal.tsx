@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ChallengePeriodInterval } from '../types';
 import { challengesApi } from '../api/challenges';
+import { Modal, ModalTitle, ModalClose } from './ui/Modal';
 import { AlertCircle, X } from 'lucide-react';
 
 interface PeriodSettlementModalProps {
@@ -23,7 +24,10 @@ export const PeriodSettlementModal: React.FC<PeriodSettlementModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  /*
+   * isOpen으로 조기 return하지 않는다. 닫히는 순간 null을 반환하면
+   * 이탈 전환이 시작되기 전에 노드가 사라진다.
+   */
 
   const handleConfirm = async () => {
     try {
@@ -43,23 +47,29 @@ export const PeriodSettlementModal: React.FC<PeriodSettlementModalProps> = ({
   const totalPenalty = interval.totalPenaltyAmount ?? (missedCount * (interval.penaltyAmountPerMiss ?? 0));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl relative animate-in fade-in zoom-in duration-200">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+    <Modal
+      open={isOpen}
+      onOpenChange={(next) => !next && onClose()}
+      disablePointerDismissal={submitting}
+      backdropClassName="bg-black/50 backdrop-blur-xs"
+      className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl relative"
+    >
+      <>
+        <ModalClose
+          aria-label="닫기"
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-md focus-ring"
         >
-          <X className="w-5 h-5" />
-        </button>
+          <X className="w-5 h-5" aria-hidden="true" />
+        </ModalClose>
 
         <div className="flex items-center gap-2 mb-3">
           <div className="p-2 rounded-md bg-amber-50 text-amber-600 border border-amber-200">
             <AlertCircle className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-800">
+            <ModalTitle className="text-base font-bold text-slate-800">
               {interval.index}구간 미수행 확정
-            </h3>
+            </ModalTitle>
             <p className="text-xs text-slate-400">
               {interval.startDate} ~ {interval.endDate}
             </p>
@@ -115,7 +125,7 @@ export const PeriodSettlementModal: React.FC<PeriodSettlementModalProps> = ({
             {submitting ? '처리 중...' : '미수행 확정하기'}
           </button>
         </div>
-      </div>
-    </div>
+      </>
+    </Modal>
   );
 };

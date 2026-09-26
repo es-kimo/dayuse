@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { getTodayKstString, addDaysKst } from '../utils/date';
 import type { ChallengeSummary, PeriodType, GroupMember, CreateChallengePayload } from '../types';
-import { Button, FormField, Input, Textarea } from '../components/ui';
+import { Button, FormField, Input, Textarea, Modal, ModalTitle, ModalDescription, ModalClose } from '../components/ui';
 
 const PERIOD_PRESETS = [
   { label: '1주 (7일)', days: 7 },
@@ -915,179 +915,185 @@ export const NewChallengePage: React.FC = () => {
       </form>
 
       {/* 이전 챌린지 불러오기 모달 */}
-      {showHistoryModal && (
-        <div className="fixed inset-0 z-modal bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 max-h-[85dvh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-blue-600" />
-                <h2 className="text-sm font-bold text-slate-800">이전 챌린지 불러오기</h2>
-              </div>
-              <button
-                onClick={() => setShowHistoryModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 -mr-1"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <Modal
+        open={showHistoryModal}
+        onOpenChange={setShowHistoryModal}
+        className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 max-h-[85dvh] flex flex-col"
+      >
+        <>
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4 text-blue-600" aria-hidden="true" />
+              <ModalTitle className="text-sm font-bold text-slate-800">이전 챌린지 불러오기</ModalTitle>
             </div>
-
-            <p className="text-xs text-slate-500">
-              이전에 진행했던 챌린지의 제목, 인증 기준, 기간 및 수행 주기를 그대로 불러옵니다.
-            </p>
-
-            <div className="flex-1 overflow-y-auto overscroll-contain space-y-2 pr-0.5">
-              {isLoadingHistory ? (
-                <div className="py-8 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                  <span>모임 챌린지 목록을 불러오는 중...</span>
-                </div>
-              ) : historyChallenges.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-400">
-                  불러올 수 있는 이전 챌린지가 없습니다.
-                </div>
-              ) : (
-                historyChallenges.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => handleSelectHistoryChallenge(c)}
-                    className="w-full text-left p-3 rounded-md border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 transition group"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-slate-800 group-hover:text-blue-600 line-clamp-1">
-                        {c.title}
-                      </span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                          c.status === 'ENDED'
-                            ? 'bg-slate-100 text-slate-600'
-                            : c.status === 'IN_PROGRESS'
-                            ? 'bg-emerald-50 text-emerald-600'
-                            : 'bg-blue-50 text-blue-600'
-                        }`}
-                      >
-                        {c.status === 'ENDED' ? '종료됨' : c.status === 'IN_PROGRESS' ? '진행 중' : '시작 전'}
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                      <span>{c.startDate} ~ {c.endDate} · {c.periodType === 'WEEKLY_N' ? `주 ${c.targetFrequency}회` : '매일'}</span>
-                      <span className="text-blue-600 font-semibold flex items-center gap-0.5">
-                        불러오기 <Check className="w-3 h-3" />
-                      </span>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
+            <ModalClose
+              aria-label="닫기"
+              className="text-slate-400 hover:text-slate-600 p-1 -mr-1 rounded-md focus-ring"
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
+            </ModalClose>
           </div>
-        </div>
-      )}
 
-      {/* 최종 확인 모달 */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-sheet bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-2 text-slate-800">
-              <ShieldCheck className="w-5 h-5 text-blue-600" />
-              <h2 className="text-sm font-bold">
-                {activeRestartId ? '다시 시작 챌린지 생성 최종 확인' : '챌린지 생성 최종 확인'}
-              </h2>
-            </div>
+          <ModalDescription className="text-xs text-slate-500">
+            이전에 진행했던 챌린지의 제목, 인증 기준, 기간 및 수행 주기를 그대로 불러옵니다.
+          </ModalDescription>
 
-            <div className="bg-slate-50 rounded-md p-3.5 space-y-2 text-xs border border-slate-200">
-              <div className="flex justify-between">
-                <span className="text-slate-500">챌린지명</span>
-                <span className="font-semibold text-slate-800 truncate max-w-[180px]">{title}</span>
+          <div className="flex-1 overflow-y-auto overscroll-contain space-y-2 pr-0.5">
+            {isLoadingHistory ? (
+              <div className="py-8 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                <span>모임 챌린지 목록을 불러오는 중...</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">진행 기간</span>
-                <span className="font-semibold text-slate-800">{startDate} ~ {endDate} ({durationDays}일)</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">수행 주기</span>
-                <span className="font-semibold text-slate-800">
-                  {periodType === 'WEEKLY_N' ? `주 ${targetFrequency}회` : '매일 1회'}
-                </span>
-              </div>
-              {periodType === 'WEEKLY_N' && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">총 목표 횟수</span>
-                  <span className="font-semibold text-blue-600">
-                    총 {previewIntervals.reduce((sum, item) => sum + item.targetCount, 0)}회 ({previewIntervals.length}개 구간)
-                  </span>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500">최종 참여 인원</span>
-                <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                  나 포함 총 {participantsList.length}명
-                </span>
-              </div>
-
-              {/* 참가자별 약정금 명단 요약 */}
-              <div className="pt-2 border-t border-slate-200 space-y-1">
-                <span className="text-[11px] text-slate-500 block font-medium">참가자별 약정 금액:</span>
-                <div className="max-h-28 overflow-y-auto overscroll-contain space-y-1 bg-white p-2 rounded-md border border-slate-200/80">
-                  {participantsList.map((p) => (
-                    <div key={p.userId} className="flex justify-between text-[11px]">
-                      <span className="text-slate-700 truncate max-w-[140px]">
-                        {p.nickname} {p.isCreator && '(생성자)'}
-                      </span>
-                      <span className="font-semibold text-amber-700">
-                        {p.penaltyAmount.toLocaleString()}원 / {periodType === 'WEEKLY_N' ? '회' : '일'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-1 border-t border-slate-200">
-                <span className="text-[11px] text-slate-500 block mb-0.5">인증 기준 안내:</span>
-                <p className="text-[11px] text-slate-700 whitespace-pre-wrap">{verificationCriteria}</p>
-              </div>
-            </div>
-
-            {activeRestartId && (
-              <div className="text-[11px] text-blue-700 bg-blue-50 p-2.5 rounded-md border border-blue-200">
-                ℹ️ 기존 챌린지의 과거 기록(인증 사진 등)은 새 챌린지로 복사되지 않으며 이번에 설정한 참가자 명단으로 새롭게 시작됩니다.
-              </div>
-            )}
-
-            {startDate === today ? (
-              <div className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-md border border-amber-200 leading-relaxed font-medium">
-                ⚠️ 오늘 시작하는 챌린지는 생성 즉시 조건이 확정되어 취소/수정이 불가합니다.
+            ) : historyChallenges.length === 0 ? (
+              <div className="py-8 text-center text-xs text-slate-400">
+                불러올 수 있는 이전 챌린지가 없습니다.
               </div>
             ) : (
-              <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-md border border-amber-200">
-                ⚠️ 챌린지가 시작(시작일 00:00 KST)되면 기간 및 수행 주기, 인증 기준 수정과 챌린지 삭제가 잠깁니다.
+              historyChallenges.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => handleSelectHistoryChallenge(c)}
+                  className="w-full text-left p-3 rounded-md border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 transition group"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-slate-800 group-hover:text-blue-600 line-clamp-1">
+                      {c.title}
+                    </span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                        c.status === 'ENDED'
+                          ? 'bg-slate-100 text-slate-600'
+                          : c.status === 'IN_PROGRESS'
+                          ? 'bg-emerald-50 text-emerald-600'
+                          : 'bg-blue-50 text-blue-600'
+                      }`}
+                    >
+                      {c.status === 'ENDED' ? '종료됨' : c.status === 'IN_PROGRESS' ? '진행 중' : '시작 전'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 flex items-center justify-between">
+                    <span>{c.startDate} ~ {c.endDate} · {c.periodType === 'WEEKLY_N' ? `주 ${c.targetFrequency}회` : '매일'}</span>
+                    <span className="text-blue-600 font-semibold flex items-center gap-0.5">
+                      불러오기 <Check className="w-3 h-3" />
+                    </span>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </>
+      </Modal>
+
+      {/* 최종 확인 모달 */}
+      <Modal
+        open={showConfirmModal}
+        onOpenChange={setShowConfirmModal}
+        layer="sheet"
+        disablePointerDismissal={isSubmitting}
+        className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4"
+      >
+        <>
+          <div className="flex items-center gap-2 text-slate-800">
+            <ShieldCheck className="w-5 h-5 text-blue-600" aria-hidden="true" />
+            <ModalTitle className="text-sm font-bold">
+              {activeRestartId ? '다시 시작 챌린지 생성 최종 확인' : '챌린지 생성 최종 확인'}
+            </ModalTitle>
+          </div>
+
+          <div className="bg-slate-50 rounded-md p-3.5 space-y-2 text-xs border border-slate-200">
+            <div className="flex justify-between">
+              <span className="text-slate-500">챌린지명</span>
+              <span className="font-semibold text-slate-800 truncate max-w-[180px]">{title}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">진행 기간</span>
+              <span className="font-semibold text-slate-800">{startDate} ~ {endDate} ({durationDays}일)</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">수행 주기</span>
+              <span className="font-semibold text-slate-800">
+                {periodType === 'WEEKLY_N' ? `주 ${targetFrequency}회` : '매일 1회'}
+              </span>
+            </div>
+            {periodType === 'WEEKLY_N' && (
+              <div className="flex justify-between">
+                <span className="text-slate-500">총 목표 횟수</span>
+                <span className="font-semibold text-blue-600">
+                  총 {previewIntervals.reduce((sum, item) => sum + item.targetCount, 0)}회 ({previewIntervals.length}개 구간)
+                </span>
               </div>
             )}
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">최종 참여 인원</span>
+              <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                나 포함 총 {participantsList.length}명
+              </span>
+            </div>
 
-            <div className="flex gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setShowConfirmModal(false)}
-                disabled={isSubmitting}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition"
-              >
-                다시 수정
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmSubmit}
-                disabled={isSubmitting}
-                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1 shadow-xs transition"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <span>{activeRestartId ? '다시 시작하기' : '확정하고 생성하기'}</span>
-                )}
-              </button>
+            {/* 참가자별 약정금 명단 요약 */}
+            <div className="pt-2 border-t border-slate-200 space-y-1">
+              <span className="text-[11px] text-slate-500 block font-medium">참가자별 약정 금액:</span>
+              <div className="max-h-28 overflow-y-auto overscroll-contain space-y-1 bg-white p-2 rounded-md border border-slate-200/80">
+                {participantsList.map((p) => (
+                  <div key={p.userId} className="flex justify-between text-[11px]">
+                    <span className="text-slate-700 truncate max-w-[140px]">
+                      {p.nickname} {p.isCreator && '(생성자)'}
+                    </span>
+                    <span className="font-semibold text-amber-700">
+                      {p.penaltyAmount.toLocaleString()}원 / {periodType === 'WEEKLY_N' ? '회' : '일'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-1 border-t border-slate-200">
+              <span className="text-[11px] text-slate-500 block mb-0.5">인증 기준 안내:</span>
+              <p className="text-[11px] text-slate-700 whitespace-pre-wrap">{verificationCriteria}</p>
             </div>
           </div>
-        </div>
-      )}
+
+          {activeRestartId && (
+            <div className="text-[11px] text-blue-700 bg-blue-50 p-2.5 rounded-md border border-blue-200">
+              ℹ️ 기존 챌린지의 과거 기록(인증 사진 등)은 새 챌린지로 복사되지 않으며 이번에 설정한 참가자 명단으로 새롭게 시작됩니다.
+            </div>
+          )}
+
+          {startDate === today ? (
+            <div className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-md border border-amber-200 leading-relaxed font-medium">
+              ⚠️ 오늘 시작하는 챌린지는 생성 즉시 조건이 확정되어 취소/수정이 불가합니다.
+            </div>
+          ) : (
+            <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-md border border-amber-200">
+              ⚠️ 챌린지가 시작(시작일 00:00 KST)되면 기간 및 수행 주기, 인증 기준 수정과 챌린지 삭제가 잠깁니다.
+            </div>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setShowConfirmModal(false)}
+              disabled={isSubmitting}
+              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition"
+            >
+              다시 수정
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmSubmit}
+              disabled={isSubmitting}
+              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1 shadow-xs transition"
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <span>{activeRestartId ? '다시 시작하기' : '확정하고 생성하기'}</span>
+              )}
+            </button>
+          </div>
+        </>
+      </Modal>
     </MobileLayout>
   );
 };

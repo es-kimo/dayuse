@@ -1,4 +1,5 @@
 import React from 'react';
+import { Modal, ModalTitle, ModalClose } from './ui/Modal';
 
 interface IosInstallGuideModalProps {
   isOpen: boolean;
@@ -9,24 +10,29 @@ export const IosInstallGuideModal: React.FC<IosInstallGuideModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
-      <div className="w-full max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom duration-200">
+    <Modal
+      open={isOpen}
+      onOpenChange={(next) => !next && onClose()}
+      layer="sheet"
+      placement="bottom"
+      backdropClassName="bg-slate-900/60 backdrop-blur-xs"
+      className="w-full max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden"
+    >
+      <>
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <span>🍎</span> iOS 홈 화면 추가 안내
-            </h3>
-            <button
-              onClick={onClose}
-              className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            <ModalTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <span aria-hidden="true">🍎</span> iOS 홈 화면 추가 안내
+            </ModalTitle>
+            <ModalClose
+              aria-label="닫기"
+              className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus-ring"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button>
+            </ModalClose>
           </div>
 
           <p className="text-sm text-slate-600 mb-5 leading-relaxed">
@@ -70,14 +76,11 @@ export const IosInstallGuideModal: React.FC<IosInstallGuideModalProps> = ({
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="w-full py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
-          >
+          <ModalClose className="w-full py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors focus-ring">
             확인했어요
-          </button>
+          </ModalClose>
         </div>
-      </div>
-    </div>
+      </>
+    </Modal>
   );
 };
