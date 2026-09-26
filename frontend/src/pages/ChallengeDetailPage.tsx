@@ -454,7 +454,7 @@ export const ChallengeDetailPage: React.FC = () => {
       />
 
       {/* 참여자 카드 목록 */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 flex-1 shadow-xs mb-20">
+      <div className="bg-white border border-slate-200 rounded-lg p-4 flex-1 shadow-xs mb-28">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
             <Users className="w-4 h-4 text-blue-600" />
@@ -517,18 +517,28 @@ export const ChallengeDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 하단 고정 액션 바 */}
-      <div className="fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-slate-200 max-w-md mx-auto">
+      {/*
+        하단 고정 액션 바.
+
+        고칠 점이 네 가지였다.
+        1) safe-area 패딩이 없어 홈 인디케이터가 버튼 아래를 덮었다.
+        2) 폭이 max-w-md(448px)라 앱 셸(max-w-app, 480px)과 어긋났다.
+        3) z-index 스케일 밖이라 겹침 순서가 DOM 순서에 의존했다.
+        4) 흰 배경 + 얇은 테두리뿐이라 페이지 배경(#F8FAFC)과 잘 구분되지 않았다.
+           shadow-sheet(0 -8px 24px)는 이런 하단 바를 위해 정의된 토큰이다.
+      */}
+      <div className="fixed bottom-0 left-0 right-0 z-header max-w-app mx-auto bg-card/95 backdrop-blur-md border-t border-line shadow-sheet px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         {challenge.canJoin ? (
-          <button
+          <Button
+            size="lg"
+            fullWidth
             onClick={() => {
               setShowJoinModal(true);
               setActionError(null);
             }}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-md shadow-xs transition active:scale-[0.98] flex items-center justify-center gap-1.5"
+            leftIcon={<Coins className="w-4 h-4" />}
           >
-            <Coins className="w-4 h-4" />
-            <span>{(() => {
+            {(() => {
               if (challenge.status === 'NOT_STARTED') return '챌린지 참여하기';
               const todayStr = getTodayKstString();
               if (challenge.endDate === todayStr) return '오늘 하루 참여하기';
@@ -540,47 +550,51 @@ export const ChallengeDetailPage: React.FC = () => {
                 ) + 1
               );
               return `남은 ${diffDays}일 참여하기`;
-            })()}</span>
-          </button>
+            })()}
+          </Button>
         ) : challenge.isParticipating ? (
           <div className="flex gap-2">
             {(challenge.status === 'NOT_STARTED' || challenge.canCancel) ? (
               <>
-                <button
+                <Button
+                  variant="secondary"
+                  size="md"
+                  fullWidth
                   onClick={() => {
                     setShowPenaltyModal(true);
                     setActionError(null);
                   }}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-md transition"
                 >
                   약정 금액 변경
-                </button>
+                </Button>
+                {/* 파괴적 동작이지만 보조 위치라 솔리드 대신 옅은 배경을 쓴다 */}
                 {challenge.canCancel && (
                   <button
                     type="button"
                     onClick={() => setShowLeaveConfirm(true)}
                     disabled={actionLoading}
-                    className="py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs rounded-md transition"
+                    className="h-btn-md min-h-[44px] px-4 shrink-0 bg-danger-bg hover:bg-danger-border text-danger font-semibold text-body-sm rounded-md transition active:scale-[0.98] focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     참여 취소
                   </button>
                 )}
               </>
             ) : (
-              <div className="flex-1 py-2.5 bg-slate-50 border border-slate-200 text-slate-500 font-medium text-xs rounded-md flex items-center justify-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-slate-400" />
+              <div className="flex-1 h-btn-md min-h-[44px] bg-sunken border border-line text-ink-muted font-medium text-body-sm rounded-md flex items-center justify-center gap-1.5">
+                <Lock className="w-4 h-4 text-ink-disabled shrink-0" aria-hidden="true" />
                 <span>수행 진행 중 (약정·취소 고정)</span>
               </div>
             )}
           </div>
         ) : challenge.status === 'ENDED' ? (
-          <button
+          <Button
+            size="lg"
+            fullWidth
             onClick={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-md shadow-xs transition active:scale-[0.98] flex items-center justify-center gap-1.5"
+            leftIcon={<RotateCcw className="w-4 h-4" />}
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>이 챌린지 다시 시작하기</span>
-          </button>
+            이 챌린지 다시 시작하기
+          </Button>
         ) : (
           <div className="text-center py-2 text-xs text-slate-400">
             현재 참여할 수 없는 상태입니다.
