@@ -2,6 +2,7 @@ package com.dayuse.domain.verification.service
 
 import com.dayuse.domain.challenge.ChallengeParticipantRepository
 import com.dayuse.domain.challenge.ChallengeRepository
+import com.dayuse.domain.challenge.ExecutionType
 import com.dayuse.domain.dailyrecord.DailyRecordRepository
 import com.dayuse.domain.dailyrecord.service.DailyRecordService
 import com.dayuse.domain.group.GroupMemberRepository
@@ -30,7 +31,8 @@ class VerificationService(
     private val presignedUrlService: PresignedUrlService,
     private val dailyRecordService: DailyRecordService? = null,
     private val dailyRecordRepository: DailyRecordRepository? = null,
-    private val shareCardRepository: com.dayuse.domain.share.ShareCardRepository? = null
+    private val shareCardRepository: com.dayuse.domain.share.ShareCardRepository? = null,
+    private val challengeProgressService: com.dayuse.domain.challenge.service.ChallengeProgressService? = null
 ) {
 
     fun createVerification(
@@ -101,6 +103,7 @@ class VerificationService(
             )
             val saved = verificationRepository.save(verification)
             dailyRecordService?.onVerificationCreated(saved)
+            challengeProgressService?.onVerificationCreated(saved, challenge)
             return toDetailResponse(saved)
         } catch (e: DataIntegrityViolationException) {
             val constraintViolation = generateSequence<Throwable>(e) { it.cause }
@@ -169,8 +172,13 @@ class VerificationService(
             it.deactivate()
         }
 
+        val challenge = challengeRepository.findById(verification.challengeId).orElse(null)
         verificationRepository.delete(verification)
-        dailyRecordService?.onVerificationDeleted(verification)
+        if (challenge != null && challenge.executionType == ExecutionType.TOGETHER) {
+            challengeProgressService?.onVerificationDeleted(verification, challenge)
+        } else {
+            dailyRecordService?.onVerificationDeleted(verification)
+        }
     }
 
     private fun toDetailResponse(v: Verification): VerificationDetailResponse {

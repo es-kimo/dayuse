@@ -22,6 +22,7 @@ import com.dayuse.domain.verification.Verification
 import com.dayuse.domain.verification.VerificationRepository
 import com.dayuse.domain.verification.dto.VerificationDetailResponse
 import com.dayuse.domain.verification.service.PresignedUrlService
+import com.dayuse.global.exception.BadRequestException
 import com.dayuse.global.exception.ForbiddenException
 import com.dayuse.global.exception.ResourceNotFoundException
 import com.dayuse.global.util.DateTimeUtils
@@ -297,6 +298,12 @@ class DailyRecordService(
 
         if (record.userId != userId) {
             throw ForbiddenException("본인의 일일 기록만 미수행으로 확정할 수 있습니다.")
+        }
+
+        val challenge = challengeRepository.findById(record.challengeId)
+            .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
+        if (challenge.executionType.isTogether) {
+            throw BadRequestException("함께하기 챌린지는 미수행 확정을 진행하지 않습니다.")
         }
 
         val today = DateTimeUtils.todayKst()

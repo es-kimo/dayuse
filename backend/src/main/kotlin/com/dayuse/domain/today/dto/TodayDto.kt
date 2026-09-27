@@ -1,5 +1,6 @@
 package com.dayuse.domain.today.dto
 
+import com.dayuse.domain.challenge.ExecutionType
 import com.dayuse.domain.challenge.PeriodType
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,5 +41,6 @@ data class TodayActionResponse(
     val groupId: Long? = null,
     val groupName: String? = null,
     val periodType: PeriodType = PeriodType.DAILY,
-    val periodInfo: TodayPeriodInfo? = null
+    val periodInfo: TodayPeriodInfo? = null,
+    val executionType: ExecutionType = ExecutionType.INDIVIDUAL
 )

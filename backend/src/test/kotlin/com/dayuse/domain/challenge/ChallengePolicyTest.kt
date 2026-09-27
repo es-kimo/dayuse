@@ -172,6 +172,7 @@ class ChallengePolicyTest {
             groupId = 1L,
             creatorUserId = 10L,
             startDate = baseToday,
+            endDate = baseToday.plusDays(13),
             verificationCriteria = "기준"
         )
 

@@ -156,6 +156,18 @@ class DailyRecord(
         this.isLate = false
     }
 
+    fun completeJointly() {
+        if (this.status != DailyRecordStatus.COMPLETED) {
+            this.status = DailyRecordStatus.COMPLETED
+            this.penaltyAmount = 0
+        }
+    }
+
+    fun clearJointVerification() {
+        this.verificationId = null
+        this.isLate = false
+    }
+
     fun rollbackVerification(today: LocalDate = DateTimeUtils.todayKst()) {
         if (isLocked()) {
             throw BadRequestException("정산 진행 중이거나 완료된 기록의 인증은 삭제할 수 없습니다.")

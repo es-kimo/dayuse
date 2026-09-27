@@ -4,6 +4,7 @@ import com.dayuse.domain.challenge.Challenge
 import com.dayuse.domain.challenge.ChallengeParticipant
 import com.dayuse.domain.challenge.ChallengeParticipantRepository
 import com.dayuse.domain.challenge.ChallengeRepository
+import com.dayuse.domain.challenge.ExecutionType
 import com.dayuse.domain.challenge.ParticipantStatus
 import com.dayuse.domain.challenge.dto.ChallengeDetailResponse
 import com.dayuse.domain.challenge.dto.ChallengeParticipantResponse
@@ -53,7 +54,8 @@ class ChallengeService(
     private val userRepository: UserRepository,
     private val dailyRecordService: DailyRecordService? = null,
     private val dailyRecordRepository: DailyRecordRepository? = null,
-    private val challengePeriodSettlementRepository: ChallengePeriodSettlementRepository? = null
+    private val challengePeriodSettlementRepository: ChallengePeriodSettlementRepository? = null,
+    private val challengeProgressService: ChallengeProgressService? = null
 ) {
 
     @Transactional
@@ -82,12 +84,15 @@ class ChallengeService(
             throw BadRequestException("종료일은 시작일 이후여야 합니다.")
         }
 
+        val isTogether = request.executionType.isTogether
+        val defaultPenalty = if (isTogether) 0 else request.myPenaltyAmount
+
         // 참가자 목록 정규화 및 검증
         val participantsList = if (request.participants.isNullOrEmpty()) {
             listOf(
                 CreateParticipantRequest(
                     userId = userId,
-                    penaltyAmount = request.myPenaltyAmount
+                    penaltyAmount = defaultPenalty
                 )
             )
         } else {
@@ -98,7 +103,7 @@ class ChallengeService(
             if (request.participants.none { it.userId == userId }) {
                 request.participants + CreateParticipantRequest(
                     userId = userId,
-                    penaltyAmount = request.myPenaltyAmount
+                    penaltyAmount = defaultPenalty
                 )
             } else {
                 request.participants
@@ -125,7 +130,8 @@ class ChallengeService(
                 startDate = request.startDate,
                 endDate = calculatedEndDate,
                 periodType = request.periodType,
-                targetFrequency = request.targetFrequency
+                targetFrequency = request.targetFrequency,
+                executionType = request.executionType
             )
         )
 
@@ -135,7 +141,7 @@ class ChallengeService(
                 ChallengeParticipant(
                     challengeId = challenge.id,
                     userId = participantReq.userId,
-                    penaltyAmount = participantReq.penaltyAmount,
+                    penaltyAmount = if (isTogether) 0 else participantReq.penaltyAmount,
                     startDate = challenge.startDate,
                     status = ParticipantStatus.ACTIVE
                 )
@@ -161,7 +167,7 @@ class ChallengeService(
                 userId = participant.userId,
                 nickname = user?.nickname ?: "참여자",
                 profileImageUrl = user?.profileImageUrl,
-                penaltyAmount = participant.penaltyAmount,
+                penaltyAmount = if (isTogether) 0 else participant.penaltyAmount,
                 startDate = participant.startDate,
                 status = participant.status,
                 completionRate = 0,
@@ -181,7 +187,8 @@ class ChallengeService(
             challenge.periodType,
             challenge.targetFrequency,
             emptySet(),
-            today
+            today,
+            challenge.executionType
         )
 
         return ChallengeDetailResponse(
@@ -198,6 +205,7 @@ class ChallengeService(
             durationDays = durationDays,
             periodType = challenge.periodType,
             targetFrequency = challenge.targetFrequency,
+            executionType = challenge.executionType,
             totalTargetCount = initCalc.totalTargetCount,
             totalCompletedCount = 0,
             progressRate = 0,
@@ -206,7 +214,7 @@ class ChallengeService(
             status = challenge.status(today),
             isCreator = true,
             isParticipating = true,
-            myPenaltyAmount = creatorParticipant.penaltyAmount,
+            myPenaltyAmount = if (isTogether) null else creatorParticipant.penaltyAmount,
             canJoin = false,
             canCancel = false,
             canDelete = challenge.canDelete(today),
@@ -262,9 +270,10 @@ class ChallengeService(
             durationDays = durationDays,
             periodType = challenge.periodType,
             targetFrequency = challenge.targetFrequency,
+            executionType = challenge.executionType,
             suggestedStartDate = suggestedStartDate,
             suggestedEndDate = suggestedEndDate,
-            suggestedPenaltyAmount = suggestedPenalty
+            suggestedPenaltyAmount = if (challenge.executionType.isTogether) 0 else suggestedPenalty
         )
     }
 
@@ -306,6 +315,8 @@ class ChallengeService(
             request.startDate.plusDays(originalDuration)
         }
 
+        val isTogether = (request.executionType ?: sourceChallenge.executionType).isTogether
+
         val newChallenge = Challenge.recreateFrom(
             source = sourceChallenge,
             newStartDate = request.startDate,
@@ -316,6 +327,7 @@ class ChallengeService(
             newVerificationCriteria = request.verificationCriteria,
             newPeriodType = request.periodType,
             newTargetFrequency = request.targetFrequency,
+            newExecutionType = request.executionType ?: sourceChallenge.executionType,
             today = today
         )
         val savedChallenge = challengeRepository.save(newChallenge)
@@ -324,7 +336,7 @@ class ChallengeService(
             ChallengeParticipant(
                 challengeId = savedChallenge.id,
                 userId = userId,
-                penaltyAmount = request.myPenaltyAmount,
+                penaltyAmount = if (isTogether) 0 else request.myPenaltyAmount,
                 startDate = savedChallenge.startDate,
                 status = ParticipantStatus.ACTIVE
             )
@@ -341,7 +353,7 @@ class ChallengeService(
             userId = userId,
             nickname = creatorUser?.nickname ?: "참여자",
             profileImageUrl = creatorUser?.profileImageUrl,
-            penaltyAmount = creatorParticipant.penaltyAmount,
+            penaltyAmount = if (isTogether) 0 else creatorParticipant.penaltyAmount,
             startDate = creatorParticipant.startDate,
             status = creatorParticipant.status,
             completionRate = 0,
@@ -360,7 +372,8 @@ class ChallengeService(
             savedChallenge.periodType,
             savedChallenge.targetFrequency,
             emptySet(),
-            today
+            today,
+            savedChallenge.executionType
         )
 
         return ChallengeDetailResponse(
@@ -377,6 +390,7 @@ class ChallengeService(
             durationDays = durationDays,
             periodType = savedChallenge.periodType,
             targetFrequency = savedChallenge.targetFrequency,
+            executionType = savedChallenge.executionType,
             totalTargetCount = initCalc.totalTargetCount,
             totalCompletedCount = 0,
             progressRate = 0,
@@ -385,7 +399,7 @@ class ChallengeService(
             status = savedChallenge.status(today),
             isCreator = true,
             isParticipating = true,
-            myPenaltyAmount = creatorParticipant.penaltyAmount,
+            myPenaltyAmount = if (isTogether) null else creatorParticipant.penaltyAmount,
             canJoin = false,
             canCancel = false,
             canDelete = savedChallenge.canDelete(today),
@@ -450,11 +464,12 @@ class ChallengeService(
                 durationDays = durationDays,
                 periodType = challenge.periodType,
                 targetFrequency = challenge.targetFrequency,
+                executionType = challenge.executionType,
                 status = status,
                 participantCount = participantCount,
                 isParticipating = myParticipant != null,
                 isCreator = challenge.creatorUserId == userId,
-                myPenaltyAmount = myParticipant?.penaltyAmount,
+                myPenaltyAmount = if (challenge.executionType.isTogether) null else myParticipant?.penaltyAmount,
                 createdAt = challenge.createdAt
             )
         }
@@ -490,7 +505,7 @@ class ChallengeService(
         val participantResponses = participants.map { p ->
             val user = userMap[p.userId]
             val pRecords =
-                allRecords.filter { it.challengeParticipantId == p.id && it.status == DailyRecordStatus.COMPLETED }
+                allRecords.filter { it.challengeParticipantId == p.id && it.status == DailyRecordStatus.COMPLETED && it.verificationId != null }
             val pCompletedDates = pRecords.map { it.date }.toSet()
             val pCalc = ChallengePeriodCalculator.calculate(
                 challengeStartDate = challenge.startDate,
@@ -507,7 +522,7 @@ class ChallengeService(
                 userId = p.userId,
                 nickname = user?.nickname ?: "탈퇴한 사용자",
                 profileImageUrl = user?.profileImageUrl,
-                penaltyAmount = p.penaltyAmount,
+                penaltyAmount = if (challenge.executionType.isTogether) 0 else p.penaltyAmount,
                 startDate = p.startDate,
                 status = p.status,
                 completionRate = pCalc.progressRate,
@@ -519,60 +534,68 @@ class ChallengeService(
         val myParticipant = participants.find { it.userId == userId }
         val isCreator = challenge.creatorUserId == userId
         val isParticipating = myParticipant != null
+        val isTogether = challenge.executionType.isTogether
 
-        val myRecords = myParticipant?.let { p ->
-            allRecords.filter { it.challengeParticipantId == p.id && it.status == DailyRecordStatus.COMPLETED }
-        }.orEmpty()
-        val myCompletedDates = myRecords.map { it.date }.toSet()
-        val myEffectiveStart = myParticipant?.startDate ?: challenge.startDate
-        val myCalc = ChallengePeriodCalculator.calculate(
-            challengeStartDate = challenge.startDate,
-            challengeEndDate = challenge.endDate,
-            participantStartDate = myEffectiveStart,
-            periodType = challenge.periodType,
-            targetFrequency = challenge.targetFrequency,
-            completedDates = myCompletedDates,
-            today = today
-        )
+        val progressResult = if (isTogether && challengeProgressService != null) {
+            challengeProgressService.calculateProgress(challenge, myParticipant, today)
+        } else {
+            val myRecords = myParticipant?.let { p ->
+                allRecords.filter { it.challengeParticipantId == p.id && it.status == DailyRecordStatus.COMPLETED }
+            }.orEmpty()
+            val myCompletedDates = myRecords.map { it.date }.toSet()
+            val myEffectiveStart = myParticipant?.startDate ?: challenge.startDate
+            val myCalc = ChallengePeriodCalculator.calculate(
+                challengeStartDate = challenge.startDate,
+                challengeEndDate = challenge.endDate,
+                participantStartDate = myEffectiveStart,
+                periodType = challenge.periodType,
+                targetFrequency = challenge.targetFrequency,
+                completedDates = myCompletedDates,
+                today = today
+            )
 
-        val mySettlements = myParticipant?.let { p ->
-            challengePeriodSettlementRepository?.findAllByChallengeParticipantId(p.id).orEmpty()
-        }.orEmpty().associateBy { it.periodIndex }
+            val mySettlements = myParticipant?.let { p ->
+                challengePeriodSettlementRepository?.findAllByChallengeParticipantId(p.id).orEmpty()
+            }.orEmpty().associateBy { it.periodIndex }
 
-        // TODO [사용자 미션 1-A]: 주 N회 구간별 정산 상태(settlementStatus) 및 미달 벌금 산출
-        // - 구간이 종료(today > interval.endDate)되었고 목표 미달인 경우:
-        //   DB에 이미 확정된 내역(ChallengePeriodSettlement)이 있으면 그 상태(CONFIRMED_FAILED),
-        //   없으면 본인 확인 대기(NEEDS_CONFIRMATION) 상태로 매핑하세요.
-        // - 미수행 횟수(missedCount)와 총 벌금(totalPenaltyAmount)을 정확히 계산하세요.
-        val intervalDtos = myCalc.intervals.map { interval ->
-            val settlement = mySettlements[interval.index]
-            val status = when {
-                settlement != null -> settlement.status
-                today > interval.endDate -> if (interval.isAchieved) PeriodSettlementStatus.ACHIEVED else PeriodSettlementStatus.NEEDS_CONFIRMATION
-                else -> PeriodSettlementStatus.IN_PROGRESS
+            val intervalDtos = myCalc.intervals.map { interval ->
+                val settlement = mySettlements[interval.index]
+                val status = when {
+                    settlement != null -> settlement.status
+                    today > interval.endDate -> if (interval.isAchieved) PeriodSettlementStatus.ACHIEVED else PeriodSettlementStatus.NEEDS_CONFIRMATION
+                    else -> PeriodSettlementStatus.IN_PROGRESS
+                }
+                val missed = settlement?.missedCount
+                    ?: if (status == PeriodSettlementStatus.NEEDS_CONFIRMATION) interval.remainingTarget else 0
+                val penaltyPerMiss = settlement?.penaltyAmountPerMiss ?: (myParticipant?.penaltyAmount ?: 0)
+                val totalPenalty = settlement?.totalPenaltyAmount ?: (missed * penaltyPerMiss)
+
+                ChallengePeriodIntervalDto(
+                    index = interval.index,
+                    startDate = interval.startDate,
+                    endDate = interval.endDate,
+                    targetCount = interval.targetCount,
+                    completedCount = interval.completedCount,
+                    isAchieved = interval.isAchieved,
+                    settlementStatus = status,
+                    settlementId = settlement?.id,
+                    missedCount = missed,
+                    penaltyAmountPerMiss = penaltyPerMiss,
+                    totalPenaltyAmount = totalPenalty,
+                    depositStatus = settlement?.depositStatus
+                )
             }
-            val missed = settlement?.missedCount
-                ?: if (status == PeriodSettlementStatus.NEEDS_CONFIRMATION) interval.remainingTarget else 0
-            val penaltyPerMiss = settlement?.penaltyAmountPerMiss ?: (myParticipant?.penaltyAmount ?: 0)
-            val totalPenalty = settlement?.totalPenaltyAmount ?: (missed * penaltyPerMiss)
+            val currentPeriodDto = intervalDtos.find { today in it.startDate..it.endDate }
+                ?: if (today < myEffectiveStart) intervalDtos.firstOrNull() else intervalDtos.lastOrNull()
 
-            ChallengePeriodIntervalDto(
-                index = interval.index,
-                startDate = interval.startDate,
-                endDate = interval.endDate,
-                targetCount = interval.targetCount,
-                completedCount = interval.completedCount,
-                isAchieved = interval.isAchieved,
-                settlementStatus = status,
-                settlementId = settlement?.id,
-                missedCount = missed,
-                penaltyAmountPerMiss = penaltyPerMiss,
-                totalPenaltyAmount = totalPenalty,
-                depositStatus = settlement?.depositStatus
+            ChallengeProgressResult(
+                totalTargetCount = myCalc.totalTargetCount,
+                totalCompletedCount = myCalc.totalCompletedCount,
+                progressRate = myCalc.progressRate,
+                currentPeriod = currentPeriodDto,
+                intervals = intervalDtos
             )
         }
-        val currentPeriodDto = intervalDtos.find { today in it.startDate..it.endDate }
-            ?: if (today < myEffectiveStart) intervalDtos.firstOrNull() else intervalDtos.lastOrNull()
 
         val durationDays = ChronoUnit.DAYS.between(
             challenge.startDate,
@@ -593,15 +616,16 @@ class ChallengeService(
             durationDays = durationDays,
             periodType = challenge.periodType,
             targetFrequency = challenge.targetFrequency,
-            totalTargetCount = myCalc.totalTargetCount,
-            totalCompletedCount = myCalc.totalCompletedCount,
-            progressRate = myCalc.progressRate,
-            currentPeriod = currentPeriodDto,
-            intervals = intervalDtos,
+            executionType = challenge.executionType,
+            totalTargetCount = progressResult.totalTargetCount,
+            totalCompletedCount = progressResult.totalCompletedCount,
+            progressRate = progressResult.progressRate,
+            currentPeriod = progressResult.currentPeriod,
+            intervals = progressResult.intervals,
             status = challenge.status(today),
             isCreator = isCreator,
             isParticipating = isParticipating,
-            myPenaltyAmount = myParticipant?.penaltyAmount,
+            myPenaltyAmount = if (isTogether) null else myParticipant?.penaltyAmount,
             canJoin = challenge.canJoin(today) && !isParticipating,
             canCancel = myParticipant?.canCancel(today) == true && !isCreator,
             canDelete = challenge.canDelete(today) && isCreator,
@@ -694,7 +718,8 @@ class ChallengeService(
             challengeEndDate = challenge.endDate,
             isStarted = isStarted,
             options = options,
-            defaultPenaltyAmount = 5000
+            defaultPenaltyAmount = if (challenge.executionType.isTogether) 0 else 5000,
+            executionType = challenge.executionType
         )
     }
 
@@ -732,10 +757,13 @@ class ChallengeService(
             today
         )
 
+        val isTogether = challenge.executionType.isTogether
+        val effectivePenaltyAmount = if (isTogether) 0 else request.penaltyAmount
+
         val participant = if (existing != null && existing.status == ParticipantStatus.CANCELLED) {
             existing.reactivate(
                 calculatedStartDate,
-                request.penaltyAmount
+                effectivePenaltyAmount
             )
             challengeParticipantRepository.save(existing)
         } else {
@@ -743,7 +771,7 @@ class ChallengeService(
                 ChallengeParticipant(
                     challengeId = challengeId,
                     userId = userId,
-                    penaltyAmount = request.penaltyAmount,
+                    penaltyAmount = effectivePenaltyAmount,
                     startDate = calculatedStartDate,
                     status = ParticipantStatus.ACTIVE
                 )
@@ -761,7 +789,7 @@ class ChallengeService(
             userId = userId,
             nickname = user?.nickname ?: "참여자",
             profileImageUrl = user?.profileImageUrl,
-            penaltyAmount = participant.penaltyAmount,
+            penaltyAmount = if (isTogether) 0 else participant.penaltyAmount,
             startDate = participant.startDate,
             status = participant.status,
             completionRate = 0,
@@ -818,6 +846,10 @@ class ChallengeService(
             ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
         }
 
+        if (challenge.executionType.isTogether) {
+            throw BadRequestException("함께하기 챌린지는 약정 벌금을 변경할 수 없습니다.")
+        }
+
         groupMemberRepository.findByGroupIdAndUserId(
             challenge.groupId,
             userId
@@ -834,11 +866,11 @@ class ChallengeService(
             request.penaltyAmount,
             today
         )
-        val user = userRepository.findById(userId).orElse(null)
 
+        val user = userRepository.findById(userId).orElse(null)
         val allRecords = dailyRecordRepository?.findAllByChallengeId(challengeId).orEmpty()
         val pRecords =
-            allRecords.filter { it.challengeParticipantId == participant.id && it.status == DailyRecordStatus.COMPLETED }
+            allRecords.filter { it.challengeParticipantId == participant.id && it.status == DailyRecordStatus.COMPLETED && it.verificationId != null }
         val pCompletedDates = pRecords.map { it.date }.toSet()
         val pCalc = ChallengePeriodCalculator.calculate(
             challengeStartDate = challenge.startDate,
@@ -879,6 +911,10 @@ class ChallengeService(
             throw ForbiddenException("챌린지 생성자만 챌린지 조건을 수정할 수 있습니다.")
         }
 
+        if (request.executionType != null && request.executionType != challenge.executionType) {
+            throw BadRequestException("챌린지 수행 방식은 수정할 수 없습니다.")
+        }
+
         challenge.updateConditions(
             newTitle = request.title,
             newDescription = request.description,
@@ -887,6 +923,7 @@ class ChallengeService(
             newEndDate = request.endDate,
             newPeriodType = request.periodType,
             newTargetFrequency = request.targetFrequency,
+            newExecutionType = request.executionType,
             today = today
         )
 
@@ -935,6 +972,10 @@ class ChallengeService(
 
         val challenge = challengeRepository.findById(challengeId).orElseThrow {
             ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
+        }
+
+        if (challenge.executionType.isTogether) {
+            throw BadRequestException("함께하기 챌린지는 벌금 확정을 진행하지 않습니다.")
         }
 
         if (challenge.groupId != groupId) {

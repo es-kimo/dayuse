@@ -101,6 +101,7 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
         WHERE r.userId = :userId
           AND r.groupId = :groupId
           AND (c.periodType IS NULL OR c.periodType = com.dayuse.domain.challenge.PeriodType.DAILY)
+          AND (c.executionType IS NULL OR c.executionType = com.dayuse.domain.challenge.ExecutionType.INDIVIDUAL)
           AND ($UNCHECKED_CONDITION)
     """
     )
@@ -118,6 +119,7 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
         WHERE r.userId = :userId
           AND r.groupId = :groupId
           AND (c.periodType IS NULL OR c.periodType = com.dayuse.domain.challenge.PeriodType.DAILY)
+          AND (c.executionType IS NULL OR c.executionType = com.dayuse.domain.challenge.ExecutionType.INDIVIDUAL)
           AND ($UNCHECKED_CONDITION)
         ORDER BY r.date ASC
     """

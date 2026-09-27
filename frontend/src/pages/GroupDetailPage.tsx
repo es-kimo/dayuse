@@ -648,6 +648,16 @@ export const GroupDetailPage: React.FC = () => {
                           </span>
                         )}
 
+                        {c.executionType === 'TOGETHER' ? (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            함께하기
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
+                            각자하기
+                          </span>
+                        )}
+
                         {c.isParticipating && (
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                             참여 중
@@ -670,10 +680,16 @@ export const GroupDetailPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span>참여자 {c.participantCount}명</span>
-                      {c.myPenaltyAmount && (
-                        <span className="text-amber-600 font-medium">
-                          {c.myPenaltyAmount.toLocaleString()}원/일
+                      {c.executionType === 'TOGETHER' ? (
+                        <span className="text-indigo-600 font-medium">
+                          벌금 없음
                         </span>
+                      ) : (
+                        c.myPenaltyAmount && (
+                          <span className="text-amber-600 font-medium">
+                            {c.myPenaltyAmount.toLocaleString()}원/일
+                          </span>
+                        )
                       )}
                     </div>
                   </div>

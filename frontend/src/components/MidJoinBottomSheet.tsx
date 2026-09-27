@@ -47,7 +47,11 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
         if (defaultOpt) {
           setSelectedType(defaultOpt.type);
         }
-        setPenaltyAmount(data.defaultPenaltyAmount || 5000);
+        if (data.executionType === 'TOGETHER') {
+          setPenaltyAmount(0);
+        } else {
+          setPenaltyAmount(data.defaultPenaltyAmount || 5000);
+        }
       } catch (err: any) {
         setError(err.response?.data?.message || '참여 정보를 불러오는데 실패했습니다.');
       } finally {
@@ -66,14 +70,15 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
 
   const selectedOption = preview?.options.find((o) => o.type === selectedType);
   const totalDays = selectedOption?.remainingDays || 0;
-  const maxPossiblePenalty = totalDays * penaltyAmount;
+  const isTogether = preview?.executionType === 'TOGETHER';
+  const maxPossiblePenalty = isTogether ? 0 : totalDays * penaltyAmount;
 
   const handleJoin = async () => {
     setSubmitting(true);
     setError(null);
     try {
       await challengesApi.joinChallenge(challengeId, {
-        penaltyAmount,
+        penaltyAmount: isTogether ? 0 : penaltyAmount,
         startDateType: selectedType,
       });
       onSuccess();
@@ -206,43 +211,55 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
               )}
 
               {/* 1일 약정 벌금 설정 섹션 */}
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                  1일 미수행 약정 벌금
-                </label>
-                <p className="text-[11px] text-slate-400 mb-2.5">
-                  인증에 실패하거나 미제출 시 모임에 적립될 하루 벌금입니다.
-                </p>
-
-                <div className="flex gap-2 mb-2">
-                  {[3000, 5000, 10000].map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => setPenaltyAmount(amt)}
-                      className={`flex-1 py-2 text-xs rounded-md border font-semibold transition ${
-                        penaltyAmount === amt
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
-                          : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      {amt.toLocaleString()}원
-                    </button>
-                  ))}
+              {isTogether ? (
+                <div className="bg-indigo-50/60 rounded-xl p-3.5 border border-indigo-100 flex items-start gap-2.5">
+                  <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-xs font-bold text-indigo-900 block">함께하기 챌린지 (벌금 없음)</span>
+                    <span className="text-[11px] text-indigo-700 leading-relaxed block mt-0.5">
+                      이 챌린지는 약정 벌금이 부과되지 않아요. 하루 1명만 인증해도 전원이 함께 달성할 수 있습니다!
+                    </span>
+                  </div>
                 </div>
+              ) : (
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                    1일 미수행 약정 벌금
+                  </label>
+                  <p className="text-[11px] text-slate-400 mb-2.5">
+                    인증에 실패하거나 미제출 시 모임에 적립될 하루 벌금입니다.
+                  </p>
 
-                <div className="relative">
-                  <input
-                    type="number"
-                    min={0}
-                    step={1000}
-                    value={penaltyAmount}
-                    onChange={(e) => setPenaltyAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full text-sm font-semibold px-3 py-2.5 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 pr-8"
-                  />
-                  <span className="absolute right-3 top-2.5 text-xs text-slate-400">원</span>
+                  <div className="flex gap-2 mb-2">
+                    {[3000, 5000, 10000].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setPenaltyAmount(amt)}
+                        className={`flex-1 py-2 text-xs rounded-md border font-semibold transition ${
+                          penaltyAmount === amt
+                            ? 'border-blue-600 bg-blue-50 text-blue-700'
+                            : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {amt.toLocaleString()}원
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      step={1000}
+                      value={penaltyAmount}
+                      onChange={(e) => setPenaltyAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full text-sm font-semibold px-3 py-2.5 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 pr-8"
+                    />
+                    <span className="absolute right-3 top-2.5 text-xs text-slate-400">원</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* 요약 안내 카드 */}
               <div className="bg-slate-50 rounded-lg p-4 border border-slate-100 space-y-2">
@@ -255,9 +272,11 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                   <span className="font-medium text-slate-600">미수행·벌금 원천 제외</span>
                 </div>
                 <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200/60">
-                  <span className="text-slate-700 font-semibold">최대 예상 약정 총액</span>
-                  <span className="font-extrabold text-blue-600">
-                    {maxPossiblePenalty.toLocaleString()}원
+                  <span className="text-slate-700 font-semibold">
+                    {isTogether ? '약정 벌금' : '최대 예상 약정 총액'}
+                  </span>
+                  <span className={`font-extrabold ${isTogether ? 'text-emerald-600' : 'text-blue-600'}`}>
+                    {isTogether ? '없음 (0원)' : `${maxPossiblePenalty.toLocaleString()}원`}
                   </span>
                 </div>
               </div>
@@ -266,7 +285,9 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
               <div className="flex items-start gap-1.5 text-[11px] text-slate-400">
                 <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-400" />
                 <span>
-                  본인 수행 시작일(00:00 KST) 전까지만 참여 취소와 금액 변경이 가능하며, 시작 이후에는 고정됩니다.
+                  {isTogether
+                    ? '본인 수행 시작일(00:00 KST) 전까지만 참여 취소가 가능하며, 시작 이후에는 고정됩니다.'
+                    : '본인 수행 시작일(00:00 KST) 전까지만 참여 취소와 금액 변경이 가능하며, 시작 이후에는 고정됩니다.'}
                 </span>
               </div>
             </>
