@@ -15,7 +15,8 @@ class VerificationAggregator(
      * 특정 날짜에 해당 챌린지의 유효한 인증이 1건 이상 존재하는지 확인합니다.
      */
     fun isDateCompleted(challengeId: Long, targetDate: LocalDate): Boolean {
-        return verificationRepository.existsByChallengeIdAndTargetDate(challengeId, targetDate)
+        // TODO [사용자 미션 2-1]: 해당 날짜에 해당 챌린지의 인증이 1건 이상 존재하는지 확인하는 쿼리를 호출하세요.
+        return false
     }
 
     /**
@@ -37,7 +38,8 @@ class VerificationAggregator(
      * 동일 날짜에 다수의 인증이 있더라도 1일로 집계(Set)됩니다.
      */
     fun getCompletedDates(challengeId: Long): Set<LocalDate> {
-        return verificationRepository.findDistinctTargetDatesByChallengeId(challengeId).toSet()
+        // TODO [사용자 미션 2-2]: 챌린지 전체 기간 중 유효한 인증이 1건 이상 등록된 모든 날짜들의 집합(Set)을 조회하여 반환하세요.
+        return emptySet()
     }
 
     /**
