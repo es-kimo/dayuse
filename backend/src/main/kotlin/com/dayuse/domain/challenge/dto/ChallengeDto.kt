@@ -162,6 +162,10 @@ data class JoinPreviewResponse(
     val executionType: ExecutionType = ExecutionType.INDIVIDUAL
 )
 
+data class AbortChallengeRequest(
+    val reason: String? = null
+)
+
 data class ChallengeSummaryResponse(
     val id: Long,
     val groupId: Long,
@@ -179,7 +183,8 @@ data class ChallengeSummaryResponse(
     val isParticipating: Boolean,
     val isCreator: Boolean,
     val myPenaltyAmount: Int?,
-    val createdAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    val abortedAt: LocalDateTime? = null
 )
 
 data class ChallengeParticipantResponse(
@@ -223,5 +228,10 @@ data class ChallengeDetailResponse(
     val canCancel: Boolean,
     val canDelete: Boolean,
     val canModifyFull: Boolean,
+    val canAbort: Boolean = false,
+    val abortedAt: LocalDateTime? = null,
+    val abortedBy: Long? = null,
+    val abortedByNickname: String? = null,
+    val abortReason: String? = null,
     val participants: List<ChallengeParticipantResponse>
 )

@@ -567,6 +567,7 @@ export const GroupDetailPage: React.FC = () => {
                 <option value="IN_PROGRESS">진행 중</option>
                 <option value="NOT_STARTED">시작 전</option>
                 <option value="ENDED">종료</option>
+                <option value="ABORTED">중단됨</option>
               </Select>
 
               <Button
@@ -645,6 +646,11 @@ export const GroupDetailPage: React.FC = () => {
                         {c.status === 'ENDED' && (
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                             종료
+                          </span>
+                        )}
+                        {c.status === 'ABORTED' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                            중단됨
                           </span>
                         )}
 

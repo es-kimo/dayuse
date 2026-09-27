@@ -238,7 +238,11 @@ class DailyRecordService(
                     }
 
                     // 자정 경과 동적 상태 평가
-                    val effectiveStatus = record.currentStatus(today)
+                    val effectiveStatus = if (challenge.isAborted() && record.date >= challenge.abortedAt!!.toLocalDate() && record.verificationId == null) {
+                        DailyRecordStatus.PLANNED
+                    } else {
+                        record.currentStatus(today)
+                    }
 
                     CalendarDailyRecordItem(
                         id = record.id,
@@ -305,6 +309,12 @@ class DailyRecordService(
         if (challenge.executionType.isTogether) {
             throw BadRequestException("함께하기 챌린지는 미수행 확정을 진행하지 않습니다.")
         }
+        if (challenge.isAborted()) {
+            val abortDate = challenge.abortedAt!!.toLocalDate()
+            if (record.date >= abortDate) {
+                throw BadRequestException("중단된 챌린지의 진행 중 및 이후 기간은 미수행으로 확정할 수 없습니다.")
+            }
+        }
 
         val today = DateTimeUtils.todayKst()
         val participant = challengeParticipantRepository.findById(record.challengeParticipantId)
@@ -325,6 +335,12 @@ class DailyRecordService(
 
         if (record.userId != userId) {
             throw ForbiddenException("본인의 일일 기록만 늦은 인증을 등록할 수 있습니다.")
+        }
+
+        val challenge = challengeRepository.findById(record.challengeId)
+            .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
+        if (challenge.isAborted()) {
+            throw BadRequestException("중단된 챌린지에는 인증을 등록할 수 없습니다.")
         }
 
         val today = DateTimeUtils.todayKst()

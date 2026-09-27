@@ -75,11 +75,13 @@ class ChallengeProgressService(
             targetFrequency = challenge.targetFrequency,
             completedDates = completedDates,
             today = today,
-            executionType = ExecutionType.TOGETHER
+            executionType = ExecutionType.TOGETHER,
+            abortedDate = challenge.abortedAt?.toLocalDate()
         )
 
         val intervalDtos = calc.intervals.map { interval ->
             val status = when {
+                challenge.isAborted() && interval.endDate >= challenge.abortedAt!!.toLocalDate() -> PeriodSettlementStatus.EXCLUDED_ABORTED
                 interval.isAchieved -> PeriodSettlementStatus.ACHIEVED
                 today > interval.endDate -> PeriodSettlementStatus.NOT_ACHIEVED
                 else -> PeriodSettlementStatus.IN_PROGRESS
@@ -136,11 +138,18 @@ class ChallengeProgressService(
             targetFrequency = challenge.targetFrequency,
             completedDates = myCompletedDates,
             today = today,
-            executionType = ExecutionType.INDIVIDUAL
+            executionType = ExecutionType.INDIVIDUAL,
+            abortedDate = challenge.abortedAt?.toLocalDate()
         )
 
         // 구간 DTO 매핑
         val intervalDtos = myCalc.intervals.map { interval ->
+            val status = when {
+                challenge.isAborted() && interval.endDate >= challenge.abortedAt!!.toLocalDate() -> PeriodSettlementStatus.EXCLUDED_ABORTED
+                interval.isAchieved -> PeriodSettlementStatus.ACHIEVED
+                today > interval.endDate -> PeriodSettlementStatus.NEEDS_CONFIRMATION
+                else -> PeriodSettlementStatus.IN_PROGRESS
+            }
             ChallengePeriodIntervalDto(
                 index = interval.index,
                 startDate = interval.startDate,
@@ -148,7 +157,7 @@ class ChallengeProgressService(
                 targetCount = interval.targetCount,
                 completedCount = interval.completedCount,
                 isAchieved = interval.isAchieved,
-                settlementStatus = if (interval.isAchieved) PeriodSettlementStatus.ACHIEVED else if (today > interval.endDate) PeriodSettlementStatus.NEEDS_CONFIRMATION else PeriodSettlementStatus.IN_PROGRESS
+                settlementStatus = status
             )
         }
 

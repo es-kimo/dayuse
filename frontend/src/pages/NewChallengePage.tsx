@@ -272,7 +272,7 @@ export const NewChallengePage: React.FC = () => {
     setIsLoadingTemplate(true);
 
     try {
-      if (selected.status === 'ENDED') {
+      if (selected.status === 'ENDED' || selected.status === 'ABORTED') {
         const template = await challengesApi.getRestartTemplate(Number(groupId), selected.id);
         setTitle(template.title);
         setDescription(template.description || '');
@@ -1075,14 +1075,16 @@ export const NewChallengePage: React.FC = () => {
                     </span>
                     <span
                       className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                        c.status === 'ENDED'
+                        c.status === 'ABORTED'
+                          ? 'bg-rose-50 text-rose-600'
+                          : c.status === 'ENDED'
                           ? 'bg-slate-100 text-slate-600'
                           : c.status === 'IN_PROGRESS'
                           ? 'bg-emerald-50 text-emerald-600'
                           : 'bg-blue-50 text-blue-600'
                       }`}
                     >
-                      {c.status === 'ENDED' ? '종료됨' : c.status === 'IN_PROGRESS' ? '진행 중' : '시작 전'}
+                      {c.status === 'ABORTED' ? '중단됨' : c.status === 'ENDED' ? '종료됨' : c.status === 'IN_PROGRESS' ? '진행 중' : '시작 전'}
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-400 flex items-center justify-between">

@@ -8,6 +8,7 @@ import { ChallengeCalendarSection } from '../components/ChallengeCalendarSection
 import { ChallengePeriodSection } from '../components/ChallengePeriodSection';
 import { PeriodSettlementModal } from '../components/PeriodSettlementModal';
 import { VerificationModal } from '../components/VerificationModal';
+import { AbortChallengeModal } from '../components/AbortChallengeModal';
 import { MidJoinBottomSheet } from '../components/MidJoinBottomSheet';
 import { useAuth } from '../context/AuthContext';
 import { getTodayKstString, getDurationDaysKst } from '../utils/date';
@@ -24,11 +25,13 @@ import {
   User as UserIcon,
   Users,
   AlertCircle,
+  AlertTriangle,
   Lock,
   Flame,
   RotateCcw,
   Repeat,
   MoreVertical,
+  StopCircle,
 } from 'lucide-react';
 import { ShareCardModal } from '../components/ShareCardModal';
 import {
@@ -60,6 +63,7 @@ export const ChallengeDetailPage: React.FC = () => {
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAbortModal, setShowAbortModal] = useState(false);
   const [selectedPeriodForConfirm, setSelectedPeriodForConfirm] = useState<ChallengePeriodInterval | null>(null);
   const [verificationTarget, setVerificationTarget] = useState<{
     recordId?: number;
@@ -193,6 +197,10 @@ export const ChallengeDetailPage: React.FC = () => {
   };
 
   const handleStartVerify = (record: CalendarDailyRecordItem, isLate: boolean) => {
+    if (challenge?.status === 'ABORTED') {
+      alert('중단된 챌린지에는 인증을 등록할 수 없습니다.');
+      return;
+    }
     setVerificationTarget({
       recordId: isLate ? record.id : undefined,
       isLate,
@@ -271,6 +279,13 @@ export const ChallengeDetailPage: React.FC = () => {
             종료
           </span>
         );
+      case 'ABORTED':
+        return (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+            <AlertTriangle className="w-3 h-3" />
+            중단됨
+          </span>
+        );
     }
   };
 
@@ -303,7 +318,7 @@ export const ChallengeDetailPage: React.FC = () => {
               각자하기
             </span>
           )}
-          {challenge.isParticipating && (
+          {challenge.isParticipating && challenge.status !== 'ABORTED' && (
             <button
               onClick={() => setShowStreakModal(true)}
               className="px-2.5 py-1 text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 rounded-md transition flex items-center gap-1 text-[11px] font-bold"
@@ -313,7 +328,7 @@ export const ChallengeDetailPage: React.FC = () => {
               <span>기록 공유</span>
             </button>
           )}
-          {challenge.isCreator && (
+          {(challenge.isCreator || challenge.canAbort) && (
             <Menu>
               <MenuTrigger
                 className="p-1.5 text-ink-muted hover:text-ink rounded-md transition focus-ring min-w-[36px] min-h-[36px] inline-flex items-center justify-center cursor-pointer"
@@ -322,22 +337,36 @@ export const ChallengeDetailPage: React.FC = () => {
                 <MoreVertical className="w-4 h-4" aria-hidden="true" />
               </MenuTrigger>
               <MenuPopup sideOffset={6}>
-                <MenuItem
-                  onSelect={() => {
-                    setShowEditModal(true);
-                    setActionError(null);
-                  }}
-                >
-                  <Edit3 className="w-4 h-4" />
-                  <span>챌린지 수정</span>
-                </MenuItem>
-                {challenge.status === 'NOT_STARTED' && (
+                {challenge.isCreator && (
+                  <MenuItem
+                    onSelect={() => {
+                      setShowEditModal(true);
+                      setActionError(null);
+                    }}
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span>챌린지 수정</span>
+                  </MenuItem>
+                )}
+                {challenge.isCreator && challenge.status === 'NOT_STARTED' && (
                   <MenuItem
                     destructive
                     onSelect={() => setShowDeleteConfirm(true)}
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>챌린지 삭제</span>
+                  </MenuItem>
+                )}
+                {challenge.canAbort && (
+                  <MenuItem
+                    destructive
+                    onSelect={() => {
+                      setShowAbortModal(true);
+                      setActionError(null);
+                    }}
+                  >
+                    <StopCircle className="w-4 h-4" />
+                    <span>챌린지 중단</span>
                   </MenuItem>
                 )}
               </MenuPopup>
@@ -434,8 +463,27 @@ export const ChallengeDetailPage: React.FC = () => {
           </p>
         </div>
 
+        {/* 중단 안내 배너 */}
+        {challenge.status === 'ABORTED' && (
+          <div className="bg-rose-50 border border-rose-200 rounded-lg p-3.5 text-xs text-rose-800 flex items-start gap-2.5 shadow-xs">
+            <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-bold block text-sm text-rose-900">챌린지가 중단되었습니다</span>
+              <p className="text-[11px] text-rose-700">
+                {challenge.abortedByNickname ? `${challenge.abortedByNickname}님에 의해 ` : ''}
+                {challenge.abortedAt ? new Date(challenge.abortedAt).toLocaleDateString('ko-KR') : ''}에 조기 중단 처리되었습니다. 중단 시점의 열린 구간과 이후 구간은 정산에서 제외됩니다.
+              </p>
+              {challenge.abortReason && (
+                <p className="text-[11px] bg-white/80 p-2 rounded border border-rose-200 text-rose-800 font-medium">
+                  사유: {challenge.abortReason}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 시작 후 잠금 알림 안내 배너 */}
-        {challenge.status !== 'NOT_STARTED' && (
+        {challenge.status !== 'NOT_STARTED' && challenge.status !== 'ABORTED' && (
           <div className="bg-slate-50 border border-slate-200 rounded-md p-3 text-[11px] text-slate-600 flex items-start gap-2">
             <Lock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
             <div>
@@ -585,6 +633,15 @@ export const ChallengeDetailPage: React.FC = () => {
               return `남은 ${diffDays}일 참여하기`;
             })()}
           </Button>
+        ) : (challenge.status === 'ENDED' || challenge.status === 'ABORTED') ? (
+          <Button
+            size="lg"
+            fullWidth
+            onClick={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
+            leftIcon={<RotateCcw className="w-4 h-4" />}
+          >
+            이 챌린지 다시 시작하기
+          </Button>
         ) : challenge.isParticipating ? (
           <div className="flex gap-2">
             {(challenge.status === 'NOT_STARTED' || challenge.canCancel) ? (
@@ -621,15 +678,6 @@ export const ChallengeDetailPage: React.FC = () => {
               </div>
             )}
           </div>
-        ) : challenge.status === 'ENDED' ? (
-          <Button
-            size="lg"
-            fullWidth
-            onClick={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
-            leftIcon={<RotateCcw className="w-4 h-4" />}
-          >
-            이 챌린지 다시 시작하기
-          </Button>
         ) : (
           <div className="text-center py-2 text-xs text-slate-400">
             현재 참여할 수 없는 상태입니다.
@@ -874,6 +922,19 @@ export const ChallengeDetailPage: React.FC = () => {
           onSuccess={async () => {
             await fetchChallenge();
             await fetchCalendar();
+          }}
+        />
+      )}
+
+      {/* 챌린지 중단 확인 모달 */}
+      {showAbortModal && challenge && (
+        <AbortChallengeModal
+          challengeId={challenge.id}
+          isOpen={showAbortModal}
+          onClose={() => setShowAbortModal(false)}
+          onSuccess={(updated) => {
+            setChallenge(updated);
+            fetchCalendar();
           }}
         />
       )}

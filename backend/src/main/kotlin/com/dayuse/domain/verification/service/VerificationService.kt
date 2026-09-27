@@ -39,8 +39,13 @@ class VerificationService(
         userId: Long,
         request: CreateVerificationRequest
     ): VerificationDetailResponse {
-        val challenge = challengeRepository.findById(request.challengeId)
-            .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
+        val challenge = (challengeRepository.findByIdWithLock(request.challengeId)
+            ?: challengeRepository.findById(request.challengeId).orElse(null))
+            ?: throw ResourceNotFoundException("챌린지를 찾을 수 없습니다.")
+
+        if (challenge.isAborted()) {
+            throw BadRequestException("중단된 챌린지에는 인증을 등록할 수 없습니다.")
+        }
 
         // 1. 모임원 권한 검증
         val isMember = groupMemberRepository.existsByGroupIdAndUserId(

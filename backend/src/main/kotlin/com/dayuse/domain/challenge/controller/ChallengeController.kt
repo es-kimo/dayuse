@@ -180,4 +180,18 @@ class ChallengeController(
         val response = challengeService.updateMyPenaltyAmount(challengeId, userId, request)
         return ResponseEntity.ok(response)
     }
+
+    @PostMapping("/abort")
+    fun abortChallenge(
+        @PathVariable challengeId: Long,
+        @CurrentUserId userId: Long,
+        @RequestBody(required = false) request: com.dayuse.domain.challenge.dto.AbortChallengeRequest?
+    ): ResponseEntity<ChallengeDetailResponse> {
+        val response = challengeService.abortChallenge(
+            challengeId = challengeId,
+            userId = userId,
+            request = request ?: com.dayuse.domain.challenge.dto.AbortChallengeRequest()
+        )
+        return ResponseEntity.ok(response)
+    }
 }

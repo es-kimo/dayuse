@@ -5,5 +5,6 @@ enum class PeriodSettlementStatus {
     ACHIEVED,             // 목표 달성 (벌금 0원)
     NEEDS_CONFIRMATION,   // 구간 종료되었으나 미달성 (사용자 확인 대기)
     CONFIRMED_FAILED,     // 사용자가 미수행 확인 완료 (벌금 확정)
-    NOT_ACHIEVED          // 함께하기 미달성 (벌금 없음, 확인 불필요)
+    NOT_ACHIEVED,         // 함께하기 미달성 (벌금 없음, 확인 불필요)
+    EXCLUDED_ABORTED      // 중단으로 정산 제외
 }

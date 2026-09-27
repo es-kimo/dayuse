@@ -103,6 +103,7 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
           AND (c.periodType IS NULL OR c.periodType = com.dayuse.domain.challenge.PeriodType.DAILY)
           AND (c.executionType IS NULL OR c.executionType = com.dayuse.domain.challenge.ExecutionType.INDIVIDUAL)
           AND ($UNCHECKED_CONDITION)
+          AND (c.abortedAt IS NULL OR r.date < CAST(c.abortedAt AS LocalDate))
     """
     )
     fun countUncheckedRecords(
@@ -121,6 +122,7 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
           AND (c.periodType IS NULL OR c.periodType = com.dayuse.domain.challenge.PeriodType.DAILY)
           AND (c.executionType IS NULL OR c.executionType = com.dayuse.domain.challenge.ExecutionType.INDIVIDUAL)
           AND ($UNCHECKED_CONDITION)
+          AND (c.abortedAt IS NULL OR r.date < CAST(c.abortedAt AS LocalDate))
         ORDER BY r.date ASC
     """
     )
