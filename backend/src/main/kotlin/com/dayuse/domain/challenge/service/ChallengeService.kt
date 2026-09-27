@@ -1105,22 +1105,13 @@ class ChallengeService(
         request: AbortChallengeRequest,
         now: LocalDateTime = LocalDateTime.now()
     ): ChallengeDetailResponse {
-        val challenge = (challengeRepository.findByIdWithLock(challengeId)
-            ?: challengeRepository.findById(challengeId).orElse(null))
-            ?: throw ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
-
-        val member = groupMemberRepository.findByGroupIdAndUserId(challenge.groupId, userId)
-        val isCreator = challenge.creatorUserId == userId
-        val isHost = member?.role == com.dayuse.domain.group.GroupRole.HOST
-
-        if (!isCreator && !isHost) {
-            throw ForbiddenException("챌린지 중단 권한이 없습니다. 생성자 또는 모임장만 중단할 수 있습니다.")
-        }
-
-        challenge.abort(userId, request.reason, now)
-        challengeRepository.save(challenge)
-
-        return getChallengeDetail(challengeId, userId, now.toLocalDate())
+        // TODO [사용자 미션 1]: 챌린지 중단 트랜잭션 및 권한 가드 로직 구현
+        // 1. 챌린지를 조회합니다 (동시성 보호를 위해 challengeRepository.findByIdWithLock 사용 권장). 없으면 ResourceNotFoundException 발생
+        // 2. 권한 검증: 챌린지 생성자(challenge.creatorUserId == userId)이거나, 해당 모임의 모임장(groupMember.role == HOST)만 중단 가능.
+        //    권한이 없으면 ForbiddenException("챌린지 중단 권한이 없습니다. 생성자 또는 모임장만 중단할 수 있습니다.") 발생
+        // 3. challenge.abort(userId, request.reason, now) 호출 및 repository에 저장
+        // 4. getChallengeDetail(challengeId, userId, now.toLocalDate())를 호출하여 최신 상세 정보를 반환
+        throw NotImplementedError("미션 1: abortChallenge 로직을 구현해주세요.")
     }
 
     private fun ChallengePeriodInterval.toDto() = ChallengePeriodIntervalDto(

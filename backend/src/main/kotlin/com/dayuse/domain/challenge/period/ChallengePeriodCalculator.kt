@@ -83,23 +83,11 @@ object ChallengePeriodCalculator {
             index++
         }
 
-        val totalTarget = if (abortedDate != null) {
-            when (periodType) {
-                PeriodType.DAILY -> {
-                    if (abortedDate <= effectiveStart) {
-                        0
-                    } else {
-                        val closedEnd = minOf(effectiveEnd, abortedDate.minusDays(1))
-                        (ChronoUnit.DAYS.between(effectiveStart, closedEnd).toInt() + 1).coerceAtLeast(0)
-                    }
-                }
-                PeriodType.WEEKLY_N -> {
-                    intervals.filter { it.endDate < abortedDate }.sumOf { it.targetCount }
-                }
-            }
-        } else {
-            intervals.sumOf { it.targetCount }
-        }
+        // TODO [사용자 미션 2]: 중단 시점의 열린 수행 기간 정산 제외 및 달성률 분모 재계산 엔진 구현
+        // 챌린지가 조기 중단(abortedDate != null)된 경우, 진행 중이던 열린 구간 및 이후 구간은 정산 대상(분모)에서 제외되어야 합니다.
+        // - DAILY(매일형): abortedDate 당일 및 이후 날짜는 분모에서 제외. (단, abortedDate <= effectiveStart이면 분모는 0)
+        // - WEEKLY_N(주 N회형): interval.endDate < abortedDate 인 이미 마감 완료된 구간들의 targetCount만 합산.
+        val totalTarget = intervals.sumOf { it.targetCount }
 
         val totalCompleted = if (abortedDate != null) {
             when (periodType) {
