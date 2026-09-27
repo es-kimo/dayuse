@@ -61,7 +61,14 @@ class Challenge(
     var periodType: PeriodType = PeriodType.DAILY,
 
     @Column(nullable = true)
-    var targetFrequency: Int? = null
+    var targetFrequency: Int? = null,
+
+    @Enumerated(EnumType.STRING)
+    @Column(
+        nullable = false,
+        length = 20
+    )
+    var executionType: ExecutionType = ExecutionType.INDIVIDUAL
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -161,8 +168,13 @@ class Challenge(
         newEndDate: LocalDate?,
         newPeriodType: PeriodType? = null,
         newTargetFrequency: Int? = null,
+        newExecutionType: ExecutionType? = null,
         today: LocalDate = DateTimeUtils.todayKst()
     ) {
+        if (newExecutionType != null && newExecutionType != this.executionType) {
+            throw BadRequestException("챌린지 수행 방식은 수정할 수 없습니다.")
+        }
+
         // 1. 변경 후 값 계산: 아직 객체는 변경하지 않음
         val nextTitle = newTitle ?: this.title
         val nextDescription = newDescription ?: this.description
@@ -229,6 +241,7 @@ class Challenge(
             newVerificationCriteria: String? = null,
             newPeriodType: PeriodType? = null,
             newTargetFrequency: Int? = null,
+            newExecutionType: ExecutionType? = null,
             today: LocalDate = DateTimeUtils.todayKst()
         ): Challenge {
             if (!source.isEnded(today)) {
@@ -253,6 +266,7 @@ class Challenge(
 
             val finalPeriodType = newPeriodType ?: source.periodType
             val finalTargetFrequency = if (finalPeriodType == PeriodType.DAILY) null else (newTargetFrequency ?: source.targetFrequency)
+            val finalExecutionType = newExecutionType ?: source.executionType
 
             return Challenge(
                 id = 0L,
@@ -264,7 +278,8 @@ class Challenge(
                 startDate = newStartDate,
                 endDate = newEndDate,
                 periodType = finalPeriodType,
-                targetFrequency = finalTargetFrequency
+                targetFrequency = finalTargetFrequency,
+                executionType = finalExecutionType
             )
         }
     }

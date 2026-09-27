@@ -135,20 +135,29 @@ class NotificationSchedulerService(
             val challenge = challengeRepository.findByIdOrNull(participant.challengeId) ?: continue
 
             if (participant.startDate <= targetDate && targetDate <= challenge.endDate) {
-                val hasVerified = verificationRepository.findByChallengeIdAndUserIdAndTargetDate(
-                    challengeId = challenge.id,
-                    userId = userId,
-                    targetDate = targetDate
-                ) != null
+                val isTogether = challenge.executionType.isTogether
+                val hasVerified = if (isTogether) {
+                    verificationRepository.existsByChallengeIdAndTargetDate(challenge.id, targetDate)
+                } else {
+                    verificationRepository.findByChallengeIdAndUserIdAndTargetDate(
+                        challengeId = challenge.id,
+                        userId = userId,
+                        targetDate = targetDate
+                    ) != null
+                }
 
                 if (!hasVerified) {
                     if (challenge.periodType == PeriodType.DAILY) {
                         pendingCount++
                     } else if (challenge.periodType == PeriodType.WEEKLY_N) {
-                        val completedRecords = dailyRecordRepository?.findAllByChallengeParticipantId(participant.id)
-                            ?.filter { it.status == com.dayuse.domain.dailyrecord.DailyRecordStatus.COMPLETED }
-                            ?.map { it.date }
-                            ?.toSet() ?: emptySet()
+                        val completedDates = if (isTogether) {
+                            verificationRepository.findDistinctTargetDatesByChallengeId(challenge.id).toSet()
+                        } else {
+                            dailyRecordRepository?.findAllByChallengeParticipantId(participant.id)
+                                ?.filter { it.status == com.dayuse.domain.dailyrecord.DailyRecordStatus.COMPLETED && it.verificationId != null }
+                                ?.map { it.date }
+                                ?.toSet() ?: emptySet()
+                        }
 
                         val calc = ChallengePeriodCalculator.calculate(
                             challengeStartDate = challenge.startDate,
@@ -156,13 +165,14 @@ class NotificationSchedulerService(
                             participantStartDate = participant.startDate,
                             periodType = challenge.periodType,
                             targetFrequency = challenge.targetFrequency,
-                            completedDates = completedRecords,
-                            today = targetDate
+                            completedDates = completedDates,
+                            today = targetDate,
+                            executionType = challenge.executionType
                         )
 
                         val curPeriod = calc.currentPeriod
                         if (curPeriod != null && !curPeriod.isAchieved) {
-                            pendingCount++;
+                            pendingCount++
                         }
                     }
                 }

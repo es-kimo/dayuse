@@ -52,7 +52,8 @@ export interface AuthResponse {
 
 export type ChallengeStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED';
 export type PeriodType = 'DAILY' | 'WEEKLY_N';
-export type PeriodSettlementStatus = 'IN_PROGRESS' | 'ACHIEVED' | 'NEEDS_CONFIRMATION' | 'CONFIRMED_FAILED';
+export type ExecutionType = 'INDIVIDUAL' | 'TOGETHER';
+export type PeriodSettlementStatus = 'IN_PROGRESS' | 'ACHIEVED' | 'NEEDS_CONFIRMATION' | 'CONFIRMED_FAILED' | 'NOT_ACHIEVED';
 
 export interface ChallengePeriodInterval {
   index: number;
@@ -79,6 +80,7 @@ export interface ChallengeSummary {
   durationDays?: number;
   periodType?: PeriodType;
   targetFrequency?: number | null;
+  executionType?: ExecutionType;
   status: ChallengeStatus;
   participantCount: number;
   isParticipating: boolean;
@@ -118,6 +120,7 @@ export interface JoinPreviewResponse {
   isStarted: boolean;
   options: JoinOption[];
   defaultPenaltyAmount: number;
+  executionType?: ExecutionType;
 }
 
 export interface ChallengeDetail {
@@ -134,6 +137,7 @@ export interface ChallengeDetail {
   durationDays?: number;
   periodType?: PeriodType;
   targetFrequency?: number | null;
+  executionType?: ExecutionType;
   totalTargetCount?: number;
   totalCompletedCount?: number;
   progressRate?: number;
@@ -163,6 +167,7 @@ export interface CreateChallengePayload {
   endDate?: string;
   periodType?: PeriodType;
   targetFrequency?: number | null;
+  executionType?: ExecutionType;
   myPenaltyAmount: number;
   participants?: CreateParticipantPayload[];
 }
@@ -175,6 +180,7 @@ export interface ChallengeRestartTemplate {
   durationDays: number;
   periodType?: PeriodType;
   targetFrequency?: number | null;
+  executionType?: ExecutionType;
   suggestedStartDate: string;
   suggestedEndDate: string;
   suggestedPenaltyAmount: number;
@@ -223,6 +229,7 @@ export interface TodayAction {
   verificationCriteria: string;
   startDate: string;
   endDate: string;
+  executionType?: ExecutionType;
   isCompletedToday: boolean;
   canVerify: boolean;
   myVerification?: TodayVerificationSummary | null;

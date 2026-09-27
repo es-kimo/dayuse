@@ -293,6 +293,16 @@ export const ChallengeDetailPage: React.FC = () => {
         </button>
         <div className="flex items-center gap-2">
           {getStatusBadge()}
+          {challenge.executionType === 'TOGETHER' ? (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              함께하기
+            </span>
+          ) : (
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
+              각자하기
+            </span>
+          )}
           {challenge.isParticipating && (
             <button
               onClick={() => setShowStreakModal(true)}
@@ -460,10 +470,16 @@ export const ChallengeDetailPage: React.FC = () => {
             <Users className="w-4 h-4 text-blue-600" />
             <span>참여자 목록 ({challenge.participants.length}명)</span>
           </div>
-          {challenge.isParticipating && challenge.myPenaltyAmount !== undefined && (
-            <span className="text-[11px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-md">
-              나의 약정: {challenge.myPenaltyAmount?.toLocaleString()}원
+          {challenge.executionType === 'TOGETHER' ? (
+            <span className="text-[11px] text-indigo-700 font-semibold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+              공동 목표 (벌금 없음)
             </span>
+          ) : (
+            challenge.isParticipating && challenge.myPenaltyAmount !== undefined && (
+              <span className="text-[11px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-md">
+                나의 약정: {challenge.myPenaltyAmount?.toLocaleString()}원
+              </span>
+            )
           )}
         </div>
 
@@ -500,17 +516,34 @@ export const ChallengeDetailPage: React.FC = () => {
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-xs font-bold text-amber-600 block">
-                  {p.penaltyAmount.toLocaleString()}원
-                </span>
-                <div className="flex items-center justify-end gap-1 mt-0.5">
-                  <span className="text-[9px] text-slate-400">1일 약정</span>
-                  {p.completionRate !== undefined && (
-                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-100">
-                      달성 {p.completionRate}%
+                {challenge.executionType === 'TOGETHER' ? (
+                  <>
+                    <span className="text-xs font-bold text-indigo-600 block">
+                      벌금 없음
                     </span>
-                  )}
-                </div>
+                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                      {p.completionRate !== undefined && (
+                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-100">
+                          개인 인증 {p.completionRate}%
+                        </span>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs font-bold text-amber-600 block">
+                      {p.penaltyAmount.toLocaleString()}원
+                    </span>
+                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                      <span className="text-[9px] text-slate-400">1일 약정</span>
+                      {p.completionRate !== undefined && (
+                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-100">
+                          달성 {p.completionRate}%
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -556,24 +589,26 @@ export const ChallengeDetailPage: React.FC = () => {
           <div className="flex gap-2">
             {(challenge.status === 'NOT_STARTED' || challenge.canCancel) ? (
               <>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  fullWidth
-                  onClick={() => {
-                    setShowPenaltyModal(true);
-                    setActionError(null);
-                  }}
-                >
-                  약정 금액 변경
-                </Button>
+                {challenge.executionType !== 'TOGETHER' && (
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    fullWidth
+                    onClick={() => {
+                      setShowPenaltyModal(true);
+                      setActionError(null);
+                    }}
+                  >
+                    약정 금액 변경
+                  </Button>
+                )}
                 {/* 파괴적 동작이지만 보조 위치라 솔리드 대신 옅은 배경을 쓴다 */}
                 {challenge.canCancel && (
                   <button
                     type="button"
                     onClick={() => setShowLeaveConfirm(true)}
                     disabled={actionLoading}
-                    className="h-btn-md min-h-[44px] px-4 shrink-0 bg-danger-bg hover:bg-danger-border text-danger font-semibold text-body-sm rounded-md transition active:scale-[0.98] focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`h-btn-md min-h-[44px] px-4 ${challenge.executionType === 'TOGETHER' ? 'w-full' : 'shrink-0'} bg-danger-bg hover:bg-danger-border text-danger font-semibold text-body-sm rounded-md transition active:scale-[0.98] focus-ring disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     참여 취소
                   </button>

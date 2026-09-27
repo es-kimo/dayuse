@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Size
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+import com.dayuse.domain.challenge.ExecutionType
 import com.dayuse.domain.challenge.period.PeriodSettlementStatus
 import com.dayuse.domain.dailyrecord.DepositStatus
 
@@ -65,6 +66,8 @@ data class CreateChallengeRequest(
 
     val targetFrequency: Int? = null,
 
+    val executionType: ExecutionType = ExecutionType.INDIVIDUAL,
+
     @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
     val myPenaltyAmount: Int = 5000,
 
@@ -90,6 +93,8 @@ data class RestartChallengeRequest(
 
     val targetFrequency: Int? = null,
 
+    val executionType: ExecutionType? = null,
+
     @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
     val myPenaltyAmount: Int = 5000
 )
@@ -102,6 +107,7 @@ data class ChallengeRestartTemplateResponse(
     val durationDays: Int,
     val periodType: PeriodType = PeriodType.DAILY,
     val targetFrequency: Int? = null,
+    val executionType: ExecutionType = ExecutionType.INDIVIDUAL,
     val suggestedStartDate: LocalDate,
     val suggestedEndDate: LocalDate,
     val suggestedPenaltyAmount: Int
@@ -121,7 +127,9 @@ data class UpdateChallengeRequest(
 
     val periodType: PeriodType? = null,
 
-    val targetFrequency: Int? = null
+    val targetFrequency: Int? = null,
+
+    val executionType: ExecutionType? = null
 )
 
 data class JoinChallengeRequest(
@@ -150,7 +158,8 @@ data class JoinPreviewResponse(
     val challengeEndDate: LocalDate,
     val isStarted: Boolean,
     val options: List<JoinOptionDto>,
-    val defaultPenaltyAmount: Int = 5000
+    val defaultPenaltyAmount: Int = 5000,
+    val executionType: ExecutionType = ExecutionType.INDIVIDUAL
 )
 
 data class ChallengeSummaryResponse(
@@ -164,6 +173,7 @@ data class ChallengeSummaryResponse(
     val durationDays: Int = 14,
     val periodType: PeriodType = PeriodType.DAILY,
     val targetFrequency: Int? = null,
+    val executionType: ExecutionType = ExecutionType.INDIVIDUAL,
     val status: ChallengeStatus,
     val participantCount: Int,
     val isParticipating: Boolean,
@@ -199,6 +209,7 @@ data class ChallengeDetailResponse(
     val durationDays: Int = 14,
     val periodType: PeriodType = PeriodType.DAILY,
     val targetFrequency: Int? = null,
+    val executionType: ExecutionType = ExecutionType.INDIVIDUAL,
     val totalTargetCount: Int = 14,
     val totalCompletedCount: Int = 0,
     val progressRate: Int = 0,

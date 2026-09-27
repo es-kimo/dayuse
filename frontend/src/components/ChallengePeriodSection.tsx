@@ -78,6 +78,12 @@ export const ChallengePeriodSection: React.FC<ChallengePeriodSectionProps> = ({
                     미수행 확정
                   </span>
                 )}
+                {interval.settlementStatus === 'NOT_ACHIEVED' && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 flex items-center gap-1">
+                    <XCircle className="w-3 h-3 text-slate-500" />
+                    미달성 (벌금 없음)
+                  </span>
+                )}
               </div>
 
               {/* 진행도 게이지 */}

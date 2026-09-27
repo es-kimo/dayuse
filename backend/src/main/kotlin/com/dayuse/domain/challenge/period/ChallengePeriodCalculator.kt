@@ -1,5 +1,6 @@
 package com.dayuse.domain.challenge.period
 
+import com.dayuse.domain.challenge.ExecutionType
 import com.dayuse.domain.challenge.PeriodType
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -25,9 +26,14 @@ object ChallengePeriodCalculator {
         periodType: PeriodType,
         targetFrequency: Int?,
         completedDates: Set<LocalDate>,
-        today: LocalDate
+        today: LocalDate,
+        executionType: ExecutionType = ExecutionType.INDIVIDUAL
     ): ChallengePeriodCalculationResult {
-        val effectiveStart = if (participantStartDate > challengeStartDate) participantStartDate else challengeStartDate
+        val effectiveStart = if (executionType.isTogether) {
+            challengeStartDate
+        } else {
+            if (participantStartDate > challengeStartDate) participantStartDate else challengeStartDate
+        }
         val effectiveEnd = challengeEndDate
 
         if (effectiveStart > effectiveEnd) {

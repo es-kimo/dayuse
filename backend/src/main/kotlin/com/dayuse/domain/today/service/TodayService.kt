@@ -58,7 +58,12 @@ class TodayService(
                 targetDate = today
             )
 
-            val isCompleted = verification != null
+            val isTogether = challenge.executionType.isTogether
+            val isCompleted = if (isTogether) {
+                verificationRepository.existsByChallengeIdAndTargetDate(challenge.id, today)
+            } else {
+                verification != null
+            }
             val summary = verification?.let {
                 TodayVerificationSummary(
                     id = it.id,
@@ -69,7 +74,7 @@ class TodayService(
                 )
             }
 
-            val periodInfo = buildPeriodInfo(challenge, participant, today, isCompleted)
+            val periodInfo = buildPeriodInfo(challenge, participant, today, verification != null)
 
             TodayActionResponse(
                 challengeId = challenge.id,
@@ -78,12 +83,13 @@ class TodayService(
                 startDate = challenge.startDate,
                 endDate = challenge.endDate,
                 isCompletedToday = isCompleted,
-                canVerify = !isCompleted,
+                canVerify = verification == null,
                 myVerification = summary,
                 groupId = challenge.groupId,
                 groupName = group?.name,
                 periodType = challenge.periodType,
-                periodInfo = periodInfo
+                periodInfo = periodInfo,
+                executionType = challenge.executionType
             )
         }
     }
@@ -117,7 +123,12 @@ class TodayService(
                 targetDate = today
             )
 
-            val isCompleted = verification != null
+            val isTogether = challenge.executionType.isTogether
+            val isCompleted = if (isTogether) {
+                verificationRepository.existsByChallengeIdAndTargetDate(challenge.id, today)
+            } else {
+                verification != null
+            }
             val summary = verification?.let {
                 TodayVerificationSummary(
                     id = it.id,
@@ -128,7 +139,7 @@ class TodayService(
                 )
             }
 
-            val periodInfo = buildPeriodInfo(challenge, participant, today, isCompleted)
+            val periodInfo = buildPeriodInfo(challenge, participant, today, verification != null)
 
             TodayActionResponse(
                 challengeId = challenge.id,
@@ -137,11 +148,12 @@ class TodayService(
                 startDate = challenge.startDate,
                 endDate = challenge.endDate,
                 isCompletedToday = isCompleted,
-                canVerify = !isCompleted,
+                canVerify = verification == null,
                 myVerification = summary,
                 groupId = challenge.groupId,
                 periodType = challenge.periodType,
-                periodInfo = periodInfo
+                periodInfo = periodInfo,
+                executionType = challenge.executionType
             )
         }
     }
@@ -190,8 +202,12 @@ class TodayService(
     ): TodayPeriodInfo? {
         if (challenge.periodType != PeriodType.WEEKLY_N) return null
 
-        val allRecords = dailyRecordRepository?.findAllByChallengeParticipantId(participant.id).orEmpty()
-        val completedDates = allRecords.filter { it.status == DailyRecordStatus.COMPLETED }.map { it.date }.toSet()
+        val completedDates = if (challenge.executionType.isTogether) {
+            verificationRepository.findDistinctTargetDatesByChallengeId(challenge.id).toSet()
+        } else {
+            val allRecords = dailyRecordRepository?.findAllByChallengeParticipantId(participant.id).orEmpty()
+            allRecords.filter { it.status == DailyRecordStatus.COMPLETED && it.verificationId != null }.map { it.date }.toSet()
+        }
 
         val calc = ChallengePeriodCalculator.calculate(
             challengeStartDate = challenge.startDate,
@@ -200,11 +216,16 @@ class TodayService(
             periodType = challenge.periodType,
             targetFrequency = challenge.targetFrequency,
             completedDates = completedDates,
-            today = today
+            today = today,
+            executionType = challenge.executionType
         )
 
         val cur = calc.currentPeriod ?: return null
-        val summaryText = "이번 구간 ${cur.completedCount}/${cur.targetCount}회 · ${cur.startDate.monthValue}월 ${cur.startDate.dayOfMonth}일~${cur.endDate.monthValue}월 ${cur.endDate.dayOfMonth}일"
+        val summaryText = if (challenge.executionType.isTogether) {
+            "이번 구간 공동 ${cur.completedCount}/${cur.targetCount}회 · ${cur.startDate.monthValue}월 ${cur.startDate.dayOfMonth}일~${cur.endDate.monthValue}월 ${cur.endDate.dayOfMonth}일"
+        } else {
+            "이번 구간 ${cur.completedCount}/${cur.targetCount}회 · ${cur.startDate.monthValue}월 ${cur.startDate.dayOfMonth}일~${cur.endDate.monthValue}월 ${cur.endDate.dayOfMonth}일"
+        }
 
         return TodayPeriodInfo(
             index = cur.index,
