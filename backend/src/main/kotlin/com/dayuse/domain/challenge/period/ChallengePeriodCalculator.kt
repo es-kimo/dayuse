@@ -29,10 +29,11 @@ object ChallengePeriodCalculator {
         today: LocalDate,
         executionType: ExecutionType = ExecutionType.INDIVIDUAL
     ): ChallengePeriodCalculationResult {
-        // TODO [사용자 미션 1]: 수행 방식(executionType)에 따른 유효 시작일(effectiveStart)을 계산하세요.
-        // - 함께하기(TOGETHER): 참가자의 중도 참여 여부와 관계없이 모임 전체가 동일한 7일 윈도우를 공유하도록 challengeStartDate 기준
-        // - 각자하기(INDIVIDUAL): 참가자의 participantStartDate가 challengeStartDate보다 늦다면 participantStartDate 기준
-        val effectiveStart = if (participantStartDate > challengeStartDate) participantStartDate else challengeStartDate
+        val effectiveStart = if (executionType.isTogether) {
+            challengeStartDate
+        } else {
+            if (participantStartDate > challengeStartDate) participantStartDate else challengeStartDate
+        }
         val effectiveEnd = challengeEndDate
 
         if (effectiveStart > effectiveEnd) {
