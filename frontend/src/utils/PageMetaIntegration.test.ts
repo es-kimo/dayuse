@@ -38,7 +38,7 @@ describe('PageMetaIntegration (BR-04, BR-05, BR-06 Integration)', () => {
 
     expect(document.title).toBe('모임 · dayuse');
     expect(getMeta('meta[name="robots"]')).toBe('noindex, nofollow');
-    expect(getMeta('meta[name="description"]')).toBe('친구들과 각자의 챌린지를 인증하고 기록해요.');
+    expect(getMeta('meta[name="description"]')).toBe('참여 중인 모임 목록을 확인하고 친구들과 함께 챌린지를 이어가세요.');
     expect(getMeta('meta[property="og:image"]')).toContain(BRAND_DEFAULT_OG);
 
     const challengeMeta = resolvePageMeta('/challenges/456');
@@ -53,7 +53,7 @@ describe('PageMetaIntegration (BR-04, BR-05, BR-06 Integration)', () => {
     const todayMeta = resolvePageMeta('/today');
     updateDocumentMeta(todayMeta);
 
-    expect(document.title).toBe('인증 · dayuse');
+    expect(document.title).toBe('오늘의 챌린지 · dayuse');
     expect(getMeta('meta[name="robots"]')).toBe('noindex, nofollow');
   });
 

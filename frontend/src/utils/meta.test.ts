@@ -69,7 +69,7 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
       for (const path of paths) {
         const meta = resolvePageMeta(path);
         expect(meta.title).toBe('모임 · dayuse');
-        expect(meta.description).toBe('친구들과 각자의 챌린지를 인증하고 기록해요.');
+        expect(meta.description).toBe('참여 중인 모임 목록을 확인하고 친구들과 함께 챌린지를 이어가세요.');
         expect(meta.ogImage).toBe(BRAND_DEFAULT_OG);
         expect(meta.robots).toBe('noindex, nofollow');
       }
@@ -78,21 +78,37 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
     it('비공개 챌린지 상세 및 생성 경로는 "챌린지 · dayuse" 타이틀과 noindex, nofollow를 갖는다', () => {
       const detailMeta = resolvePageMeta('/challenges/101');
       expect(detailMeta.title).toBe('챌린지 · dayuse');
+      expect(detailMeta.description).toBe('모임원들과 함께하는 챌린지 달성 현황과 인증 피드를 확인하세요.');
       expect(detailMeta.robots).toBe('noindex, nofollow');
 
       const newChallengeMeta = resolvePageMeta('/groups/42/challenges/new');
       expect(newChallengeMeta.title).toBe('챌린지 · dayuse');
+      expect(newChallengeMeta.description).toBe('모임원들과 함께하는 챌린지 달성 현황과 인증 피드를 확인하세요.');
       expect(newChallengeMeta.robots).toBe('noindex, nofollow');
     });
 
-    it('비공개 오늘/인증 경로는 "인증 · dayuse" 타이틀과 noindex, nofollow를 갖는다', () => {
+    it('비공개 오늘/인증 경로는 각각 전용 타이틀과 noindex, nofollow를 갖는다', () => {
       const todayMeta = resolvePageMeta('/today');
-      expect(todayMeta.title).toBe('인증 · dayuse');
+      expect(todayMeta.title).toBe('오늘의 챌린지 · dayuse');
+      expect(todayMeta.description).toBe('오늘 실천해야 할 챌린지를 확인하고 가볍게 인증하세요.');
       expect(todayMeta.robots).toBe('noindex, nofollow');
 
       const verifyMeta = resolvePageMeta('/verify/record/7');
-      expect(verifyMeta.title).toBe('인증 · dayuse');
+      expect(verifyMeta.title).toBe('인증하기 · dayuse');
+      expect(verifyMeta.description).toBe('오늘 실천한 챌린지를 사진 한 장과 한마디로 가볍게 인증하세요.');
       expect(verifyMeta.robots).toBe('noindex, nofollow');
+    });
+
+    it('프로필 및 설정 경로는 전용 타이틀과 noindex, nofollow를 갖는다', () => {
+      const profileMeta = resolvePageMeta('/profile');
+      expect(profileMeta.title).toBe('내 프로필 · dayuse');
+      expect(profileMeta.description).toBe('내 프로필 정보와 계정 설정을 관리하세요.');
+      expect(profileMeta.robots).toBe('noindex, nofollow');
+
+      const settingsMeta = resolvePageMeta('/settings/notifications');
+      expect(settingsMeta.title).toBe('알림 설정 · dayuse');
+      expect(settingsMeta.description).toBe('리마인더 및 활동 알림 수신 설정을 변경하세요.');
+      expect(settingsMeta.robots).toBe('noindex, nofollow');
     });
 
     it('모임 초대 수락 경로는 "모임 초대 · dayuse" 타이틀과 noindex, nofollow, og-invite를 갖는다', () => {
@@ -140,7 +156,7 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
       const meta = resolvePageMeta('/groups/999', hostileOptions);
       // 개인정보가 일체 포함되지 않고 기본 모임 메타데이터로 유지되어야 함
       expect(meta.title).toBe('모임 · dayuse');
-      expect(meta.description).toBe('친구들과 각자의 챌린지를 인증하고 기록해요.');
+      expect(meta.description).toBe('참여 중인 모임 목록을 확인하고 친구들과 함께 챌린지를 이어가세요.');
       expect(meta.ogImage).toBe(BRAND_DEFAULT_OG);
       expect(meta.description).not.toContain('홍길동');
       expect(meta.description).not.toContain('110-123');
@@ -155,7 +171,7 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
 
       const challengeMeta = resolvePageMeta('/challenges/55', hostileOptions);
       expect(challengeMeta.title).toBe('챌린지 · dayuse');
-      expect(challengeMeta.description).toBe('친구들과 각자의 챌린지를 인증하고 기록해요.');
+      expect(challengeMeta.description).toBe('모임원들과 함께하는 챌린지 달성 현황과 인증 피드를 확인하세요.');
       expect(challengeMeta.ogImage).toBe(BRAND_DEFAULT_OG);
     });
   });

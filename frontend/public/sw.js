@@ -10,6 +10,7 @@ const STATIC_ASSETS = [
   '/apple-touch-icon.png',
   '/assets/brand/logo-combination.svg',
   '/assets/brand/og-default.png',
+  '/assets/brand/og-landing.png',
   '/assets/brand/og-invite.png',
   '/assets/brand/og-expired.png',
   '/assets/brand/symbol.svg'

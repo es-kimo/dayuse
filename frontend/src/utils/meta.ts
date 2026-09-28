@@ -47,31 +47,49 @@ export const PAGE_META_PRESETS: Record<string, PageMeta> = {
   },
   LOGIN: {
     title: '로그인 · dayuse',
-    description: '친구들과 각자의 챌린지를 인증하고 기록해요.',
+    description: '카카오 계정으로 간편하게 시작하고 우리 모임 챌린지에 참여해보세요.',
     ogImage: BRAND_DEFAULT_OG,
     robots: 'noindex, nofollow',
   },
   SIGNUP: {
     title: '가입 · dayuse',
-    description: '친구들과 각자의 챌린지를 인증하고 기록해요.',
+    description: 'dayuse와 함께 나만의 습관을 만들고 친구들과 공유해보세요.',
     ogImage: BRAND_DEFAULT_OG,
     robots: 'noindex, nofollow',
   },
   GROUPS: {
     title: '모임 · dayuse',
-    description: '친구들과 각자의 챌린지를 인증하고 기록해요.',
+    description: '참여 중인 모임 목록을 확인하고 친구들과 함께 챌린지를 이어가세요.',
     ogImage: BRAND_DEFAULT_OG,
     robots: 'noindex, nofollow',
   },
   CHALLENGES: {
     title: '챌린지 · dayuse',
-    description: '친구들과 각자의 챌린지를 인증하고 기록해요.',
+    description: '모임원들과 함께하는 챌린지 달성 현황과 인증 피드를 확인하세요.',
+    ogImage: BRAND_DEFAULT_OG,
+    robots: 'noindex, nofollow',
+  },
+  TODAY: {
+    title: '오늘의 챌린지 · dayuse',
+    description: '오늘 실천해야 할 챌린지를 확인하고 가볍게 인증하세요.',
     ogImage: BRAND_DEFAULT_OG,
     robots: 'noindex, nofollow',
   },
   VERIFY: {
-    title: '인증 · dayuse',
-    description: '친구들과 각자의 챌린지를 인증하고 기록해요.',
+    title: '인증하기 · dayuse',
+    description: '오늘 실천한 챌린지를 사진 한 장과 한마디로 가볍게 인증하세요.',
+    ogImage: BRAND_DEFAULT_OG,
+    robots: 'noindex, nofollow',
+  },
+  PROFILE: {
+    title: '내 프로필 · dayuse',
+    description: '내 프로필 정보와 계정 설정을 관리하세요.',
+    ogImage: BRAND_DEFAULT_OG,
+    robots: 'noindex, nofollow',
+  },
+  SETTINGS: {
+    title: '알림 설정 · dayuse',
+    description: '리마인더 및 활동 알림 수신 설정을 변경하세요.',
     ogImage: BRAND_DEFAULT_OG,
     robots: 'noindex, nofollow',
   },
@@ -96,28 +114,28 @@ export const PAGE_META_PRESETS: Record<string, PageMeta> = {
   CONTACT: {
     title: '문의하기 · dayuse',
     description: 'dayuse 서비스 이용 문의, 오류 제보 및 피드백 창구입니다.',
-    ogImage: BRAND_LANDING_OG,
+    ogImage: BRAND_DEFAULT_OG,
     robots: 'index, follow',
     canonicalUrl: 'https://dayuse.kr/contact',
   },
   GUIDE: {
     title: '서비스 안내 · dayuse',
     description: '목표는 각자, 꾸준함은 함께. 모임 만들기, 챌린지 생성, 인증 및 자율 정산 가이드입니다.',
-    ogImage: BRAND_LANDING_OG,
+    ogImage: BRAND_DEFAULT_OG,
     robots: 'index, follow',
     canonicalUrl: 'https://dayuse.kr/guide',
   },
   TERMS: {
     title: '이용약관 · dayuse',
     description: 'dayuse 서비스 이용약관 및 운영 정책입니다.',
-    ogImage: BRAND_LANDING_OG,
+    ogImage: BRAND_DEFAULT_OG,
     robots: 'index, follow',
     canonicalUrl: 'https://dayuse.kr/terms',
   },
   PRIVACY: {
     title: '개인정보처리방침 · dayuse',
     description: 'dayuse 개인정보처리방침 및 정보보호 정책입니다.',
-    ogImage: BRAND_LANDING_OG,
+    ogImage: BRAND_DEFAULT_OG,
     robots: 'index, follow',
     canonicalUrl: 'https://dayuse.kr/privacy',
   },
@@ -182,7 +200,10 @@ export function resolvePageMeta(pathname: string, options: ResolveMetaOptions = 
   }
 
   // 6. 비공개 인증 등록 및 오늘 화면
-  if (normalizedPath === '/today' || normalizedPath.startsWith('/verify/') || normalizedPath === '/verify') {
+  if (normalizedPath === '/today') {
+    return { ...PAGE_META_PRESETS.TODAY };
+  }
+  if (normalizedPath.startsWith('/verify/') || normalizedPath === '/verify') {
     return { ...PAGE_META_PRESETS.VERIFY };
   }
 
@@ -214,8 +235,11 @@ export function resolvePageMeta(pathname: string, options: ResolveMetaOptions = 
   }
 
   // 9. 프로필 및 설정 등 기타 내부 개인화 페이지
-  if (normalizedPath === '/profile' || normalizedPath.startsWith('/settings/')) {
-    return { ...PAGE_META_PRESETS.GROUPS };
+  if (normalizedPath === '/profile') {
+    return { ...PAGE_META_PRESETS.PROFILE };
+  }
+  if (normalizedPath.startsWith('/settings/')) {
+    return { ...PAGE_META_PRESETS.SETTINGS };
   }
 
   // 10. 정의되지 않은 모든 경로는 404 안내 폴백
