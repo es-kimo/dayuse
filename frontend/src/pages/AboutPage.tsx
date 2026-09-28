@@ -912,12 +912,12 @@ export const AboutPage: React.FC = () => {
 
           <footer className="foot">
             <span>목표는 각자, 꾸준함은 함께.</span>
-            <span className="links">
+            <nav className="links" aria-label="바닥글 링크">
               <a className="todo" href="#start">문의하기</a>
               <a className="todo" href="#start">서비스 안내</a>
               <a className="todo" href="#start">이용약관</a>
               <a className="todo" href="#start">개인정보처리방침</a>
-            </span>
+            </nav>
           </footer>
         </section>
       </main>
