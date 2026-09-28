@@ -10,7 +10,7 @@ import type { TodayAction } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 export const TodayPage: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [actions, setActions] = useState<TodayAction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -18,12 +18,14 @@ export const TodayPage: React.FC = () => {
   const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       navigate('/login?redirect=/today');
       return;
     }
-    loadTodayActions();
-  }, [isAuthenticated]);
+    if (isAuthenticated) {
+      loadTodayActions();
+    }
+  }, [authLoading, isAuthenticated]);
 
   const loadTodayActions = async () => {
     try {
