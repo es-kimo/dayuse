@@ -39,11 +39,13 @@ class VerificationService(
         userId: Long,
         request: CreateVerificationRequest
     ): VerificationDetailResponse {
-        // TODO [사용자 미션 3]: 중단과 동시 인증 등록 간의 충돌 방지 및 원자적 상태 검증 (동시성 제어)
-        // 1. 챌린지 중단 트랜잭션과의 동시성 경합(Race Condition)을 직렬화하기 위해 비관적 쓰기 락(PESSIMISTIC_WRITE)을 획득하여 챌린지를 조회합니다. (findByIdWithLock 활용)
-        // 2. 챌린지가 이미 중단된 상태(challenge.isAborted())라면 BadRequestException("중단된 챌린지에는 인증을 등록할 수 없습니다.")을 발생시킵니다.
-        val challenge = challengeRepository.findById(request.challengeId)
-            .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
+        val challenge = (challengeRepository.findByIdWithLock(request.challengeId)
+            ?: challengeRepository.findById(request.challengeId).orElse(null))
+            ?: throw ResourceNotFoundException("챌린지를 찾을 수 없습니다.")
+
+        if (challenge.isAborted()) {
+            throw BadRequestException("중단된 챌린지에는 인증을 등록할 수 없습니다.")
+        }
 
         // 1. 모임원 권한 검증
         val isMember = groupMemberRepository.existsByGroupIdAndUserId(
@@ -106,7 +108,10 @@ class VerificationService(
             )
             val saved = verificationRepository.save(verification)
             dailyRecordService?.onVerificationCreated(saved)
-            challengeProgressService?.onVerificationCreated(saved, challenge)
+            challengeProgressService?.onVerificationCreated(
+                saved,
+                challenge
+            )
             return toDetailResponse(saved)
         } catch (e: DataIntegrityViolationException) {
             val constraintViolation = generateSequence<Throwable>(e) { it.cause }
@@ -178,7 +183,10 @@ class VerificationService(
         val challenge = challengeRepository.findById(verification.challengeId).orElse(null)
         verificationRepository.delete(verification)
         if (challenge != null && challenge.executionType == ExecutionType.TOGETHER) {
-            challengeProgressService?.onVerificationDeleted(verification, challenge)
+            challengeProgressService?.onVerificationDeleted(
+                verification,
+                challenge
+            )
         } else {
             dailyRecordService?.onVerificationDeleted(verification)
         }
