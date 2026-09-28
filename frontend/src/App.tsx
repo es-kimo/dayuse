@@ -17,7 +17,12 @@ import { PublicShareLandingPage } from './pages/PublicShareLandingPage';
 import { TodayPage } from './pages/TodayPage';
 import { NotificationSettingsPage } from './pages/NotificationSettingsPage';
 import { AboutPage } from './pages/AboutPage';
+import { ContactPage } from './pages/ContactPage';
+import { GuidePage } from './pages/GuidePage';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { PageMetaTracker } from './components/PageMetaTracker';
+import { ScrollToTop } from './components/ScrollToTop';
 import { preloadKakao } from './utils/kakao';
 import { registerServiceWorker } from './utils/webPush';
 
@@ -33,6 +38,7 @@ export const App: React.FC = () => {
       <ToastProvider>
         <BrowserRouter>
           <PageMetaTracker />
+          <ScrollToTop />
           <AuthProvider>
             <Routes>
               <Route path="/" element={<Navigate to="/groups" replace />} />
@@ -51,6 +57,10 @@ export const App: React.FC = () => {
               <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/guide" element={<GuidePage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="*" element={<Navigate to="/groups" replace />} />
             </Routes>
           </AuthProvider>

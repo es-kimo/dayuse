@@ -93,6 +93,34 @@ export const PAGE_META_PRESETS: Record<string, PageMeta> = {
     ogImage: BRAND_EXPIRED_OG,
     robots: 'noindex, nofollow',
   },
+  CONTACT: {
+    title: '문의하기 · dayuse',
+    description: 'dayuse 서비스 이용 문의, 오류 제보 및 피드백 창구입니다.',
+    ogImage: BRAND_LANDING_OG,
+    robots: 'index, follow',
+    canonicalUrl: 'https://dayuse.kr/contact',
+  },
+  GUIDE: {
+    title: '서비스 안내 · dayuse',
+    description: '목표는 각자, 꾸준함은 함께. 모임 만들기, 챌린지 생성, 인증 및 자율 정산 가이드입니다.',
+    ogImage: BRAND_LANDING_OG,
+    robots: 'index, follow',
+    canonicalUrl: 'https://dayuse.kr/guide',
+  },
+  TERMS: {
+    title: '이용약관 · dayuse',
+    description: 'dayuse 서비스 이용약관 및 운영 정책입니다.',
+    ogImage: BRAND_LANDING_OG,
+    robots: 'index, follow',
+    canonicalUrl: 'https://dayuse.kr/terms',
+  },
+  PRIVACY: {
+    title: '개인정보처리방침 · dayuse',
+    description: 'dayuse 개인정보처리방침 및 정보보호 정책입니다.',
+    ogImage: BRAND_LANDING_OG,
+    robots: 'index, follow',
+    canonicalUrl: 'https://dayuse.kr/privacy',
+  },
 };
 
 /**
@@ -113,9 +141,21 @@ export function resolvePageMeta(pathname: string, options: ResolveMetaOptions = 
   // 경로 정규화 (끝 슬래시 제거, 단 루트 제외)
   const normalizedPath = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
 
-  // 2. 공개 홈 및 서비스 소개
+  // 2. 공개 홈 및 서비스 소개, 고객 지원 및 법적 정책
   if (normalizedPath === '/' || normalizedPath === '/about') {
     return { ...PAGE_META_PRESETS.HOME };
+  }
+  if (normalizedPath === '/contact') {
+    return { ...PAGE_META_PRESETS.CONTACT };
+  }
+  if (normalizedPath === '/guide') {
+    return { ...PAGE_META_PRESETS.GUIDE };
+  }
+  if (normalizedPath === '/terms') {
+    return { ...PAGE_META_PRESETS.TERMS };
+  }
+  if (normalizedPath === '/privacy') {
+    return { ...PAGE_META_PRESETS.PRIVACY };
   }
 
   // 3. 로그인 및 회원가입

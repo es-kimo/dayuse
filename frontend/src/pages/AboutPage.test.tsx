@@ -71,6 +71,23 @@ describe('AboutPage (공개 소개 페이지)', () => {
     expect(screen.getByRole('heading', { name: /초대 링크 하나면\s*준비 끝/i })).toBeInTheDocument();
   });
 
+  it('바닥글(Footer)의 링크가 실제 정책 라우트로 연결되며 임시(todo) 링크가 남아있지 않다', () => {
+    const { container } = renderWithAuth(false);
+
+    const contactLink = screen.getByRole('link', { name: '문의하기' });
+    const guideLink = screen.getByRole('link', { name: '서비스 안내' });
+    const termsLink = screen.getByRole('link', { name: '이용약관' });
+    const privacyLink = screen.getByRole('link', { name: '개인정보처리방침' });
+
+    expect(contactLink).toHaveAttribute('href', '/contact');
+    expect(guideLink).toHaveAttribute('href', '/guide');
+    expect(termsLink).toHaveAttribute('href', '/terms');
+    expect(privacyLink).toHaveAttribute('href', '/privacy');
+
+    // 임시 링크나 todo 클래스가 남아있지 않아야 함
+    expect(container.querySelectorAll('.todo').length).toBe(0);
+  });
+
   it('비로그인 사용자가 "시작하기"를 클릭하면 로그인 후 모임 생성 리다이렉트 URL로 이동한다', () => {
     renderWithAuth(false);
 

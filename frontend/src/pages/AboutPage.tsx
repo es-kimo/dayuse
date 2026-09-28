@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { DayuLogo } from '../components/brand/DayuLogo';
 import {
@@ -942,16 +942,16 @@ export const AboutPage: React.FC = () => {
           </div>
 
           <div className="water" aria-hidden="true">
-            데이유즈
+            DAYUSE
           </div>
 
           <footer className="foot">
             <span>목표는 각자, 꾸준함은 함께.</span>
             <nav className="links" aria-label="바닥글 링크">
-              <a className="todo" href="#start">문의하기</a>
-              <a className="todo" href="#start">서비스 안내</a>
-              <a className="todo" href="#start">이용약관</a>
-              <a className="todo" href="#start">개인정보처리방침</a>
+              <Link to="/contact">문의하기</Link>
+              <Link to="/guide">서비스 안내</Link>
+              <Link to="/terms">이용약관</Link>
+              <Link to="/privacy">개인정보처리방침</Link>
             </nav>
           </footer>
         </section>

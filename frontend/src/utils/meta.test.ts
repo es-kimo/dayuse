@@ -32,6 +32,28 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
       expect(aboutMeta.canonicalUrl).toBe('https://dayuse.kr/about');
     });
 
+    it('고객 안내 및 법적 정책(문의, 가이드, 약관, 개인정보) 경로는 index, follow 정책과 Canonical URL을 갖는다', () => {
+      const contactMeta = resolvePageMeta('/contact');
+      expect(contactMeta.title).toBe('문의하기 · dayuse');
+      expect(contactMeta.robots).toBe('index, follow');
+      expect(contactMeta.canonicalUrl).toBe('https://dayuse.kr/contact');
+
+      const guideMeta = resolvePageMeta('/guide');
+      expect(guideMeta.title).toBe('서비스 안내 · dayuse');
+      expect(guideMeta.robots).toBe('index, follow');
+      expect(guideMeta.canonicalUrl).toBe('https://dayuse.kr/guide');
+
+      const termsMeta = resolvePageMeta('/terms');
+      expect(termsMeta.title).toBe('이용약관 · dayuse');
+      expect(termsMeta.robots).toBe('index, follow');
+      expect(termsMeta.canonicalUrl).toBe('https://dayuse.kr/terms');
+
+      const privacyMeta = resolvePageMeta('/privacy');
+      expect(privacyMeta.title).toBe('개인정보처리방침 · dayuse');
+      expect(privacyMeta.robots).toBe('index, follow');
+      expect(privacyMeta.canonicalUrl).toBe('https://dayuse.kr/privacy');
+    });
+
     it('로그인 및 OAuth 콜백 경로는 noindex, nofollow 정책을 갖는다', () => {
       const loginMeta = resolvePageMeta('/login');
       expect(loginMeta.title).toBe('로그인 · dayuse');
