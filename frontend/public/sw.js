@@ -1,6 +1,6 @@
-// dayuse Web Push & PWA Service Worker (v0.6.0)
+// dayuse Web Push & PWA Service Worker (v0.7.0)
 
-const CACHE_NAME = 'dayuse-static-v0.6.0';
+const CACHE_NAME = 'dayuse-static-v0.7.0';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
