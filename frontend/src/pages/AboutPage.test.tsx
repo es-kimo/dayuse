@@ -18,6 +18,7 @@ describe('AboutPage (공개 소개 페이지)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
+    sessionStorage.clear();
   });
 
   const renderWithAuth = (isAuthenticated: boolean) => {
@@ -89,4 +90,102 @@ describe('AboutPage (공개 소개 페이지)', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/groups/new');
   });
 
+  describe('유입 분석 및 액션 트래킹 연동 (F06)', () => {
+    it('페이지 진입 시 landing_view 이벤트가 sessionStorage 플래그와 함께 1회 발송된다', () => {
+      const fetchSpy = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal('fetch', fetchSpy);
+      vi.stubGlobal('navigator', { ...navigator, sendBeacon: undefined });
+
+      renderWithAuth(false);
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/v1/public/analytics/events',
+        expect.objectContaining({
+          body: expect.stringContaining('"eventName":"landing_view"'),
+        })
+      );
+    });
+
+    it('상단 시작 버튼 클릭 시 hero_cta_click 이벤트가 placement: hero와 함께 발송된다', () => {
+      const fetchSpy = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal('fetch', fetchSpy);
+      vi.stubGlobal('navigator', { ...navigator, sendBeacon: undefined });
+
+      renderWithAuth(false);
+      fetchSpy.mockClear();
+
+      const heroStartBtn = screen.getByRole('button', { name: '시작하기' });
+      fireEvent.click(heroStartBtn);
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/v1/public/analytics/events',
+        expect.objectContaining({
+          body: expect.stringMatching(/"eventName":"hero_cta_click".*"placement":"hero"/),
+        })
+      );
+      expect(mockNavigate).toHaveBeenCalledWith('/login?returnTo=/groups/new');
+    });
+
+    it('하단 시작 버튼 클릭 시 footer_cta_click 이벤트가 placement: bottom과 함께 발송된다', () => {
+      const fetchSpy = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal('fetch', fetchSpy);
+      vi.stubGlobal('navigator', { ...navigator, sendBeacon: undefined });
+
+      renderWithAuth(true);
+      fetchSpy.mockClear();
+
+      const footerStartBtn = screen.getByRole('button', { name: '데이유즈 시작하기' });
+      fireEvent.click(footerStartBtn);
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/v1/public/analytics/events',
+        expect.objectContaining({
+          body: expect.stringMatching(/"eventName":"footer_cta_click".*"placement":"bottom"/),
+        })
+      );
+      expect(mockNavigate).toHaveBeenCalledWith('/groups/new');
+    });
+
+    it('"내 모임으로" 버튼 클릭 시 my_group_click 이벤트가 발송되고 적절한 경로로 이동한다', () => {
+      const fetchSpy = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal('fetch', fetchSpy);
+      vi.stubGlobal('navigator', { ...navigator, sendBeacon: undefined });
+
+      // 비로그인 사용자
+      const { unmount } = renderWithAuth(false);
+      fetchSpy.mockClear();
+
+      const myGroupButtons = screen.getAllByRole('button', { name: /내 모임으로/i });
+      fireEvent.click(myGroupButtons[0]);
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/v1/public/analytics/events',
+        expect.objectContaining({
+          body: expect.stringContaining('"eventName":"my_group_click"'),
+        })
+      );
+      expect(mockNavigate).toHaveBeenCalledWith('/login?returnTo=/groups');
+
+      // 로그인 사용자
+      unmount();
+      renderWithAuth(true);
+      mockNavigate.mockClear();
+
+      const myGroupBtnAuth = screen.getAllByRole('button', { name: /내 모임으로/i })[0];
+      fireEvent.click(myGroupBtnAuth);
+      expect(mockNavigate).toHaveBeenCalledWith('/groups');
+    });
+
+    it('분석 요청이 네트워크 오류나 AdBlock으로 실패하더라도 사용자 이동이 정상적으로 진행된다', () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Blocked by client')));
+      vi.stubGlobal('navigator', { ...navigator, sendBeacon: undefined });
+
+      renderWithAuth(true);
+
+      const footerStartBtn = screen.getByRole('button', { name: '데이유즈 시작하기' });
+      expect(() => fireEvent.click(footerStartBtn)).not.toThrow();
+      expect(mockNavigate).toHaveBeenCalledWith('/groups/new');
+    });
+  });
 });
+

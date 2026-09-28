@@ -3,6 +3,7 @@ import {
   resolvePageMeta,
   updateDocumentMeta,
   BRAND_DEFAULT_OG,
+  BRAND_LANDING_OG,
   BRAND_SHARE_OG,
   BRAND_INVITE_OG,
   BRAND_EXPIRED_OG,
@@ -16,16 +17,19 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
   });
 
   describe('1. 페이지별 메타데이터 정책 매핑 검증 (BR-04)', () => {
-    it('공개 홈 및 서비스 소개 경로는 공개 타이틀과 index, follow 정책을 갖는다', () => {
+    it('공개 홈 및 서비스 소개 경로는 공개 타이틀과 index, follow 정책, 대표 Canonical URL을 갖는다', () => {
       const homeMeta = resolvePageMeta('/');
       expect(homeMeta.title).toBe('dayuse · 목표는 각자, 꾸준함은 함께');
-      expect(homeMeta.description).toBe('친구들과 각자의 챌린지를 인증하고 기록해요.');
-      expect(homeMeta.ogImage).toBe(BRAND_DEFAULT_OG);
+      expect(homeMeta.description).toBe('친구들과 각자의 챌린지를 인증하고 기록해요. 우리 모임을 만들고 함께 시작해보세요.');
+      expect(homeMeta.ogImage).toBe(BRAND_LANDING_OG);
       expect(homeMeta.robots).toBe('index, follow');
+      expect(homeMeta.canonicalUrl).toBe('https://dayuse.kr/about');
+      expect(homeMeta.twitterCard).toBe('summary_large_image');
 
       const aboutMeta = resolvePageMeta('/about');
       expect(aboutMeta.title).toBe('dayuse · 목표는 각자, 꾸준함은 함께');
       expect(aboutMeta.robots).toBe('index, follow');
+      expect(aboutMeta.canonicalUrl).toBe('https://dayuse.kr/about');
     });
 
     it('로그인 및 OAuth 콜백 경로는 noindex, nofollow 정책을 갖는다', () => {
@@ -183,6 +187,23 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
 
       const twitterTitle = document.querySelector('meta[name="twitter:title"]');
       expect(twitterTitle?.getAttribute('content')).toBe('테스트 타이틀 · dayuse');
+
+      const twitterCard = document.querySelector('meta[name="twitter:card"]');
+      expect(twitterCard?.getAttribute('content')).toBe('summary_large_image');
+    });
+
+    it('canonicalUrl이 지정되면 link[rel="canonical"] 태그를 올바르게 삽입한다', () => {
+      updateDocumentMeta({
+        title: 'dayuse · 목표는 각자, 꾸준함은 함께',
+        description: '설명',
+        ogImage: '/assets/brand/og-landing.png',
+        robots: 'index, follow',
+        canonicalUrl: 'https://dayuse.kr/about',
+      });
+
+      const canonicalLink = document.querySelector('link[rel="canonical"]');
+      expect(canonicalLink).not.toBeNull();
+      expect(canonicalLink?.getAttribute('href')).toBe('https://dayuse.kr/about');
     });
   });
 });
