@@ -19,6 +19,7 @@ import { MobileLayout } from '../components/MobileLayout';
 import { TodayActionSection } from '../components/TodayActionSection';
 import { VerificationModal } from '../components/VerificationModal';
 import { GroupFeedSection } from '../components/GroupFeedSection';
+import { DayuAvatar } from '../components/brand/DayuAvatar';
 import { CommentsBottomSheet } from '../components/CommentsBottomSheet';
 import { GroupStatusSummaryBanner } from '../components/GroupStatusSummaryBanner';
 import { UncheckedRecordsBottomSheet } from '../components/UncheckedRecordsBottomSheet';
@@ -763,18 +764,13 @@ export const GroupDetailPage: React.FC = () => {
               {group.members.map((member) => (
                 <div key={member.id} className="py-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    {member.profileImageUrl ? (
-                      <img
-                        src={member.profileImageUrl}
-                        alt={member.nickname}
-                        className="w-8 h-8 rounded-full object-cover border border-slate-100"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
-                        <UserIcon className="w-4 h-4" />
-                      </div>
-                    )}
+                    <DayuAvatar
+                      profileImageUrl={member.profileImageUrl}
+                      size={32}
+                      alt={member.nickname}
+                    />
                     <div>
+
                       <div className="text-xs font-medium text-slate-800 flex items-center gap-1">
                         {member.nickname}
                         {member.role === 'HOST' && (

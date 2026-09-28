@@ -11,6 +11,7 @@ import { VerificationModal } from '../components/VerificationModal';
 import { AbortChallengeModal } from '../components/AbortChallengeModal';
 import { MidJoinBottomSheet } from '../components/MidJoinBottomSheet';
 import { useAuth } from '../context/AuthContext';
+import { DayuAvatar } from '../components/brand/DayuAvatar';
 import { getTodayKstString, getDurationDaysKst } from '../utils/date';
 import {
   ArrowLeft,
@@ -535,18 +536,13 @@ export const ChallengeDetailPage: React.FC = () => {
           {challenge.participants.map((p) => (
             <div key={p.id} className="py-2.5 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                {p.profileImageUrl ? (
-                  <img
-                    src={p.profileImageUrl}
-                    alt={p.nickname}
-                    className="w-8 h-8 rounded-full object-cover border border-slate-100"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
-                    <UserIcon className="w-4 h-4" />
-                  </div>
-                )}
+                <DayuAvatar
+                  profileImageUrl={p.profileImageUrl}
+                  size={32}
+                  alt={p.nickname}
+                />
                 <div>
+
                   <div className="text-xs font-medium text-slate-800 flex items-center gap-1">
                     {p.nickname}
                     {p.isCreator && (

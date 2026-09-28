@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ShareCardModal } from './ShareCardModal';
 import { Lightbox } from './ui/Lightbox';
+import { DayuAvatar } from './brand/DayuAvatar';
 
 interface GroupFeedSectionProps {
   feedItems: FeedItem[];
@@ -93,17 +94,12 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
             {/* 상단 작성자 정보 헤더 */}
             <div className="p-3.5 pb-0 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                {item.authorProfileImageUrl ? (
-                  <img
-                    src={item.authorProfileImageUrl}
-                    alt={item.authorNickname}
-                    className="w-8 h-8 rounded-full object-cover border border-slate-200"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
-                    <UserIcon className="w-4 h-4" />
-                  </div>
-                )}
+                <DayuAvatar
+                  profileImageUrl={item.authorProfileImageUrl}
+                  size={32}
+                  alt={item.authorNickname}
+                />
+
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-800">{item.authorNickname}</span>
