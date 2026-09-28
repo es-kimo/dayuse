@@ -469,43 +469,43 @@ export const AboutPageMobile: React.FC = () => {
                   <div className="screen">
                     <div className="notch"></div>
 
+                    {/* 1. Camera viewfinder & Today actions capture */}
                     <div className="scr cam" id="sCam" style={{ opacity: 1 }}>
-                      <div className="camTop">매일 1알고리즘 문제 풀기</div>
-                      <div className="viewfinder">
-                        <div className="shot">
-                          <i className="l" style={{ width: '62%' }}></i>
-                          <i className="l" style={{ width: '88%' }}></i>
-                          <i className="l" style={{ width: '74%' }}></i>
-                          <i className="l" style={{ width: '40%' }}></i>
-                          <div className="ok">
-                            <i>✓</i>제출 성공
-                          </div>
-                        </div>
+                      <img
+                        src="/landing/assets/captures/05-today-actions.webp"
+                        alt="오늘의 챌린지 액션 화면"
+                        className="scr-img"
+                        loading="lazy"
+                      />
+                      <div className="cam-overlay">
+                        <div className="camTop">인증 사진 촬영</div>
+                        <div className="corners"></div>
+                        <div className="shutter"></div>
                       </div>
-                      <div className="shutter"></div>
                       <div className="flash" id="flash"></div>
                     </div>
 
-                    <div className="scr" id="sUp">
-                      <h4>오늘 사진 인증</h4>
-                      <div className="sub">매일 1알고리즘 문제 풀기</div>
-                      <div className="criteria">
-                        <b>인증 기준</b> 제출 성공 화면 캡처 또는 커밋 내역
-                      </div>
-                      <div className="thumb">
-                        <i className="l" style={{ width: '60%' }}></i>
-                        <i className="l" style={{ width: '86%' }}></i>
-                        <i className="l" style={{ width: '70%' }}></i>
-                      </div>
-                      <div className="memo">오늘은 DP 문제 하나 풀었어요</div>
-                      <div className="cta" id="upCta">인증 완료하기</div>
+                    {/* 2. Upload verification screen (실제 사진 인증 모달 캡처) */}
+                    <div className="scr up" id="sUp">
+                      <img
+                        src="/landing/assets/captures/08-verification-modal.webp"
+                        alt="사진 인증 작성 모달"
+                        className="scr-img"
+                        loading="lazy"
+                      />
+                      <div id="upCta" style={{ display: 'none' }}></div>
                     </div>
 
+                    {/* 3. Done streak screen (실제 연속 기록 공유 카드 캡처) */}
                     <div className="scr done" id="sDone">
-                      <DayuLogo variant="symbol" theme="light" className="w-2/5 h-auto" />
-                      <h4>오늘 인증을 모두 마쳤어요!</h4>
-                      <div className="sub" id="streakTxt">1일 연속</div>
-                      <div className="streak" id="streak">
+                      <img
+                        src="/landing/assets/captures/09-share-card.webp"
+                        alt="7일 연속 달성 기록"
+                        className="scr-img"
+                        loading="lazy"
+                      />
+                      <div id="streakTxt" style={{ display: 'none' }}></div>
+                      <div id="streak" style={{ display: 'none' }}>
                         <i></i>
                         <i></i>
                         <i></i>
@@ -513,17 +513,10 @@ export const AboutPageMobile: React.FC = () => {
                         <i></i>
                         <i></i>
                         <i></i>
-                      </div>
-                      <div className="days">
-                        <span>월</span>
-                        <span>화</span>
-                        <span>수</span>
-                        <span>목</span>
-                        <span>금</span>
-                        <span>토</span>
-                        <span>일</span>
                       </div>
                     </div>
+
+                    <div className="samp">예시 화면</div>
                   </div>
                 </div>
               </div>
@@ -993,31 +986,15 @@ export const AboutPageMobile: React.FC = () => {
               데이유즈 시작하기
             </button>
 
-            <div className="shareCard" role="img" aria-label="공유 카드 예시: 7일 연속 인증">
-              <div className="top">
-                <DayuLogo variant="horizontal" theme="mono-white" className="h-5 w-auto" />
-                <span>dayuse.kr</span>
-              </div>
-              <div className="face">
-                <DayuLogo variant="symbol" theme="light" className="w-14 h-14" />
-              </div>
-              <div className="big">
-                <b>7</b>
-                <span>일 연속</span>
-              </div>
-              <div className="streak">
-                <i className="on"></i>
-                <i className="on"></i>
-                <i className="on"></i>
-                <i className="on"></i>
-                <i className="on"></i>
-                <i className="on"></i>
-                <i className="on"></i>
-              </div>
-              <div className="who">
-                <small>매일 1알고리즘 문제 풀기</small>
-                <b>류기현</b>
-              </div>
+            <div className="shareCard-wrap" aria-label="연속 기록 공유 카드">
+              <img
+                src="/landing/assets/captures/09-share-card.webp"
+                alt="7일 연속 달성 인증 공유 카드"
+                className="shareCard-img"
+                width={780}
+                height={1688}
+                loading="lazy"
+              />
             </div>
             <div className="shareCap">연속 기록은 공유 카드로 자랑할 수 있어요 · 예시</div>
 
