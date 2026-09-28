@@ -40,6 +40,14 @@ export const PAGE_META_PRESETS: Record<string, PageMeta> = {
   HOME: {
     title: 'dayuse · 목표는 각자, 꾸준함은 함께',
     description: '친구들과 각자의 챌린지를 인증하고 기록해요. 우리 모임을 만들고 함께 시작해보세요.',
+    ogImage: BRAND_DEFAULT_OG,
+    robots: 'index, follow',
+    canonicalUrl: 'https://dayuse.kr',
+    twitterCard: 'summary_large_image',
+  },
+  LANDING: {
+    title: 'dayuse · 목표는 각자, 꾸준함은 함께',
+    description: '친구들과 각자의 챌린지를 인증하고 기록해요. 우리 모임을 만들고 함께 시작해보세요.',
     ogImage: BRAND_LANDING_OG,
     robots: 'index, follow',
     canonicalUrl: 'https://dayuse.kr/about',
@@ -160,7 +168,10 @@ export function resolvePageMeta(pathname: string, options: ResolveMetaOptions = 
   const normalizedPath = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
 
   // 2. 공개 홈 및 서비스 소개, 고객 지원 및 법적 정책
-  if (normalizedPath === '/' || normalizedPath === '/about') {
+  if (normalizedPath === '/about') {
+    return { ...PAGE_META_PRESETS.LANDING };
+  }
+  if (normalizedPath === '/') {
     return { ...PAGE_META_PRESETS.HOME };
   }
   if (normalizedPath === '/contact') {

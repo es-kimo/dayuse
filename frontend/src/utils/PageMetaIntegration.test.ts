@@ -28,6 +28,18 @@ describe('PageMetaIntegration (BR-04, BR-05, BR-06 Integration)', () => {
     expect(getMeta('meta[name="description"]')).toBe('친구들과 각자의 챌린지를 인증하고 기록해요. 우리 모임을 만들고 함께 시작해보세요.');
     expect(getMeta('meta[name="robots"]')).toBe('index, follow');
     expect(getMeta('meta[property="og:title"]')).toBe('dayuse · 목표는 각자, 꾸준함은 함께');
+    expect(getMeta('meta[property="og:image"]')).toContain('og-default.png');
+    expect(getMeta('meta[name="twitter:image"]')).toContain('og-default.png');
+  });
+
+  it('랜딩(/about) 방문 시 전용 랜딩 OG 이미지를 DOM에 반영한다', () => {
+    const meta = resolvePageMeta('/about');
+    updateDocumentMeta(meta);
+
+    expect(document.title).toBe('dayuse · 목표는 각자, 꾸준함은 함께');
+    expect(getMeta('meta[name="description"]')).toBe('친구들과 각자의 챌린지를 인증하고 기록해요. 우리 모임을 만들고 함께 시작해보세요.');
+    expect(getMeta('meta[name="robots"]')).toBe('index, follow');
+    expect(getMeta('meta[property="og:title"]')).toBe('dayuse · 목표는 각자, 꾸준함은 함께');
     expect(getMeta('meta[property="og:image"]')).toContain('og-landing.png');
     expect(getMeta('meta[name="twitter:image"]')).toContain('og-landing.png');
   });

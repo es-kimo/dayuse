@@ -17,19 +17,22 @@ describe('Page Metadata Engine (BR-04, BR-05)', () => {
   });
 
   describe('1. 페이지별 메타데이터 정책 매핑 검증 (BR-04)', () => {
-    it('공개 홈 및 서비스 소개 경로는 공개 타이틀과 index, follow 정책, 대표 Canonical URL을 갖는다', () => {
+    it('공개 홈(/)은 기본 브랜드 OG를, 서비스 소개(/about)는 전용 랜딩 OG와 Canonical URL을 갖는다', () => {
       const homeMeta = resolvePageMeta('/');
       expect(homeMeta.title).toBe('dayuse · 목표는 각자, 꾸준함은 함께');
       expect(homeMeta.description).toBe('친구들과 각자의 챌린지를 인증하고 기록해요. 우리 모임을 만들고 함께 시작해보세요.');
-      expect(homeMeta.ogImage).toBe(BRAND_LANDING_OG);
+      expect(homeMeta.ogImage).toBe(BRAND_DEFAULT_OG);
       expect(homeMeta.robots).toBe('index, follow');
-      expect(homeMeta.canonicalUrl).toBe('https://dayuse.kr/about');
+      expect(homeMeta.canonicalUrl).toBe('https://dayuse.kr');
       expect(homeMeta.twitterCard).toBe('summary_large_image');
 
       const aboutMeta = resolvePageMeta('/about');
       expect(aboutMeta.title).toBe('dayuse · 목표는 각자, 꾸준함은 함께');
+      expect(aboutMeta.description).toBe('친구들과 각자의 챌린지를 인증하고 기록해요. 우리 모임을 만들고 함께 시작해보세요.');
+      expect(aboutMeta.ogImage).toBe(BRAND_LANDING_OG);
       expect(aboutMeta.robots).toBe('index, follow');
       expect(aboutMeta.canonicalUrl).toBe('https://dayuse.kr/about');
+      expect(aboutMeta.twitterCard).toBe('summary_large_image');
     });
 
     it('고객 안내 및 법적 정책(문의, 가이드, 약관, 개인정보) 경로는 index, follow 정책과 Canonical URL을 갖는다', () => {
