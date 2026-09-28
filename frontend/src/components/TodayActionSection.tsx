@@ -59,11 +59,23 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
                 <span className="text-xs font-bold text-slate-800 truncate">
                   {action.challengeTitle}
                 </span>
-                {action.isCompletedToday ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-0.5 shrink-0">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                    완료
+                {action.executionType === 'TOGETHER' && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                    함께하기
                   </span>
+                )}
+                {action.isCompletedToday ? (
+                  action.executionType === 'TOGETHER' ? (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-0.5 shrink-0">
+                      <CheckCircle2 className="w-3 h-3 text-indigo-600" />
+                      오늘 공동 완료
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-0.5 shrink-0">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                      완료
+                    </span>
+                  )
                 ) : (
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
                     인증 대기
@@ -73,6 +85,11 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
               <p className="text-[11px] text-slate-500 line-clamp-1">
                 기준: {action.verificationCriteria}
               </p>
+              {action.isCompletedToday && action.executionType === 'TOGETHER' && action.todayVerifierNickname && (
+                <p className="text-[10px] text-indigo-600 font-medium mt-0.5">
+                  오늘 공동 완료 · {action.todayVerifierNickname}님이 인증했어요
+                </p>
+              )}
               {action.periodType === 'WEEKLY_N' && action.periodInfo && (
                 <div className="mt-1.5 flex items-center gap-2">
                   <div className="flex-1 bg-slate-100 rounded-full h-1.5 max-w-[120px] overflow-hidden">

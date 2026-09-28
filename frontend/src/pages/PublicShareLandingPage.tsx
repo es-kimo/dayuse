@@ -133,7 +133,13 @@ export const PublicShareLandingPage: React.FC = () => {
       {/* 상단 브랜딩 바: 로고 (좌) · 도메인 (우) */}
       <div className="w-full max-w-[340px] flex items-center justify-between mb-4 px-1 gap-2 min-w-0">
         <DayuLogo variant="horizontal" theme="dark" className="h-7 w-auto object-contain shrink-0" />
-        <span className="text-xs text-[#94A3B8] font-mono tracking-wider shrink-0">dayuse.kr</span>
+        {card.executionType === 'TOGETHER' ? (
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shrink-0">
+            함께하기 · 공동 달성
+          </span>
+        ) : (
+          <span className="text-xs text-[#94A3B8] font-mono tracking-wider shrink-0">dayuse.kr</span>
+        )}
       </div>
 
       {/* 공유 카드 본체 */}
@@ -237,6 +243,11 @@ export const PublicShareLandingPage: React.FC = () => {
           <div className="text-[17px] font-semibold text-white">
             {card.userNickname}
           </div>
+          {card.executionType === 'TOGETHER' && card.actualVerifierNickname && (
+            <p className="text-xs text-indigo-300 mt-0.5">
+              {card.actualVerifierNickname}님의 인증으로 달성
+            </p>
+          )}
         </div>
       </div>
 

@@ -248,6 +248,8 @@ export interface TodayAction {
   groupName?: string;
   periodType?: PeriodType;
   periodInfo?: TodayPeriodInfo | null;
+  todayVerifierNickname?: string | null;
+  isJointlyCompleted?: boolean;
 }
 
 export interface PresignedUrlResponse {
@@ -501,6 +503,8 @@ export interface ShareCardResponse {
   comment?: string | null;
   streakDays: number;
   historyJson?: string | null;
+  executionType?: ExecutionType;
+  actualVerifierNickname?: string | null;
   createdAt: string;
 }
 
@@ -514,6 +518,8 @@ export interface PublicShareCardResponse {
   comment?: string | null;
   streakDays: number;
   historyJson?: string | null;
+  executionType?: ExecutionType;
+  actualVerifierNickname?: string | null;
   createdAt: string;
 }
 

@@ -38,18 +38,44 @@ class ShareCardService(
         val verification = verificationRepository.findById(verificationId)
             .orElseThrow { ResourceNotFoundException("인증 내역을 찾을 수 없습니다.") }
 
-        if (verification.userId != userId) {
+        val challenge = challengeRepository.findById(verification.challengeId)
+            .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
+
+        val isTogether = challenge.executionType == com.dayuse.domain.challenge.ExecutionType.TOGETHER
+        if (!isTogether && verification.userId != userId) {
             throw ForbiddenException("본인이 작성한 인증만 공유할 수 있습니다.")
         }
 
-        // 기존 활성 공유 카드가 있으면 재사용
-        val existingCard = shareCardRepository.findByVerificationIdAndIsActiveTrue(verificationId)
+        if (isTogether) {
+            val participant = challengeParticipantRepository.findByChallengeIdAndUserId(challenge.id, userId)
+            if (participant == null || participant.status != ParticipantStatus.ACTIVE) {
+                throw ForbiddenException("해당 챌린지의 참여자만 공유 카드를 생성할 수 있습니다.")
+            }
+        }
+
+        val user = userRepository.findById(userId)
+            .orElseThrow { ResourceNotFoundException("사용자를 찾을 수 없습니다.") }
+
+        val verifierUser = if (verification.userId != userId) {
+            userRepository.findById(verification.userId).orElse(null)
+        } else {
+            user
+        }
+
+        val actualVerifierNickname = if (isTogether) {
+            verifierUser?.nickname ?: user.nickname
+        } else {
+            null
+        }
+
+        // 기존 활성 공유 카드가 있으면 재사용 (동일 유저가 생성한 카드)
+        val existingCard = shareCardRepository.findByVerificationIdAndUserIdAndIsActiveTrue(verificationId, userId)
         if (existingCard != null) {
             val presignedUrl = existingCard.imageUrl?.let {
                 presignedUrlService.generatePresignedGetUrl(
                     it,
                     existingCard.challengeId,
-                    existingCard.userId
+                    verification.userId
                 )
             }
             return ShareCardResponse.from(
@@ -57,11 +83,6 @@ class ShareCardService(
                 presignedUrl
             )
         }
-
-        val challenge = challengeRepository.findById(verification.challengeId)
-            .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
-        val user = userRepository.findById(userId)
-            .orElseThrow { ResourceNotFoundException("사용자를 찾을 수 없습니다.") }
 
         val shareCard = ShareCard(
             token = UUID.randomUUID().toString(),
@@ -75,6 +96,8 @@ class ShareCardService(
             comment = verification.comment,
             streakDays = 0,
             historyJson = null,
+            executionType = challenge.executionType,
+            actualVerifierNickname = actualVerifierNickname,
             isActive = true
         )
         val saved = shareCardRepository.save(shareCard)
@@ -82,7 +105,7 @@ class ShareCardService(
             presignedUrlService.generatePresignedGetUrl(
                 it,
                 saved.challengeId,
-                saved.userId
+                verification.userId
             )
         }
         return ShareCardResponse.from(
@@ -131,6 +154,8 @@ class ShareCardService(
             comment = null,
             streakDays = streakResult.streakDays,
             historyJson = streakResult.historyJson,
+            executionType = challenge.executionType,
+            actualVerifierNickname = null,
             isActive = true
         )
         val saved = shareCardRepository.save(shareCard)
@@ -146,11 +171,15 @@ class ShareCardService(
             throw ResourceNotFoundException("공유 카드를 찾을 수 없거나 비활성화되었습니다.")
         }
 
+        val ownerUserId = card.verificationId?.let { vId ->
+            verificationRepository.findById(vId).map { it.userId }.orElse(card.userId)
+        } ?: card.userId
+
         val presignedUrl = card.imageUrl?.let {
             presignedUrlService.generatePresignedGetUrl(
                 it,
                 card.challengeId,
-                card.userId
+                ownerUserId
             )
         }
         return PublicShareCardResponse.from(

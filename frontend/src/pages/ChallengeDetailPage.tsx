@@ -907,6 +907,7 @@ export const ChallengeDetailPage: React.FC = () => {
           targetId={challenge.id}
           title={challenge.title}
           userNickname={user?.nickname || '참여자'}
+          executionType={challenge.executionType}
           onClose={() => setShowStreakModal(false)}
         />
       )}

@@ -27,7 +27,8 @@ import kotlin.math.max
 class ShareOgImageService(
     private val shareCardRepository: ShareCardRepository,
     private val presignedUrlService: PresignedUrlService,
-    private val s3ObjectLoader: S3ObjectLoader
+    private val s3ObjectLoader: S3ObjectLoader,
+    private val verificationRepository: com.dayuse.domain.verification.VerificationRepository? = null
 ) {
 
     companion object {
@@ -60,7 +61,11 @@ class ShareOgImageService(
             throw ResourceNotFoundException("공유 카드를 찾을 수 없거나 비활성화되었습니다.")
         }
 
-        val key = presignedUrlService.resolveOwnedBucketKey(card.imageUrl, card.challengeId, card.userId)
+        val ownerUserId = card.verificationId?.let { vId ->
+            verificationRepository?.findById(vId)?.map { it.userId }?.orElse(card.userId)
+        } ?: card.userId
+
+        val key = presignedUrlService.resolveOwnedBucketKey(card.imageUrl, card.challengeId, ownerUserId)
             ?: return defaultImage
 
         val source = s3ObjectLoader.load(key) ?: return defaultImage

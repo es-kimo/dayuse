@@ -41,6 +41,8 @@ interface ShareCardModalProps {
   streakDays?: number;
   historyJson?: string | null;
   targetDate?: string;
+  executionType?: import('../types').ExecutionType;
+  actualVerifierNickname?: string | null;
   onClose: () => void;
 }
 
@@ -54,6 +56,8 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   streakDays: initialStreakDays = 0,
   historyJson: initialHistoryJson,
   targetDate,
+  executionType: initialExecutionType,
+  actualVerifierNickname: initialActualVerifierNickname,
   onClose,
 }) => {
   const { showToast } = useToast();
@@ -63,6 +67,8 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   const [imageUrl, setImageUrl] = useState<string | null>(initialImageUrl || null);
   const [streakDays, setStreakDays] = useState<number>(initialStreakDays);
   const [historyItems, setHistoryItems] = useState<StreakHistoryItem[]>([]);
+  const [executionType, setExecutionType] = useState<import('../types').ExecutionType | undefined>(initialExecutionType);
+  const [actualVerifierNickname, setActualVerifierNickname] = useState<string | null>(initialActualVerifierNickname || null);
 
   // 카드에 실제로 그릴 이미지. 외부 URL은 data URL로 바꿔 심어야 캡처에서 빠지지 않는다.
   const [cardImageSrc, setCardImageSrc] = useState<string | null>(initialImageUrl || null);
@@ -132,6 +138,8 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       .then((res) => {
         setShareToken(res.token);
         if (res.imageUrl) setImageUrl(res.imageUrl);
+        if (res.executionType) setExecutionType(res.executionType);
+        if (res.actualVerifierNickname) setActualVerifierNickname(res.actualVerifierNickname);
         if (cardType === 'STREAK') {
           setStreakDays(res.streakDays);
           if (res.historyJson) {
@@ -244,10 +252,15 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   // 연속 기록 카드는 사진 자체가 없다. 만료 없는 서버 OG 엔드포인트로 넘긴다.
   const buildOgImageUrl = (token: string) => absoluteApiUrl(`/public/shares/${token}/og.jpg`);
 
+  const isTogether = executionType === 'TOGETHER';
   const shareDescription =
     cardType === 'TODAY_VERIFICATION'
-      ? `${userNickname}님의 오늘 인증: "${comment || title}"`
-      : `${userNickname}님이 ${streakDays}일 연속 인증을 달성했습니다! 🔥`;
+      ? isTogether
+        ? `${userNickname}님의 함께하기 공동 달성! (${actualVerifierNickname ? `${actualVerifierNickname}님의 인증` : '공동 인증'})`
+        : `${userNickname}님의 오늘 인증: "${comment || title}"`
+      : isTogether
+        ? `${userNickname}님이 함께하기 ${streakDays}일 연속 인증을 달성했습니다! 🔥`
+        : `${userNickname}님이 ${streakDays}일 연속 인증을 달성했습니다! 🔥`;
 
   /**
    * 링크 복사 공통 경로.
@@ -431,7 +444,13 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
             {/* 상단 서비스 브랜딩 */}
             <div className="flex items-center justify-between border-b border-[#1E293B]/60 pb-3 gap-2 min-w-0">
               <DayuLogo variant="horizontal" theme="dark" className="h-5 w-auto max-w-[120px] object-contain shrink-0" />
-              <span className="text-[10px] text-[#94A3B8] font-mono tracking-wider shrink-0">dayuse.kr</span>
+              {isTogether ? (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                  함께하기 · 공동 달성
+                </span>
+              ) : (
+                <span className="text-[10px] text-[#94A3B8] font-mono tracking-wider shrink-0">dayuse.kr</span>
+              )}
             </div>
 
             {/* 카드 중앙 본문 */}
@@ -536,7 +555,14 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
                 {title}
               </div>
               <div className="flex items-center justify-between text-xs text-slate-300">
-                <span className="font-semibold text-white">{userNickname}</span>
+                <div>
+                  <span className="font-semibold text-white">{userNickname}</span>
+                  {isTogether && actualVerifierNickname && (
+                    <span className="block text-[10px] text-indigo-300">
+                      {actualVerifierNickname}님의 인증으로 달성
+                    </span>
+                  )}
+                </div>
                 {targetDate && (
                   <span className="text-[10px] text-[#94A3B8] flex items-center gap-1 font-mono">
                     <Calendar className="w-3 h-3" />

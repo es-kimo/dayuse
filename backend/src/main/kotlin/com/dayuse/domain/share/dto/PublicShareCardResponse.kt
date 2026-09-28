@@ -14,6 +14,8 @@ data class PublicShareCardResponse(
     val comment: String?,
     val streakDays: Int,
     val historyJson: String?,
+    val executionType: com.dayuse.domain.challenge.ExecutionType = com.dayuse.domain.challenge.ExecutionType.INDIVIDUAL,
+    val actualVerifierNickname: String? = null,
     val createdAt: LocalDateTime
 ) {
     companion object {
@@ -28,6 +30,8 @@ data class PublicShareCardResponse(
                 comment = card.comment,
                 streakDays = card.streakDays,
                 historyJson = card.historyJson,
+                executionType = card.executionType,
+                actualVerifierNickname = card.actualVerifierNickname,
                 createdAt = card.createdAt
             )
         }
