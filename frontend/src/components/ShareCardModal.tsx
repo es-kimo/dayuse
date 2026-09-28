@@ -462,11 +462,11 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
             ) : cardType === 'TODAY_VERIFICATION' ? (
               /* 오늘의 인증 카드 중앙 */
               <div className="flex-1 flex flex-col justify-center py-3 space-y-3">
-                <div className="rounded-xl overflow-hidden aspect-square bg-slate-800 border border-[#1E293B] shadow-md">
+                <div className="rounded-xl overflow-hidden aspect-square bg-slate-950 border border-[#1E293B] shadow-md flex items-center justify-center">
                   {cardImageSrc ? (
                     /* crossOrigin을 두지 않는다. 캡처용 이미지는 이미 data URL로 심었고,
                        치환에 실패한 경우엔 CORS 없이도 미리보기는 보여야 한다. */
-                    <img src={cardImageSrc} alt="인증 사진" className="w-full h-full object-cover" />
+                    <img src={cardImageSrc} alt="인증 사진" className="w-full h-full object-contain" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">
                       인증 사진 없음

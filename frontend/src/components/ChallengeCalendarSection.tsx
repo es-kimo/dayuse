@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { getTodayKstString } from '../utils/date';
 import { useGracePeriodTimer } from '../hooks/useGracePeriodTimer';
+import { Lightbox } from './ui/Lightbox';
 
 interface ChallengeCalendarSectionProps {
   calendarData: ChallengeCalendarResponse | null;
@@ -30,6 +31,7 @@ interface CalendarRecordRowProps {
   todayStr: string;
   renderStatusBadge: (record: CalendarDailyRecordItem) => React.ReactNode;
   onStartVerify?: (record: CalendarDailyRecordItem, isLate: boolean) => void;
+  onImageClick?: (src: string, alt?: string) => void;
 }
 
 const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
@@ -38,6 +40,7 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
   todayStr,
   renderStatusBadge,
   onStartVerify,
+  onImageClick,
 }) => {
   const isPast = record.date < todayStr;
   const isLocked = record.depositStatus !== 'UNPAID';
@@ -75,11 +78,19 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
           {record.date}
         </span>
         {record.imageUrl && (
-          <img
-            src={record.imageUrl}
-            alt="인증 사진"
-            className="w-7 h-7 rounded-sm object-cover border border-slate-200 shrink-0"
-          />
+          <button
+            type="button"
+            onClick={() => onImageClick?.(record.imageUrl!, `${record.date} 인증 사진`)}
+            className="w-7 h-7 rounded-sm overflow-hidden bg-slate-900 border border-slate-200 shrink-0 cursor-zoom-in focus-ring flex items-center justify-center"
+            title="사진 확대 보기"
+            aria-label="사진 확대 보기"
+          >
+            <img
+              src={record.imageUrl}
+              alt="인증 사진"
+              className="w-full h-full object-contain"
+            />
+          </button>
         )}
         {record.comment && (
           <span className="text-[11px] text-slate-500 truncate max-w-[120px]">
@@ -127,6 +138,7 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
   onStartVerify,
 }) => {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
 
   if (loading) {
     return (
@@ -286,10 +298,20 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
               todayStr={todayStr}
               renderStatusBadge={renderStatusBadge}
               onStartVerify={onStartVerify}
+              onImageClick={(src, alt) => setLightboxImage({ src, alt })}
             />
           );
         })}
       </div>
+
+      {lightboxImage && (
+        <Lightbox
+          open={true}
+          onClose={() => setLightboxImage(null)}
+          src={lightboxImage.src}
+          alt={lightboxImage.alt}
+        />
+      )}
     </div>
   );
 };

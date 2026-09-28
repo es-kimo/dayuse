@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { TodayAction } from '../types';
 import { CheckCircle2, Camera, Calendar, ShieldCheck } from 'lucide-react';
+import { Lightbox } from './ui/Lightbox';
 
 interface TodayActionSectionProps {
   todayActions: TodayAction[];
@@ -13,6 +14,8 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
   loading,
   onOpenVerificationModal,
 }) => {
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
+
   if (loading) {
     return (
       <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs animate-pulse space-y-3">
@@ -116,12 +119,20 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
             {action.isCompletedToday ? (
               <div className="flex items-center gap-2 shrink-0">
                 {action.myVerification?.imageUrl && (
-                  <img
-                    src={action.myVerification.imageUrl}
-                    alt="오늘 인증 사진"
-                    className="w-11 h-11 rounded-md object-cover border border-emerald-200 shadow-2xs"
-                    crossOrigin="anonymous"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setLightboxImage({ src: action.myVerification!.imageUrl, alt: `${action.challengeTitle} 오늘 인증 사진` })}
+                    className="w-11 h-11 rounded-md overflow-hidden bg-slate-900 border border-emerald-200 shadow-2xs cursor-zoom-in focus-ring flex items-center justify-center"
+                    title="사진 확대 보기"
+                    aria-label="사진 확대 보기"
+                  >
+                    <img
+                      src={action.myVerification.imageUrl}
+                      alt="오늘 인증 사진"
+                      className="w-full h-full object-contain"
+                      crossOrigin="anonymous"
+                    />
+                  </button>
                 )}
               </div>
             ) : (
@@ -136,6 +147,15 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
           </div>
         ))}
       </div>
+
+      {lightboxImage && (
+        <Lightbox
+          open={true}
+          onClose={() => setLightboxImage(null)}
+          src={lightboxImage.src}
+          alt={lightboxImage.alt}
+        />
+      )}
     </div>
   );
 };

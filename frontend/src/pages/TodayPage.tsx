@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, ArrowRight, Calendar, Bell } from 'lucide-react';
 import { MobileLayout } from '../components/MobileLayout';
 import { VerificationModal } from '../components/VerificationModal';
+import { Lightbox } from '../components/ui/Lightbox';
 import { DayuExpression } from '../components/brand/DayuExpression';
 import { todayApi } from '../api/today';
 import type { TodayAction } from '../types';
@@ -14,6 +15,7 @@ export const TodayPage: React.FC = () => {
   const [actions, setActions] = useState<TodayAction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedAction, setSelectedAction] = useState<TodayAction | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -171,13 +173,21 @@ export const TodayPage: React.FC = () => {
                     >
                       <div className="flex items-center gap-3">
                         {action.myVerification?.imageUrl ? (
-                          <img
-                            src={action.myVerification.imageUrl}
-                            alt="인증 사진"
-                            className="w-12 h-12 rounded-md object-cover border border-slate-200"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxImage({ src: action.myVerification!.imageUrl, alt: `${action.challengeTitle} 인증 사진` })}
+                            className="w-12 h-12 rounded-md overflow-hidden bg-slate-900 border border-slate-200 cursor-zoom-in shrink-0 focus-ring flex items-center justify-center"
+                            title="사진 확대 보기"
+                            aria-label="사진 확대 보기"
+                          >
+                            <img
+                              src={action.myVerification.imageUrl}
+                              alt="인증 사진"
+                              className="w-full h-full object-contain"
+                            />
+                          </button>
                         ) : (
-                          <div className={`w-12 h-12 rounded-md flex items-center justify-center font-bold text-xs ${
+                          <div className={`w-12 h-12 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${
                             action.executionType === 'TOGETHER'
                               ? 'bg-indigo-100 text-indigo-600'
                               : 'bg-emerald-100 text-emerald-600'
@@ -238,6 +248,15 @@ export const TodayPage: React.FC = () => {
             setSelectedAction(null);
             loadTodayActions();
           }}
+        />
+      )}
+
+      {lightboxImage && (
+        <Lightbox
+          open={true}
+          onClose={() => setLightboxImage(null)}
+          src={lightboxImage.src}
+          alt={lightboxImage.alt}
         />
       )}
     </MobileLayout>

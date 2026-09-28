@@ -125,4 +125,38 @@ class ShareOgImageServiceTest {
     fun `이미지가 아닌 바이트는 null을 돌려준다`() {
         assertNull(service.cropToOgSize("이건 이미지가 아니다".toByteArray()))
     }
+
+    @Test
+    fun `세로로 긴 원본 이미지는 잘리지 않고 중앙에 배치되며 좌우에 레터박스 여백이 생성된다`() {
+        // 흰색(0xFFFFFF) 단색 이미지 생성 (세로 600x1200)
+        val whiteImage = BufferedImage(600, 1200, BufferedImage.TYPE_INT_RGB).apply {
+            val g = createGraphics()
+            g.color = java.awt.Color.WHITE
+            g.fillRect(0, 0, 600, 1200)
+            g.dispose()
+        }
+        val bytes = ByteArrayOutputStream().use { out ->
+            ImageIO.write(whiteImage, "jpg", out)
+            out.toByteArray()
+        }
+
+        val rendered = service.cropToOgSize(bytes)
+        assertNotNull(rendered)
+
+        val resultImage = ImageIO.read(ByteArrayInputStream(rendered))
+        assertEquals(ShareOgImageService.OG_WIDTH, resultImage.width)
+        assertEquals(ShareOgImageService.OG_HEIGHT, resultImage.height)
+
+        // 좌측 끝 여백 (x=10, y=315): 배경색(0x0F172A)이어야 함
+        val leftPixel = resultImage.getRGB(10, 315) and 0x00FFFFFF
+        assertEquals(0x0F172A, leftPixel, "좌측 여백에 배경색이 칠해져야 합니다")
+
+        // 중앙 지점 (x=600, y=315): 원본 이미지의 흰색이어야 함
+        val centerPixel = resultImage.getRGB(600, 315) and 0x00FFFFFF
+        // JPEG 압축 특성상 오차 허용 (흰색에 매우 가까워야 함)
+        val r = (centerPixel shr 16) and 0xFF
+        val g = (centerPixel shr 8) and 0xFF
+        val b = centerPixel and 0xFF
+        org.junit.jupiter.api.Assertions.assertTrue(r > 240 && g > 240 && b > 240, "중앙 영역에 원본 이미지가 위치해야 합니다")
+    }
 }

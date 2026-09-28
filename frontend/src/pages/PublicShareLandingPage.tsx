@@ -16,6 +16,7 @@ import { DayuLogo } from '../components/brand/DayuLogo';
 import { DayuExpression } from '../components/brand/DayuExpression';
 import { usePageMeta } from '../hooks/usePageMeta';
 import { Modal, ModalTitle, ModalDescription, ModalClose } from '../components/ui';
+import { Lightbox } from '../components/ui/Lightbox';
 
 export const PublicShareLandingPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -26,6 +27,7 @@ export const PublicShareLandingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [historyItems, setHistoryItems] = useState<StreakHistoryItem[]>([]);
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
 
   // 비공개 정보 격리 및 404/만료 안전 폴백 메타데이터 관리
   usePageMeta({
@@ -147,12 +149,30 @@ export const PublicShareLandingPage: React.FC = () => {
         {/* 카드 중앙 내용 */}
         {card.cardType === 'TODAY_VERIFICATION' ? (
           <div className="flex-1 flex flex-col justify-center py-4 space-y-4">
-            <div className="rounded-2xl overflow-hidden aspect-square bg-slate-800 border border-[#1E293B] shadow-lg">
+            <div
+              role={card.imageUrl ? 'button' : undefined}
+              tabIndex={card.imageUrl ? 0 : undefined}
+              aria-label={card.imageUrl ? '인증 사진 확대 보기' : undefined}
+              onClick={() => {
+                if (card.imageUrl) {
+                  setLightboxImage({ src: card.imageUrl, alt: `${card.title} 인증 사진` });
+                }
+              }}
+              onKeyDown={(e) => {
+                if (card.imageUrl && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  setLightboxImage({ src: card.imageUrl, alt: `${card.title} 인증 사진` });
+                }
+              }}
+              className={`rounded-2xl overflow-hidden aspect-square bg-slate-950 border border-[#1E293B] shadow-lg flex items-center justify-center relative ${
+                card.imageUrl ? 'cursor-zoom-in focus-ring' : ''
+              }`}
+            >
               {card.imageUrl ? (
                 <img
                   src={card.imageUrl}
                   alt="인증 사진"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   crossOrigin="anonymous"
                 />
               ) : (
@@ -306,6 +326,16 @@ export const PublicShareLandingPage: React.FC = () => {
           </ModalClose>
         </>
       </Modal>
+
+      {/* 인증 사진 확대 보기(Lightbox) 모달 */}
+      {lightboxImage && (
+        <Lightbox
+          open={true}
+          onClose={() => setLightboxImage(null)}
+          src={lightboxImage.src}
+          alt={lightboxImage.alt}
+        />
+      )}
     </div>
   );
 };

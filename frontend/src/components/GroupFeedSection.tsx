@@ -9,8 +9,10 @@ import {
   User as UserIcon,
   Loader2,
   Share2,
+  Maximize2,
 } from 'lucide-react';
 import { ShareCardModal } from './ShareCardModal';
+import { Lightbox } from './ui/Lightbox';
 
 interface GroupFeedSectionProps {
   feedItems: FeedItem[];
@@ -33,6 +35,7 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
 }) => {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [shareItem, setShareItem] = useState<FeedItem | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('인증을 삭제하시겠습니까?\n오늘 인증을 삭제하면 다시 인증 대기 상태로 변경됩니다.')) {
@@ -152,14 +155,30 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
 
             {/* 인증 사진 */}
             <div className="px-3.5">
-              <div className="rounded-xl overflow-hidden aspect-4/3 bg-slate-100 border border-slate-100">
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label={`${item.authorNickname}님의 인증 사진 확대 보기`}
+                onClick={() => setLightboxImage({ src: item.imageUrl, alt: `${item.authorNickname}님의 인증 사진` })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setLightboxImage({ src: item.imageUrl, alt: `${item.authorNickname}님의 인증 사진` });
+                  }
+                }}
+                className="group relative rounded-xl overflow-hidden bg-slate-100 border border-slate-100 cursor-zoom-in focus-ring flex items-center justify-center max-h-[500px]"
+              >
                 <img
                   src={item.imageUrl}
-                  alt="인증 사진"
-                  className="w-full h-full object-cover"
+                  alt={`${item.authorNickname}님의 인증 사진`}
+                  className="w-full h-auto max-h-[500px] object-contain"
                   loading="lazy"
                   crossOrigin="anonymous"
                 />
+                <div className="absolute bottom-2.5 right-2.5 bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-lg opacity-80 group-hover:opacity-100 transition shadow-xs flex items-center gap-1 text-[11px]">
+                  <Maximize2 className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span className="hidden sm:inline font-medium">확대</span>
+                </div>
               </div>
             </div>
 
@@ -221,6 +240,16 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
           comment={shareItem.comment}
           targetDate={shareItem.targetDate}
           onClose={() => setShareItem(null)}
+        />
+      )}
+
+      {/* 인증 사진 확대 보기(Lightbox) 모달 */}
+      {lightboxImage && (
+        <Lightbox
+          open={true}
+          onClose={() => setLightboxImage(null)}
+          src={lightboxImage.src}
+          alt={lightboxImage.alt}
         />
       )}
     </div>

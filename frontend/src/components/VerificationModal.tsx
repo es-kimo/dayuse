@@ -417,24 +417,12 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
             {previewUrl ? (
               <div className="space-y-2">
-                <div className="relative rounded-lg overflow-hidden border border-slate-200 aspect-4/3 bg-slate-900 group">
+                <div className="relative rounded-lg overflow-hidden border border-slate-200 aspect-4/3 bg-slate-950 flex items-center justify-center">
                   <img
                     src={previewUrl}
                     alt="인증 사진 미리보기"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
-                  {!isSubmitting && (
-                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={handleRemovePhoto}
-                        className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition shadow-md"
-                        title="사진 삭제"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 {/* 첨부 완료 후 교체 / 삭제 액션 바 */}
