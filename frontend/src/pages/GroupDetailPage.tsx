@@ -274,6 +274,8 @@ export const GroupDetailPage: React.FC = () => {
   const statusMatchedChallenges =
     challengeFilter === 'ALL'
       ? challenges
+      : challengeFilter === 'PAST'
+      ? challenges.filter((c) => c.status === 'ENDED' || c.status === 'ABORTED')
       : challenges.filter((c) => c.status === challengeFilter);
 
   const myChallengeCount = statusMatchedChallenges.filter((c) => c.isParticipating).length;
@@ -565,6 +567,7 @@ export const GroupDetailPage: React.FC = () => {
               >
                 <option value="ALL">전체 상태</option>
                 <option value="IN_PROGRESS">진행 중</option>
+                <option value="PAST">지난 기록 (종료·중단)</option>
                 <option value="NOT_STARTED">시작 전</option>
                 <option value="ENDED">종료</option>
                 <option value="ABORTED">중단됨</option>
@@ -682,7 +685,13 @@ export const GroupDetailPage: React.FC = () => {
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{c.startDate} ~ {c.endDate}</span>
+                      {c.status === 'ABORTED' && c.abortedAt ? (
+                        <span className="text-rose-600 font-medium">
+                          중단일: {c.abortedAt.slice(0, 10)}
+                        </span>
+                      ) : (
+                        <span>{c.startDate} ~ {c.endDate}</span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <span>참여자 {c.participantCount}명</span>

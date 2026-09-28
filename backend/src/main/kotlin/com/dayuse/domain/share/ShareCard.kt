@@ -88,6 +88,16 @@ class ShareCard(
     @Column(columnDefinition = "TEXT")
     var historyJson: String? = null,
 
+    @Enumerated(EnumType.STRING)
+    @Column(
+        nullable = false,
+        length = 20
+    )
+    var executionType: com.dayuse.domain.challenge.ExecutionType = com.dayuse.domain.challenge.ExecutionType.INDIVIDUAL,
+
+    @Column(length = 50)
+    var actualVerifierNickname: String? = null,
+
     @Column(nullable = false)
     var isActive: Boolean = true
 ) : BaseTimeEntity() {

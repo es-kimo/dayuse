@@ -6,6 +6,7 @@ interface ShareCardRepository : JpaRepository<ShareCard, Long> {
     fun findByToken(token: String): ShareCard?
     fun findAllByVerificationIdAndIsActiveTrue(verificationId: Long): List<ShareCard>
     fun findByVerificationIdAndIsActiveTrue(verificationId: Long): ShareCard?
+    fun findByVerificationIdAndUserIdAndIsActiveTrue(verificationId: Long, userId: Long): ShareCard?
     fun findByChallengeIdAndUserIdAndCardTypeAndIsActiveTrue(
         challengeId: Long,
         userId: Long,

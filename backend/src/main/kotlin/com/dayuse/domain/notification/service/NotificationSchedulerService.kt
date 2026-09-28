@@ -66,17 +66,19 @@ class NotificationSchedulerService(
                 continue
             }
 
+            // 발송 직전 공동 완료 및 중단 여부 2차 검증 (레이스 컨디션 방어)
             val pendingCount = countPendingChallenges(
                 userId,
                 today
             )
             if (pendingCount <= 0) {
                 log.debug(
-                    "미인증 챌린지가 없어 알림 발송 스킵: userId={}",
+                    "발송 직전 2차 검증 결과 미인증 챌린지가 없어 알림 발송 스킵: userId={}",
                     userId
                 )
                 continue
             }
+
 
             val payload = PushPayload(
                 title = "dayuse 오늘 인증 리마인더",
@@ -134,10 +136,18 @@ class NotificationSchedulerService(
         for (participant in activeParticipants) {
             val challenge = challengeRepository.findByIdOrNull(participant.challengeId) ?: continue
 
+            // 중단된 챌린지 또는 진행 중이 아닌 챌린지 제외
+            if (challenge.isAborted() || challenge.status(targetDate) != com.dayuse.domain.challenge.ChallengeStatus.IN_PROGRESS) {
+                continue
+            }
+
             if (participant.startDate <= targetDate && targetDate <= challenge.endDate) {
                 val isTogether = challenge.executionType.isTogether
                 val hasVerified = if (isTogether) {
-                    verificationRepository.existsByChallengeIdAndTargetDate(challenge.id, targetDate)
+                    verificationRepository.existsByChallengeIdAndTargetDate(
+                        challenge.id,
+                        targetDate
+                    )
                 } else {
                     verificationRepository.findByChallengeIdAndUserIdAndTargetDate(
                         challengeId = challenge.id,

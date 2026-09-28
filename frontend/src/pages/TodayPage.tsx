@@ -121,11 +121,18 @@ export const TodayPage: React.FC = () => {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          {action.groupName && (
-                            <span className="inline-block text-[11px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md mb-1">
-                              {action.groupName}
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5 mb-1">
+                            {action.groupName && (
+                              <span className="inline-block text-[11px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
+                                {action.groupName}
+                              </span>
+                            )}
+                            {action.executionType === 'TOGETHER' && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                함께하기
+                              </span>
+                            )}
+                          </div>
                           <h3 className="text-sm font-bold text-slate-900">
                             {action.challengeTitle}
                           </h3>
@@ -170,29 +177,50 @@ export const TodayPage: React.FC = () => {
                             className="w-12 h-12 rounded-md object-cover border border-slate-200"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-md flex items-center justify-center font-bold text-xs">
+                          <div className={`w-12 h-12 rounded-md flex items-center justify-center font-bold text-xs ${
+                            action.executionType === 'TOGETHER'
+                              ? 'bg-indigo-100 text-indigo-600'
+                              : 'bg-emerald-100 text-emerald-600'
+                          }`}>
                             완료
                           </div>
                         )}
                         <div>
-                          {action.groupName && (
-                            <span className="text-[10px] text-slate-500 font-medium block">
-                              {action.groupName}
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            {action.groupName && (
+                              <span className="text-[10px] text-slate-500 font-medium block">
+                                {action.groupName}
+                              </span>
+                            )}
+                            {action.executionType === 'TOGETHER' && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                함께하기
+                              </span>
+                            )}
+                          </div>
                           <h3 className="text-body-sm font-semibold text-ink">
                             {action.challengeTitle}
                           </h3>
-                          {action.myVerification?.comment && (
+                          {action.executionType === 'TOGETHER' && action.todayVerifierNickname ? (
+                            <p className="text-caption text-indigo-600 font-medium mt-0.5">
+                              오늘 공동 완료 · {action.todayVerifierNickname}님이 인증했어요
+                            </p>
+                          ) : action.myVerification?.comment ? (
                             <p className="text-caption text-ink-muted line-clamp-1 mt-0.5">
                               "{action.myVerification.comment}"
                             </p>
-                          )}
+                          ) : null}
                         </div>
                       </div>
-                      <span className="text-label text-success bg-success-bg border border-success-border px-2 py-1 rounded-md shrink-0 font-semibold">
-                        인증 완료
-                      </span>
+                      {action.executionType === 'TOGETHER' ? (
+                        <span className="text-label text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-1 rounded-md shrink-0 font-semibold">
+                          공동 완료
+                        </span>
+                      ) : (
+                        <span className="text-label text-success bg-success-bg border border-success-border px-2 py-1 rounded-md shrink-0 font-semibold">
+                          인증 완료
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
