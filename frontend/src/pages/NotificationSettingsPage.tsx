@@ -288,11 +288,32 @@ export const NotificationSettingsPage: React.FC = () => {
                 선택하신 시간에 맞춰 알림이 전송됩니다.
               </p>
 
+              <div className="flex flex-wrap gap-2 pt-1">
+                {['20:00', '21:00', '22:00', '23:00'].map((time) => {
+                  const isSelected = settings.reminderTime === time;
+                  return (
+                    <button
+                      key={time}
+                      type="button"
+                      disabled={!settings.enabled || saving}
+                      onClick={() => handleTimeChange(time)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition cursor-pointer ${
+                        isSelected
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {time}
+                    </button>
+                  );
+                })}
+              </div>
+
               <select
                 value={settings.reminderTime}
                 disabled={!settings.enabled || saving}
                 onChange={(e) => handleTimeChange(e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm font-medium text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm font-medium text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 {timeOptions.map((time) => (
                   <option key={time} value={time}>
@@ -301,6 +322,7 @@ export const NotificationSettingsPage: React.FC = () => {
                 ))}
               </select>
             </div>
+
 
             {/* 테스트 알림 전송 버튼 */}
             <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs space-y-3">

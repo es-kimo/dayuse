@@ -10,6 +10,7 @@ import { NewGroupPage } from './pages/NewGroupPage';
 import { GroupDetailPage } from './pages/GroupDetailPage';
 import { InviteLandingPage } from './pages/InviteLandingPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { AvatarCustomPage } from './pages/AvatarCustomPage';
 import { NewChallengePage } from './pages/NewChallengePage';
 import { ChallengeDetailPage } from './pages/ChallengeDetailPage';
 import { SettlementManagePage } from './pages/SettlementManagePage';
@@ -61,6 +62,7 @@ export const App: React.FC = () => {
               <Route path="/today" element={<TodayPage />} />
               <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile/avatar" element={<AvatarCustomPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/guide" element={<GuidePage />} />
