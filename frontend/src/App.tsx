@@ -22,6 +22,7 @@ import { GuidePage } from './pages/GuidePage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { PageMetaTracker } from './components/PageMetaTracker';
+import { ScrollToTop } from './components/ScrollToTop';
 import { preloadKakao } from './utils/kakao';
 import { registerServiceWorker } from './utils/webPush';
 
@@ -37,6 +38,7 @@ export const App: React.FC = () => {
       <ToastProvider>
         <BrowserRouter>
           <PageMetaTracker />
+          <ScrollToTop />
           <AuthProvider>
             <Routes>
               <Route path="/" element={<Navigate to="/groups" replace />} />
