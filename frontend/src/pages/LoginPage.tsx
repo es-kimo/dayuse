@@ -6,6 +6,7 @@ import { handlePostLoginNavigation, inviteStorage } from '../api/invites';
 import { MobileLayout } from '../components/MobileLayout';
 import { DayuLogo } from '../components/brand/DayuLogo';
 import { MessageCircle, UserCheck } from 'lucide-react';
+import { InAppBrowserNotice } from '../components/InAppBrowserNotice';
 
 import { Button, Select, FormField } from '../components/ui';
 
@@ -75,9 +76,12 @@ export const LoginPage: React.FC = () => {
         <p className="text-body-sm text-ink-secondary font-medium text-center mb-1">
           목표는 각자, 꾸준함은 함께.
         </p>
-        <p className="text-caption text-ink-muted text-center mb-10 max-w-xs">
+        <p className="text-caption text-ink-muted text-center mb-6 max-w-xs">
           친구들과 각자의 챌린지를 인증하고 기록해요
         </p>
+
+        {/* 인앱 브라우저 감지 시 외부 브라우저 오픈 안내 배너 */}
+        <InAppBrowserNotice className="max-w-xs mb-6" />
 
         {/* 카카오 로그인 버튼 (카카오 공식 디자인 가이드 준수) */}
         <button
