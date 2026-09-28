@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (accessToken: string, refreshToken: string, user: User) => void;
   logout: () => void;
   updateUserNickname: (newNickname: string) => Promise<void>;
+  updateUserProfile: (data: { nickname?: string; profileImageUrl?: string | null }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,9 +50,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.location.href = '/login';
   };
 
-  const updateUserNickname = async (newNickname: string) => {
-    const updated = await authApi.updateNickname(newNickname);
+  const updateUserProfile = async (data: { nickname?: string; profileImageUrl?: string | null }) => {
+    const updated = await authApi.updateProfile(data);
     setUser(updated);
+  };
+
+  const updateUserNickname = async (newNickname: string) => {
+    await updateUserProfile({ nickname: newNickname });
   };
 
   return (
@@ -63,8 +68,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         updateUserNickname,
+        updateUserProfile,
       }}
     >
+
       {children}
     </AuthContext.Provider>
   );

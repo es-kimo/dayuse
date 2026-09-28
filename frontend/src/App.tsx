@@ -26,6 +26,8 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { preloadKakao } from './utils/kakao';
 import { registerServiceWorker } from './utils/webPush';
 
+import { UiVersionProvider, UiVersionSwitcherFloat } from './context/UiVersionContext';
+
 export const App: React.FC = () => {
   // 카카오 SDK 및 웹 푸시 Service Worker를 부팅 때 초기화한다.
   useEffect(() => {
@@ -39,8 +41,11 @@ export const App: React.FC = () => {
         <BrowserRouter>
           <PageMetaTracker />
           <ScrollToTop />
-          <AuthProvider>
-            <Routes>
+          <UiVersionProvider>
+            <AuthProvider>
+              <UiVersionSwitcherFloat />
+              <Routes>
+
               <Route path="/" element={<Navigate to="/groups" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/oauth/callback/kakao" element={<KakaoCallbackPage />} />
@@ -64,7 +69,8 @@ export const App: React.FC = () => {
               <Route path="*" element={<Navigate to="/groups" replace />} />
             </Routes>
           </AuthProvider>
-        </BrowserRouter>
+        </UiVersionProvider>
+      </BrowserRouter>
       </ToastProvider>
     </ErrorBoundary>
   );

@@ -21,4 +21,10 @@ export const authApi = {
     const res = await apiClient.patch<User>('/users/me', { nickname });
     return res.data;
   },
+
+  updateProfile: async (data: { nickname?: string; profileImageUrl?: string | null }): Promise<User> => {
+    const res = await apiClient.patch<User>('/users/me', data);
+    return res.data;
+  },
 };
+
