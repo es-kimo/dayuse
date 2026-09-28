@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PolicyLayout } from '../components/PolicyLayout';
-import { Mail, Copy, Check, MessageSquare, AlertCircle, HelpCircle, Lightbulb } from 'lucide-react';
+import { Mail, Copy, Check, AlertCircle, HelpCircle, Lightbulb } from 'lucide-react';
 
 export const ContactPage: React.FC = () => {
   const [copied, setCopied] = useState<boolean>(false);
@@ -30,22 +30,24 @@ export const ContactPage: React.FC = () => {
       description="dayuse를 이용하시면서 겪으신 오류, 궁금한 점, 혹은 더 나은 서비스를 위한 제안이 있으신가요? 언제든 편하게 소통해 주세요."
     >
       {/* 1. 빠른 소통 채널 카드 */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* 이메일 문의 카드 */}
-        <div className="p-6 rounded-xl border border-blue-100 bg-blue-50/50 flex flex-col justify-between">
+      <section>
+        <div className="p-6 rounded-xl border border-blue-100 bg-blue-50/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center mb-4">
               <Mail className="w-5 h-5" />
             </div>
             <h2 className="text-lg font-bold text-slate-900 mb-1">공식 지원 이메일</h2>
-            <p className="text-sm text-slate-600 mb-4 break-keep">
+            <p className="text-sm text-slate-600 mb-2 break-keep">
               오류 제보, 모임 운영 문의, 계정 관련 요청을 상세한 내용과 함께 보내주시면 영업일 기준 1~2일 이내에 답변드립니다.
             </p>
+            <p className="text-base sm:text-lg font-mono font-bold text-blue-700 select-all">
+              {supportEmail}
+            </p>
           </div>
-          <div className="flex items-center gap-2 pt-2">
+          <div className="flex items-center gap-2 pt-2 sm:pt-0 shrink-0">
             <a
               href={`mailto:${supportEmail}?subject=[dayuse 문의] `}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition active:scale-[0.98]"
             >
               <Mail className="w-4 h-4" />
               <span>메일 보내기</span>
@@ -68,30 +70,6 @@ export const ContactPage: React.FC = () => {
                 </>
               )}
             </button>
-          </div>
-        </div>
-
-        {/* 카카오톡 오픈채팅 카드 */}
-        <div className="p-6 rounded-xl border border-amber-200 bg-amber-50/40 flex flex-col justify-between">
-          <div>
-            <div className="w-10 h-10 rounded-lg bg-[#FEE500] text-[#191919] flex items-center justify-center mb-4 font-bold shadow-xs">
-              <MessageSquare className="w-5 h-5 fill-current" />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900 mb-1">실시간 오픈 문의방</h2>
-            <p className="text-sm text-slate-600 mb-4 break-keep">
-              간단한 사용법 질문이나 빠른 피드백 전달이 필요하실 때 카카오톡 오픈채팅방을 이용하실 수 있습니다.
-            </p>
-          </div>
-          <div className="pt-2">
-            <a
-              href="https://open.kakao.com/o/sDayuse"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#FEE500] hover:bg-[#FADA0A] text-[#191919] text-sm font-semibold rounded-lg transition shadow-xs active:scale-[0.98]"
-            >
-              <MessageSquare className="w-4 h-4 fill-current" />
-              <span>카카오톡 오픈채팅 입장</span>
-            </a>
           </div>
         </div>
       </section>

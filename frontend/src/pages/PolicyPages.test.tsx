@@ -12,7 +12,7 @@ describe('고객 안내 및 법적 정책 페이지 (F07)', () => {
   });
 
   describe('1. 문의하기 (/contact)', () => {
-    it('공식 지원 이메일과 오픈채팅 안내 및 복사 기능이 정상 제공된다', async () => {
+    it('공식 지원 이메일 안내 및 복사 기능이 정상 제공된다', async () => {
       const writeTextMock = vi.fn().mockResolvedValue(undefined);
       Object.assign(navigator, {
         clipboard: {
@@ -40,16 +40,15 @@ describe('고객 안내 및 법적 정책 페이지 (F07)', () => {
       expect(writeTextMock).toHaveBeenCalledWith('contact@dayuse.kr');
     });
 
-    it('카카오톡 오픈채팅 링크 및 전송되지 않는 빈 폼 없이 명확한 문의 가이드를 안내한다', () => {
+    it('오픈채팅 및 전송되지 않는 빈 폼 없이 공식 이메일 중심의 명확한 문의 가이드를 안내한다', () => {
       render(
         <BrowserRouter>
           <ContactPage />
         </BrowserRouter>
       );
 
-      const chatLink = screen.getByRole('link', { name: /카카오톡 오픈채팅 입장/i });
-      expect(chatLink).toHaveAttribute('href', 'https://open.kakao.com/o/sDayuse');
-      expect(chatLink).toHaveAttribute('target', '_blank');
+      // 오픈채팅 링크가 없어야 함
+      expect(screen.queryByRole('link', { name: /카카오톡 오픈채팅/i })).not.toBeInTheDocument();
 
       // 빈 폼 전송 인풋이 없어야 함 (가짜 폼 금지 정책)
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
