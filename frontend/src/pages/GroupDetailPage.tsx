@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
 import { challengesApi } from '../api/challenges';
@@ -6,6 +6,7 @@ import { todayApi } from '../api/today';
 import { verificationsApi } from '../api/verifications';
 import { recordsApi } from '../api/records';
 import { settlementApi } from '../api/settlement';
+import { useAuth } from '../context/AuthContext';
 import type {
   GroupDetail,
   ChallengeSummary,
@@ -20,6 +21,7 @@ import { TodayActionSection } from '../components/TodayActionSection';
 import { VerificationModal } from '../components/VerificationModal';
 import { GroupFeedSection } from '../components/GroupFeedSection';
 import { DayuAvatar } from '../components/brand/DayuAvatar';
+import { useUiVersion } from '../context/UiVersionContext';
 import { CommentsBottomSheet } from '../components/CommentsBottomSheet';
 import { GroupStatusSummaryBanner } from '../components/GroupStatusSummaryBanner';
 import { UncheckedRecordsBottomSheet } from '../components/UncheckedRecordsBottomSheet';
@@ -43,6 +45,9 @@ import {
   ChevronRight,
   Home,
   UserCheck,
+  Users,
+  Camera,
+  UserPlus,
 } from 'lucide-react';
 
 export const GroupDetailPage: React.FC = () => {
@@ -50,6 +55,8 @@ export const GroupDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const { uiVersion } = useUiVersion();
 
   const tabParam = searchParams.get('tab');
   const activeTab: 'home' | 'challenges' | 'members' =
@@ -118,6 +125,19 @@ export const GroupDetailPage: React.FC = () => {
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  const { user: currentUser } = useAuth();
+  const completedTodayCount = todayActions.filter((a) => a.isCompletedToday).length;
+  const verifiedUserIds = useMemo(() => {
+    const set = new Set<number>();
+    feedItems.forEach((f) => {
+      set.add(f.userId);
+    });
+    if (completedTodayCount > 0 && currentUser?.id) {
+      set.add(currentUser.id);
+    }
+    return set;
+  }, [feedItems, completedTodayCount, currentUser?.id]);
 
   const fetchGroup = async () => {
     if (!groupId) return;
@@ -415,67 +435,261 @@ export const GroupDetailPage: React.FC = () => {
   return (
     <MobileLayout>
       {/* 상단 헤더 */}
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          onClick={() => navigate('/groups')}
-          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-lg font-bold text-slate-800 truncate flex-1">{group.name}</h1>
-        {group.isHost && (
-          <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-            <Crown className="w-3 h-3" />
-            모임장
-          </span>
-        )}
-      </div>
+      {uiVersion === 'B' ? (
+        <header className="flex items-center justify-between h-14 -mx-4 px-4 bg-slate-50/95 sticky top-0 z-20 border-b border-slate-200">
+          <button
+            onClick={() => navigate('/groups')}
+            className="w-10 h-10 -ml-2 text-slate-700 hover:text-slate-900 rounded-full flex items-center justify-center transition active:scale-95"
+            aria-label="뒤로"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="text-base font-bold text-slate-900 truncate px-2 flex-1 text-center">
+            {group.name}
+          </div>
+          <button
+            onClick={handleCopyLink}
+            className="w-10 h-10 -mr-2 text-slate-700 hover:text-slate-900 rounded-full flex items-center justify-center transition active:scale-95"
+            aria-label="친구 초대"
+            title="초대 링크 복사"
+          >
+            <UserPlus className="w-5 h-5" />
+          </button>
+        </header>
+      ) : (
+        <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={() => navigate('/groups')}
+            className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-lg font-bold text-slate-800 truncate flex-1">{group.name}</h1>
+          {group.isHost && (
+            <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+              <Crown className="w-3 h-3" />
+              모임장
+            </span>
+          )}
+        </div>
+      )}
 
       {/* 탭 네비게이션 */}
-      <div className="flex border-b border-slate-200 mb-4">
-        <button
-          onClick={() => handleTabChange('home')}
-          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
-            activeTab === 'home'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Home className="w-3.5 h-3.5" />
-          <span>홈</span>
-        </button>
-        <button
-          onClick={() => handleTabChange('challenges')}
-          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
-            activeTab === 'challenges'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Trophy className="w-3.5 h-3.5" />
-          <span>챌린지 ({challenges.length})</span>
-        </button>
-        <button
-          onClick={() => handleTabChange('members')}
-          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
-            activeTab === 'members'
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <UserIcon className="w-3.5 h-3.5" />
-          <span>멤버 ({group.members.length})</span>
-        </button>
-      </div>
+      {uiVersion === 'B' ? (
+        <nav className="grid grid-cols-3 border-b border-slate-200 bg-slate-50/95 sticky top-14 z-10 -mx-4 px-4 mb-3">
+          <button
+            onClick={() => handleTabChange('home')}
+            className={`h-11 border-b-2 text-sm font-bold flex items-center justify-center gap-1 transition ${
+              activeTab === 'home'
+                ? 'text-slate-900 border-slate-900'
+                : 'text-slate-400 border-transparent hover:text-slate-600'
+            }`}
+          >
+            홈
+          </button>
+          <button
+            onClick={() => handleTabChange('challenges')}
+            className={`h-11 border-b-2 text-sm font-bold flex items-center justify-center gap-1 transition ${
+              activeTab === 'challenges'
+                ? 'text-slate-900 border-slate-900'
+                : 'text-slate-400 border-transparent hover:text-slate-600'
+            }`}
+          >
+            챌린지
+            <small
+              className={`text-xs ml-0.5 ${
+                activeTab === 'challenges' ? 'text-blue-600 font-semibold' : 'text-slate-400 font-normal'
+              }`}
+            >
+              {challenges.length}
+            </small>
+          </button>
+          <button
+            onClick={() => handleTabChange('members')}
+            className={`h-11 border-b-2 text-sm font-bold flex items-center justify-center gap-1 transition ${
+              activeTab === 'members'
+                ? 'text-slate-900 border-slate-900'
+                : 'text-slate-400 border-transparent hover:text-slate-600'
+            }`}
+          >
+            멤버
+            <small
+              className={`text-xs ml-0.5 ${
+                activeTab === 'members' ? 'text-blue-600 font-semibold' : 'text-slate-400 font-normal'
+              }`}
+            >
+              {group.members.length}
+            </small>
+          </button>
+        </nav>
+      ) : (
+        <div className="flex border-b border-slate-200 mb-4">
+          <button
+            onClick={() => handleTabChange('home')}
+            className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
+              activeTab === 'home'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Home className="w-3.5 h-3.5" />
+            <span>홈</span>
+          </button>
+          <button
+            onClick={() => handleTabChange('challenges')}
+            className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
+              activeTab === 'challenges'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Trophy className="w-3.5 h-3.5" />
+            <span>챌린지 ({challenges.length})</span>
+          </button>
+          <button
+            onClick={() => handleTabChange('members')}
+            className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
+              activeTab === 'members'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <UserIcon className="w-3.5 h-3.5" />
+            <span>멤버 ({group.members.length})</span>
+          </button>
+        </div>
+      )}
 
       {activeTab === 'home' && (
-        <div className="space-y-6 flex-1 flex flex-col">
+        <div className="space-y-5 flex-1 flex flex-col">
           {/* 상단: 미확인 기록 및 미납 벌금 요약 배너 */}
           <GroupStatusSummaryBanner
             summary={statusSummary}
             loading={summaryLoading}
             onOpenUncheckedSheet={handleOpenUncheckedSheet}
           />
+
+          {uiVersion === 'B' ? (
+            <>
+              {/* UI(B): 내 오늘 할 일 */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between pt-1">
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-slate-700" />
+                    내 오늘 할 일
+                  </h3>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {completedTodayCount} / {todayActions.length} 완료
+                  </span>
+                </div>
+
+                {todayActions.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-4 text-center text-xs text-slate-500 shadow-2xs">
+                    오늘 예정된 인증이 없습니다.
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {todayActions.map((action) => (
+                      <div
+                        key={action.challengeId}
+                        className={`bg-white rounded-2xl border p-3.5 shadow-2xs flex items-center justify-between gap-3 ${
+                          action.isCompletedToday
+                            ? 'border-emerald-100 bg-emerald-50/20'
+                            : 'border-slate-200/90'
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className={`text-sm font-bold truncate ${
+                                action.isCompletedToday ? 'text-slate-700' : 'text-slate-900'
+                              }`}
+                            >
+                              {action.challengeTitle}
+                            </span>
+                            {action.isCompletedToday ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                                완료
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700">
+                                인증 대기
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-500 mt-1 truncate">
+                            {action.verificationCriteria || '인증이 필요합니다'}
+                          </div>
+                        </div>
+
+                        {action.isCompletedToday ? (
+                          action.myVerification?.imageUrl ? (
+                            <img
+                              src={action.myVerification.imageUrl}
+                              alt="인증 썸네일"
+                              className="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-200"
+                            />
+                          ) : null
+                        ) : (
+                          <button
+                            onClick={() => setActiveVerificationAction(action)}
+                            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition active:scale-95 shadow-2xs shrink-0"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            인증하기
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* UI(B): 오늘 누가 했을까 */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between pt-1">
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-slate-700" />
+                    오늘 누가 했을까
+                  </h3>
+                  <span className="text-xs font-semibold text-slate-500">
+                    {verifiedUserIds.size}명 인증
+                  </span>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-2xs">
+                  <div className="flex gap-3 overflow-x-auto pb-1">
+                    {group.members.map((m) => {
+                      const isDone = verifiedUserIds.has(m.userId);
+                      return (
+                        <div key={m.userId} className="shrink-0 flex flex-col items-center gap-1.5 w-14">
+                          <div className={`relative ${isDone ? '' : 'opacity-35'}`}>
+                            <DayuAvatar profileImageUrl={m.profileImageUrl} size="md" />
+                            {isDone && (
+                              <span className="absolute -right-1 -bottom-1 w-[18px] h-[18px] rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white">
+                                <Check className="w-2.5 h-2.5 stroke-[3.5]" />
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11.5px] font-medium text-slate-700 truncate max-w-full text-center">
+                            {m.nickname}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* UI(A): 기존 오늘 할 일 */
+            <TodayActionSection
+              todayActions={todayActions}
+              loading={todayLoading}
+              onOpenVerificationModal={(action) => setActiveVerificationAction(action)}
+            />
+          )}
 
           {/* 모임 정산 & 계좌 카드 (F07) */}
           <GroupSettlementCard
@@ -488,13 +702,6 @@ export const GroupDetailPage: React.FC = () => {
               fetchStatusSummary();
             }}
             onOpenDepositModal={() => setShowDepositModal(true)}
-          />
-
-          {/* 오늘 할 일 */}
-          <TodayActionSection
-            todayActions={todayActions}
-            loading={todayLoading}
-            onOpenVerificationModal={(action) => setActiveVerificationAction(action)}
           />
 
           <hr className="border-slate-200/80 -mx-4" />
