@@ -2,6 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { DayuLogo } from '../components/brand/DayuLogo';
+import {
+  trackLandingView,
+  trackHeroCtaClick,
+  trackFooterCtaClick,
+  trackMyGroupClick,
+} from '../utils/analytics';
 import { AboutPageMobile } from './AboutPageMobile';
 import './AboutPage.css';
 
@@ -33,11 +39,35 @@ export const AboutPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMobileLayout();
+
+  useEffect(() => {
+    trackLandingView();
+  }, []);
+
   const handleStart = () => {
     if (isAuthenticated) {
       navigate('/groups/new');
     } else {
       navigate('/login?returnTo=/groups/new');
+    }
+  };
+
+  const handleHeroStart = () => {
+    trackHeroCtaClick();
+    handleStart();
+  };
+
+  const handleFooterStart = () => {
+    trackFooterCtaClick();
+    handleStart();
+  };
+
+  const handleMyGroup = () => {
+    trackMyGroupClick();
+    if (isAuthenticated) {
+      navigate('/groups');
+    } else {
+      navigate('/login?returnTo=/groups');
     }
   };
 
@@ -417,7 +447,7 @@ export const AboutPage: React.FC = () => {
     <div className="about-page">
       {/* 고정 상단 내비게이션 */}
       <header className="nav" id="aboutNav">
-        <div className="logo-wrap cursor-pointer" onClick={() => navigate('/groups')}>
+        <div className="logo-wrap cursor-pointer" onClick={handleMyGroup} role="button" tabIndex={0} aria-label="내 모임으로 이동">
           <div className="logo-light">
             <DayuLogo variant="horizontal" theme="light" className="h-7 w-auto" />
           </div>
@@ -426,9 +456,14 @@ export const AboutPage: React.FC = () => {
           </div>
         </div>
 
-        <button type="button" onClick={handleStart} className="btn">
-          시작하기
-        </button>
+        <div className="nav-actions">
+          <button type="button" onClick={handleMyGroup} className="btn-secondary">
+            내 모임으로
+          </button>
+          <button type="button" onClick={handleHeroStart} className="btn">
+            시작하기
+          </button>
+        </div>
       </header>
 
       {/* Progress rail */}
@@ -882,7 +917,7 @@ export const AboutPage: React.FC = () => {
               <p>모임을 만들고 초대 링크를 보내면 준비 끝이에요.</p>
               <button
                 type="button"
-                onClick={handleStart}
+                onClick={handleFooterStart}
                 className="btn btn-lg"
                 data-track="start_click"
                 data-position="final"

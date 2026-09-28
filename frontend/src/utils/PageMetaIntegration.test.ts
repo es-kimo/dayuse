@@ -25,11 +25,11 @@ describe('PageMetaIntegration (BR-04, BR-05, BR-06 Integration)', () => {
     updateDocumentMeta(meta);
 
     expect(document.title).toBe('dayuse · 목표는 각자, 꾸준함은 함께');
-    expect(getMeta('meta[name="description"]')).toBe('친구들과 각자의 챌린지를 인증하고 기록해요.');
+    expect(getMeta('meta[name="description"]')).toBe('친구들과 각자의 챌린지를 인증하고 기록해요. 우리 모임을 만들고 함께 시작해보세요.');
     expect(getMeta('meta[name="robots"]')).toBe('index, follow');
     expect(getMeta('meta[property="og:title"]')).toBe('dayuse · 목표는 각자, 꾸준함은 함께');
-    expect(getMeta('meta[property="og:image"]')).toContain(BRAND_DEFAULT_OG);
-    expect(getMeta('meta[name="twitter:image"]')).toContain(BRAND_DEFAULT_OG);
+    expect(getMeta('meta[property="og:image"]')).toContain('og-landing.png');
+    expect(getMeta('meta[name="twitter:image"]')).toContain('og-landing.png');
   });
 
   it('비공개 모임(/groups/123) 및 챌린지(/challenges/456)는 robots noindex 처리되고 개인정보가 메타에 격리된다', () => {

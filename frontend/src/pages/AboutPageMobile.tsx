@@ -2,6 +2,12 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { DayuLogo } from '../components/brand/DayuLogo';
+import {
+  trackLandingView,
+  trackHeroCtaClick,
+  trackFooterCtaClick,
+  trackMyGroupClick,
+} from '../utils/analytics';
 import './AboutPageMobile.css';
 
 /**
@@ -14,11 +20,34 @@ export const AboutPageMobile: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    trackLandingView();
+  }, []);
+
   const handleStart = () => {
     if (isAuthenticated) {
       navigate('/groups/new');
     } else {
       navigate('/login?returnTo=/groups/new');
+    }
+  };
+
+  const handleHeroStart = () => {
+    trackHeroCtaClick();
+    handleStart();
+  };
+
+  const handleFooterStart = () => {
+    trackFooterCtaClick();
+    handleStart();
+  };
+
+  const handleMyGroup = () => {
+    trackMyGroupClick();
+    if (isAuthenticated) {
+      navigate('/groups');
+    } else {
+      navigate('/login?returnTo=/groups');
     }
   };
 
@@ -360,8 +389,8 @@ export const AboutPageMobile: React.FC = () => {
           <button
             type="button"
             className="logo-btn"
-            aria-label="데이유즈 처음으로"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            aria-label="내 모임으로 이동"
+            onClick={handleMyGroup}
           >
             <span className="logo-light">
               <DayuLogo variant="horizontal" theme="light" className="h-6 w-auto" />
@@ -370,9 +399,14 @@ export const AboutPageMobile: React.FC = () => {
               <DayuLogo variant="horizontal" theme="mono-white" className="h-6 w-auto" />
             </span>
           </button>
-          <button type="button" onClick={handleStart} className="btn">
-            시작하기
-          </button>
+          <div className="nav-actions">
+            <button type="button" onClick={handleMyGroup} className="btn-secondary">
+              내 모임으로
+            </button>
+            <button type="button" onClick={handleHeroStart} className="btn">
+              시작하기
+            </button>
+          </div>
         </header>
 
         <main>
@@ -951,7 +985,7 @@ export const AboutPageMobile: React.FC = () => {
             <p>모임을 만들고 초대 링크를 보내면 준비 끝이에요.</p>
             <button
               type="button"
-              onClick={handleStart}
+              onClick={handleFooterStart}
               className="btn btn-lg"
               data-track="start_click"
               data-position="final"

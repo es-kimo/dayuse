@@ -8,6 +8,8 @@ export interface PageMeta {
   ogImage: string;
   robots: 'index, follow' | 'noindex, nofollow';
   ogType?: 'website' | 'article';
+  canonicalUrl?: string;
+  twitterCard?: 'summary' | 'summary_large_image';
 }
 
 export interface ResolveMetaOptions {
@@ -26,6 +28,7 @@ export interface ResolveMetaOptions {
 }
 
 export const BRAND_DEFAULT_OG = '/assets/brand/og-default.png';
+export const BRAND_LANDING_OG = '/assets/brand/og-landing.png';
 export const BRAND_SHARE_OG = '/assets/brand/og-share.png';
 export const BRAND_INVITE_OG = '/assets/brand/og-invite.png';
 export const BRAND_EXPIRED_OG = '/assets/brand/og-expired.png';
@@ -36,9 +39,11 @@ export const BRAND_EXPIRED_OG = '/assets/brand/og-expired.png';
 export const PAGE_META_PRESETS: Record<string, PageMeta> = {
   HOME: {
     title: 'dayuse · 목표는 각자, 꾸준함은 함께',
-    description: '친구들과 각자의 챌린지를 인증하고 기록해요.',
-    ogImage: BRAND_DEFAULT_OG,
+    description: '친구들과 각자의 챌린지를 인증하고 기록해요. 우리 모임을 만들고 함께 시작해보세요.',
+    ogImage: BRAND_LANDING_OG,
     robots: 'index, follow',
+    canonicalUrl: 'https://dayuse.kr/about',
+    twitterCard: 'summary_large_image',
   },
   LOGIN: {
     title: '로그인 · dayuse',
@@ -216,7 +221,24 @@ export function updateDocumentMeta(meta: PageMeta): void {
   }
 
   // 6. Twitter Card
+  setMeta('name', 'twitter:card', meta.twitterCard ?? 'summary_large_image');
   setMeta('name', 'twitter:title', meta.title);
   setMeta('name', 'twitter:description', meta.description);
   setMeta('name', 'twitter:image', fullOgImage);
+
+  // 7. Canonical URL
+  if (meta.canonicalUrl) {
+    let link = document.querySelector('link[rel="canonical"]');
+    if (!link) {
+      link = document.createElement('link');
+      link.setAttribute('rel', 'canonical');
+      document.head.appendChild(link);
+    }
+    link.setAttribute('href', meta.canonicalUrl);
+  } else {
+    const existing = document.querySelector('link[rel="canonical"]');
+    if (existing) {
+      existing.remove();
+    }
+  }
 }
