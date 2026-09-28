@@ -43,6 +43,9 @@ describe('AboutPage (공개 소개 페이지)', () => {
     expect(screen.getByRole('heading', { name: /사진 한 장이면\s*끝나는 인증/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /매일 하는 일은\s*가볍게/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /오늘부터 친구와\s*하루 하나씩/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /목표가 달라도 한 모임에서/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /친구의 인증에\s*한마디 얹어요/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /초대 링크 하나면\s*준비 끝/i })).toBeInTheDocument();
   });
 
   it('비로그인 사용자가 "시작하기"를 클릭하면 로그인 후 모임 생성 리다이렉트 URL로 이동한다', () => {

@@ -60,6 +60,27 @@ export const AboutPage: React.FC = () => {
     const flood = document.getElementById('flood');
     const together = document.getElementById('togetherCopy');
 
+    const scrToday = document.getElementById('scrToday');
+    const scrWeek = document.getElementById('scrWeek');
+
+    const K = document.getElementById('kw');
+    const BG = document.querySelector<HTMLElement>('.blueGap');
+    const C = document.getElementById('cheer');
+    const G = document.getElementById('gather');
+    const fx1 = document.getElementById('fx1');
+    const fx2 = document.getElementById('fx2');
+    const pane1 = document.getElementById('pane1');
+    const pane2 = document.getElementById('pane2');
+    const bub1 = document.getElementById('bub1');
+    const bub2 = document.getElementById('bub2');
+    const bars = pane2 ? pane2.querySelectorAll<HTMLElement>('.bar i') : [];
+    const wordsEl = document.getElementById('words');
+    const gWords = wordsEl ? Array.from(wordsEl.children) as HTMLElement[] : [];
+    const gh = document.getElementById('gh');
+    const invite = document.getElementById('invite');
+    const copyBtn = document.getElementById('copyBtn');
+    const toast = document.getElementById('toast');
+
     const nav = document.getElementById('aboutNav');
     const rail = document.getElementById('rail');
     const ticks = rail ? rail.querySelectorAll<HTMLElement>('i') : [];
@@ -77,8 +98,8 @@ export const AboutPage: React.FC = () => {
       const vh = window.innerHeight;
       const m = mobile();
 
-      const shrink = ease(seg(p, 0.14, 0.40));
-      const leave = ease(seg(p, 0.62, 0.76));
+      const shrink = ease(seg(p, 0.08, 0.28));
+      const leave = ease(seg(p, 0.44, 0.54));
       const ix = lerp(0, m ? 0.05 * vw : 0.09 * vw, shrink);
       const iy = lerp(0, m ? 0.14 * vh : 0.17 * vh, shrink);
       const rad = lerp(0, m ? 24 : 36, shrink);
@@ -86,33 +107,28 @@ export const AboutPage: React.FC = () => {
 
       if (morning) {
         morning.style.clipPath = `inset(${iy - lift}px ${ix}px ${iy + lift}px ${ix}px round ${rad}px)`;
-        morning.style.opacity = String(1 - seg(p, 0.70, 0.76));
+        morning.style.opacity = String(1 - seg(p, 0.50, 0.54));
       }
 
       words.forEach((w) => {
-        w.style.opacity = String(1 - seg(p, 0.12, 0.2));
-        w.style.transform = `translateY(${-seg(p, 0.12, 0.2) * 30}px)`;
+        w.style.opacity = String(1 - seg(p, 0.07, 0.13));
+        w.style.transform = `translateY(${-seg(p, 0.07, 0.13) * 30}px)`;
       });
 
-      if (heroP) {
-        heroP.style.opacity = String(1 - seg(p, 0.1, 0.18));
-      }
-      if (chips) {
-        chips.style.opacity = String(1 - seg(p, 0.16, 0.26));
-      }
-      if (phLabel) {
-        phLabel.style.opacity = String(1 - seg(p, 0.1, 0.2));
-      }
+      if (heroP) heroP.style.opacity = String(1 - seg(p, 0.06, 0.11));
+      if (chips) chips.style.opacity = String(1 - seg(p, 0.1, 0.17));
+      if (phLabel) phLabel.style.opacity = String(1 - seg(p, 0.06, 0.12));
 
-      const cIn = out(seg(p, 0.30, 0.40));
-      const cOut = seg(p, 0.58, 0.66);
+      const cIn = out(seg(p, 0.20, 0.27));
+      const cOut = seg(p, 0.42, 0.47);
       if (cardCopy) {
         cardCopy.style.opacity = String(cIn * (1 - cOut));
         cardCopy.style.filter = `blur(${(1 - cIn) * 8}px)`;
       }
 
-      const rise = out(seg(p, 0.0, 0.18));
-      const toRight = ease(seg(p, 0.66, 0.80));
+      // phone
+      const rise = out(seg(p, 0, 0.12));
+      const toRight = ease(seg(p, 0.48, 0.58));
       const shiftX = m ? 0 : lerp(0, -(vw * 0.02), toRight);
       const y = lerp(vh * 0.22, 0, rise);
       if (phone) {
@@ -121,25 +137,32 @@ export const AboutPage: React.FC = () => {
           : `translate(${shiftX}px, calc(-50% + ${y}px))`;
       }
 
-      const up = seg(p, 0.34, 0.38);
-      const done = seg(p, 0.52, 0.56);
+      // screens: camera -> upload -> done (hero) ... then today -> upload -> week (steps)
+      const active = p < 0.66 ? 0 : p < 0.80 ? 1 : 2;
+      const up = seg(p, 0.23, 0.26);
+      const done = seg(p, 0.36, 0.39);
+      const today = seg(p, 0.55, 0.58);
+      const upAgain = seg(p, 0.66, 0.68);
+      const week = seg(p, 0.80, 0.82);
+      const showUp = Math.max(up * (1 - done), upAgain * (1 - week));
       if (scrCam) scrCam.style.opacity = String(1 - up);
-      if (scrUp) scrUp.style.opacity = String(up * (1 - done));
-      if (scrDone) scrDone.style.opacity = String(done);
-      if (flash) flash.style.opacity = String(Math.sin(seg(p, 0.30, 0.35) * Math.PI) * 0.9);
-      if (upCta) upCta.style.background = p > 0.47 && p < 0.53 ? '#1E40AF' : '';
+      if (scrUp) scrUp.style.opacity = String(showUp);
+      if (scrDone) scrDone.style.opacity = String(done * (1 - today));
+      if (scrToday) scrToday.style.opacity = String(today * (1 - upAgain));
+      if (scrWeek) scrWeek.style.opacity = String(week);
+      if (flash) flash.style.opacity = String(Math.sin(seg(p, 0.20, 0.24) * Math.PI) * 0.9);
+      if (upCta) upCta.style.background = (p > 0.32 && p < 0.36) || (p > 0.76 && p < 0.80) ? '#1E40AF' : '';
 
-      const filled = Math.round(lerp(1, 7, seg(p, 0.80, 0.96)));
+      const filled = Math.round(lerp(1, 7, seg(p, 0.39, 0.46)));
       cells.forEach((c, i) => c.classList.toggle('on', i < filled));
       if (streakTxt) streakTxt.textContent = `${filled}일 연속`;
 
-      const sIn = out(seg(p, 0.74, 0.82));
+      // steps list
+      const sIn = out(seg(p, 0.54, 0.60));
       if (steps) {
         steps.style.opacity = String(sIn);
         steps.style.transform = m ? `translateY(${(1 - sIn) * 20}px)` : `translateY(calc(-50% + ${(1 - sIn) * 30}px))`;
       }
-
-      const active = p < 0.84 ? 0 : p < 0.9 ? 1 : 2;
       lis.forEach((li, i) => li.classList.toggle('on', sIn > 0.5 && i === active));
 
       return shrink < 0.6 && leave < 0.9;
@@ -193,32 +216,150 @@ export const AboutPage: React.FC = () => {
       return p > 0.84;
     }
 
+    function cheer(p: number) {
+      const a = seg(p, 0.02, 0.10);
+      const sw = seg(p, 0.52, 0.58);
+      if (fx1) {
+        fx1.style.opacity = String(a * (1 - sw));
+        fx1.style.transform = `translateY(${(1 - a) * 16 - sw * 16}px)`;
+      }
+      if (fx2) {
+        fx2.style.opacity = String(sw);
+        fx2.style.transform = `translateY(${(1 - sw) * 16}px)`;
+      }
+      if (pane1) {
+        pane1.style.opacity = String(a * (1 - sw));
+        pane1.style.transform = `scale(${lerp(0.96, 1, a)})`;
+      }
+      if (pane2) {
+        pane2.style.opacity = String(sw);
+        pane2.style.transform = `scale(${lerp(0.96, 1, sw)})`;
+      }
+      [bub1, bub2].forEach((bub, i) => {
+        if (!bub) return;
+        const t = out(seg(p, 0.16 + i * 0.12, 0.24 + i * 0.12));
+        bub.style.opacity = String(t);
+        bub.style.transform = `translateY(${(1 - t) * 14}px)`;
+      });
+      bars.forEach((bar, i) => {
+        const w = Number(bar.dataset.w ?? 0);
+        bar.style.width = `${w * out(seg(p, 0.60 + i * 0.05, 0.78 + i * 0.05))}%`;
+      });
+      return p > 0 && p < 1;
+    }
+
+    const spots: [number, number][] = [
+      [-0.40, -0.30], [0.32, -0.34], [-0.10, -0.40], [0.40, -0.10], [-0.44, -0.04],
+      [0.04, -0.26], [-0.30, 0.18], [0.30, 0.20], [-0.14, 0.32], [0.18, 0.36],
+      [-0.42, 0.36], [0.44, 0.34], [-0.24, -0.18], [0.22, -0.02],
+    ];
+
+    function gather(p: number) {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const g = ease(seg(p, 0.05, 0.42));
+      gWords.forEach((w, i) => {
+        const [sx, sy] = spots[i % spots.length];
+        const drift = Math.sin(p * 6 + i) * 8 * (1 - g);
+        w.style.transform = `translate(-50%, -50%) translate(${sx * vw * (1 - g)}px, ${sy * vh * 0.9 * (1 - g) + drift}px) scale(${lerp(1, 0.6, g)})`;
+        w.style.opacity = String((0.35 + (0.4 * ((i * 37) % 10)) / 10) * (1 - seg(p, 0.32, 0.44)));
+        w.style.filter = `blur(${(i % 3) * 1.2 * (1 - g)}px)`;
+      });
+
+      const hIn = out(seg(p, 0.30, 0.46));
+      const up = ease(seg(p, 0.5, 0.66));
+      if (gh) {
+        gh.style.opacity = String(hIn);
+        gh.style.filter = `blur(${(1 - hIn) * 10}px)`;
+        gh.style.transform = `translateY(calc(-50% - ${up * vh * 0.12}px))`;
+      }
+      const iIn = out(seg(p, 0.56, 0.72));
+      if (invite) {
+        invite.style.opacity = String(iIn);
+        invite.style.transform = `translateY(${(1 - iIn) * 60 - up * vh * 0.06}px)`;
+      }
+      if (copyBtn) copyBtn.style.background = p > 0.78 && p < 0.82 ? '#1E40AF' : '';
+      if (toast) toast.classList.toggle('on', p > 0.8);
+    }
+
     function frame() {
       if (!A || !B) return;
       const pa = progress(A);
       const pb = progress(B);
       const darkA = sceneA(pa);
       const darkB = sceneB(pb);
-      const rA = A.getBoundingClientRect();
-      const rB = B.getBoundingClientRect();
-      const rO = startSection ? startSection.getBoundingClientRect() : { top: 9999 };
+      if (C) cheer(progress(C));
+      if (G) gather(progress(G));
 
-      const inA = rA.top <= 0 && rA.bottom > window.innerHeight * 0.5;
-      const inB = rB.top <= 0 && rB.bottom > window.innerHeight * 0.5;
-      const inO = rO.top < window.innerHeight * 0.5;
-
-      const dark = (inA && darkA) || (inB && darkB) || inO;
+      const vh = window.innerHeight;
+      const hit = (el: Element | null) => {
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        return r.top <= 40 && r.bottom > 40;
+      };
+      const dark = (hit(A) && darkA) || (hit(B) && darkB) || hit(BG) || hit(C) || hit(startSection);
       if (nav) nav.classList.toggle('on-dark', dark);
       if (rail) rail.classList.toggle('on-dark', dark);
 
-      const idx = inO ? 3 : inB ? (pb < 0.8 ? 1 : 2) : 0;
+      const mid = (el: Element | null) => {
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        return r.top < vh * 0.5 && r.bottom > vh * 0.5;
+      };
+      const idx = mid(startSection) ? 5 : mid(G) ? 4 : mid(C) || mid(BG) ? 3 : mid(B) ? 2 : mid(K) ? 1 : 0;
       ticks.forEach((t, i) => t.classList.toggle('on', i === idx));
+    }
+
+    // 단어 단위 blur-in + 진입 시 reveal
+    document.querySelectorAll<HTMLElement>('.about-page [data-split]').forEach((h) => {
+      if (h.dataset.splitDone) return;
+      h.dataset.splitDone = '1';
+      const text = h.textContent ?? '';
+      h.innerHTML = text
+        .split(' ')
+        .map((w, i) => `<span class="bw" style="transition-delay:${i * 0.1}s">${w}</span>`)
+        .join(' ');
+    });
+
+    const kchips = K ? K.querySelectorAll<HTMLElement>('.kchip') : [];
+    let kTimer: ReturnType<typeof setInterval> | null = null;
+    const onReveal = (el: Element) => {
+      el.classList.add('in');
+      if (el === K && !kTimer) {
+        let k = 0;
+        kTimer = setInterval(() => {
+          kchips.forEach((c, i) => c.classList.toggle('hot', i === k % 3));
+          k += 1;
+        }, 1100);
+      }
+    };
+    const rvs = document.querySelectorAll('.about-page .rv-on');
+    let io: IntersectionObserver | null = null;
+    if (reduce || !('IntersectionObserver' in window)) {
+      rvs.forEach(onReveal);
+    } else {
+      io = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              onReveal(e.target);
+              io?.unobserve(e.target);
+            }
+          }),
+        { rootMargin: '0px 0px -20% 0px', threshold: 0.01 }
+      );
+      rvs.forEach((el) => io?.observe(el));
     }
 
     if (reduce) {
       sceneA(0.9);
       sceneB(1);
-      return;
+      cheer(0.3);
+      gather(1);
+      return () => {
+        if (kTimer) clearInterval(kTimer);
+        io?.disconnect();
+      };
     }
 
     let ticking = false;
@@ -239,6 +380,8 @@ export const AboutPage: React.FC = () => {
     return () => {
       window.removeEventListener('scroll', req);
       window.removeEventListener('resize', req);
+      if (kTimer) clearInterval(kTimer);
+      io?.disconnect();
     };
   }, []);
 
@@ -262,6 +405,8 @@ export const AboutPage: React.FC = () => {
 
       {/* Progress rail */}
       <div className="rail" id="rail" aria-hidden="true">
+        <i></i>
+        <i></i>
         <i></i>
         <i></i>
         <i></i>
@@ -348,11 +493,11 @@ export const AboutPage: React.FC = () => {
                   <div id="upCta" style={{ display: 'none' }}></div>
                 </div>
 
-                {/* 3. Done streak screen (실제 챌린지 캘린더 & 스트릭 통계 캡처) */}
+                {/* 3. 인증 완료 후 연속 기록 (스텝 0) */}
                 <div className="scr done" id="scrDone">
                   <img
-                    src="/landing/assets/captures/04-challenge-calendar.webp"
-                    alt="챌린지 캘린더 및 7일 연속 달성 스트릭"
+                    src="/landing/assets/captures/09-share-card.webp"
+                    alt="7일 연속 달성 기록"
                     className="scr-img"
                     loading="lazy"
                   />
@@ -367,6 +512,28 @@ export const AboutPage: React.FC = () => {
                     <i></i>
                   </div>
                 </div>
+
+                {/* 4. 오늘 할 일 목록 (스텝 1) */}
+                <div className="scr" id="scrToday">
+                  <img
+                    src="/landing/assets/captures/05-today-actions.webp"
+                    alt="참여 중인 모임의 오늘 남은 인증 목록"
+                    className="scr-img"
+                    loading="lazy"
+                  />
+                </div>
+
+                {/* 5. 이번 주 기록 (스텝 3) */}
+                <div className="scr" id="scrWeek">
+                  <img
+                    src="/landing/assets/captures/04-challenge-calendar.webp"
+                    alt="참가자별 이번 주 인증 기록"
+                    className="scr-img"
+                    loading="lazy"
+                  />
+                </div>
+
+                <div className="samp">예시 화면</div>
               </div>
             </div>
 
@@ -380,20 +547,100 @@ export const AboutPage: React.FC = () => {
               </h2>
               <ol>
                 <li>
-                  <b>오늘 할 일 확인</b>
-                  <span>참여 중인 모든 모임의 인증을 한 화면에서.</span>
+                  <b>참여 중인 모든 인증을 한 화면에서</b>
+                  <span>모임이 여러 개여도 괜찮아요. 오늘 남은 인증만 모아서 보여드려요.</span>
                 </li>
                 <li>
-                  <b>사진으로 인증</b>
-                  <span>카메라로 찍거나 캡처를 붙여 넣어요.</span>
+                  <b>찍거나, 캡처를 붙여 넣거나</b>
+                  <span>카메라로 바로 찍어도, 앱 화면을 캡처해도 돼요. 인증 기준이 함께 보여서 헷갈리지 않아요.</span>
                 </li>
                 <li>
-                  <b>연속 기록 쌓기</b>
-                  <span>하루하루 칸이 채워지는 걸 친구와 함께 봐요.</span>
+                  <b>하루하루 칸이 채워지는 걸 친구와 함께 봐요</b>
+                  <span>연속 기록이 한눈에 보여서, 오늘 하루를 비우기가 아까워져요.</span>
                 </li>
               </ol>
             </div>
           </div>
+        </section>
+
+        {/* 목표가 달라도 한 모임에서 */}
+        <section className="kw rv-on" id="kw" aria-labelledby="kwH">
+          <h2 id="kwH">
+            <span className="kchip">코딩</span>
+            <span className="kchip">운동</span>
+            <span className="kchip">기상</span>
+            <br />
+            <span data-split="">목표가 달라도 한 모임에서</span>
+          </h2>
+
+          <div className="cards3">
+            <div className="pcard rise">
+              <div className="top">
+                <div className="av" style={{ background: '#2563EB' }}>류</div>
+                <div>
+                  <b>류</b>
+                  <small>코딩</small>
+                </div>
+              </div>
+              <h4>
+                매일 1알고리즘
+                <br />
+                문제 풀기
+              </h4>
+              <div className="pic" style={{ background: '#EFF6FF' }}>
+                <i className="l" style={{ width: '60%', background: '#BFDBFE' }}></i>
+                <i className="l" style={{ width: '84%', background: '#BFDBFE' }}></i>
+                <i className="l" style={{ width: '40%', background: '#BFDBFE' }}></i>
+              </div>
+              <div className="meta">매일 · 제출 성공 화면</div>
+            </div>
+
+            <div className="pcard rise">
+              <div className="top">
+                <div className="av" style={{ background: '#0891B2' }}>김</div>
+                <div>
+                  <b>김</b>
+                  <small>운동</small>
+                </div>
+              </div>
+              <h4>
+                주 3회
+                <br />
+                헬스장 가기
+              </h4>
+              <div
+                className="pic"
+                style={{ background: '#ECFEFF', flexDirection: 'row', alignItems: 'flex-end', gap: '8px' }}
+              >
+                <i style={{ flex: 1, height: '40%', borderRadius: '5px', background: '#A5F3FC' }}></i>
+                <i style={{ flex: 1, height: '70%', borderRadius: '5px', background: '#A5F3FC' }}></i>
+                <i style={{ flex: 1, height: '55%', borderRadius: '5px', background: '#A5F3FC' }}></i>
+                <i style={{ flex: 1, height: '90%', borderRadius: '5px', background: '#22D3EE' }}></i>
+              </div>
+              <div className="meta">주 3회 · 운동 기록 캡처</div>
+            </div>
+
+            <div className="pcard rise">
+              <div className="top">
+                <div className="av" style={{ background: '#475569' }}>박</div>
+                <div>
+                  <b>박</b>
+                  <small>습관</small>
+                </div>
+              </div>
+              <h4>
+                6시에
+                <br />
+                일어나기
+              </h4>
+              <div className="pic" style={{ background: '#F1F5F9', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ font: '800 52px/1 var(--font)', letterSpacing: '-0.04em', color: '#475569' }}>06:00</span>
+              </div>
+              <div className="meta">매일 · 시계가 보이는 사진</div>
+            </div>
+          </div>
+
+          <p className="kwnote">모임에 들어왔다고 모든 챌린지를 할 필요는 없어요.</p>
         </section>
 
         {/* Scene B */}
@@ -444,6 +691,157 @@ export const AboutPage: React.FC = () => {
           </div>
         </section>
 
+        <div className="blueGap" aria-hidden="true"></div>
+
+        {/* 서로의 오늘 (dark sheet) */}
+        <section className="scene" id="cheer" aria-labelledby="cheerH">
+          <div className="stage">
+            <div className="cheerL">
+              <div className="eyebrow">서로의 오늘</div>
+              <h2 id="cheerH">
+                친구의 인증에
+                <br />
+                한마디 얹어요
+              </h2>
+              <div className="fx">
+                <div id="fx1">
+                  <span className="tag">응원</span>
+                  <h3>인증마다 짧은 응원을</h3>
+                  <p>카톡방처럼 묻히지 않아요. 누가 언제 무엇을 했는지 인증 옆에 남아요.</p>
+                </div>
+                <div id="fx2">
+                  <span className="tag">모임 피드</span>
+                  <h3>모임의 오늘이 한눈에</h3>
+                  <p>각자 다른 챌린지라도, 서로 어디쯤 왔는지 한 화면에서 보여요.</p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="cheerR"
+              role="img"
+              aria-label="예시 화면: 인증 글에 친구들이 응원을 남기는 화면과 모임 전체의 진행 상황 화면"
+            >
+              <span className="samp">예시 화면</span>
+
+              <div className="pane" id="pane1">
+                <div className="dk post">
+                  <div className="ph">
+                    <div className="av" style={{ background: '#2563EB' }}>류</div>
+                    <div>
+                      <b>류</b>
+                      <small>오전 7:40 · 매일 1알고리즘</small>
+                    </div>
+                  </div>
+                  <div className="img">
+                    <i className="l" style={{ width: '62%' }}></i>
+                    <i className="l" style={{ width: '88%' }}></i>
+                    <i className="l" style={{ width: '46%' }}></i>
+                  </div>
+                  <div className="bub" id="bub1">
+                    <div className="av" style={{ background: '#0891B2' }}>김</div>
+                    <p>출근 전에 벌써? 대단하다</p>
+                  </div>
+                  <div className="bub me" id="bub2">
+                    <div className="av" style={{ background: '#475569' }}>박</div>
+                    <p>나도 지금 일어났어, 인증 간다</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pane" id="pane2">
+                <div className="dk grp">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <b style={{ fontSize: '16px' }}>퇴근 후 챌린지</b>
+                    <span style={{ fontSize: '12px', color: '#64748B' }}>오늘 2/3 인증</span>
+                  </div>
+                  <div className="row">
+                    <div className="av" style={{ background: '#2563EB' }}>류</div>
+                    <div className="t">
+                      <b>매일 1알고리즘</b>
+                      <small>7일 연속</small>
+                      <div className="bar">
+                        <i data-w="100"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="av" style={{ background: '#0891B2' }}>김</div>
+                    <div className="t">
+                      <b>주 3회 헬스장</b>
+                      <small>이번 주 2/3</small>
+                      <div className="bar">
+                        <i data-w="66"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="av" style={{ background: '#475569' }}>박</div>
+                    <div className="t">
+                      <b>6시 기상</b>
+                      <small>오늘 아직</small>
+                      <div className="bar">
+                        <i data-w="40"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 흩어진 단어가 모여 한 줄로 */}
+        <section className="scene" id="gather" aria-label="초대 링크 하나면 준비 끝">
+          <div className="stage">
+            <div className="words" id="words" aria-hidden="true">
+              <span>오늘</span>
+              <span>인증</span>
+              <span>7일 연속</span>
+              <span>응원</span>
+              <span>사진 한 장</span>
+              <span>기록</span>
+              <span>코딩</span>
+              <span>운동</span>
+              <span>6시 기상</span>
+              <span>한마디</span>
+              <span>친구</span>
+              <span>모임</span>
+              <span>캡처</span>
+              <span>하루 하나</span>
+            </div>
+
+            <div className="gh" id="gh">
+              <h2>
+                초대 링크 하나면
+                <br />
+                준비 끝
+              </h2>
+            </div>
+
+            <div className="invite" id="invite" role="img" aria-label="예시 화면: 모임 초대 링크를 복사하는 카드">
+              <span className="samp">예시 화면</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div
+                  className="av"
+                  style={{ background: '#2563EB', width: '44px', height: '44px', borderRadius: '14px', fontSize: '14px' }}
+                >
+                  퇴
+                </div>
+                <div>
+                  <b style={{ fontSize: '17px' }}>퇴근 후 챌린지</b>
+                  <div style={{ fontSize: '13px', color: 'var(--ink-3)' }}>멤버 3명 · 챌린지 3개</div>
+                </div>
+              </div>
+              <div className="lnk">
+                <span>dayuse.kr/invite/…</span>
+                <b id="copyBtn">링크 복사</b>
+              </div>
+              <div className="toast" id="toast">초대 링크를 복사했어요</div>
+            </div>
+          </div>
+        </section>
+
         {/* Outro (마지막 CTA) */}
         <section className="outro" id="start" aria-label="시작하기">
           <div className="inner">
@@ -454,20 +852,29 @@ export const AboutPage: React.FC = () => {
                 하루 하나씩
               </h2>
               <p>모임을 만들고 초대 링크를 보내면 준비 끝이에요.</p>
-              <button type="button" onClick={handleStart} className="btn btn-lg">
+              <button
+                type="button"
+                onClick={handleStart}
+                className="btn btn-lg"
+                data-track="start_click"
+                data-position="final"
+              >
                 데이유즈 시작하기
               </button>
             </div>
 
-            <div className="shareCard-wrap" aria-label="연속 기록 공유 카드">
-              <img
-                src="/landing/assets/captures/09-share-card.webp"
-                alt="7일 연속 달성 인증 공유 카드"
-                className="shareCard-img"
-                width={780}
-                height={1688}
-                loading="lazy"
-              />
+            <div>
+              <div className="shareCard-wrap" aria-label="연속 기록 공유 카드">
+                <img
+                  src="/landing/assets/captures/09-share-card.webp"
+                  alt="7일 연속 달성 인증 공유 카드"
+                  className="shareCard-img"
+                  width={780}
+                  height={1688}
+                  loading="lazy"
+                />
+              </div>
+              <div className="shareCap">연속 기록은 공유 카드로 자랑할 수 있어요 · 예시</div>
             </div>
           </div>
 
@@ -477,7 +884,12 @@ export const AboutPage: React.FC = () => {
 
           <footer className="foot">
             <span>목표는 각자, 꾸준함은 함께.</span>
-            <span>&copy; {new Date().getFullYear()} dayuse.kr · All rights reserved.</span>
+            <span className="links">
+              <a className="todo" href="#start">문의하기</a>
+              <a className="todo" href="#start">서비스 안내</a>
+              <a className="todo" href="#start">이용약관</a>
+              <a className="todo" href="#start">개인정보처리방침</a>
+            </span>
           </footer>
         </section>
       </main>
