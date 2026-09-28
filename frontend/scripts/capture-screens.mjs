@@ -142,6 +142,18 @@ const SCREENS = [
     route: '/profile',
     requiresAuth: true,
   },
+  {
+    id: '13-notification-settings',
+    title: '미인증 웹 푸시 알림 설정',
+    caption: '매일 저녁 미완료 챌린지 리마인더 시간 및 수신 설정',
+    route: '/settings/notifications',
+    requiresAuth: true,
+    isPrimary: false,
+    action: async (page) => {
+      await page.waitForSelector('select', { timeout: 5000 }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 300));
+    },
+  },
 ];
 
 async function captureAll(baseUrl = 'http://localhost:5173') {
@@ -157,6 +169,12 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--hide-scrollbars'],
   });
+
+  try {
+    await browser.defaultBrowserContext().overridePermissions(baseUrl, ['notifications']);
+  } catch {
+    // 권한 오버라이드 지원 안 되는 환경 대비 fallback
+  }
 
   const page = await browser.newPage();
 
@@ -239,7 +257,11 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
     else if (url.includes('/shares/')) {
       respondJson(mock.MOCK_SHARE_CARD);
     }
-    // 8. 기타 API
+    // 8. 알림 설정 정보
+    else if (url.includes('/notifications/settings') && method === 'GET') {
+      respondJson(mock.MOCK_NOTIFICATION_SETTINGS);
+    }
+    // 9. 기타 API
     else {
       respondJson({});
     }
@@ -258,6 +280,36 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
         await page.evaluateOnNewDocument(() => {
           localStorage.setItem('accessToken', 'mock-access-token');
           localStorage.setItem('refreshToken', 'mock-refresh-token');
+
+          // 웹 푸시 ServiceWorker & PushManager 모의 주입 (블로킹 방지 및 정상 구독 상태 재현)
+          if ('serviceWorker' in navigator) {
+            const mockSub = {
+              endpoint: 'https://fcm.googleapis.com/fcm/send/mock-device-endpoint',
+              getKey: (name) => {
+                if (name === 'p256dh') return new Uint8Array([1, 2, 3]).buffer;
+                if (name === 'auth') return new Uint8Array([4, 5, 6]).buffer;
+                return null;
+              },
+            };
+            const mockRegistration = {
+              active: true,
+              scope: '/',
+              pushManager: {
+                getSubscription: () => Promise.resolve(mockSub),
+                subscribe: () => Promise.resolve(mockSub),
+              },
+            };
+            Object.defineProperty(navigator, 'serviceWorker', {
+              value: {
+                register: () => Promise.resolve(mockRegistration),
+                getRegistration: () => Promise.resolve(mockRegistration),
+                ready: Promise.resolve(mockRegistration),
+                addEventListener: () => {},
+                removeEventListener: () => {},
+              },
+              configurable: true,
+            });
+          }
         });
       } else {
         await page.evaluateOnNewDocument(() => {

@@ -11,7 +11,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:14:57.602Z"
+      "capturedAt": "2026-09-28T06:24:27.691Z"
     },
     {
       "id": "02-groups-list",
@@ -24,7 +24,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:14:59.187Z"
+      "capturedAt": "2026-09-28T06:24:29.233Z"
     },
     {
       "id": "03-group-feed",
@@ -37,7 +37,7 @@
       "width": 780,
       "height": 3490,
       "aspectRatio": "780/3490",
-      "capturedAt": "2026-09-28T06:15:01.629Z"
+      "capturedAt": "2026-09-28T06:24:31.677Z"
     },
     {
       "id": "04-challenge-calendar",
@@ -50,7 +50,7 @@
       "width": 780,
       "height": 2970,
       "aspectRatio": "780/2970",
-      "capturedAt": "2026-09-28T06:15:03.231Z"
+      "capturedAt": "2026-09-28T06:24:33.186Z"
     },
     {
       "id": "05-today-actions",
@@ -63,7 +63,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:15:04.691Z"
+      "capturedAt": "2026-09-28T06:24:34.647Z"
     },
     {
       "id": "06-group-new",
@@ -76,7 +76,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:15:06.125Z"
+      "capturedAt": "2026-09-28T06:24:36.071Z"
     },
     {
       "id": "07-challenge-new",
@@ -89,7 +89,7 @@
       "width": 780,
       "height": 4034,
       "aspectRatio": "780/4034",
-      "capturedAt": "2026-09-28T06:15:07.712Z"
+      "capturedAt": "2026-09-28T06:24:37.675Z"
     },
     {
       "id": "08-verification-modal",
@@ -102,7 +102,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:15:10.274Z"
+      "capturedAt": "2026-09-28T06:24:40.154Z"
     },
     {
       "id": "09-share-card",
@@ -115,7 +115,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:15:11.808Z"
+      "capturedAt": "2026-09-28T06:24:41.496Z"
     },
     {
       "id": "10-invite-landing",
@@ -128,7 +128,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:15:13.279Z"
+      "capturedAt": "2026-09-28T06:24:42.938Z"
     },
     {
       "id": "11-login",
@@ -141,7 +141,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:15:14.710Z"
+      "capturedAt": "2026-09-28T06:24:44.287Z"
     },
     {
       "id": "12-profile",
@@ -154,7 +154,20 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:15:16.147Z"
+      "capturedAt": "2026-09-28T06:24:45.741Z"
+    },
+    {
+      "id": "13-notification-settings",
+      "title": "미인증 웹 푸시 알림 설정",
+      "caption": "매일 저녁 미완료 챌린지 리마인더 시간 및 수신 설정",
+      "isPrimary": false,
+      "pngFile": "13-notification-settings.png",
+      "webpFile": "13-notification-settings.webp",
+      "assetPath": "/landing/assets/captures/13-notification-settings.webp",
+      "width": 780,
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-28T06:24:48.053Z"
     }
   ]
 }

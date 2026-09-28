@@ -234,3 +234,10 @@ export const MOCK_SHARE_CARD = {
     { date: '2026-03-28', inPeriod: true, completed: true },
   ]),
 };
+
+export const MOCK_NOTIFICATION_SETTINGS = {
+  enabled: true,
+  reminderTime: '21:00',
+  hasActiveSubscription: true,
+  vapidPublicKey: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
+};
