@@ -39,8 +39,13 @@ class VerificationService(
         userId: Long,
         request: CreateVerificationRequest
     ): VerificationDetailResponse {
-        val challenge = challengeRepository.findById(request.challengeId)
-            .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
+        val challenge = (challengeRepository.findByIdWithLock(request.challengeId)
+            ?: challengeRepository.findById(request.challengeId).orElse(null))
+            ?: throw ResourceNotFoundException("챌린지를 찾을 수 없습니다.")
+
+        if (challenge.isAborted()) {
+            throw BadRequestException("중단된 챌린지에는 인증을 등록할 수 없습니다.")
+        }
 
         // 1. 모임원 권한 검증
         val isMember = groupMemberRepository.existsByGroupIdAndUserId(
@@ -103,7 +108,10 @@ class VerificationService(
             )
             val saved = verificationRepository.save(verification)
             dailyRecordService?.onVerificationCreated(saved)
-            challengeProgressService?.onVerificationCreated(saved, challenge)
+            challengeProgressService?.onVerificationCreated(
+                saved,
+                challenge
+            )
             return toDetailResponse(saved)
         } catch (e: DataIntegrityViolationException) {
             val constraintViolation = generateSequence<Throwable>(e) { it.cause }
@@ -175,7 +183,10 @@ class VerificationService(
         val challenge = challengeRepository.findById(verification.challengeId).orElse(null)
         verificationRepository.delete(verification)
         if (challenge != null && challenge.executionType == ExecutionType.TOGETHER) {
-            challengeProgressService?.onVerificationDeleted(verification, challenge)
+            challengeProgressService?.onVerificationDeleted(
+                verification,
+                challenge
+            )
         } else {
             dailyRecordService?.onVerificationDeleted(verification)
         }

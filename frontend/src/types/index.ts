@@ -50,10 +50,10 @@ export interface AuthResponse {
   user: User;
 }
 
-export type ChallengeStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED';
+export type ChallengeStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED' | 'ABORTED';
 export type PeriodType = 'DAILY' | 'WEEKLY_N';
 export type ExecutionType = 'INDIVIDUAL' | 'TOGETHER';
-export type PeriodSettlementStatus = 'IN_PROGRESS' | 'ACHIEVED' | 'NEEDS_CONFIRMATION' | 'CONFIRMED_FAILED' | 'NOT_ACHIEVED';
+export type PeriodSettlementStatus = 'IN_PROGRESS' | 'ACHIEVED' | 'NEEDS_CONFIRMATION' | 'CONFIRMED_FAILED' | 'NOT_ACHIEVED' | 'EXCLUDED_ABORTED';
 
 export interface ChallengePeriodInterval {
   index: number;
@@ -86,6 +86,8 @@ export interface ChallengeSummary {
   isParticipating: boolean;
   isCreator: boolean;
   myPenaltyAmount?: number | null;
+  canAbort?: boolean;
+  abortedAt?: string | null;
   createdAt: string;
 }
 
@@ -151,7 +153,16 @@ export interface ChallengeDetail {
   canCancel: boolean;
   canDelete: boolean;
   canModifyFull: boolean;
+  canAbort?: boolean;
+  abortedAt?: string | null;
+  abortedBy?: number | null;
+  abortedByNickname?: string | null;
+  abortReason?: string | null;
   participants: ChallengeParticipant[];
+}
+
+export interface AbortChallengePayload {
+  reason?: string;
 }
 
 export interface CreateParticipantPayload {

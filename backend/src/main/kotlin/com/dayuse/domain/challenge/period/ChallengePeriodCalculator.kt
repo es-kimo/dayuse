@@ -27,7 +27,8 @@ object ChallengePeriodCalculator {
         targetFrequency: Int?,
         completedDates: Set<LocalDate>,
         today: LocalDate,
-        executionType: ExecutionType = ExecutionType.INDIVIDUAL
+        executionType: ExecutionType = ExecutionType.INDIVIDUAL,
+        abortedDate: LocalDate? = null
     ): ChallengePeriodCalculationResult {
         val effectiveStart = if (executionType.isTogether) {
             challengeStartDate
@@ -82,9 +83,50 @@ object ChallengePeriodCalculator {
             index++
         }
 
-        val totalTarget = intervals.sumOf { it.targetCount }
+        val totalTarget = if (abortedDate != null) {
+            when (periodType) {
+                PeriodType.DAILY -> {
+                    if (abortedDate <= effectiveStart) {
+                        0
+                    } else {
+                        val closedEnd = minOf(
+                            effectiveEnd,
+                            abortedDate.minusDays(1)
+                        )
+                        (ChronoUnit.DAYS.between(
+                            effectiveStart,
+                            closedEnd
+                        ).toInt() + 1).coerceAtLeast(0)
+                    }
+                }
 
-        val totalCompleted = intervals.sumOf { it.effectiveCompletedCount }
+                PeriodType.WEEKLY_N -> {
+                    intervals.filter { it.endDate < abortedDate }.sumOf { it.targetCount }
+                }
+            }
+        } else {
+            intervals.sumOf { it.targetCount }
+        }
+
+        val totalCompleted = if (abortedDate != null) {
+            when (periodType) {
+                PeriodType.DAILY -> {
+                    completedDates.count {
+                        it in effectiveStart..minOf(
+                            effectiveEnd,
+                            abortedDate
+                        )
+                    }
+                }
+
+                PeriodType.WEEKLY_N -> {
+                    intervals.sumOf { it.effectiveCompletedCount }
+                }
+            }
+        } else {
+            intervals.sumOf { it.effectiveCompletedCount }
+        }
+
         val progressRate = if (totalTarget > 0) {
             minOf(
                 100,

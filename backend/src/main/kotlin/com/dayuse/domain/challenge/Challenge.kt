@@ -14,6 +14,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Entity
 @Table(
@@ -83,6 +84,18 @@ class Challenge(
     var creatorUserId: Long = creatorUserId
         protected set
 
+    @Column(name = "aborted_at")
+    var abortedAt: LocalDateTime? = null
+        protected set
+
+    @Column(name = "aborted_by")
+    var abortedBy: Long? = null
+        protected set
+
+    @Column(name = "abort_reason", columnDefinition = "TEXT")
+    var abortReason: String? = null
+        protected set
+
     init {
         if (endDate < startDate) {
             throw BadRequestException("종료일은 시작일 이후여야 합니다.")
@@ -101,6 +114,8 @@ class Challenge(
     }
 
 
+    fun isAborted(): Boolean = abortedAt != null
+
     fun isStarted(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
         return today >= startDate
     }
@@ -111,6 +126,7 @@ class Challenge(
 
     fun status(today: LocalDate = DateTimeUtils.todayKst()): ChallengeStatus {
         return when {
+            isAborted() -> ChallengeStatus.ABORTED
             !isStarted(today) -> ChallengeStatus.NOT_STARTED
             !isEnded(today) -> ChallengeStatus.IN_PROGRESS
             else -> ChallengeStatus.ENDED
@@ -118,13 +134,20 @@ class Challenge(
     }
 
     fun canJoin(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
-        return !isEnded(today)
+        return !isEnded(today) && !isAborted()
+    }
+
+    fun canAbort(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
+        return !isEnded(today) && !isAborted()
     }
 
     fun calculateStartDate(
         startDateType: StartDateType?,
         today: LocalDate = DateTimeUtils.todayKst()
     ): LocalDate {
+        if (isAborted()) {
+            throw BadRequestException("중단된 챌린지에는 참여할 수 없습니다.")
+        }
         if (isEnded(today)) {
             throw BadRequestException("이미 종료된 챌린지에는 참여할 수 없습니다.")
         }
@@ -149,15 +172,32 @@ class Challenge(
     }
 
     fun canCancel(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
-        return !isStarted(today)
+        return !isStarted(today) && !isAborted()
     }
 
     fun canDelete(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
-        return !isStarted(today)
+        return !isStarted(today) && !isAborted()
     }
 
     fun canModifyFullConditions(today: LocalDate = DateTimeUtils.todayKst()): Boolean {
-        return !isStarted(today)
+        return !isStarted(today) && !isAborted()
+    }
+
+    fun abort(
+        userId: Long,
+        reason: String?,
+        now: LocalDateTime = LocalDateTime.now()
+    ) {
+        val today = now.toLocalDate()
+        if (isEnded(today)) {
+            throw BadRequestException("이미 종료된 챌린지는 중단할 수 없습니다.")
+        }
+        if (isAborted()) {
+            throw BadRequestException("이미 중단된 챌린지입니다.")
+        }
+        this.abortedAt = now
+        this.abortedBy = userId
+        this.abortReason = reason?.trim()?.ifBlank { null }
     }
 
     fun updateConditions(
@@ -171,6 +211,10 @@ class Challenge(
         newExecutionType: ExecutionType? = null,
         today: LocalDate = DateTimeUtils.todayKst()
     ) {
+        if (isAborted()) {
+            throw BadRequestException("중단된 챌린지는 수정할 수 없습니다.")
+        }
+
         if (newExecutionType != null && newExecutionType != this.executionType) {
             throw BadRequestException("챌린지 수행 방식은 수정할 수 없습니다.")
         }
@@ -244,8 +288,8 @@ class Challenge(
             newExecutionType: ExecutionType? = null,
             today: LocalDate = DateTimeUtils.todayKst()
         ): Challenge {
-            if (!source.isEnded(today)) {
-                throw BadRequestException("종료된 챌린지만 다시 시작할 수 있습니다.")
+            if (!source.isEnded(today) && !source.isAborted()) {
+                throw BadRequestException("종료되었거나 중단된 챌린지만 다시 시작할 수 있습니다.")
             }
             if (newStartDate < today) {
                 throw BadRequestException("시작일은 오늘 이후 날짜여야 합니다.")

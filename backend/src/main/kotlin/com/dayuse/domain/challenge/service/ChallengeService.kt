@@ -6,6 +6,7 @@ import com.dayuse.domain.challenge.ChallengeParticipantRepository
 import com.dayuse.domain.challenge.ChallengeRepository
 import com.dayuse.domain.challenge.ExecutionType
 import com.dayuse.domain.challenge.ParticipantStatus
+import com.dayuse.domain.challenge.dto.AbortChallengeRequest
 import com.dayuse.domain.challenge.dto.ChallengeDetailResponse
 import com.dayuse.domain.challenge.dto.ChallengeParticipantResponse
 import com.dayuse.domain.challenge.dto.ChallengePeriodIntervalDto
@@ -37,11 +38,13 @@ import com.dayuse.global.util.DateTimeUtils
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import com.dayuse.domain.challenge.dto.PeriodSettlementResponse
 import com.dayuse.domain.challenge.period.ChallengePeriodSettlement
 import com.dayuse.domain.challenge.period.ChallengePeriodSettlementRepository
 import com.dayuse.domain.challenge.period.PeriodSettlementStatus
+import com.dayuse.domain.group.GroupRole
 import kotlin.Long
 
 @Service
@@ -243,8 +246,8 @@ class ChallengeService(
             throw BadRequestException("해당 모임의 챌린지가 아닙니다.")
         }
 
-        if (!challenge.isEnded(today)) {
-            throw BadRequestException("종료된 챌린지만 다시 시작할 수 있습니다.")
+        if (!challenge.isEnded(today) && !challenge.isAborted()) {
+            throw BadRequestException("종료되었거나 중단된 챌린지만 다시 시작할 수 있습니다.")
         }
 
         val durationDays = ChronoUnit.DAYS.between(
@@ -303,8 +306,8 @@ class ChallengeService(
             throw BadRequestException("해당 모임의 챌린지가 아닙니다.")
         }
 
-        if (!sourceChallenge.isEnded(today)) {
-            throw BadRequestException("종료된 챌린지만 다시 시작할 수 있습니다.")
+        if (!sourceChallenge.isEnded(today) && !sourceChallenge.isAborted()) {
+            throw BadRequestException("종료되었거나 중단된 챌린지만 다시 시작할 수 있습니다.")
         }
 
         val calculatedEndDate = request.endDate ?: run {
@@ -470,7 +473,8 @@ class ChallengeService(
                 isParticipating = myParticipant != null,
                 isCreator = challenge.creatorUserId == userId,
                 myPenaltyAmount = if (challenge.executionType.isTogether) null else myParticipant?.penaltyAmount,
-                createdAt = challenge.createdAt
+                createdAt = challenge.createdAt,
+                abortedAt = challenge.abortedAt
             )
         }
     }
@@ -484,7 +488,7 @@ class ChallengeService(
             ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
         }
 
-        groupMemberRepository.findByGroupIdAndUserId(
+        val member = groupMemberRepository.findByGroupIdAndUserId(
             challenge.groupId,
             userId
         )
@@ -500,6 +504,7 @@ class ChallengeService(
         )
         val userMap = userRepository.findAllById(participants.map { it.userId }).associateBy { it.id }
         val creatorUser = userRepository.findById(challenge.creatorUserId).orElse(null)
+        val abortedByUser = challenge.abortedBy?.let { userRepository.findById(it).orElse(null) }
 
         val allRecords = dailyRecordRepository?.findAllByChallengeId(challengeId).orEmpty()
         val participantResponses = participants.map { p ->
@@ -514,7 +519,8 @@ class ChallengeService(
                 periodType = challenge.periodType,
                 targetFrequency = challenge.targetFrequency,
                 completedDates = pCompletedDates,
-                today = today
+                today = today,
+                abortedDate = challenge.abortedAt?.toLocalDate()
             )
 
             ChallengeParticipantResponse(
@@ -533,11 +539,17 @@ class ChallengeService(
 
         val myParticipant = participants.find { it.userId == userId }
         val isCreator = challenge.creatorUserId == userId
+        val isHost = member.role == com.dayuse.domain.group.GroupRole.HOST
         val isParticipating = myParticipant != null
         val isTogether = challenge.executionType.isTogether
+        val canAbort = (isCreator || isHost) && challenge.canAbort(today)
 
         val progressResult = if (isTogether && challengeProgressService != null) {
-            challengeProgressService.calculateProgress(challenge, myParticipant, today)
+            challengeProgressService.calculateProgress(
+                challenge,
+                myParticipant,
+                today
+            )
         } else {
             val myRecords = myParticipant?.let { p ->
                 allRecords.filter { it.challengeParticipantId == p.id && it.status == DailyRecordStatus.COMPLETED }
@@ -551,7 +563,8 @@ class ChallengeService(
                 periodType = challenge.periodType,
                 targetFrequency = challenge.targetFrequency,
                 completedDates = myCompletedDates,
-                today = today
+                today = today,
+                abortedDate = challenge.abortedAt?.toLocalDate()
             )
 
             val mySettlements = myParticipant?.let { p ->
@@ -560,15 +573,21 @@ class ChallengeService(
 
             val intervalDtos = myCalc.intervals.map { interval ->
                 val settlement = mySettlements[interval.index]
+                val isIntervalAborted = challenge.isAborted() && interval.endDate >= challenge.abortedAt!!.toLocalDate()
                 val status = when {
                     settlement != null -> settlement.status
+                    isIntervalAborted -> PeriodSettlementStatus.EXCLUDED_ABORTED
                     today > interval.endDate -> if (interval.isAchieved) PeriodSettlementStatus.ACHIEVED else PeriodSettlementStatus.NEEDS_CONFIRMATION
                     else -> PeriodSettlementStatus.IN_PROGRESS
                 }
                 val missed = settlement?.missedCount
                     ?: if (status == PeriodSettlementStatus.NEEDS_CONFIRMATION) interval.remainingTarget else 0
-                val penaltyPerMiss = settlement?.penaltyAmountPerMiss ?: (myParticipant?.penaltyAmount ?: 0)
-                val totalPenalty = settlement?.totalPenaltyAmount ?: (missed * penaltyPerMiss)
+                val penaltyPerMiss =
+                    if (status == PeriodSettlementStatus.EXCLUDED_ABORTED) 0 else (settlement?.penaltyAmountPerMiss
+                        ?: (myParticipant?.penaltyAmount ?: 0))
+                val totalPenalty =
+                    if (status == PeriodSettlementStatus.EXCLUDED_ABORTED) 0 else (settlement?.totalPenaltyAmount
+                        ?: (missed * penaltyPerMiss))
 
                 ChallengePeriodIntervalDto(
                     index = interval.index,
@@ -630,6 +649,11 @@ class ChallengeService(
             canCancel = myParticipant?.canCancel(today) == true && !isCreator,
             canDelete = challenge.canDelete(today) && isCreator,
             canModifyFull = challenge.canModifyFullConditions(today) && isCreator,
+            canAbort = canAbort,
+            abortedAt = challenge.abortedAt,
+            abortedBy = challenge.abortedBy,
+            abortedByNickname = abortedByUser?.nickname,
+            abortReason = challenge.abortReason,
             participants = participantResponses
         )
     }
@@ -1001,11 +1025,19 @@ class ChallengeService(
             periodType = challenge.periodType,
             targetFrequency = challenge.targetFrequency,
             completedDates = myCompletedDates,
-            today = today
+            today = today,
+            abortedDate = challenge.abortedAt?.toLocalDate()
         )
 
         val interval = calc.intervals.find { it.index == periodIndex }
             ?: throw ResourceNotFoundException("해당 구간을 찾을 수 없습니다. (구간 번호: $periodIndex)")
+
+        if (challenge.isAborted()) {
+            val abortDate = challenge.abortedAt!!.toLocalDate()
+            if (interval.endDate >= abortDate) {
+                throw BadRequestException("중단으로 인해 정산에서 제외된 구간은 미수행 확정할 수 없습니다.")
+            }
+        }
 
         if (today <= interval.endDate) {
             throw BadRequestException("아직 진행 중인 구간은 미수행으로 확정할 수 없습니다.")
@@ -1072,6 +1104,42 @@ class ChallengeService(
             penaltyAmountPerMiss = saved.penaltyAmountPerMiss,
             totalPenaltyAmount = saved.totalPenaltyAmount,
             status = saved.status
+        )
+    }
+
+    @Transactional
+    fun abortChallenge(
+        challengeId: Long,
+        userId: Long,
+        request: AbortChallengeRequest,
+        now: LocalDateTime = LocalDateTime.now()
+    ): ChallengeDetailResponse {
+        val challenge = (challengeRepository.findByIdWithLock(challengeId)
+            ?: challengeRepository.findById(challengeId).orElse(null))
+            ?: throw ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
+
+        val member = groupMemberRepository.findByGroupIdAndUserId(
+            challenge.groupId,
+            userId
+        )
+        val isCreator = challenge.creatorUserId == userId
+        val isHost = member?.role == GroupRole.HOST
+
+        if (!isCreator && !isHost) {
+            throw ForbiddenException("챌린지 중단 권한이 없습니다. 생성자 또는 모임장만 중단할 수 있습니다.")
+        }
+
+        challenge.abort(
+            userId,
+            request.reason,
+            now
+        )
+        challengeRepository.save(challenge)
+
+        return getChallengeDetail(
+            challengeId,
+            userId,
+            now.toLocalDate()
         )
     }
 

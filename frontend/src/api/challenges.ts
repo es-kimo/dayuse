@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type {
+  AbortChallengePayload,
   ChallengeDetail,
   ChallengeParticipant,
   ChallengeRestartTemplate,
@@ -68,5 +69,10 @@ export const challengesApi = {
 
   confirmPeriod: async (groupId: number, challengeId: number, periodIndex: number): Promise<void> => {
     await apiClient.post(`/groups/${groupId}/challenges/${challengeId}/periods/${periodIndex}/confirm`);
+  },
+
+  abortChallenge: async (challengeId: number, payload?: AbortChallengePayload): Promise<ChallengeDetail> => {
+    const res = await apiClient.post<ChallengeDetail>(`/challenges/${challengeId}/abort`, payload ?? {});
+    return res.data;
   },
 };
