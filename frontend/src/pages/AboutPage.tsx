@@ -942,7 +942,7 @@ export const AboutPage: React.FC = () => {
           </div>
 
           <div className="water" aria-hidden="true">
-            데이유즈
+            DAYUSE
           </div>
 
           <footer className="foot">

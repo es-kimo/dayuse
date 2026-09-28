@@ -1029,7 +1029,7 @@ export const AboutPageMobile: React.FC = () => {
                 <Link to="/privacy">개인정보처리방침</Link>
               </nav>
               <small>목표는 각자, 꾸준함은 함께.</small>
-              <div className="water" aria-hidden="true">데이유즈</div>
+              <div className="water" aria-hidden="true">DAYUSE</div>
             </div>
           </section>
         </main>
