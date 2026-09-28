@@ -137,7 +137,87 @@ export const NewGroupPage: React.FC = () => {
   }
 
   // ==========================================
-  // 모임 생성 입력 화면 (09-newGroup.html & 레거시 A)
+  // 모임 생성 입력 화면 (09-newGroup.html)
+  // ==========================================
+  if (uiVersion === 'B') {
+    const SUGGESTIONS = ['미라클모닝 챌린지', '주말 러닝 크루', '퇴근 후 알고리즘'];
+
+    return (
+      <div className="max-w-app mx-auto min-h-dvh bg-slate-50 flex flex-col border-x border-slate-200 text-slate-800 font-sans relative">
+        <header className="sticky top-0 z-header h-14 bg-slate-50/95 backdrop-blur-xs border-b border-transparent flex items-center px-4">
+          <button
+            type="button"
+            onClick={() => navigate('/groups')}
+            aria-label="뒤로"
+            className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center text-slate-700 hover:bg-slate-200/50 transition cursor-pointer"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-base font-extrabold tracking-tight text-slate-900 ml-1">새 모임 만들기</h1>
+        </header>
+
+        <form onSubmit={handleSubmit} noValidate className="flex-1 p-4 flex flex-col justify-between">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
+            <div>
+              <label htmlFor="b-group-name" className="block text-xs font-bold text-slate-700 mb-1.5">
+                모임 이름 <span className="text-blue-600">*</span>
+              </label>
+              <input
+                ref={nameInputRef}
+                id="b-group-name"
+                name="name"
+                type="text"
+                placeholder="예: 미라클모닝 챌린지"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (error) setError('');
+                }}
+                maxLength={50}
+                className="w-full px-3.5 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 outline-hidden focus:border-blue-500 transition"
+              />
+              {error && <p className="text-xs text-rose-500 mt-1 font-medium">{error}</p>}
+            </div>
+
+            {/* 추천 이름 칩들 */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {SUGGESTIONS.map((sug) => (
+                <button
+                  key={sug}
+                  type="button"
+                  onClick={() => {
+                    setName(sug);
+                    if (error) setError('');
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200/70 text-slate-600 text-xs font-medium transition cursor-pointer active:scale-95"
+                >
+                  {sug}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-between items-center pt-2 text-[11px] text-slate-400 border-t border-slate-100">
+              <span>만든 사람이 자동으로 모임장이 돼요</span>
+              <span className="font-mono">{name.length}/50</span>
+            </div>
+          </div>
+
+          <div className="sticky bottom-0 bg-slate-50 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+            <button
+              type="submit"
+              disabled={isSubmitting || !name.trim()}
+              className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-2xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] cursor-pointer"
+            >
+              <span>{isSubmitting ? '모임 생성 중...' : '모임 만들기'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // 레거시 UI(A)
   // ==========================================
   return (
     <MobileLayout>
