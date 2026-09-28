@@ -47,9 +47,9 @@ class TodayService(
 
         return activeParticipants.mapNotNull { participant ->
             val challenge = challengeRepository.findByIdOrNull(participant.challengeId) ?: return@mapNotNull null
-            // TODO [사용자 미션 2-1]: 중단(ABORTED)되었거나 진행 중(IN_PROGRESS)이 아닌 챌린지 필터링
-            // 요구사항:
-            // 1. challenge.isAborted() 이거나 대상 일자 기준 challenge.status(today) 가 IN_PROGRESS 가 아닌 경우 return@mapNotNull null 처리하세요.
+            if (challenge.isAborted() || challenge.status(today) != com.dayuse.domain.challenge.ChallengeStatus.IN_PROGRESS) {
+                return@mapNotNull null
+            }
 
             if (participant.startDate > today || today > challenge.endDate) {
                 return@mapNotNull null
@@ -64,27 +64,45 @@ class TodayService(
             )
 
             val isTogether = challenge.executionType.isTogether
-            // TODO [사용자 미션 2-2]: 함께하기(TOGETHER) 챌린지의 당일 공동 인증 여부 및 실제 인증자 닉네임 바인딩
-            // 요구사항:
-            // 1. isTogether인 경우 verificationRepository.findAllByChallengeIdAndTargetDate(challenge.id, today)로 당일 인증을 조회하세요.
-            // 2. 당일 인증이 존재하면 isCompleted는 true가 되고, userRepository를 통해 실제 인증자(userId)의 닉네임을 조회하여 todayVerifierNickname에 할당하세요.
-            // 3. isJointlyCompleted는 isTogether && isCompleted 일 때 true입니다.
-            // 4. effectiveVerification을 통해 summary에 인증 사진 및 정보가 노출되도록 구성하세요.
-            val isCompleted = verification != null
-            val todayVerifierNickname: String? = null
-            val isJointlyCompleted = false
+            val todayTogetherVerification = if (isTogether) {
+                verificationRepository.findAllByChallengeIdAndTargetDate(
+                    challenge.id,
+                    today
+                ).firstOrNull()
+            } else null
 
-            val summary = verification?.let {
+            val isCompleted = if (isTogether) {
+                todayTogetherVerification != null
+            } else {
+                verification != null
+            }
+
+            val todayVerifierNickname = if (isTogether && todayTogetherVerification != null) {
+                userRepository?.findByIdOrNull(todayTogetherVerification.userId)?.nickname
+            } else null
+
+            val effectiveVerification = verification ?: (if (isTogether) todayTogetherVerification else null)
+
+            val summary = effectiveVerification?.let {
                 TodayVerificationSummary(
                     id = it.id,
-                    imageUrl = presignedUrlService.generatePresignedGetUrl(it.imageUrl, it.challengeId, it.userId),
+                    imageUrl = presignedUrlService.generatePresignedGetUrl(
+                        it.imageUrl,
+                        it.challengeId,
+                        it.userId
+                    ),
                     comment = it.comment,
                     isLate = it.isLate,
                     createdAt = it.createdAt
                 )
             }
 
-            val periodInfo = buildPeriodInfo(challenge, participant, today, verification != null)
+            val periodInfo = buildPeriodInfo(
+                challenge,
+                participant,
+                today,
+                verification != null
+            )
 
             TodayActionResponse(
                 challengeId = challenge.id,
@@ -101,13 +119,19 @@ class TodayService(
                 periodInfo = periodInfo,
                 executionType = challenge.executionType,
                 todayVerifierNickname = todayVerifierNickname,
-                isJointlyCompleted = isJointlyCompleted
+                isJointlyCompleted = isTogether && isCompleted
             )
         }
     }
 
-    fun getTodayActions(groupId: Long, userId: Long): List<TodayActionResponse> {
-        val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
+    fun getTodayActions(
+        groupId: Long,
+        userId: Long
+    ): List<TodayActionResponse> {
+        val isMember = groupMemberRepository.existsByGroupIdAndUserId(
+            groupId,
+            userId
+        )
         if (!isMember) {
             throw ForbiddenException("해당 모임의 멤버만 오늘 할 일을 조회할 수 있습니다.")
         }
@@ -123,10 +147,9 @@ class TodayService(
 
         // 오늘 수행 대상인 챌린지 추출
         val activeParticipatingChallenges = challenges.filter { challenge ->
-            // TODO [사용자 미션 2-1]: 중단(ABORTED)되었거나 진행 중(IN_PROGRESS)이 아닌 챌린지 필터링
-            // 요구사항:
-            // 1. challenge.isAborted() 이거나 대상 일자 기준 challenge.status(today) 가 IN_PROGRESS 가 아닌 경우 return@filter false 처리하세요.
-
+            if (challenge.isAborted() || challenge.status(today) != com.dayuse.domain.challenge.ChallengeStatus.IN_PROGRESS) {
+                return@filter false
+            }
             val participant = participantsMap[challenge.id] ?: return@filter false
             participant.startDate <= today && today <= challenge.endDate
         }
@@ -140,26 +163,44 @@ class TodayService(
             )
 
             val isTogether = challenge.executionType.isTogether
-            // TODO [사용자 미션 2-2]: 함께하기(TOGETHER) 챌린지의 당일 공동 인증 여부 및 실제 인증자 닉네임 바인딩
-            // 요구사항:
-            // 1. isTogether인 경우 verificationRepository.findAllByChallengeIdAndTargetDate(challenge.id, today)로 당일 인증을 조회하세요.
-            // 2. 당일 인증이 존재하면 isCompleted는 true가 되고, userRepository를 통해 실제 인증자(userId)의 닉네임을 조회하여 todayVerifierNickname에 할당하세요.
-            // 3. isJointlyCompleted는 isTogether && isCompleted 일 때 true입니다.
-            val isCompleted = verification != null
-            val todayVerifierNickname: String? = null
-            val isJointlyCompleted = false
+            val todayTogetherVerification = if (isTogether) {
+                verificationRepository.findAllByChallengeIdAndTargetDate(
+                    challenge.id,
+                    today
+                ).firstOrNull()
+            } else null
 
-            val summary = verification?.let {
+            val isCompleted = if (isTogether) {
+                todayTogetherVerification != null
+            } else {
+                verification != null
+            }
+
+            val todayVerifierNickname = if (isTogether && todayTogetherVerification != null) {
+                userRepository?.findByIdOrNull(todayTogetherVerification.userId)?.nickname
+            } else null
+
+            val effectiveVerification = verification ?: (if (isTogether) todayTogetherVerification else null)
+            val summary = effectiveVerification?.let {
                 TodayVerificationSummary(
                     id = it.id,
-                    imageUrl = presignedUrlService.generatePresignedGetUrl(it.imageUrl, it.challengeId, it.userId),
+                    imageUrl = presignedUrlService.generatePresignedGetUrl(
+                        it.imageUrl,
+                        it.challengeId,
+                        it.userId
+                    ),
                     comment = it.comment,
                     isLate = it.isLate,
                     createdAt = it.createdAt
                 )
             }
 
-            val periodInfo = buildPeriodInfo(challenge, participant, today, verification != null)
+            val periodInfo = buildPeriodInfo(
+                challenge,
+                participant,
+                today,
+                verification != null
+            )
 
             TodayActionResponse(
                 challengeId = challenge.id,
@@ -175,7 +216,7 @@ class TodayService(
                 periodInfo = periodInfo,
                 executionType = challenge.executionType,
                 todayVerifierNickname = todayVerifierNickname,
-                isJointlyCompleted = isJointlyCompleted
+                isJointlyCompleted = isTogether && isCompleted
             )
         }
     }
@@ -186,7 +227,10 @@ class TodayService(
         userId: Long,
         today: LocalDate = DateTimeUtils.todayKst()
     ): ChallengeTodayTodoResponse {
-        val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
+        val isMember = groupMemberRepository.existsByGroupIdAndUserId(
+            groupId,
+            userId
+        )
         if (!isMember) {
             throw ForbiddenException("해당 모임의 멤버만 오늘 할 일을 조회할 수 있습니다.")
         }
@@ -209,7 +253,12 @@ class TodayService(
             targetDate = today
         ) != null
 
-        val periodInfo = buildPeriodInfo(challenge, participant, today, todayVerified)
+        val periodInfo = buildPeriodInfo(
+            challenge,
+            participant,
+            today,
+            todayVerified
+        )
         return ChallengeTodayTodoResponse(
             periodType = challenge.periodType,
             periodInfo = periodInfo
@@ -228,7 +277,8 @@ class TodayService(
             verificationRepository.findDistinctTargetDatesByChallengeId(challenge.id).toSet()
         } else {
             val allRecords = dailyRecordRepository?.findAllByChallengeParticipantId(participant.id).orEmpty()
-            allRecords.filter { it.status == DailyRecordStatus.COMPLETED && it.verificationId != null }.map { it.date }.toSet()
+            allRecords.filter { it.status == DailyRecordStatus.COMPLETED && it.verificationId != null }.map { it.date }
+                .toSet()
         }
 
         val calc = ChallengePeriodCalculator.calculate(
