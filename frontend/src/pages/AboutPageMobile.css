@@ -312,15 +312,7 @@
 }
 
 .about-mobile .phl {
-  position: absolute;
-  left: 20px;
-  top: 20px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px dashed rgba(255,255,255,.35);
-  color: rgba(255,255,255,.7);
-  font-size: 11px;
-  line-height: 1.3;
+  display: none;
 }
 
 .about-mobile .heroCopy {
@@ -375,20 +367,15 @@
 
 .about-mobile #c2 {
   top: 0;
-  height: calc(100svh - 132px);
+  height: calc(100svh - 68px - env(safe-area-inset-top,0px));
   background: var(--night-2);
-}
-
-.about-mobile #c2 .phl {
-  border-color: rgba(255,255,255,.25);
-  color: rgba(255,255,255,.5);
 }
 
 .about-mobile .c2copy {
   position: absolute;
   left: 0;
   right: 0;
-  top: 56px;
+  top: clamp(28px, 4vh, 44px);
   text-align: center;
   color: #fff;
   padding: 0 20px;
@@ -396,15 +383,15 @@
 }
 
 .about-mobile .c2copy h2 {
-  font-size: 28px;
+  font-size: clamp(24px, 6.5vw, 28px);
   line-height: 1.25;
   font-weight: 800;
 }
 
 .about-mobile .c2copy p {
-  margin-top: 10px;
-  font-size: 14px;
-  line-height: 1.65;
+  margin-top: 8px;
+  font-size: clamp(13px, 3.4vw, 14px);
+  line-height: 1.5;
   color: rgba(255,255,255,.72);
 }
 
@@ -421,7 +408,10 @@
 }
 
 .about-mobile #pHero {
-  top: 43%;
+  top: clamp(140px, 20vh, 175px);
+  height: min(58svh, calc(100% - clamp(140px, 20vh, 175px) - 24px));
+  width: auto;
+  aspect-ratio: 9/18.6;
   transform: translateX(-50%);
 }
 
