@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "verify:kakao-sdk": "node scripts/verify-kakao-sdk-integrity.mjs",
+    "capture:screens": "node scripts/capture-screens.mjs",
     "test": "vitest run",
     "preview": "vite preview"
   },
@@ -34,6 +35,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^29.1.1",
     "oxlint": "^1.81.0",
+    "puppeteer-core": "^25.12.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
