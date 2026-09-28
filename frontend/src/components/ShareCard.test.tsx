@@ -174,4 +174,78 @@ describe('PublicShareLandingPage Brand v1.1 Card (BR-06)', () => {
     expect(img).toHaveClass('object-contain');
     expect(img).not.toHaveClass('object-cover');
   });
+
+  it('함께하기(TOGETHER) 인증 카드에서 공동 달성 배지와 실제 인증자 문구가 올바르게 렌더링된다', async () => {
+    const mockTogetherCard: PublicShareCardResponse = {
+      token: 'test-token-together',
+      cardType: 'TODAY_VERIFICATION',
+      challengeId: 5,
+      title: '모임 러닝 챌린지',
+      userNickname: '모임장호스트',
+      streakDays: 0,
+      imageUrl: 'https://dayuse.kr/images/running-together.jpg',
+      comment: '오늘의 팀 러닝 미션 완수!',
+      executionType: 'TOGETHER',
+      actualVerifierNickname: '도전자A',
+      createdAt: '2026-09-28T07:00:00',
+    };
+
+    (shareApi.getPublicShareCard as any).mockResolvedValue(mockTogetherCard);
+
+    render(
+      <MemoryRouter initialEntries={['/shares/test-token-together']}>
+        <Routes>
+          <Route path="/shares/:token" element={<PublicShareLandingPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('모임 러닝 챌린지')).toBeInTheDocument();
+    });
+
+    // 1. 함께하기 · 공동 달성 배지 확인
+    expect(screen.getByText('함께하기 · 공동 달성')).toBeInTheDocument();
+
+    // 2. 실제 인증자 정보 노출 확인
+    expect(screen.getByText('도전자A님의 인증으로 달성')).toBeInTheDocument();
+
+    // 3. 사진 object-contain 확인
+    const img = screen.getByAltText('인증 사진');
+    expect(img).toHaveClass('object-contain');
+  });
+
+  it('가로형, 세로형, 정사각형 이미지 모두 비율 유지(aspect-square bg-slate-950) 컨테이너 안에서 안전하게 표시된다', async () => {
+    const mockWideImageCard: PublicShareCardResponse = {
+      token: 'test-token-wide',
+      cardType: 'TODAY_VERIFICATION',
+      challengeId: 6,
+      title: '파노라마 산책 인증',
+      userNickname: '러너',
+      streakDays: 0,
+      imageUrl: 'https://dayuse.kr/images/wide-16-9.jpg',
+      comment: '넓은 풍경 사진',
+      createdAt: '2026-09-28T08:00:00',
+    };
+
+    (shareApi.getPublicShareCard as any).mockResolvedValue(mockWideImageCard);
+
+    render(
+      <MemoryRouter initialEntries={['/shares/test-token-wide']}>
+        <Routes>
+          <Route path="/shares/:token" element={<PublicShareLandingPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('파노라마 산책 인증')).toBeInTheDocument();
+    });
+
+    const img = screen.getByAltText('인증 사진');
+    const container = img.closest('.aspect-square');
+    expect(container).toBeInTheDocument();
+    expect(container).toHaveClass('bg-slate-950');
+    expect(img).toHaveClass('object-contain');
+  });
 });
