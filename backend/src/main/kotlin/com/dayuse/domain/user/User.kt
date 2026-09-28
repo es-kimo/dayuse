@@ -39,9 +39,20 @@ class User(
         protected set
 
 
-    // TODO: 필요시 추가 비즈니스 로직(예: 닉네임 유효성 검사, 업데이트 메서드)을 구현해 보세요.
     fun updateNickname(newNickname: String) {
         require(newNickname.length in 2..20) { "닉네임은 2자 이상 20자 이하여야 합니다." }
         this.nickname = newNickname
     }
+
+    fun updateProfileImageUrl(newProfileImageUrl: String?) {
+        this.profileImageUrl = newProfileImageUrl
+    }
+
+    fun updateProfile(newNickname: String?, newProfileImageUrl: String?) {
+        newNickname?.let { updateNickname(it) }
+        if (newProfileImageUrl != null) {
+            updateProfileImageUrl(newProfileImageUrl)
+        }
+    }
 }
+
