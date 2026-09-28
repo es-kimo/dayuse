@@ -118,9 +118,9 @@ export const ContactPage: React.FC = () => {
         <h2 className="text-xl font-bold text-slate-900">자주 묻는 질문 (FAQ)</h2>
         <div className="space-y-3">
           <details className="group border border-slate-200 rounded-xl p-4 bg-white hover:border-slate-300 transition">
-            <summary className="font-semibold text-slate-900 cursor-pointer text-sm sm:text-base flex items-center justify-between">
+            <summary className="font-semibold text-slate-900 cursor-pointer text-sm sm:text-base flex items-center justify-between min-h-[44px] focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2 rounded-lg">
               <span>보증금이나 벌금이 서비스에서 자동으로 결제되거나 출금되나요?</span>
-              <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+              <span className="text-slate-400 group-open:rotate-180 transition-transform" aria-hidden="true">▼</span>
             </summary>
             <p className="mt-3 text-xs sm:text-sm text-slate-600 border-t border-slate-100 pt-3 break-keep">
               <strong>아닙니다. dayuse에는 자동 출금이나 자동 결제 기능이 일체 없습니다.</strong> 보증금 및 미수행 정산은 친구 및 모임원들 간의 자율 약속이며, 정산 현황표를 바탕으로 카카오페이, 토스, 계좌이체 등을 통해 회원들이 직접 상호 송금하는 방식입니다. 또한 정산 금액을 0원으로 설정하여 비용 없이 인증 습관에만 집중하실 수도 있습니다.
@@ -128,9 +128,9 @@ export const ContactPage: React.FC = () => {
           </details>
 
           <details className="group border border-slate-200 rounded-xl p-4 bg-white hover:border-slate-300 transition">
-            <summary className="font-semibold text-slate-900 cursor-pointer text-sm sm:text-base flex items-center justify-between">
+            <summary className="font-semibold text-slate-900 cursor-pointer text-sm sm:text-base flex items-center justify-between min-h-[44px] focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2 rounded-lg">
               <span>모임원마다 서로 다른 챌린지를 할 수 있나요?</span>
-              <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+              <span className="text-slate-400 group-open:rotate-180 transition-transform" aria-hidden="true">▼</span>
             </summary>
             <p className="mt-3 text-xs sm:text-sm text-slate-600 border-t border-slate-100 pt-3 break-keep">
               <strong>네, 가능합니다.</strong> dayuse의 핵심 철학은 <strong>&apos;목표는 각자, 꾸준함은 함께&apos;</strong>입니다. 한 모임 안에서 어떤 친구는 &apos;매일 코딩&apos;, 어떤 친구는 &apos;주 3회 헬스장&apos;, 어떤 친구는 &apos;6시 기상&apos;을 각각 등록하고 함께 인증할 수 있습니다.
@@ -138,9 +138,9 @@ export const ContactPage: React.FC = () => {
           </details>
 
           <details className="group border border-slate-200 rounded-xl p-4 bg-white hover:border-slate-300 transition">
-            <summary className="font-semibold text-slate-900 cursor-pointer text-sm sm:text-base flex items-center justify-between">
+            <summary className="font-semibold text-slate-900 cursor-pointer text-sm sm:text-base flex items-center justify-between min-h-[44px] focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2 rounded-lg">
               <span>회원 탈퇴 및 개인정보 삭제는 어떻게 하나요?</span>
-              <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+              <span className="text-slate-400 group-open:rotate-180 transition-transform" aria-hidden="true">▼</span>
             </summary>
             <p className="mt-3 text-xs sm:text-sm text-slate-600 border-t border-slate-100 pt-3 break-keep">
               프로필 설정 화면 또는 공식 지원 이메일(contact@dayuse.kr)로 탈퇴 요청을 보내주시면, 이용자의 개인정보 및 인증 기록을 법령이 정한 보존 의무 범위를 제외하고 즉시 영구 파기합니다.

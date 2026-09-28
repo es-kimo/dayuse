@@ -66,3 +66,46 @@ export const pickImageSaveStrategy = (file: File): ImageSaveStrategy => {
   if (isIOS()) return 'long-press';
   return 'download';
 };
+
+/**
+ * 인앱 브라우저 종류 식별
+ */
+export const getInAppBrowserName = (): 'kakaotalk' | 'instagram' | 'naver' | 'facebook' | 'line' | 'other' | null => {
+  const agent = ua();
+  if (/KAKAOTALK/i.test(agent)) return 'kakaotalk';
+  if (/Instagram/i.test(agent)) return 'instagram';
+  if (/NAVER/i.test(agent)) return 'naver';
+  if (/FBAN|FBAV/i.test(agent)) return 'facebook';
+  if (/Line\//i.test(agent)) return 'line';
+  if (isInAppBrowser()) return 'other';
+  return null;
+};
+
+/**
+ * 인앱 브라우저에서 외부 브라우저(Chrome/Safari 등)로 전환 열기 시도
+ */
+export const openInExternalBrowser = (targetUrl?: string): boolean => {
+  if (typeof window === 'undefined') return false;
+  const url = targetUrl || window.location.href;
+
+  try {
+    // 1. 카카오톡 인앱 브라우저
+    if (isKakaoInApp()) {
+      window.location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(url)}`;
+      return true;
+    }
+
+    // 2. 안드로이드 환경 (Chrome Intent 스킴 활용)
+    if (isAndroid()) {
+      const cleanUrl = url.replace(/^https?:\/\//i, '');
+      window.location.href = `intent://${cleanUrl}#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.android.chrome;end`;
+      return true;
+    }
+
+    // 3. iOS 및 기타 환경은 새 탭 또는 직접 이동
+    window.open(url, '_blank');
+    return true;
+  } catch {
+    return false;
+  }
+};

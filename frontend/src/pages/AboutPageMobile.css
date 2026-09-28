@@ -1524,6 +1524,10 @@
 }
 
 .about-mobile .foot a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 4px;
   font-size: 13px;
   color: var(--blue-100);
   text-decoration: none;
