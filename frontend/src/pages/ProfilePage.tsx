@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MobileLayout } from '../components/MobileLayout';
-import { ArrowLeft, User as UserIcon, LogOut, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, User as UserIcon, LogOut, Check, Loader2, Info } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateUserNickname, logout } = useAuth();
@@ -101,7 +101,7 @@ export const ProfilePage: React.FC = () => {
           </form>
 
           {/* 알림 설정 메뉴 */}
-          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden divide-y divide-slate-100">
             <button
               onClick={() => navigate('/settings/notifications')}
               className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition"
@@ -115,6 +115,24 @@ export const ProfilePage: React.FC = () => {
                 <div>
                   <span className="text-sm font-semibold text-slate-800">미인증 웹 푸시 알림</span>
                   <p className="text-[11px] text-slate-400">매일 저녁 리마인더 시간 및 수신 설정</p>
+                </div>
+              </div>
+              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            <button
+              onClick={() => navigate('/about')}
+              className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Info className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold text-slate-800">dayuse 소개</span>
+                  <p className="text-[11px] text-slate-400">서비스 소개 및 사용 가이드 보기</p>
                 </div>
               </div>
               <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

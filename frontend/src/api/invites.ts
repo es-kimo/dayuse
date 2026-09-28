@@ -48,6 +48,12 @@ export const handlePostLoginNavigation = async (
 ) => {
   const pendingCode = inviteStorage.get();
   if (!pendingCode) {
+    const returnTo = sessionStorage.getItem('dayuse_return_to');
+    if (returnTo) {
+      sessionStorage.removeItem('dayuse_return_to');
+      navigate(returnTo, { replace: true });
+      return;
+    }
     const pendingChallengeId = sessionStorage.getItem('dayuse_pending_challenge_id');
     if (pendingChallengeId) {
       sessionStorage.removeItem('dayuse_pending_challenge_id');
