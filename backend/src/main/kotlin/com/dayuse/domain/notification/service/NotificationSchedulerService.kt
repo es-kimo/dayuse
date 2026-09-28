@@ -66,11 +66,11 @@ class NotificationSchedulerService(
                 continue
             }
 
-            val initialPendingCount = countPendingChallenges(
+            val pendingCount = countPendingChallenges(
                 userId,
                 today
             )
-            if (initialPendingCount <= 0) {
+            if (pendingCount <= 0) {
                 log.debug(
                     "미인증 챌린지가 없어 알림 발송 스킵: userId={}",
                     userId
@@ -78,18 +78,11 @@ class NotificationSchedulerService(
                 continue
             }
 
-            // 발송 직전 공동 완료 및 중단 여부 2차 검증 (레이스 컨디션 방어)
-            val pendingCount = countPendingChallenges(
-                userId,
-                today
-            )
-            if (pendingCount <= 0) {
-                log.debug(
-                    "발송 직전 2차 검증 결과 미인증 챌린지가 없어 알림 발송 스킵: userId={}",
-                    userId
-                )
-                continue
-            }
+            // TODO [사용자 미션 1-1]: 발송 직전 공동 완료 및 중단 여부 2차 검증 (레이스 컨디션 방어)
+            // 요구사항:
+            // 1. 발송 대기 중인 상태에서 타 참가자가 당일 공동 인증을 완료했거나 챌린지가 중단되었을 수 있습니다.
+            // 2. 푸시 발송(notificationPushService.sendPushToUser) 직전에 countPendingChallenges를 재호출하여
+            //    남은 미인증 챌린지가 0개 이하인 경우 발송을 건너뛰고 continue 처리하세요.
 
             val payload = PushPayload(
                 title = "dayuse 오늘 인증 리마인더",
@@ -147,10 +140,9 @@ class NotificationSchedulerService(
         for (participant in activeParticipants) {
             val challenge = challengeRepository.findByIdOrNull(participant.challengeId) ?: continue
 
-            // 중단된 챌린지 또는 진행 중이 아닌 챌린지 제외
-            if (challenge.isAborted() || challenge.status(targetDate) != com.dayuse.domain.challenge.ChallengeStatus.IN_PROGRESS) {
-                continue
-            }
+            // TODO [사용자 미션 1-2]: 중단(ABORTED) 및 진행 중(IN_PROGRESS)이 아닌 챌린지 필터링
+            // 요구사항:
+            // 1. challenge.isAborted() 이거나 대상 날짜 기준 challenge.status(targetDate) 가 IN_PROGRESS 가 아닌 경우 건너뛰세요.
 
             if (participant.startDate <= targetDate && targetDate <= challenge.endDate) {
                 val isTogether = challenge.executionType.isTogether

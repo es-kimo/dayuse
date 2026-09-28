@@ -250,20 +250,23 @@ class ChallengeService(
             throw BadRequestException("종료되었거나 중단된 챌린지만 다시 시작할 수 있습니다.")
         }
 
-        val durationDays = ChronoUnit.DAYS.between(
-            challenge.startDate,
-            challenge.endDate
-        ).toInt() + 1
-        val suggestedStartDate = today.plusDays(1)
-        val suggestedEndDate = suggestedStartDate.plusDays((durationDays - 1).toLong())
-
-        // 이전 참여 벌금 금액 조회: 현재 챌린지 참여 이력 우선 -> 없으면 사용자의 가장 최근 참여 이력 -> 없으면 기본 5,000원
-        val suggestedPenalty = challengeParticipantRepository.findByChallengeIdAndUserId(
-            challengeId,
-            userId
-        )?.penaltyAmount
-            ?: challengeParticipantRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)?.penaltyAmount
-            ?: 5000
+        // TODO [사용자 미션 3]: '다시 만들기' 도메인 설정 복제 팩토리 로직
+        // 요구사항:
+        // 1. 원본 챌린지의 시작일~종료일 간의 총 기간(durationDays)을 일 단위로 계산합니다. (시작일, 종료일 포함)
+        // 2. 새로운 시작 추천일(suggestedStartDate)은 기준일(today)의 다음 날(today.plusDays(1))로 설정합니다.
+        // 3. 새로운 종료 추천일(suggestedEndDate)은 suggestedStartDate로부터 durationDays 기간에 맞춰 계산합니다.
+        // 4. suggestedPenaltyAmount:
+        //    - 챌린지가 함께하기(TOGETHER)인 경우 0원
+        //    - 개인(INDIVIDUAL)인 경우:
+        //      현재 챌린지에서 사용자의 참여 벌금(penaltyAmount) 조회
+        //      -> 없으면 사용자의 가장 최근 참여 이력(findFirstByUserIdOrderByCreatedAtDesc)의 penaltyAmount
+        //      -> 이마저도 없으면 기본값 5,000원
+        // 5. 원본 챌린지의 도메인 설정(title, description, verificationCriteria, periodType, targetFrequency, executionType)을 복제하고,
+        //    위 계산값들을 담은 ChallengeRestartTemplateResponse를 반환합니다.
+        val durationDays = 0
+        val suggestedStartDate = today
+        val suggestedEndDate = today
+        val suggestedPenalty = 0
 
         return ChallengeRestartTemplateResponse(
             challengeId = challenge.id,
@@ -276,7 +279,7 @@ class ChallengeService(
             executionType = challenge.executionType,
             suggestedStartDate = suggestedStartDate,
             suggestedEndDate = suggestedEndDate,
-            suggestedPenaltyAmount = if (challenge.executionType.isTogether) 0 else suggestedPenalty
+            suggestedPenaltyAmount = suggestedPenalty
         )
     }
 
