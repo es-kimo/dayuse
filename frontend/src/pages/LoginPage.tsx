@@ -101,6 +101,19 @@ export const LoginPage: React.FC = () => {
           </div>
         )}
 
+        <p className="text-xs text-slate-400 text-center mt-3">
+          시작하면{' '}
+          <a href="/terms" className="underline underline-offset-2 hover:text-slate-600 focus-ring rounded">
+            이용약관
+          </a>
+          과{' '}
+          <a href="/privacy" className="underline underline-offset-2 hover:text-slate-600 focus-ring rounded">
+            개인정보처리방침
+          </a>
+          에 동의하게 돼요.
+        </p>
+
+
         {/* 로컬 개발/학습용 모의 로그인 영역 (개발 환경에서만 노출) */}
         {import.meta.env.DEV && (
           <div className="w-full max-w-xs mt-10 pt-6 border-t border-line">
