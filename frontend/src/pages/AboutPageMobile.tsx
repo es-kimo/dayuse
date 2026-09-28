@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { DayuLogo } from '../components/brand/DayuLogo';
 import {
@@ -1022,12 +1022,12 @@ export const AboutPageMobile: React.FC = () => {
             <div className="shareCap">연속 기록은 공유 카드로 자랑할 수 있어요 · 예시</div>
 
             <div className="foot">
-              <div className="links">
-                <a className="todo" href="#start">문의하기</a>
-                <a className="todo" href="#start">서비스 안내</a>
-                <a className="todo" href="#start">이용약관</a>
-                <a className="todo" href="#start">개인정보처리방침</a>
-              </div>
+              <nav className="links" aria-label="바닥글 링크">
+                <Link to="/contact">문의하기</Link>
+                <Link to="/guide">서비스 안내</Link>
+                <Link to="/terms">이용약관</Link>
+                <Link to="/privacy">개인정보처리방침</Link>
+              </nav>
               <small>목표는 각자, 꾸준함은 함께.</small>
               <div className="water" aria-hidden="true">데이유즈</div>
             </div>

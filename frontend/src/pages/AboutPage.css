@@ -989,8 +989,7 @@
   gap: 10px 20px;
 }
 
-.about-page .foot a,
-.about-page .foot .todo {
+.about-page .foot a {
   font-size: 13px;
   color: var(--blue-100);
   text-decoration: none;
@@ -998,8 +997,7 @@
   cursor: pointer;
 }
 
-.about-page .foot a:hover,
-.about-page .foot .todo:hover {
+.about-page .foot a:hover {
   color: #fff;
   text-decoration: underline;
 }
@@ -1616,11 +1614,6 @@
   color: var(--blue-100);
 }
 
-.about-page .todo {
-  color: #fff;
-  text-decoration: none;
-  border-bottom: 1px dashed rgba(255,255,255,.5);
-}
 
 /* Responsive */
 @media (max-width: 760px) {
