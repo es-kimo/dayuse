@@ -405,19 +405,54 @@
 .about-page .scr {
   position: absolute;
   inset: 0;
-  padding: 44px 18px 18px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   opacity: 0;
-  transition: none;
+  transition: opacity 0.2s ease-out;
+  overflow: hidden;
+  background: #fff;
+}
+
+.about-page .scr-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
 }
 
 .about-page .scr.cam {
   background: #0B1222;
   color: #fff;
-  padding: 0;
-  gap: 0;
+  position: relative;
+}
+
+.about-page .cam-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(11, 18, 34, 0.4);
+  backdrop-filter: blur(1px);
+}
+
+.about-page .shareCard-wrap {
+  justify-self: center;
+  width: min(100%, 340px);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -24px rgba(2, 6, 23, 0.55);
+  transition: transform 0.3s ease;
+}
+
+.about-page .shareCard-wrap:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+.about-page .shareCard-img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .about-page .viewfinder {

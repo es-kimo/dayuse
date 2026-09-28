@@ -365,44 +365,42 @@ export const AboutPage: React.FC = () => {
                 <div className="notch"></div>
                 <div className="flash" id="flash"></div>
 
-                {/* 1. Camera viewfinder */}
+                {/* 1. Camera viewfinder & Today actions capture */}
                 <div className="scr cam" id="scrCam">
-                  <div className="camTop">인증 사진 촬영</div>
-                  <div className="viewfinder">
-                    <div className="shot">
-                      <div className="l" style={{ width: '60%' }}></div>
-                      <div className="l" style={{ width: '40%' }}></div>
-                      <div className="ok">
-                        <i>&check;</i> 06:30 AM
-                      </div>
-                      <div className="corners"></div>
-                    </div>
+                  <img
+                    src="/landing/assets/captures/05-today-actions.webp"
+                    alt="오늘의 챌린지 액션 화면"
+                    className="scr-img"
+                    loading="lazy"
+                  />
+                  <div className="cam-overlay">
+                    <div className="camTop">인증 사진 촬영</div>
+                    <div className="corners"></div>
+                    <div className="shutter"></div>
                   </div>
-                  <div className="shutter"></div>
                 </div>
 
-                {/* 2. Upload verification screen */}
+                {/* 2. Upload verification screen (실제 사진 인증 모달 캡처) */}
                 <div className="scr up" id="scrUp">
-                  <h4>매일 1알고리즘 문제 풀기</h4>
-                  <div className="sub">알고리즘 &amp; 습관 스터디</div>
-                  <div className="criteria">인증 기준: 제출 성공 화면 캡처 또는 커밋 내역</div>
-                  <div className="thumb">
-                    <div className="l" style={{ width: '70%' }}></div>
-                    <div className="l" style={{ width: '45%' }}></div>
-                  </div>
-                  <div className="memo">오늘은 백준 DP 문제 하나 풀었어요!</div>
-                  <div className="cta" id="upCta">
-                    인증 완료하기
-                  </div>
+                  <img
+                    src="/landing/assets/captures/08-verification-modal.webp"
+                    alt="사진 인증 작성 모달"
+                    className="scr-img"
+                    loading="lazy"
+                  />
+                  <div id="upCta" style={{ display: 'none' }}></div>
                 </div>
 
-                {/* 3. Done streak screen */}
+                {/* 3. Done streak screen (실제 챌린지 캘린더 & 스트릭 통계 캡처) */}
                 <div className="scr done" id="scrDone">
-                  <h4>오늘 인증을 모두 마쳤어요!</h4>
-                  <div className="sub" id="streakTxt">
-                    7일 연속
-                  </div>
-                  <div className="streak" id="streak">
+                  <img
+                    src="/landing/assets/captures/04-challenge-calendar.webp"
+                    alt="챌린지 캘린더 및 7일 연속 달성 스트릭"
+                    className="scr-img"
+                    loading="lazy"
+                  />
+                  <div id="streakTxt" style={{ display: 'none' }}></div>
+                  <div id="streak" style={{ display: 'none' }}>
                     <i></i>
                     <i></i>
                     <i></i>
@@ -410,15 +408,6 @@ export const AboutPage: React.FC = () => {
                     <i></i>
                     <i></i>
                     <i></i>
-                  </div>
-                  <div className="days">
-                    <span>월</span>
-                    <span>화</span>
-                    <span>수</span>
-                    <span>목</span>
-                    <span>금</span>
-                    <span>토</span>
-                    <span>일</span>
                   </div>
                 </div>
               </div>
@@ -553,30 +542,13 @@ export const AboutPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="shareCard" aria-label="공유 카드 예시">
-              <div className="top">
-                <span>dayuse.kr</span>
-              </div>
-              <div className="face">
-                <DayuLogo variant="symbol" className="w-12 h-12" />
-              </div>
-              <div className="big">
-                <b>7</b>
-                <span>일 연속</span>
-              </div>
-              <div className="streak">
-                <i className="on"></i>
-                <i className="on"></i>
-                <i className="on"></i>
-                <i className="on"></i>
-                <i className="on"></i>
-                <i className="on"></i>
-                <i className="on"></i>
-              </div>
-              <div className="who">
-                <small>매일 1알고리즘 문제 풀기</small>
-                <b>류코딩</b>
-              </div>
+            <div className="shareCard-wrap" aria-label="연속 기록 공유 카드">
+              <img
+                src="/landing/assets/captures/09-share-card.webp"
+                alt="7일 연속 달성 인증 공유 카드"
+                className="shareCard-img"
+                loading="lazy"
+              />
             </div>
           </div>
 
