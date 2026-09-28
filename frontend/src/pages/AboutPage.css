@@ -24,7 +24,13 @@
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  /*
+   * overflow-x: hidden을 쓰면 안 된다.
+   * hidden은 overflow-y를 auto로 만들어 이 div가 스크롤 컨테이너가 되고,
+   * 그러면 안쪽 .stage의 position: sticky가 뷰포트가 아니라 이 div를 기준으로 잡혀
+   * 스크롤 고정(핀)이 전혀 걸리지 않는다. clip은 스크롤 컨테이너를 만들지 않는다.
+   */
+  overflow-x: clip;
   position: relative;
   min-height: 100vh;
 }
@@ -111,28 +117,6 @@
 .about-page .btn:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 3px;
-}
-
-.about-page .btn-subtle {
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--ink);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(8px);
-}
-
-.about-page .btn-subtle:hover {
-  background: #fff;
-  color: var(--blue);
-}
-
-.about-page .nav.on-dark .btn-subtle {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.about-page .nav.on-dark .btn-subtle:hover {
-  background: rgba(255, 255, 255, 0.2);
 }
 
 .about-page .btn-lg {
@@ -322,30 +306,6 @@
   color: rgba(255, 255, 255, 0.78);
 }
 
-.about-page .hero-cta-group {
-  margin-top: 28px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.about-page .hero-guide-link {
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: pointer;
-  background: none;
-  border: 0;
-  padding: 0;
-}
-
-.about-page .hero-guide-link:hover {
-  color: #fff;
-}
-
 .about-page .cardCopy {
   position: absolute;
   left: calc(9vw + clamp(20px, 4vw, 64px));
@@ -409,7 +369,12 @@
   display: flex;
   flex-direction: column;
   opacity: 0;
-  transition: opacity 0.2s ease-out;
+  /*
+   * transition을 걸면 안 된다.
+   * 아래 스크롤 핸들러가 매 프레임 opacity를 직접 넣기 때문에,
+   * 전환이 있으면 화면 전환이 스크롤보다 늦게 따라온다.
+   */
+  transition: none;
   overflow: hidden;
   background: #fff;
 }
@@ -443,6 +408,8 @@
   overflow: hidden;
   box-shadow: 0 30px 60px -24px rgba(2, 6, 23, 0.55);
   transition: transform 0.3s ease;
+  /* 캡처 원본 비율(780x1688). 지연 로딩된 뒤 아웃트로 높이가 늘어나 스크롤이 튀는 것을 막는다. */
+  aspect-ratio: 780 / 1688;
 }
 
 .about-page .shareCard-wrap:hover {
@@ -835,86 +802,12 @@
   max-width: 26em;
 }
 
-/* FAQ Section */
-.about-page .faq-section {
-  position: relative;
-  background: var(--page);
-  padding: 14vh clamp(16px, 6vw, 96px);
-  border-top: 1px solid var(--line);
-}
-
-.about-page .faq-inner {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.about-page .faq-header {
-  text-align: center;
-  margin-bottom: 48px;
-}
-
-.about-page .faq-eyebrow {
-  color: var(--blue);
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.about-page .faq-title {
-  font-size: clamp(28px, 4vw, 44px);
-  font-weight: 800;
-  color: var(--ink);
-  margin-top: 8px;
-}
-
-.about-page .faq-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.about-page .faq-item {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  overflow: hidden;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.about-page .faq-item:hover {
-  border-color: var(--blue-300);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.05);
-}
-
-.about-page .faq-question {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 20px 24px;
-  text-align: left;
-  background: none;
-  border: 0;
-  font: 700 17px/1.4 var(--font);
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.about-page .faq-answer {
-  padding: 0 24px 20px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--ink-2);
-}
-
 /* Outro */
 .about-page .outro {
   position: relative;
   background: var(--blue);
   color: #fff;
-  padding: 16vh clamp(16px, 6vw, 96px) 0;
+  padding: 18vh clamp(16px, 6vw, 96px) 0;
   overflow: hidden;
 }
 
@@ -1042,7 +935,7 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  padding: 24px 0 calc(28px + env(safe-area-inset-bottom, 0px));
+  padding: 20px 0 calc(24px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   font-size: 13px;
   color: var(--blue-100);

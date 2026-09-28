@@ -1,42 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { DayuLogo } from '../components/brand/DayuLogo';
-import { FAQ_ITEMS } from '../constants/landingContent';
-import { ChevronDown, ArrowRight } from 'lucide-react';
 import './AboutPage.css';
 
 export const AboutPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
-
   const handleStart = () => {
     if (isAuthenticated) {
       navigate('/groups/new');
     } else {
       navigate('/login?returnTo=/groups/new');
     }
-  };
-
-  const handleMyGroups = () => {
-    if (isAuthenticated) {
-      navigate('/groups');
-    } else {
-      navigate('/login?returnTo=/groups');
-    }
-  };
-
-  const handleScrollToGuide = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const stepsEl = document.getElementById('steps');
-    if (stepsEl) {
-      stepsEl.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const toggleFaq = (idx: number) => {
-    setOpenFaqIndex((prev) => (prev === idx ? null : idx));
   };
 
   useEffect(() => {
@@ -59,7 +35,6 @@ export const AboutPage: React.FC = () => {
     const heroCopy = document.getElementById('heroCopy');
     const words = heroCopy ? heroCopy.querySelectorAll<HTMLElement>('.w') : [];
     const heroP = heroCopy ? heroCopy.querySelector<HTMLElement>('p') : null;
-    const heroCtaGroup = heroCopy ? heroCopy.querySelector<HTMLElement>('.hero-cta-group') : null;
     const chips = document.getElementById('chips');
     const cardCopy = document.getElementById('cardCopy');
     const phLabel = document.getElementById('phLabel');
@@ -121,9 +96,6 @@ export const AboutPage: React.FC = () => {
 
       if (heroP) {
         heroP.style.opacity = String(1 - seg(p, 0.1, 0.18));
-      }
-      if (heroCtaGroup) {
-        heroCtaGroup.style.opacity = String(1 - seg(p, 0.12, 0.22));
       }
       if (chips) {
         chips.style.opacity = String(1 - seg(p, 0.16, 0.26));
@@ -283,26 +255,21 @@ export const AboutPage: React.FC = () => {
           </div>
         </div>
 
-        <nav className="nav-actions">
-          <button type="button" onClick={handleMyGroups} className="btn btn-subtle">
-            내 모임으로
-          </button>
-          <button type="button" onClick={handleStart} className="btn">
-            시작하기
-          </button>
-        </nav>
+        <button type="button" onClick={handleStart} className="btn">
+          시작하기
+        </button>
       </header>
 
       {/* Progress rail */}
       <div className="rail" id="rail" aria-hidden="true">
-        <i className="on"></i>
+        <i></i>
         <i></i>
         <i></i>
         <i></i>
       </div>
 
       <main>
-        {/* Section 1 & 2 & 4: Scene A */}
+        {/* Scene A */}
         <section className="scene" id="sceneA" aria-label="사진 한 장이면 끝나는 인증">
           <div className="stage">
             {/* Morning card backdrop */}
@@ -315,13 +282,13 @@ export const AboutPage: React.FC = () => {
 
               <div className="chips" id="chips">
                 <div className="chip">
-                  <b>01</b>기상 06:30 <span>매일</span>
+                  <b>류</b>매일 1알고리즘 <span>코딩</span>
                 </div>
                 <div className="chip">
-                  <b>02</b>운동 45분 <span>주 5회</span>
+                  <b>김</b>주 3회 헬스장 <span>운동</span>
                 </div>
                 <div className="chip">
-                  <b>03</b>알고리즘 1문제 <span>주 3회</span>
+                  <b>박</b>6시 기상 <span>습관</span>
                 </div>
               </div>
 
@@ -331,32 +298,22 @@ export const AboutPage: React.FC = () => {
 
               <div className="heroCopy" id="heroCopy">
                 <h1>
-                  <span className="w">사진</span> <span className="w">한</span> <span className="w">장이면</span>
+                  <span className="w">목표는</span> <span className="w">각자,</span>
                   <br />
-                  <span className="w">끝나는</span> <span className="w">인증.</span>
+                  <span className="w">꾸준함은</span> <span className="w">함께.</span>
                 </h1>
-                <p>매일 긴 글 쓸 필요 없어요. 사진 한 장과 한 줄 소감이면 친구들과의 챌린지 기록이 쌓여요.</p>
-                <div className="hero-cta-group">
-                  <button type="button" onClick={handleStart} className="btn">
-                    친구들과 시작하기
-                  </button>
-                  <button type="button" onClick={handleScrollToGuide} className="hero-guide-link">
-                    어떻게 사용하는지 보기 &darr;
-                  </button>
-                </div>
+                <p>친구들과 각자의 챌린지를 인증하고 기록해요.</p>
               </div>
             </div>
 
-            {/* Section 2: 카톡 인증 비교 및 기간/기록 조회 강조 */}
+            {/* 카드 카피 */}
             <div className="cardCopy" id="cardCopy">
               <h2>
-                카톡 방에 올리고
+                사진 한 장이면
                 <br />
-                흘려보내지 마세요
+                끝나는 인증
               </h2>
-              <p>
-                한 달 뒤에도 우리 모임의 기록이 캘린더와 통계로 온전히 남아있어요. 잊혀지지 않는 성취를 만듭니다.
-              </p>
+              <p>찍고, 한마디 남기고, 올리면 끝. 친구들에게 바로 보여요.</p>
             </div>
 
             {/* Mobile Phone Mockup */}
@@ -413,33 +370,33 @@ export const AboutPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Section 4: 3단계 가이드 스텝 */}
+            {/* 3단계 가이드 스텝 */}
             <div className="steps" id="steps">
-              <div className="eyebrow">HOW IT WORKS</div>
+              <div className="eyebrow">오늘의 인증</div>
               <h2>
-                매일 가볍게,
+                매일 하는 일은
                 <br />
-                3단계로 끝나요
+                가볍게
               </h2>
               <ol>
-                <li className="on">
-                  <b>01 모임 만들기</b>
-                  <span>링크 하나로 친구들을 초대해요.</span>
+                <li>
+                  <b>오늘 할 일 확인</b>
+                  <span>참여 중인 모든 모임의 인증을 한 화면에서.</span>
                 </li>
                 <li>
-                  <b>02 챌린지 정하기</b>
-                  <span>각자 지킬 목표와 주기를 설정해요.</span>
+                  <b>사진으로 인증</b>
+                  <span>카메라로 찍거나 캡처를 붙여 넣어요.</span>
                 </li>
                 <li>
-                  <b>03 사진 한 장 인증</b>
-                  <span>매일 정해진 시간에 가볍게 올려요.</span>
+                  <b>연속 기록 쌓기</b>
+                  <span>하루하루 칸이 채워지는 걸 친구와 함께 봐요.</span>
                 </li>
               </ol>
             </div>
           </div>
         </section>
 
-        {/* Section 3: Scene B ("목표는 각자, 꾸준함은 함께") */}
+        {/* Scene B */}
         <section className="scene" id="sceneB" aria-label="목표는 각자, 꾸준함은 함께">
           <div className="stage">
             <div className="phrase" id="phrase">
@@ -487,46 +444,7 @@ export const AboutPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Section 5: 시작 전 궁금한 점 (FAQ 아코디언) */}
-        <section className="faq-section" id="faq" aria-label="시작 전 궁금한 점">
-          <div className="faq-inner">
-            <div className="faq-header">
-              <div className="faq-eyebrow">FAQ</div>
-              <h2 className="faq-title">시작 전 궁금한 점</h2>
-            </div>
-
-            <div className="faq-list" role="region" aria-label="자주 묻는 질문 목록">
-              {FAQ_ITEMS.map((item, idx) => {
-                const isOpen = openFaqIndex === idx;
-                return (
-                  <div key={item.question} className="faq-item">
-                    <button
-                      type="button"
-                      onClick={() => toggleFaq(idx)}
-                      className="faq-question"
-                      aria-expanded={isOpen}
-                      aria-controls={`faq-answer-${idx}`}
-                    >
-                      <span>{item.question}</span>
-                      <ChevronDown
-                        className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${
-                          isOpen ? 'rotate-180 text-blue-600' : ''
-                        }`}
-                      />
-                    </button>
-                    {isOpen && (
-                      <div id={`faq-answer-${idx}`} className="faq-answer">
-                        <p>{item.answer}</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* Section 6: Outro (마지막 CTA) */}
+        {/* Outro (마지막 CTA) */}
         <section className="outro" id="start" aria-label="시작하기">
           <div className="inner">
             <div>
@@ -537,8 +455,7 @@ export const AboutPage: React.FC = () => {
               </h2>
               <p>모임을 만들고 초대 링크를 보내면 준비 끝이에요.</p>
               <button type="button" onClick={handleStart} className="btn btn-lg">
-                <span>친구들과 시작하기</span>
-                <ArrowRight className="w-5 h-5" />
+                데이유즈 시작하기
               </button>
             </div>
 
@@ -547,6 +464,8 @@ export const AboutPage: React.FC = () => {
                 src="/landing/assets/captures/09-share-card.webp"
                 alt="7일 연속 달성 인증 공유 카드"
                 className="shareCard-img"
+                width={780}
+                height={1688}
                 loading="lazy"
               />
             </div>
