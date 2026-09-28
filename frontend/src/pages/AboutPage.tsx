@@ -1,12 +1,38 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { DayuLogo } from '../components/brand/DayuLogo';
+import { AboutPageMobile } from './AboutPageMobile';
 import './AboutPage.css';
+
+/**
+ * PC판과 모바일판은 섹션 구성과 스크롤 타임라인이 완전히 다르다.
+ * 미디어 쿼리로 한 마크업을 덮는 대신 폭 기준으로 컴포넌트를 갈라 쓴다.
+ * 760px은 PC 프로토타입이 쓰던 경계값이다.
+ */
+const MOBILE_QUERY = '(max-width: 760px)';
+
+const useMobileLayout = () => {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+    return window.matchMedia(MOBILE_QUERY).matches;
+  });
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  return isMobile;
+};
 
 export const AboutPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useMobileLayout();
   const handleStart = () => {
     if (isAuthenticated) {
       navigate('/groups/new');
@@ -384,6 +410,8 @@ export const AboutPage: React.FC = () => {
       io?.disconnect();
     };
   }, []);
+
+  if (isMobile) return <AboutPageMobile />;
 
   return (
     <div className="about-page">

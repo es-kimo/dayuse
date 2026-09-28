@@ -17,6 +17,7 @@ vi.mock('react-router-dom', async () => {
 describe('AboutPage (공개 소개 페이지)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   const renderWithAuth = (isAuthenticated: boolean) => {
@@ -35,6 +36,27 @@ describe('AboutPage (공개 소개 페이지)', () => {
       </BrowserRouter>
     );
   };
+
+  it('좁은 뷰포트(760px 이하)에서는 모바일 전용 소개 페이지가 렌더링된다', () => {
+    // 데스크톱/모바일은 마크업이 완전히 다른 별도 컴포넌트라 분기 자체를 고정한다.
+    // jsdom에는 matchMedia가 없어서 직접 심는다.
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query === '(max-width: 760px)',
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    const { container } = renderWithAuth(false);
+
+    expect(container.querySelector('.about-mobile')).toBeInTheDocument();
+    expect(container.querySelector('.about-page')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /목표는 각자,\s*꾸준함은 함께\./i })).toBeInTheDocument();
+  });
 
   it('비로그인 상태에서 소개 페이지가 정상 렌더링되고 주요 섹션이 표시된다', () => {
     renderWithAuth(false);
