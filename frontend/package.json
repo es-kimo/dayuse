@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:worker": "wrangler dev",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/generate-static-pages.mjs",
     "lint": "oxlint",
     "verify:kakao-sdk": "node scripts/verify-kakao-sdk-integrity.mjs",
     "capture:screens": "node scripts/capture-screens.mjs",
