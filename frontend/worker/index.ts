@@ -27,6 +27,8 @@ interface PublicShareCard {
 const SHARE_PATH = /^\/shares\/([^/]+)\/?$/;
 /** 모임 초대 경로 */
 const INVITE_PATH = /^\/invite\/([^/]+)\/?$/;
+/** 소개 및 랜딩 페이지 경로 (전용 og-landing 이미지 서빙) */
+const ABOUT_PATH = /^\/about\/?$/;
 
 /** 카드 및 초대 조회가 늦어져도 페이지가 늦게 뜨지 않도록 끊는다. */
 const API_TIMEOUT_MS = 2500;
@@ -153,8 +155,9 @@ export default {
 
     const shareMatch = request.method === 'GET' ? SHARE_PATH.exec(url.pathname) : null;
     const inviteMatch = request.method === 'GET' ? INVITE_PATH.exec(url.pathname) : null;
+    const isAbout = request.method === 'GET' && ABOUT_PATH.test(url.pathname);
 
-    if (!shareMatch && !inviteMatch) {
+    if (!shareMatch && !inviteMatch && !isAbout) {
       return env.ASSETS.fetch(request);
     }
 
@@ -165,15 +168,20 @@ export default {
     const page = await env.ASSETS.fetch(shell);
     if (!page.ok) return page;
 
-    const canonical = url.toString();
+    const canonical = isAbout ? `${url.origin}/about` : url.toString();
     const origin = url.origin;
 
     let title = '페이지 안내 · dayuse';
     let description = '없거나 만료된 링크예요.';
     let image = `${origin}/assets/brand/og-expired.png`;
-    const robots = 'noindex, nofollow';
+    let robots = 'noindex, nofollow';
 
-    if (shareMatch) {
+    if (isAbout) {
+      title = 'dayuse · 목표는 각자, 꾸준함은 함께';
+      description = '친구들과 각자의 챌린지를 인증하고 기록해요. 우리 모임을 만들고 함께 시작해보세요.';
+      image = `${origin}/assets/brand/og-landing.png`;
+      robots = 'index, follow';
+    } else if (shareMatch) {
       const card = await fetchCard(env, shareMatch[1]);
       if (card) {
         // 공개 허용 범위로 한정한 공유 카드 메타데이터
