@@ -6,7 +6,6 @@ import {
   Trash2,
   Calendar,
   AlertTriangle,
-  User as UserIcon,
   Loader2,
   Share2,
   Maximize2,

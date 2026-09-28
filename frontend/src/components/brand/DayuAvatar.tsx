@@ -1,5 +1,5 @@
 import React from 'react';
-import { parseDayuColor, isHttpProfileImage, DayuColorOption } from '../../tokens/dayuColors';
+import { parseDayuColor, isHttpProfileImage, type DayuColorOption } from '../../tokens/dayuColors';
 
 interface DayuAvatarProps {
   profileImageUrl?: string | null;

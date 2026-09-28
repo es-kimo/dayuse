@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { DAYU_COLOR_LIST, DAYU_COLORS, parseDayuColor, DayuColorOption } from '../tokens/dayuColors';
+import { DAYU_COLOR_LIST, DAYU_COLORS, parseDayuColor, type DayuColorOption } from '../tokens/dayuColors';
 import { DayuAvatar } from '../components/brand/DayuAvatar';
 import { ArrowLeft, Dices, Check, Loader2 } from 'lucide-react';
 
 export const AvatarCustomPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, updateUserProfile } = useAuth();
-  const { showSuccess, showError } = useToast();
+  const { showToast, showErrorToast } = useToast();
 
   const initialColor = parseDayuColor(user?.profileImageUrl);
   const [selectedColor, setSelectedColor] = useState<DayuColorOption>(initialColor);
@@ -30,11 +30,11 @@ export const AvatarCustomPage: React.FC = () => {
     setIsSaving(true);
     try {
       await updateUserProfile({ profileImageUrl: `dayu:${selectedColor.id}` });
-      showSuccess(`프로필 데이유가 '${selectedColor.label}' 색상으로 변경되었습니다.`);
+      showToast(`프로필 데이유가 '${selectedColor.label}' 색상으로 변경되었습니다.`, 'success');
       navigate('/profile');
     } catch (err) {
       console.error('Failed to update avatar:', err);
-      showError('데이유 색상 변경 중 오류가 발생했습니다.');
+      showErrorToast('데이유 색상 변경 중 오류가 발생했습니다.');
     } finally {
       setIsSaving(false);
     }

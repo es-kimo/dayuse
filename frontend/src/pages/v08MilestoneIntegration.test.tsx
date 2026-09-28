@@ -1,9 +1,9 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider, useAuth } from '../context/AuthContext';
-import { UiVersionProvider, useUiVersion } from '../context/UiVersionContext';
+import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../context/AuthContext';
+import { UiVersionProvider } from '../context/UiVersionContext';
 import { ToastProvider } from '../context/ToastContext';
 import { TodayPage } from './TodayPage';
 import { GroupsPage } from './GroupsPage';

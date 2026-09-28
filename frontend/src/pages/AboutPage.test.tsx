@@ -29,6 +29,7 @@ describe('AboutPage (공개 소개 페이지)', () => {
       login: vi.fn(),
       logout: vi.fn(),
       updateUserNickname: vi.fn(),
+      updateUserProfile: vi.fn(),
     });
 
     return render(

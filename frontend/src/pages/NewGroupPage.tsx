@@ -5,13 +5,13 @@ import { MobileLayout } from '../components/MobileLayout';
 import { Button, FormField, Input } from '../components/ui';
 import { useUiVersion } from '../context/UiVersionContext';
 import { useToast } from '../context/ToastContext';
-import { ArrowLeft, Check, Copy, Sparkles, Plus, Users } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Sparkles, Plus } from 'lucide-react';
 import type { GroupDetail } from '../types';
 
 export const NewGroupPage: React.FC = () => {
   const navigate = useNavigate();
   const { uiVersion } = useUiVersion();
-  const { showSuccess } = useToast();
+  const { showToast } = useToast();
   const [name, setName] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -59,10 +59,10 @@ export const NewGroupPage: React.FC = () => {
     try {
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
-      showSuccess('초대 링크가 복사되었습니다!');
+      showToast('초대 링크가 복사되었습니다!', 'success');
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      showSuccess(`초대 코드: ${createdGroup.inviteCode}`);
+      showToast(`초대 코드: ${createdGroup.inviteCode}`, 'info');
     }
   };
 

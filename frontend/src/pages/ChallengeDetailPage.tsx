@@ -23,7 +23,6 @@ import {
   Edit3,
   Loader2,
   Trash2,
-  User as UserIcon,
   Users,
   AlertCircle,
   AlertTriangle,

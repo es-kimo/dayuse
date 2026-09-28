@@ -26,6 +26,7 @@ describe('v0.7 마일스톤 통합 검증 (PRD Section 8 완료 조건 14개 항
       login: vi.fn(),
       logout: vi.fn(),
       updateUserNickname: vi.fn(),
+      updateUserProfile: vi.fn(),
     });
 
     return render(

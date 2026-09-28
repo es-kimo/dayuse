@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, AlertCircle, ArrowRight, Calendar, Bell, Clock, Sparkles } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ArrowRight, Calendar, Bell } from 'lucide-react';
 import { MobileLayout } from '../components/MobileLayout';
 import { BottomNav } from '../components/BottomNav';
 import { DayuLogo } from '../components/brand/DayuLogo';

@@ -9,7 +9,7 @@ import { BottomNav } from '../components/BottomNav';
 import { EmptyState } from '../components/EmptyState';
 import { DayuExpression } from '../components/brand/DayuExpression';
 import { Button, Input, Tabs, TabsList, TabsTab, TabsPanel } from '../components/ui';
-import { Plus, ChevronRight, Crown, Link as LinkIcon, Loader2, ArrowRight } from 'lucide-react';
+import { Plus, ChevronRight, Crown, Link as LinkIcon, Loader2 } from 'lucide-react';
 
 export const GroupsPage: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
