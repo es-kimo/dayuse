@@ -141,4 +141,37 @@ describe('PublicShareLandingPage Brand v1.1 Card (BR-06)', () => {
     expect(screen.getByText('100일 연속 러닝 챌린지 완주를 위한 장기 프로젝트')).toBeInTheDocument();
     expect(screen.getByText('마라토너')).toBeInTheDocument();
   });
+
+  it('오늘의 인증(TODAY_VERIFICATION) 카드에서 인증 사진이 원본 비율 보존(object-contain) 스타일로 렌더링된다', async () => {
+    const mockVerificationCard: PublicShareCardResponse = {
+      token: 'test-token-today',
+      cardType: 'TODAY_VERIFICATION',
+      challengeId: 4,
+      title: '미라클 모닝 6시 기상',
+      userNickname: '아침형인간',
+      streakDays: 0,
+      imageUrl: 'https://dayuse.kr/images/test-verify.jpg',
+      comment: '오늘도 일찍 일어났습니다!',
+      createdAt: '2026-09-28T06:05:00',
+    };
+
+    (shareApi.getPublicShareCard as any).mockResolvedValue(mockVerificationCard);
+
+    render(
+      <MemoryRouter initialEntries={['/shares/test-token-today']}>
+        <Routes>
+          <Route path="/shares/:token" element={<PublicShareLandingPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('미라클 모닝 6시 기상')).toBeInTheDocument();
+    });
+
+    const img = screen.getByAltText('인증 사진');
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveClass('object-contain');
+    expect(img).not.toHaveClass('object-cover');
+  });
 });

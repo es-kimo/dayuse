@@ -77,7 +77,7 @@ class ShareOgImageService(
     }
 
     /**
-     * 비율을 유지한 채 1200x630을 꽉 채우도록 확대/축소하고 가운데를 남긴다.
+     * 원본 비율을 온전히 보존한 채 1200x630 규격 내에 비례 축소(Letterbox)하고 중앙에 배치한다.
      * 디코딩에 실패하면 null을 돌려 호출부가 기본 이미지로 넘어가게 한다.
      */
     internal fun cropToOgSize(source: ByteArray): ByteArray? {
@@ -90,7 +90,8 @@ class ShareOgImageService(
 
         if (original.width <= 0 || original.height <= 0) return null
 
-        val scale = max(
+        // 강제 크롭(max) 대신 전체 이미지를 보존하는 비례 축소(min)를 적용하여 Letterbox 처리한다.
+        val scale = kotlin.math.min(
             OG_WIDTH.toDouble() / original.width,
             OG_HEIGHT.toDouble() / original.height
         )
