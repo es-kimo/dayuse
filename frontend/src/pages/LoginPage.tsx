@@ -19,7 +19,7 @@ export const LoginPage: React.FC = () => {
 
   useEffect(() => {
     const inviteParam = searchParams.get('invite');
-    const redirectParam = searchParams.get('redirect');
+    const redirectParam = searchParams.get('redirect') || searchParams.get('returnTo');
 
     if (inviteParam) {
       inviteStorage.set(inviteParam);
@@ -28,6 +28,8 @@ export const LoginPage: React.FC = () => {
       if (match && match[1]) {
         inviteStorage.set(match[1]);
       }
+    } else if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+      sessionStorage.setItem('dayuse_return_to', redirectParam);
     }
   }, [searchParams]);
 

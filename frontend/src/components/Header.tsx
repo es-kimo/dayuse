@@ -53,13 +53,21 @@ export const Header: React.FC = () => {
       )}
 
       {!isAuthenticated && (
-        <button
-          type="button"
-          onClick={() => navigate('/login')}
-          className="text-xs px-3.5 py-1.5 rounded-full bg-primary text-white font-semibold hover:bg-primary-hover active:bg-primary-active focus-ring transition cursor-pointer"
-        >
-          로그인
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/about"
+            className="text-xs font-medium text-ink-secondary hover:text-primary focus-ring rounded px-2 py-1.5 min-h-[36px] inline-flex items-center transition"
+          >
+            소개
+          </Link>
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="text-xs px-3.5 py-1.5 rounded-full bg-primary text-white font-semibold hover:bg-primary-hover active:bg-primary-active focus-ring transition cursor-pointer"
+          >
+            로그인
+          </button>
+        </div>
       )}
     </header>
   );
