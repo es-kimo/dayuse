@@ -27,14 +27,19 @@ import { PageMetaTracker } from './components/PageMetaTracker';
 import { ScrollToTop } from './components/ScrollToTop';
 import { preloadKakao } from './utils/kakao';
 import { registerServiceWorker } from './utils/webPush';
+import { initPwaInstallTracking } from './utils/pwaAnalytics';
 
 import { UiVersionProvider, UiVersionSwitcherFloat } from './context/UiVersionContext';
 
 export const App: React.FC = () => {
-  // 카카오 SDK 및 웹 푸시 Service Worker를 부팅 때 초기화한다.
+  // 카카오 SDK 및 웹 푸시 Service Worker, PWA 설치 추적을 부팅 때 초기화한다.
   useEffect(() => {
     void preloadKakao();
     void registerServiceWorker();
+    const cleanupTracking = initPwaInstallTracking();
+    return () => {
+      cleanupTracking();
+    };
   }, []);
 
   return (

@@ -22,7 +22,11 @@ import {
   Share2,
   Repeat,
   Trash2,
+  Smartphone,
 } from 'lucide-react';
+import { IosInstallGuideModal } from './IosInstallGuideModal';
+import { isStandalone, isIos } from '../utils/webPush';
+import { logPwaImpression, logPwaGuideOpen } from '../utils/pwaAnalytics';
 
 interface VerificationModalProps {
   action: TodayAction | { challengeId: number; challengeTitle: string; verificationCriteria?: string };
@@ -62,8 +66,9 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const [open, setOpen] = useState<boolean>(true);
   const requestClose = () => setOpen(false);
   const [createdVerification, setCreatedVerification] = useState<VerificationDetail | null>(null);
-  const [postSuccessAction, setPostSuccessAction] = useState<'success' | 'share'>('success');
+  const [postSuccessAction, setPostSuccessAction] = useState<'success' | 'share' | 'install_guide'>('success');
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [showInstallGuideModal, setShowInstallGuideModal] = useState<boolean>(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -105,6 +110,13 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       }
     };
   }, []);
+
+  // 인증 완료 시 PWA 설치 안내 노출 로깅 (비 standalone 환경)
+  useEffect(() => {
+    if (createdVerification && !isStandalone()) {
+      logPwaImpression('verification_success');
+    }
+  }, [createdVerification]);
 
   // 새로운 파일 적용 파이프라인 (검증, 미리보기 URL 생성, 메모리 해제)
   const applyNewFile = (newFile: File) => {
@@ -249,6 +261,16 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       );
     }
 
+    if (showInstallGuideModal) {
+      return (
+        <IosInstallGuideModal
+          isOpen={true}
+          onClose={onSuccess}
+          initialPlatform={isIos() ? 'ios' : 'android'}
+        />
+      );
+    }
+
     return (
       <Modal
         open={open}
@@ -258,6 +280,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           if (!isOpen) {
             if (postSuccessAction === 'share') {
               setShowShareModal(true);
+            } else if (postSuccessAction === 'install_guide') {
+              setShowInstallGuideModal(true);
             } else {
               onSuccess();
             }
@@ -286,6 +310,22 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               <Share2 className="w-4 h-4" />
               <span>오늘 인증 공유 카드 만들기</span>
             </button>
+
+            {!isStandalone() && (
+              <button
+                type="button"
+                onClick={() => {
+                  logPwaGuideOpen('verification_success');
+                  setPostSuccessAction('install_guide');
+                  setOpen(false);
+                }}
+                className="w-full py-2.5 bg-blue-50/80 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>내일도 바로 열기 (홈 화면에 앱 추가)</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => {

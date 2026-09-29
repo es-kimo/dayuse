@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUiVersion } from '../context/UiVersionContext';
@@ -8,6 +8,9 @@ import { parseUserDayuColor } from '../components/dayu/dayuColors';
 import { Button } from '../components/dayu/ui';
 import { ScreenNav } from '../components/screens/Screen';
 import { AppMainHeader } from '../components/layout/AppMainHeader';
+import { IosInstallGuideModal } from '../components/IosInstallGuideModal';
+import { isStandalone, isIos } from '../utils/webPush';
+import { logPwaImpression, logPwaGuideOpen } from '../utils/pwaAnalytics';
 import {
   ArrowLeft,
   User as UserIcon,
@@ -19,6 +22,7 @@ import {
   FileText,
   Shield,
   ChevronRight,
+  Smartphone,
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
@@ -30,6 +34,13 @@ export const ProfilePage: React.FC = () => {
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [showInstallGuide, setShowInstallGuide] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isStandalone()) {
+      logPwaImpression('profile_menu');
+    }
+  }, []);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,6 +115,33 @@ export const ProfilePage: React.FC = () => {
 
           {/* 서비스 설정 및 안내 메뉴 */}
           <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white py-1.5 [&>button+button]:border-t [&>button+button]:border-slate-200">
+            {!isStandalone() && (
+              <button
+                type="button"
+                onClick={() => {
+                  logPwaGuideOpen('profile_menu');
+                  setShowInstallGuide(true);
+                }}
+                className="flex w-full cursor-pointer items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-sky-50 text-sky-600">
+                    <Smartphone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[15px] font-semibold text-slate-800">앱으로 편하게 쓰기</span>
+                      <span className="rounded-full bg-blue-50 px-1.5 py-0.2 text-[11px] font-bold text-blue-600">
+                        추천
+                      </span>
+                    </div>
+                    <p className="text-[12.5px] text-slate-500">홈 화면에 추가하고 앱처럼 쓰기</p>
+                  </div>
+                </div>
+                <ChevronRight className="size-4 shrink-0 text-slate-400" />
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => navigate('/settings/notifications')}
@@ -177,6 +215,12 @@ export const ProfilePage: React.FC = () => {
 
         {/* 모바일 하단 탭 바 (AppTabBar) */}
         <ScreenNav active="me" />
+
+        <IosInstallGuideModal
+          isOpen={showInstallGuide}
+          onClose={() => setShowInstallGuide(false)}
+          initialPlatform={isIos() ? 'ios' : 'android'}
+        />
       </div>
     );
   }
@@ -250,6 +294,33 @@ export const ProfilePage: React.FC = () => {
 
           {/* 알림 설정 메뉴 */}
           <div className="bg-white border border-slate-200 rounded-lg overflow-hidden divide-y divide-slate-100">
+            {!isStandalone() && (
+              <button
+                type="button"
+                onClick={() => {
+                  logPwaGuideOpen('profile_menu');
+                  setShowInstallGuide(true);
+                }}
+                className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-md bg-sky-50 text-sky-600 flex items-center justify-center">
+                    <Smartphone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold text-slate-800">앱으로 편하게 쓰기</span>
+                      <span className="rounded-full bg-blue-50 px-1.5 py-0.2 text-[10px] font-bold text-blue-600">
+                        추천
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">홈 화면에 추가하고 앱처럼 쓰기</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+            )}
+
             <button
               onClick={() => navigate('/settings/notifications')}
               className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition"
@@ -298,6 +369,12 @@ export const ProfilePage: React.FC = () => {
           <LogOut className="w-4 h-4" />
           <span>로그아웃</span>
         </button>
+
+        <IosInstallGuideModal
+          isOpen={showInstallGuide}
+          onClose={() => setShowInstallGuide(false)}
+          initialPlatform={isIos() ? 'ios' : 'android'}
+        />
       </div>
     </MobileLayout>
   );

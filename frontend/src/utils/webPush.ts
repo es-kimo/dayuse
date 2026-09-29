@@ -20,7 +20,7 @@ export function isAndroid(): boolean {
 export function isStandalone(): boolean {
   if (typeof window === 'undefined') return false;
   return (
-    window.matchMedia('(display-mode: standalone)').matches ||
+    (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches) ||
     (window.navigator as unknown as { standalone?: boolean }).standalone === true
   );
 }

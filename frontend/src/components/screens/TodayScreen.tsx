@@ -1,9 +1,19 @@
+import React, { useState, useEffect } from 'react';
 import { Clock, Bell, Camera, Check, CheckCircle2 } from './ScreenIcons';
 import { useNavigate } from 'react-router-dom';
 import type { TodayAction } from '../../types';
 import { Screen, ScreenNav, screenAssets } from './Screen';
 import { AppHeader, HeaderIconButton } from '../layout/AppHeader';
 import { Button, Card, Chip, Notice, ProgressBar } from '../dayu/ui';
+import { Smartphone, X } from 'lucide-react';
+import { IosInstallGuideModal } from '../IosInstallGuideModal';
+import { isStandalone, isIos } from '../../utils/webPush';
+import {
+  logPwaImpression,
+  logPwaGuideOpen,
+  dismissPwaBanner,
+  isPwaBannerDismissed,
+} from '../../utils/pwaAnalytics';
 
 /** 섹션 제목 줄. 인증 대기(amber)와 완료(emerald)는 글자색까지 상태를 따른다. */
 function StatusHead({ tone, icon, title, count }: { tone: 'warn' | 'ok'; icon: React.ReactNode; title: string; count: number }) {
@@ -36,6 +46,17 @@ export function TodayScreen({
   const pending = actions.filter((a) => !a.isCompletedToday);
   const completed = actions.filter((a) => a.isCompletedToday);
 
+  const [showInstallGuide, setShowInstallGuide] = useState<boolean>(false);
+  const [isBannerDismissed, setIsBannerDismissed] = useState<boolean>(() => isPwaBannerDismissed());
+
+  const canShowBanner = !isStandalone() && !isBannerDismissed;
+
+  useEffect(() => {
+    if (canShowBanner) {
+      logPwaImpression('today_banner');
+    }
+  }, [canShowBanner]);
+
   return (
     <Screen>
       <AppHeader
@@ -50,6 +71,43 @@ export function TodayScreen({
         }
       />
       <main className="flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto px-4 pt-1 pb-screen-nav">
+        {canShowBanner && (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-blue-200/70 bg-gradient-to-r from-blue-50/90 to-sky-50/90 p-3.5 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => {
+                logPwaGuideOpen('today_banner');
+                setShowInstallGuide(true);
+              }}
+              className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 text-left"
+            >
+              <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-xs">
+                <Smartphone className="size-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[13.5px] font-bold text-slate-800">앱으로 편하게 쓰기</span>
+                  <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[10.5px] font-bold text-blue-700">
+                    설치 3초
+                  </span>
+                </div>
+                <p className="truncate text-[12px] text-slate-500">홈 화면에 추가하고 매일 편하게 인증하세요</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                dismissPwaBanner(7);
+                setIsBannerDismissed(true);
+              }}
+              className="grid size-7 shrink-0 cursor-pointer place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-200/60 hover:text-slate-600"
+              aria-label="배너 닫기"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+
         <p className="text-[14px] text-slate-500">
           {new Date().toLocaleDateString('ko-KR', {
             month: 'long',
@@ -155,6 +213,12 @@ export function TodayScreen({
         )}
       </main>
       <ScreenNav active="today" pending={pending.length} />
+
+      <IosInstallGuideModal
+        isOpen={showInstallGuide}
+        onClose={() => setShowInstallGuide(false)}
+        initialPlatform={isIos() ? 'ios' : 'android'}
+      />
     </Screen>
   );
 }
