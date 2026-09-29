@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { recordsApi } from '../api/records';
@@ -12,6 +12,8 @@ import { AbortChallengeModal } from '../components/AbortChallengeModal';
 import { MidJoinBottomSheet } from '../components/MidJoinBottomSheet';
 import { useAuth } from '../context/AuthContext';
 import { DayuAvatar } from '../components/brand/DayuAvatar';
+import { useUiVersion } from '../context/UiVersionContext';
+import { ChallengeDetailViewB } from '../components/ChallengeDetailViewB';
 import { getTodayKstString, getDurationDaysKst } from '../utils/date';
 import {
   ArrowLeft,
@@ -85,6 +87,139 @@ export const ChallengeDetailPage: React.FC = () => {
 
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const { uiVersion } = useUiVersion();
+
+  const todayStr = getTodayKstString();
+  const totalDurationDays = useMemo(() => {
+    return challenge ? getDurationDaysKst(challenge.startDate, challenge.endDate) : 1;
+  }, [challenge]);
+
+  const currentDayNumber = useMemo(() => {
+    if (!challenge) return 1;
+    const s = new Date(challenge.startDate).getTime();
+    const now = new Date(todayStr).getTime();
+    const diff = Math.floor((now - s) / (1000 * 60 * 60 * 24)) + 1;
+    return Math.max(1, Math.min(totalDurationDays, diff));
+  }, [challenge, todayStr, totalDurationDays]);
+
+  const progressPercent = useMemo(() => {
+    return Math.min(100, Math.max(0, Math.round((currentDayNumber / totalDurationDays) * 100)));
+  }, [currentDayNumber, totalDurationDays]);
+
+  const remainingDays = useMemo(() => {
+    return Math.max(0, totalDurationDays - currentDayNumber);
+  }, [totalDurationDays, currentDayNumber]);
+
+  const dDay = useMemo(() => {
+    if (!challenge) return '';
+    const now = new Date(todayStr).getTime();
+    const s = new Date(challenge.startDate).getTime();
+    const end = new Date(challenge.endDate).getTime();
+    if (now < s) {
+      const diff = Math.ceil((s - now) / (1000 * 60 * 60 * 24));
+      return `D-${diff}`;
+    }
+    const diff = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    if (diff < 0) return '종료';
+    if (diff === 0) return 'D-Day';
+    return `D-${diff}`;
+  }, [challenge, todayStr]);
+
+  const myParticipant = useMemo(() => {
+    return calendarData?.participants.find((p) => p.userId === user?.id) || null;
+  }, [calendarData, user?.id]);
+
+  const myRecords = useMemo(() => {
+    return myParticipant?.records || [];
+  }, [myParticipant]);
+
+  const isTodayCompleted = useMemo(() => {
+    const todayRec = myRecords.find((r) => r.date === todayStr);
+    return todayRec?.status === 'COMPLETED';
+  }, [myRecords, todayStr]);
+
+  // 연속 달성일 (streak)
+  const streakCount = useMemo(() => {
+    if (!myRecords || myRecords.length === 0) return 0;
+    const sorted = [...myRecords].sort((a, b) => b.date.localeCompare(a.date));
+    const todayRec = sorted.find((r) => r.date === todayStr);
+    let startDateIndex = 0;
+    if (todayRec && todayRec.status === 'COMPLETED') {
+      startDateIndex = sorted.indexOf(todayRec);
+    } else {
+      const yestIndex = sorted.findIndex((r) => r.date < todayStr);
+      if (yestIndex >= 0 && sorted[yestIndex].status === 'COMPLETED') {
+        startDateIndex = yestIndex;
+      } else {
+        return 0;
+      }
+    }
+    let count = 0;
+    for (let i = startDateIndex; i < sorted.length; i++) {
+      if (sorted[i].status === 'COMPLETED') {
+        count++;
+      } else if (sorted[i].status !== 'NOT_PARTICIPATED') {
+        break;
+      }
+    }
+    return count;
+  }, [myRecords, todayStr]);
+
+  // Calendar dates for the active month (UI B grid)
+  const calendarMonthDays = useMemo(() => {
+    if (!challenge) return [];
+    const baseDate = new Date(challenge.startDate);
+    const year = baseDate.getFullYear();
+    const month = baseDate.getMonth();
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const recordMap = new Map<string, CalendarDailyRecordItem>();
+    myRecords.forEach((r) => recordMap.set(r.date, r));
+
+    const days: Array<{
+      dayNumber: number;
+      dateStr: string;
+      status: 'BLANK' | 'DONE' | 'MISS' | 'WAIT_NOW' | 'FUTURE';
+    }> = [];
+
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      days.push({ dayNumber: 0, dateStr: '', status: 'BLANK' });
+    }
+
+    for (let d = 1; d <= totalDaysInMonth; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const rec = recordMap.get(dateStr);
+      let status: 'BLANK' | 'DONE' | 'MISS' | 'WAIT_NOW' | 'FUTURE' = 'FUTURE';
+
+      if (rec?.status === 'COMPLETED') {
+        status = 'DONE';
+      } else if (dateStr === todayStr) {
+        status = 'WAIT_NOW';
+      } else if (dateStr < todayStr) {
+        if (dateStr >= challenge.startDate && dateStr <= challenge.endDate) {
+          status = 'MISS';
+        } else {
+          status = 'FUTURE';
+        }
+      } else {
+        status = 'FUTURE';
+      }
+
+      days.push({ dayNumber: d, dateStr, status });
+    }
+
+    return days;
+  }, [challenge, myRecords, todayStr]);
+
+  const handleStartTodayVerify = () => {
+    setVerificationTarget({
+      recordId: undefined,
+      isLate: false,
+      targetDate: todayStr,
+    });
+  };
 
   const fetchCalendar = async () => {
     if (!challengeId) return;
@@ -291,22 +426,50 @@ export const ChallengeDetailPage: React.FC = () => {
 
   return (
     <MobileLayout>
-      {/* 상단 네비게이션 헤더 */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={() => {
+      {uiVersion === 'B' ? (
+        <ChallengeDetailViewB
+          challenge={challenge}
+          calendarData={calendarData}
+          dDay={dDay}
+          totalDurationDays={totalDurationDays}
+          currentDayNumber={currentDayNumber}
+          progressPercent={progressPercent}
+          remainingDays={remainingDays}
+          isTodayCompleted={isTodayCompleted}
+          streakCount={streakCount}
+          calendarMonthDays={calendarMonthDays}
+          onBack={() => {
             if (window.history.length > 1) {
               navigate(-1);
             } else {
               navigate(`/groups/${challenge.groupId}?tab=challenges`);
             }
           }}
-          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
-          aria-label="뒤로가기"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div className="flex items-center gap-2">
+          onShare={() => setShowStreakModal(true)}
+          onOpenCert={handleStartTodayVerify}
+          onAbortChallenge={challenge.canAbort ? () => setShowAbortModal(true) : undefined}
+          onDeleteChallenge={challenge.isCreator ? () => setShowDeleteConfirm(true) : undefined}
+          onOpenMidJoin={() => setShowJoinModal(true)}
+          onRestartChallenge={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
+        />
+      ) : (
+        <>
+          {/* 상단 네비게이션 헤더 */}
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate(`/groups/${challenge.groupId}?tab=challenges`);
+                }
+              }}
+              className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
+              aria-label="뒤로가기"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2">
           {getStatusBadge()}
           {challenge.executionType === 'TOGETHER' ? (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
@@ -855,6 +1018,8 @@ export const ChallengeDetailPage: React.FC = () => {
           </div>
         </form>
       </Dialog>
+      </>
+      )}
 
       {/* 참여 취소 확인 다이얼로그 (위험 액션: 취소 버튼 기본 포커스) */}
       <ConfirmDialog
