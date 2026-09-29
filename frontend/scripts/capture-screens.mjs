@@ -50,18 +50,7 @@ const SCREENS = [
     route: '/groups/5',
     requiresAuth: true,
     isPrimary: true,
-    action: async (page) => {
-      // 피드 섹션이 화면 중심에 오도록 스크롤
-      await page.evaluate(() => {
-        const feedSec = document.querySelector('section[aria-label*="피드"], div.space-y-4');
-        if (feedSec) {
-          feedSec.scrollIntoView({ behavior: 'instant', block: 'center' });
-        } else {
-          window.scrollBy({ top: 400, behavior: 'instant' });
-        }
-      });
-      await new Promise((r) => setTimeout(r, 400));
-    },
+    fullHeight: true,
   },
   {
     id: '03b-group-challenges',
@@ -142,14 +131,30 @@ const SCREENS = [
     isPrimary: true,
     isModal: true,
     action: async (page) => {
-      // 상단 상태 배너의 '정리하기' 버튼 클릭
+      // 미확인 기록 버튼 탐색 및 클릭 (GroupSettlementCard의 '미확인 기록' 또는 상태 배너의 '정리하기')
       await page.waitForSelector('button', { timeout: 5000 });
-      await page.evaluate(() => {
+      const found = await page.evaluate(() => {
         const buttons = Array.from(document.querySelectorAll('button'));
-        const btn = buttons.find((b) => b.textContent && b.textContent.includes('정리하기'));
-        if (btn) btn.click();
+        const btn = buttons.find((b) => {
+          const t = b.textContent || '';
+          return (
+            t.includes('미확인 기록') ||
+            t.includes('지난 기록 확인') ||
+            t.includes('정리하기') ||
+            t.includes('검토')
+          );
+        });
+        if (btn) {
+          btn.scrollIntoView({ behavior: 'instant', block: 'center' });
+          btn.click();
+          return true;
+        }
+        return false;
       });
-      await page.waitForSelector('[role="dialog"]', { timeout: 3000 }).catch(() => {});
+      if (!found) {
+        console.warn('    ⚠️ [08b] 미확인 기록 확인 버튼을 찾지 못했습니다.');
+      }
+      await page.waitForSelector('[role="dialog"]', { timeout: 4000 }).catch(() => {});
       await new Promise((r) => setTimeout(r, 600));
     },
   },
@@ -167,7 +172,10 @@ const SCREENS = [
       await page.evaluate(() => {
         const buttons = Array.from(document.querySelectorAll('button'));
         const btn = buttons.find((b) => b.textContent && b.textContent.includes('댓글'));
-        if (btn) btn.click();
+        if (btn) {
+          btn.scrollIntoView({ behavior: 'instant', block: 'center' });
+          btn.click();
+        }
       });
       await page.waitForSelector('[role="dialog"]', { timeout: 3000 }).catch(() => {});
       await new Promise((r) => setTimeout(r, 600));
@@ -187,7 +195,10 @@ const SCREENS = [
       await page.evaluate(() => {
         const buttons = Array.from(document.querySelectorAll('button'));
         const btn = buttons.find((b) => b.textContent && b.textContent.includes('입금 신고'));
-        if (btn) btn.click();
+        if (btn) {
+          btn.scrollIntoView({ behavior: 'instant', block: 'center' });
+          btn.click();
+        }
       });
       await page.waitForSelector('[role="dialog"]', { timeout: 3000 }).catch(() => {});
       await new Promise((r) => setTimeout(r, 600));
@@ -202,13 +213,35 @@ const SCREENS = [
     isPrimary: true,
     isModal: true,
     action: async (page) => {
-      await page.waitForSelector('button', { timeout: 5000 });
-      await page.evaluate(() => {
-        const buttons = Array.from(document.querySelectorAll('button'));
-        const btn = buttons.find((b) => b.textContent && (b.textContent.includes('포기') || b.textContent.includes('중단')));
-        if (btn) btn.click();
+      // 1. 우측 상단 더보기 버튼 클릭
+      await page.waitForSelector('button[aria-label="더보기"]', { timeout: 5000 });
+      await page.click('button[aria-label="더보기"]');
+      await new Promise((r) => setTimeout(r, 400));
+
+      // 2. 열린 메뉴의 '챌린지 중단' [role="menuitem"] 위치 계산 후 마우스 클릭
+      const itemRect = await page.evaluate(() => {
+        const items = Array.from(document.querySelectorAll('[role="menuitem"]'));
+        const abortItem = items.find((el) => {
+          const t = el.textContent || '';
+          return t.includes('중단') || t.includes('포기');
+        });
+        if (abortItem) {
+          const r = abortItem.getBoundingClientRect();
+          return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+        }
+        return null;
       });
-      await page.waitForSelector('[role="dialog"]', { timeout: 3000 }).catch(() => {});
+
+      if (itemRect) {
+        await page.mouse.click(itemRect.x, itemRect.y);
+      } else {
+        await page.evaluate(() => {
+          const items = Array.from(document.querySelectorAll('[role="menuitem"]'));
+          const abortItem = items.find((el) => (el.textContent || '').includes('중단'));
+          if (abortItem) abortItem.click();
+        });
+      }
+      await page.waitForSelector('[role="dialog"]', { timeout: 4000 }).catch(() => {});
       await new Promise((r) => setTimeout(r, 600));
     },
   },
@@ -440,7 +473,24 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
         // Base UI의 Portal로 인해 모달은 .max-w-app 바깥(body 직하단)에 렌더링되므로 전체 뷰포트를 캡처
         rawPngBuffer = await page.screenshot({ type: 'png' });
       } else {
-        const appContainer = await page.$('.max-w-app');
+        // .screen-ui 구조인 경우 내부 스크롤 컨테이너를 해제하여 전체 높이(Full Height)로 확장
+        await page.evaluate(() => {
+          const screenUi = document.querySelector('.screen-ui');
+          const screenBody = document.querySelector('.screen-ui .body');
+          if (screenUi) {
+            screenUi.style.position = 'relative';
+            screenUi.style.height = 'auto';
+            screenUi.style.minHeight = '100vh';
+          }
+          if (screenBody) {
+            screenBody.style.overflow = 'visible';
+            screenBody.style.height = 'auto';
+            screenBody.style.flex = 'none';
+          }
+        });
+        await new Promise((r) => setTimeout(r, 200));
+
+        const appContainer = (await page.$('.screen-ui')) || (await page.$('.max-w-app'));
         rawPngBuffer = appContainer
           ? await appContainer.screenshot({ type: 'png' })
           : await page.screenshot({ type: 'png' });

@@ -129,22 +129,22 @@ export const MOCK_GROUP_STATUS_SUMMARY = {
 
 export const MOCK_UNCHECKED_RECORDS = [
   {
-    recordId: 101,
+    id: 101,
     challengeId: 1,
     challengeTitle: '매일 1알고리즘 문제 풀기',
     date: '2026-03-28',
     status: 'UNCHECKED',
-    isGracePeriod: true,
-    remainingMinutes: 120,
+    penaltyAmount: 5000,
+    verificationCriteria: '제출 성공 화면 캡처 또는 커밋 내역',
   },
   {
-    recordId: 102,
+    id: 102,
     challengeId: 2,
     challengeTitle: '6시 기상 습관',
     date: '2026-03-27',
     status: 'UNCHECKED',
-    isGracePeriod: false,
-    remainingMinutes: 0,
+    penaltyAmount: 5000,
+    verificationCriteria: '시간이 보이는 시계/알람 사진',
   },
 ];
 
