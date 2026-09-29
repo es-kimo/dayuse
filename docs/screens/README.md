@@ -38,3 +38,31 @@ open docs/screens/05-groups.html
 ```
 
 상세한 개편 명세 및 프론트엔드 상태 매트릭스는 [`docs/v0.8-screen-inventory.md`](../v0.8-screen-inventory.md)를 참조하세요.
+
+## 프론트엔드 구현 및 화면 비교 (01–07)
+
+`frontend/src/components/screens/`는 이 HTML의 CSS, SVG, Pretendard 자산을 사용합니다.
+샘플 이름·사진·숫자는 서비스 코드에 넣지 않고 실제 API 응답을 표시합니다.
+기존 A/B 비교 버튼은 URL에 `?ui=A` 또는 `?ui=B`가 있을 때만 노출됩니다.
+
+개발 서버 실행 후 아래 명령으로 원본과 같은 샘플 데이터의 390×844 화면을 비교합니다.
+인증 사진 예시는 HTML에서 캡처해 테스트 응답에만 사용합니다.
+
+```bash
+cd frontend
+npm run dev
+# 별도 터미널 (frontend 디렉터리)
+node scripts/compare-screen-ui.mjs /tmp/dayuse-screen-comparison
+```
+
+각 화면의 `*-reference.png`, `*-actual.png`, 요소 좌표(`geometry.json`), 픽셀 차이(`pixels.json`)를 저장합니다.
+Chrome 경로가 다르면 `CHROME_PATH` 환경 변수를 지정합니다.
+초대 입력·화면 이동, 인증 모달 닫기, 사진 미첨부 시 제출 차단, 320/390px 가로 넘침도 검증합니다.
+
+화면 데이터에 필요한 기존 API의 추가 응답 필드:
+
+- `GET /api/v1/invites/:code`: `members`(닉네임·프로필), `challenges`(진행 중인 챌린지의 제목·주기·참여 인원).
+- `GET /api/v1/today`, `GET /api/v1/groups/:id/today`: 기존 연속 인증 계산 정책을 사용하는 `streakDays`.
+- `GET /api/v1/groups/:id/status-summary`: 해당 모임에서 오늘 인증한 `verifiedUserIds`. 피드 페이지에 없는 멤버도 정확히 표시합니다.
+
+기존 응답 필드는 유지하며, 프론트엔드는 추가 필드가 없는 응답도 처리합니다.
