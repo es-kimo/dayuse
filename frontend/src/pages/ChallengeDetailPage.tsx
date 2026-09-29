@@ -848,6 +848,8 @@ export const ChallengeDetailPage: React.FC = () => {
           </div>
         )}
       </div>
+    </>
+  )}
 
       {/* 중도/신규 참여 바텀시트 */}
       <MidJoinBottomSheet
@@ -1024,8 +1026,6 @@ export const ChallengeDetailPage: React.FC = () => {
           </div>
         </form>
       </Dialog>
-      </>
-      )}
 
       {/* 참여 취소 확인 다이얼로그 (위험 액션: 취소 버튼 기본 포커스) */}
       <ConfirmDialog
