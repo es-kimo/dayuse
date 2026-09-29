@@ -45,9 +45,9 @@ const SCREENS = [
   },
   {
     id: '03-group-feed',
-    title: '모임 인증 피드 (대표 UI)',
+    title: '모임 인증 피드 (홈 탭)',
     caption: '친구들의 일일 챌린지 인증 사진과 한마디 피드 타임라인',
-    route: '/groups/1',
+    route: '/groups/5',
     requiresAuth: true,
     isPrimary: true,
     action: async (page) => {
@@ -62,6 +62,22 @@ const SCREENS = [
       });
       await new Promise((r) => setTimeout(r, 400));
     },
+  },
+  {
+    id: '03b-group-challenges',
+    title: '모임 챌린지 탭',
+    caption: '모임 내 진행 중인 챌린지 목록과 필터 및 개설 옵션',
+    route: '/groups/5?tab=challenges',
+    requiresAuth: true,
+    isPrimary: true,
+  },
+  {
+    id: '03c-group-members',
+    title: '모임 멤버 탭',
+    caption: '참여 멤버 목록, 방장 권한 표시 및 모임 초대 링크 관리',
+    route: '/groups/5?tab=members',
+    requiresAuth: true,
+    isPrimary: true,
   },
   {
     id: '04-challenge-calendar',
@@ -91,7 +107,7 @@ const SCREENS = [
     id: '07-challenge-new',
     title: '챌린지 개설 폼',
     caption: '수행 요일 및 인증 기준 지정, 0원 벌금 정책 지원',
-    route: '/groups/1/challenges/new',
+    route: '/groups/5/challenges/new',
     requiresAuth: true,
     isPrimary: true,
   },
@@ -102,8 +118,10 @@ const SCREENS = [
     route: '/today',
     requiresAuth: true,
     isPrimary: true,
+    isModal: true,
     action: async (page) => {
-      // 오늘 할 일 페이지에서 '사진 찍고 인증하기' 버튼 클릭
+      // 오늘 할 일 페이지에서 '인증하기' 버튼 클릭
+      await page.waitForSelector('button', { timeout: 5000 });
       await page.evaluate(() => {
         const buttons = Array.from(document.querySelectorAll('button'));
         const verifyBtn = buttons.find((b) => b.textContent && b.textContent.includes('인증하기'));
@@ -111,6 +129,86 @@ const SCREENS = [
           verifyBtn.click();
         }
       });
+      await page.waitForSelector('[role="dialog"]', { timeout: 3000 }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 600));
+    },
+  },
+  {
+    id: '08b-modal-unchecked-sheet',
+    title: '미확인 인증 기록 검토 바텀시트',
+    caption: '전일 미인증 및 유예 시간 대상 기록을 확인하고 인증/소명 지원',
+    route: '/groups/5',
+    requiresAuth: true,
+    isPrimary: true,
+    isModal: true,
+    action: async (page) => {
+      // 상단 상태 배너의 '정리하기' 버튼 클릭
+      await page.waitForSelector('button', { timeout: 5000 });
+      await page.evaluate(() => {
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const btn = buttons.find((b) => b.textContent && b.textContent.includes('정리하기'));
+        if (btn) btn.click();
+      });
+      await page.waitForSelector('[role="dialog"]', { timeout: 3000 }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 600));
+    },
+  },
+  {
+    id: '08c-modal-comments-sheet',
+    title: '피드 댓글 소통 바텀시트',
+    caption: '친구들의 인증 사진에 댓글과 응원의 메시지를 남기는 소통 공간',
+    route: '/groups/5',
+    requiresAuth: true,
+    isPrimary: true,
+    isModal: true,
+    action: async (page) => {
+      // 피드 카드의 '댓글' 버튼 클릭
+      await page.waitForSelector('button', { timeout: 5000 });
+      await page.evaluate(() => {
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const btn = buttons.find((b) => b.textContent && b.textContent.includes('댓글'));
+        if (btn) btn.click();
+      });
+      await page.waitForSelector('[role="dialog"]', { timeout: 3000 }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 600));
+    },
+  },
+  {
+    id: '08d-modal-deposit-report',
+    title: '미수행 벌금 입금 신고 모달',
+    caption: '미납 벌금 내역 선택 및 모임 계좌로 입금 후 확인 요청',
+    route: '/groups/5',
+    requiresAuth: true,
+    isPrimary: true,
+    isModal: true,
+    action: async (page) => {
+      // 정산 카드의 '입금 신고' 버튼 클릭
+      await page.waitForSelector('button', { timeout: 5000 });
+      await page.evaluate(() => {
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const btn = buttons.find((b) => b.textContent && b.textContent.includes('입금 신고'));
+        if (btn) btn.click();
+      });
+      await page.waitForSelector('[role="dialog"]', { timeout: 3000 }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 600));
+    },
+  },
+  {
+    id: '08e-modal-abort-challenge',
+    title: '챌린지 중도 포기 확인 모달',
+    caption: '챌린지 포기 시 누적 페널티 및 주의사항 확인 팝업',
+    route: '/challenges/1',
+    requiresAuth: true,
+    isPrimary: true,
+    isModal: true,
+    action: async (page) => {
+      await page.waitForSelector('button', { timeout: 5000 });
+      await page.evaluate(() => {
+        const buttons = Array.from(document.querySelectorAll('button'));
+        const btn = buttons.find((b) => b.textContent && (b.textContent.includes('포기') || b.textContent.includes('중단')));
+        if (btn) btn.click();
+      });
+      await page.waitForSelector('[role="dialog"]', { timeout: 3000 }).catch(() => {});
       await new Promise((r) => setTimeout(r, 600));
     },
   },
@@ -221,29 +319,37 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
     else if (url.endsWith('/groups') && method === 'GET') {
       respondJson(currentEmptyGroups ? mock.MOCK_GROUPS_EMPTY : mock.MOCK_GROUPS_LIST);
     }
-    // 3. 그룹 상세 관련
-    else if (url.includes('/groups/1/challenges') && method === 'GET') {
+    // 3. 그룹 상세 관련 (1번, 5번 등 모든 모임 ID 지원)
+    else if (/\/groups\/\d+\/challenges/.test(url) && method === 'GET') {
       respondJson(mock.MOCK_GROUP_CHALLENGES);
-    } else if (url.includes('/groups/1/feed') && method === 'GET') {
+    } else if (/\/groups\/\d+\/feed/.test(url) && method === 'GET') {
       respondJson(mock.MOCK_GROUP_FEED);
-    } else if (url.includes('/groups/1/status-summary') && method === 'GET') {
+    } else if (/\/groups\/\d+\/status-summary/.test(url) && method === 'GET') {
       respondJson(mock.MOCK_GROUP_STATUS_SUMMARY);
-    } else if (url.includes('/groups/1/unchecked-records') && method === 'GET') {
+    } else if (/\/groups\/\d+\/unchecked-records/.test(url) && method === 'GET') {
+      respondJson(mock.MOCK_UNCHECKED_RECORDS);
+    } else if (/\/groups\/\d+\/settlement/.test(url) && method === 'GET') {
+      respondJson(mock.MOCK_SETTLEMENT_SUMMARY);
+    } else if (/\/groups\/\d+\/unpaid-records/.test(url) && method === 'GET') {
+      respondJson(mock.MOCK_UNPAID_RECORDS);
+    } else if (/\/groups\/\d+\/deposit-reports/.test(url) && method === 'GET') {
       respondJson([]);
-    } else if (url.includes('/groups/1/settlement-summary') || url.includes('/groups/1/settlements/summary')) {
-      respondJson({ totalUnsettledAmount: 0, items: [] });
-    } else if (url.includes('/groups/1/account')) {
-      respondJson({ bankName: '카카오뱅크', accountNumber: '3333-**-******', accountHolder: '류코딩' });
-    } else if (url.includes('/groups/1/today')) {
+    } else if (/\/groups\/\d+\/account/.test(url)) {
+      respondJson(mock.MOCK_SETTLEMENT_SUMMARY.account);
+    } else if (/\/groups\/\d+\/today/.test(url)) {
       respondJson(mock.MOCK_TODAY_ACTIONS);
-    } else if (url.includes('/groups/1') && method === 'GET') {
+    } else if (/\/groups\/\d+(\?|$)/.test(url) && method === 'GET') {
       respondJson(mock.MOCK_GROUP_DETAIL);
     }
     // 4. 챌린지 상세
-    else if (url.includes('/challenges/1/calendar')) {
+    else if (/\/challenges\/\d+\/calendar/.test(url)) {
       respondJson(mock.MOCK_CHALLENGE_CALENDAR);
-    } else if (url.includes('/challenges/1') && method === 'GET') {
+    } else if (/\/challenges\/\d+(\?|$)/.test(url) && method === 'GET') {
       respondJson(mock.MOCK_CHALLENGE_DETAIL);
+    }
+    // 4-1. 댓글 관련
+    else if (/\/verifications\/\d+\/comments/.test(url) && method === 'GET') {
+      respondJson(mock.MOCK_COMMENTS);
     }
     // 5. 오늘 할 일
     else if (url.includes('/today') && method === 'GET') {
@@ -326,11 +432,19 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
         await new Promise((r) => setTimeout(r, 400));
       }
 
-      // 모바일 레이아웃 메인 컨테이너(.max-w-app) 탐색
-      const appContainer = await page.$('.max-w-app');
-      const rawPngBuffer = appContainer
-        ? await appContainer.screenshot({ type: 'png' })
-        : await page.screenshot({ type: 'png' });
+      // 모달/바텀시트가 열려 있는지 감지하거나 screen.isModal인 경우 전체 뷰포트(390x844) 캡처
+      const hasModalOpen = !!screen.isModal || (await page.$('[role="dialog"]')) !== null;
+      let rawPngBuffer;
+
+      if (hasModalOpen) {
+        // Base UI의 Portal로 인해 모달은 .max-w-app 바깥(body 직하단)에 렌더링되므로 전체 뷰포트를 캡처
+        rawPngBuffer = await page.screenshot({ type: 'png' });
+      } else {
+        const appContainer = await page.$('.max-w-app');
+        rawPngBuffer = appContainer
+          ? await appContainer.screenshot({ type: 'png' })
+          : await page.screenshot({ type: 'png' });
+      }
 
       const pngPath = path.join(outputDir, `${screen.id}.png`);
       const webpPath = path.join(outputDir, `${screen.id}.webp`);
