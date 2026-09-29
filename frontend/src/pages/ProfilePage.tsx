@@ -173,8 +173,6 @@ export const ProfilePage: React.FC = () => {
             <LogOut className="size-4" />
             로그아웃
           </button>
-
-          <p className="py-1 text-center text-[12.5px] text-slate-500">버전 0.1.0</p>
         </main>
 
         {/* 모바일 하단 탭 바 (AppTabBar) */}
