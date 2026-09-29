@@ -35,7 +35,8 @@ class TodayService(
     private val verificationRepository: VerificationRepository,
     private val presignedUrlService: PresignedUrlService,
     private val dailyRecordRepository: DailyRecordRepository? = null,
-    private val userRepository: com.dayuse.domain.user.UserRepository? = null
+    private val userRepository: com.dayuse.domain.user.UserRepository? = null,
+    private val streakCalculator: com.dayuse.domain.share.service.StreakCalculator = com.dayuse.domain.share.service.StreakCalculator()
 ) {
 
     fun getAllTodayActions(userId: Long): List<TodayActionResponse> {
@@ -119,7 +120,13 @@ class TodayService(
                 periodInfo = periodInfo,
                 executionType = challenge.executionType,
                 todayVerifierNickname = todayVerifierNickname,
-                isJointlyCompleted = isTogether && isCompleted
+                isJointlyCompleted = isTogether && isCompleted,
+                streakDays = dailyRecordRepository?.let { repository ->
+                    streakCalculator.calculateStreak(
+                        repository.findAllByChallengeParticipantId(participant.id),
+                        participant.startDate, challenge.startDate, challenge.endDate, today
+                    ).streakDays
+                } ?: 0
             )
         }
     }
@@ -216,7 +223,13 @@ class TodayService(
                 periodInfo = periodInfo,
                 executionType = challenge.executionType,
                 todayVerifierNickname = todayVerifierNickname,
-                isJointlyCompleted = isTogether && isCompleted
+                isJointlyCompleted = isTogether && isCompleted,
+                streakDays = dailyRecordRepository?.let { repository ->
+                    streakCalculator.calculateStreak(
+                        repository.findAllByChallengeParticipantId(participant.id),
+                        participant.startDate, challenge.startDate, challenge.endDate, today
+                    ).streakDays
+                } ?: 0
             )
         }
     }

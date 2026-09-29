@@ -44,5 +44,6 @@ data class TodayActionResponse(
     val periodInfo: TodayPeriodInfo? = null,
     val executionType: ExecutionType = ExecutionType.INDIVIDUAL,
     val todayVerifierNickname: String? = null,
-    val isJointlyCompleted: Boolean = false
+    val isJointlyCompleted: Boolean = false,
+    val streakDays: Int = 0
 )

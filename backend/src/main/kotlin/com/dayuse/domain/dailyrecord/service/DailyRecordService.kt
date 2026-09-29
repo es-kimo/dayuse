@@ -146,7 +146,8 @@ class DailyRecordService(
         return StatusSummaryResponse(
             groupId = groupId,
             uncheckedCount = uncheckedCount,
-            unpaidPenaltyAmount = unpaidPenaltyAmount
+            unpaidPenaltyAmount = unpaidPenaltyAmount,
+            verifiedUserIds = verificationRepository.findAllByGroupIdAndTargetDate(groupId, today).map { it.userId }.distinct()
         )
     }
 

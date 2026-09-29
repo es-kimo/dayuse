@@ -50,7 +50,18 @@ data class InviteInfoResponse(
     val groupName: String,
     val hostNickname: String,
     val memberCount: Long,
-    val inviteCode: String
+    val inviteCode: String,
+    val members: List<InviteMemberPreview> = emptyList(),
+    val challenges: List<InviteChallengePreview> = emptyList()
+)
+
+data class InviteMemberPreview(val nickname: String, val profileImageUrl: String?)
+data class InviteChallengePreview(
+    val id: Long,
+    val title: String,
+    val periodType: com.dayuse.domain.challenge.PeriodType,
+    val targetFrequency: Int?,
+    val participantCount: Long
 )
 
 data class JoinGroupResponse(
