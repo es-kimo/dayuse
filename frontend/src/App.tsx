@@ -22,6 +22,7 @@ import { ContactPage } from './pages/ContactPage';
 import { GuidePage } from './pages/GuidePage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import { InviteCreatedPage } from './pages/InviteCreatedPage';
 import { PageMetaTracker } from './components/PageMetaTracker';
 import { ScrollToTop } from './components/ScrollToTop';
 import { preloadKakao } from './utils/kakao';
@@ -52,6 +53,7 @@ export const App: React.FC = () => {
               <Route path="/oauth/callback/kakao" element={<KakaoCallbackPage />} />
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/groups/new" element={<NewGroupPage />} />
+              <Route path="/groups/:groupId/invite-created" element={<InviteCreatedPage />} />
               <Route path="/groups/:groupId" element={<GroupDetailPage />} />
               <Route path="/groups/:groupId/challenges" element={<GroupDetailPage />} />
               <Route path="/groups/:groupId/challenges/new" element={<NewChallengePage />} />
