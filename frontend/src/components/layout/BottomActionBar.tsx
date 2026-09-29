@@ -7,7 +7,7 @@ interface BottomActionBarProps {
 
 /**
  * 모바일 화면 하단 고정 CTA 버튼 영역.
- * - 핸드오프 표준: max-w-[390px] mx-auto
+ * - 앱 공통 너비: max-w-app mx-auto
  * - 패딩: p-[12px_16px_16px] 및 safe-area-inset-bottom 대응
  * - 배경: #F8FAFC/95 블러 + 상단 1px slate-200 경계선
  */

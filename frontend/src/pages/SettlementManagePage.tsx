@@ -179,7 +179,7 @@ export const SettlementManagePage: React.FC = () => {
         }}
       />
 
-      <main className="w-full max-w-[390px] mx-auto px-4 pt-3 pb-12 flex-1 flex flex-col">
+      <main className="w-full max-w-app mx-auto px-4 pt-3 pb-12 flex-1 flex flex-col">
         {/* 탭 네비게이션 */}
         <div className="flex border-b border-slate-200 mb-4">
         <button

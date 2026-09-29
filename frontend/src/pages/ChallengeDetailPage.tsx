@@ -766,7 +766,7 @@ export const ChallengeDetailPage: React.FC = () => {
 
         고칠 점이 네 가지였다.
         1) safe-area 패딩이 없어 홈 인디케이터가 버튼 아래를 덮었다.
-        2) 폭이 max-w-md(448px)라 앱 셸(max-w-app, 480px)과 어긋났다.
+        2) 폭이 max-w-md(448px)라 앱 셸(max-w-app)과 어긋났다.
         3) z-index 스케일 밖이라 겹침 순서가 DOM 순서에 의존했다.
         4) 흰 배경 + 얇은 테두리뿐이라 페이지 배경(#F8FAFC)과 잘 구분되지 않았다.
            shadow-sheet(0 -8px 24px)는 이런 하단 바를 위해 정의된 토큰이다.

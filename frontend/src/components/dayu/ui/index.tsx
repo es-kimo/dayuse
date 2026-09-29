@@ -474,7 +474,7 @@ export function AppTabBar({
   return (
     <nav
       aria-label="주요 메뉴"
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] z-30 grid grid-cols-3 border-t border-slate-200 bg-white/95 backdrop-blur-md px-2 pt-1.5 pb-[calc(8px+env(safe-area-inset-bottom))]"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app z-30 grid grid-cols-3 border-t border-slate-200 bg-white/95 backdrop-blur-md px-2 pt-1.5 pb-[calc(8px+env(safe-area-inset-bottom))]"
     >
       {items.map(({ key, label, Icon }) => (
         <button
