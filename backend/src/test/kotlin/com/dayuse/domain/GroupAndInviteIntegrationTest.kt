@@ -78,6 +78,46 @@ class GroupAndInviteIntegrationTest {
         }
     }
 
+    @Autowired
+    private lateinit var participantRepository: com.dayuse.domain.challenge.ChallengeParticipantRepository
+
+    @Test
+    fun `챌린지 목록은 해당 챌린지의 활성 참여자 프로필만 반환한다`() {
+        hostUser.profileImageUrl = "dayu:mint"
+        val group = groupService.createGroup(hostUser.id, CreateGroupRequest(name = "프로필 모임"))
+        val today = com.dayuse.global.util.DateTimeUtils.todayKst()
+        val challenge = challengeRepository.save(com.dayuse.domain.challenge.Challenge(
+            groupId = group.id, creatorUserId = hostUser.id, title = "프로필 확인",
+            startDate = today, endDate = today.plusDays(7)
+        ))
+        participantRepository.save(com.dayuse.domain.challenge.ChallengeParticipant(
+            challengeId = challenge.id, userId = hostUser.id
+        ))
+        participantRepository.save(com.dayuse.domain.challenge.ChallengeParticipant(
+            challengeId = challenge.id, userId = memberUser.id,
+            status = com.dayuse.domain.challenge.ParticipantStatus.CANCELLED
+        ))
+        val other = challengeRepository.save(com.dayuse.domain.challenge.Challenge(
+            groupId = group.id, creatorUserId = hostUser.id, title = "다른 챌린지",
+            startDate = today.plusDays(1), endDate = today.plusDays(7)
+        ))
+        participantRepository.save(com.dayuse.domain.challenge.ChallengeParticipant(
+            challengeId = other.id, userId = strangerUser.id
+        ))
+        mockMvc.get("/api/v1/groups/${group.id}/challenges") {
+            header("Authorization", hostToken)
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$[0].participantCount") { value(1) }
+            jsonPath("$[0].isParticipating") { value(true) }
+            jsonPath("$[0].participants.length()") { value(1) }
+            jsonPath("$[0].participants[0].userId") { value(hostUser.id.toInt()) }
+            jsonPath("$[0].participants[0].nickname") { value(hostUser.nickname) }
+            jsonPath("$[0].participants[0].profileImageUrl") { value("dayu:mint") }
+            jsonPath("$[1].participants[0].userId") { value(strangerUser.id.toInt()) }
+        }
+    }
+
     @BeforeEach
     fun setUp() {
         hostUser = userRepository.save(User(kakaoId = "kakao_host", nickname = "모임장유저"))

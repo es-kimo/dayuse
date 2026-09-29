@@ -73,6 +73,12 @@ export interface ChallengePeriodInterval {
   isSettled?: boolean;
 }
 
+export interface ChallengeParticipantPreview {
+  userId: number;
+  nickname: string;
+  profileImageUrl?: string | null;
+}
+
 export interface ChallengeSummary {
   id: number;
   groupId: number;
@@ -87,6 +93,7 @@ export interface ChallengeSummary {
   executionType?: ExecutionType;
   status: ChallengeStatus;
   participantCount: number;
+  participants?: ChallengeParticipantPreview[];
   isParticipating: boolean;
   isCreator: boolean;
   myPenaltyAmount?: number | null;

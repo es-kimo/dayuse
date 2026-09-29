@@ -184,7 +184,14 @@ data class ChallengeSummaryResponse(
     val isCreator: Boolean,
     val myPenaltyAmount: Int?,
     val createdAt: LocalDateTime,
-    val abortedAt: LocalDateTime? = null
+    val abortedAt: LocalDateTime? = null,
+    val participants: List<ChallengeParticipantPreview> = emptyList()
+)
+
+data class ChallengeParticipantPreview(
+    val userId: Long,
+    val nickname: String,
+    val profileImageUrl: String?
 )
 
 data class ChallengeParticipantResponse(

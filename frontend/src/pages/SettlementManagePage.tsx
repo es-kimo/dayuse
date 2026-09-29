@@ -18,7 +18,6 @@ export const SettlementManagePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DepositReportStatus>("WAITING_CONFIRMATION");
   const [reports, setReports] = useState<DepositReportDetail[]>([]);
   const [loading, setLoading] = useState(true);
-  const [groupName, setGroupName] = useState("");
   const [expandedReportIds, setExpandedReportIds] = useState<number[]>([]);
 
   // 모달 상태
@@ -45,7 +44,6 @@ export const SettlementManagePage: React.FC = () => {
     if (!groupId) return;
     try {
       const data = await groupsApi.getGroupDetail(Number(groupId));
-      setGroupName(data.name);
       if (!data.isHost) {
         alert("모임장만 정산 관리 페이지에 접근할 수 있습니다.");
         navigate(`/groups/${groupId}`);

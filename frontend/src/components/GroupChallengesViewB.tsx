@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Plus, Check } from 'lucide-react';
 import type { ChallengeSummary } from '../types';
+import { DayuAvatar } from './brand/DayuAvatar';
 import { Dayu } from './dayu/DayuAvatar';
 import { Button, Card, Chip, Pill, ProgressBar, Segmented } from './dayu/ui';
 
@@ -177,8 +178,23 @@ export const GroupChallengesViewB: React.FC<GroupChallengesViewBProps> = ({
                 </div>
 
                 {/* 하단 구분선 + 참여 인원 + 오늘 상태 칩 */}
-                <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-[13px]">
-                  <span className="text-[13px] text-slate-500">{c.participantCount}명 참여</span>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-[13px]">
+                  <div className="flex min-w-0 items-center gap-2">
+                    {!!c.participants?.length && (
+                      <div className="flex shrink-0 -space-x-2">
+                        {c.participants.slice(0, 3).map((participant) => (
+                          <DayuAvatar
+                            key={participant.userId}
+                            profileImageUrl={participant.profileImageUrl}
+                            alt={participant.nickname}
+                            size={28}
+                            className="border-2 border-white"
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <span className="whitespace-nowrap text-[13px] text-slate-500">{c.participantCount}명 참여</span>
+                  </div>
 
                   {c.isParticipating &&
                     (isCompletedToday ? (
