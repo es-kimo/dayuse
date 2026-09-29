@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { DepositReportDetail, DepositReportStatus } from '../types';
 import { settlementApi } from '../api/settlement';
 import { groupsApi } from '../api/groups';
-import { MobileLayout } from '../components/MobileLayout';
 import { SubPageHeader } from '../components/layout/SubPageHeader';
 import { Button, FormField, Textarea, Modal, ModalTitle, ModalClose } from '../components/ui';
 import {
@@ -162,7 +161,7 @@ export const SettlementManagePage: React.FC = () => {
   };
 
   return (
-    <MobileLayout showHeader={false}>
+    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col">
       {/* 상단 헤더 */}
       <SubPageHeader
         title={
@@ -178,11 +177,11 @@ export const SettlementManagePage: React.FC = () => {
             navigate(`/groups/${groupId}`);
           }
         }}
-        className="-mt-4 -mx-4 mb-3 border-b border-slate-200"
       />
 
-      {/* 탭 네비게이션 */}
-      <div className="flex border-b border-slate-200 mb-4">
+      <main className="w-full max-w-[390px] mx-auto px-4 pt-3 pb-12 flex-1 flex flex-col">
+        {/* 탭 네비게이션 */}
+        <div className="flex border-b border-slate-200 mb-4">
         <button
           onClick={() => setActiveTab('WAITING_CONFIRMATION')}
           className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
@@ -505,6 +504,7 @@ export const SettlementManagePage: React.FC = () => {
           </form>
         </>
       </Modal>
-    </MobileLayout>
+      </main>
+    </div>
   );
 };

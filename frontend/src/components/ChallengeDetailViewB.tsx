@@ -172,7 +172,7 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
       />
 
       {/* Main Body */}
-      <div className="w-full max-w-[390px] mx-auto pt-1.5 pb-28 flex flex-col gap-3.5">
+      <div className="w-full max-w-[390px] mx-auto px-4 pt-1.5 pb-28 flex flex-col gap-3.5">
         {/* 1. Challenge Hero Card */}
         <ChallengeHeroCard
           challenge={challenge}

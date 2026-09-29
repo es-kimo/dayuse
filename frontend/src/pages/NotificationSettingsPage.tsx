@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Send, ShieldAlert, AlertCircle, Smartphone } from 'lucide-react';
-import { MobileLayout } from '../components/MobileLayout';
 import { SubPageHeader } from '../components/layout/SubPageHeader';
 import { IosInstallGuideModal } from '../components/IosInstallGuideModal';
 import { useToast } from '../context/ToastContext';
@@ -195,14 +194,14 @@ export const NotificationSettingsPage: React.FC = () => {
 
 
   return (
-    <MobileLayout showHeader={false}>
-      <div className="w-full max-w-[390px] mx-auto flex flex-col gap-3.5 pb-12">
-        {/* Header */}
-        <SubPageHeader
-          title="알림 설정"
-          onBack={() => navigate(-1)}
-        />
+    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col">
+      {/* Header */}
+      <SubPageHeader
+        title="알림 설정"
+        onBack={() => navigate(-1)}
+      />
 
+      <main className="w-full max-w-[390px] mx-auto px-4 pt-3 pb-12 flex-1 flex flex-col gap-3.5">
         <p className="text-[13.5px] text-slate-500 leading-normal -mt-1 px-1">
           오늘 인증을 아직 안 한 챌린지가 있을 때만 알려드려요.
         </p>
@@ -321,12 +320,12 @@ export const NotificationSettingsPage: React.FC = () => {
             </div>
           </div>
         ) : null}
-      </div>
+      </main>
 
       <IosInstallGuideModal
         isOpen={showIosGuide}
         onClose={() => setShowIosGuide(false)}
       />
-    </MobileLayout>
+    </div>
   );
 };

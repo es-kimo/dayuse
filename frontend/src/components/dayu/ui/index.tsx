@@ -60,7 +60,7 @@ export function AppTabBar({ active, todayLeft = 0, onNavigate }: {
     { key: "me", label: "내 정보", Icon: User },
   ] as const;
   return (
-    <nav aria-label="주요 메뉴" className="grid grid-cols-3 border-t border-slate-200 bg-white px-2 pt-1.5 pb-[calc(8px+env(safe-area-inset-bottom))]">
+    <nav aria-label="주요 메뉴" className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] z-30 grid grid-cols-3 border-t border-slate-200 bg-white/95 backdrop-blur-md px-2 pt-1.5 pb-[calc(8px+env(safe-area-inset-bottom))]">
       {items.map(({ key, label, Icon }) => (
         <button key={key} onClick={() => onNavigate(key)} aria-current={active === key ? "page" : undefined}
           className={`relative flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-bold ${active === key ? "text-slate-800" : "text-slate-400"}`}>

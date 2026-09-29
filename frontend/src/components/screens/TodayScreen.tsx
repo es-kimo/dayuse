@@ -2,6 +2,7 @@ import { Clock, Bell, Camera, Check, CheckCircle2 } from './ScreenIcons';
 import { useNavigate } from 'react-router-dom';
 import type { TodayAction } from '../../types';
 import { Screen, ScreenNav, screenAssets } from './Screen';
+import { AppHeader } from '../layout/AppHeader';
 
 export function TodayScreen({ actions, loading, error, retry, onVerify, onImage }: {
   actions: TodayAction[]; loading: boolean; error: string; retry: () => void;
@@ -11,7 +12,21 @@ export function TodayScreen({ actions, loading, error, retry, onVerify, onImage 
   const pending = actions.filter(a => !a.isCompletedToday);
   const completed = actions.filter(a => a.isCompletedToday);
   return <Screen>
-    <header className="bar"><img className="logo" src={screenAssets.symbol} alt="데이유즈" style={{ height: 28 }} /><h1 className="t" style={{ paddingLeft: 6 }}>오늘</h1><button className="ib" onClick={() => navigate('/settings/notifications')} aria-label="알림 설정"><Bell className="ic" /></button></header>
+    <AppHeader
+      variant="main"
+      leftAction={<img className="logo h-7 w-auto mr-1" src={screenAssets.symbol} alt="데이유즈" />}
+      title="오늘"
+      rightAction={
+        <button
+          type="button"
+          className="ib w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 transition active:scale-95"
+          onClick={() => navigate('/settings/notifications')}
+          aria-label="알림 설정"
+        >
+          <Bell className="ic" />
+        </button>
+      }
+    />
     <main className="body">
       <div><p className="sub">{new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long', timeZone: 'Asia/Seoul' })}</p></div>
       {loading ? <p className="screen-loading" role="status">오늘 할 일을 불러오는 중...</p> : error ? <div className="notice"><span>{error}</span><button onClick={retry}>다시 시도</button></div> : !actions.length ? <div className="center" style={{ padding: '60px 0', gap: 14 }}><img src={screenAssets.symbol} alt="" width="96" height="96" /><h2 className="t1">오늘은 인증할 챌린지가 없어요</h2><button className="btn" onClick={() => navigate('/groups')}>모임 둘러보기</button></div> : <>

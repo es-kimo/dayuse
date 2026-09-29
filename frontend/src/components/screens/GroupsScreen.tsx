@@ -6,6 +6,7 @@ import { challengesApi } from '../../api/challenges';
 import { todayApi } from '../../api/today';
 import type { GroupSummary, GroupDetail, ChallengeSummary, TodayAction } from '../../types';
 import { Screen, ScreenAvatar, ScreenNav, screenAssets } from './Screen';
+import { AppHeader } from '../layout/AppHeader';
 
 type Details = { group?: GroupDetail; challenges?: ChallengeSummary[] };
 export function GroupsScreen({ groups, loading, error, retry, inviteInput, setInviteInput, onJoin }: {
@@ -32,7 +33,22 @@ export function GroupsScreen({ groups, loading, error, retry, inviteInput, setIn
   const joinForm = <form onSubmit={onJoin} style={{ display: 'flex', gap: 8 }}><input className="inp" aria-label="초대 코드 또는 링크" placeholder="초대 코드 또는 링크" value={inviteInput} onChange={e => setInviteInput(e.target.value)} /><button className="btn dark" disabled={!inviteInput.trim()}>들어가기</button></form>;
   const empty = !loading && !error && groups.length === 0;
   return <Screen>
-    <header className="bar"><h1 className="t" style={{ paddingLeft: 4, fontSize: 22 }}>내 모임</h1>{!empty && <button className="btn sm" onClick={() => navigate('/groups/new')}><Plus className="ic s" />만들기</button>}</header>
+    <AppHeader
+      variant="main"
+      title="내 모임"
+      rightAction={
+        !empty ? (
+          <button
+            type="button"
+            className="btn sm flex items-center gap-1.5 h-9 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[13.5px] transition cursor-pointer"
+            onClick={() => navigate('/groups/new')}
+          >
+            <Plus className="ic s" />
+            만들기
+          </button>
+        ) : undefined
+      }
+    />
     <main className="body" style={empty ? { justifyContent: 'center', padding: '24px 24px 40px' } : undefined}>
       {loading ? <p className="screen-loading" role="status">모임 목록을 불러오는 중...</p> : error ? <div className="notice"><span>{error}</span><button onClick={retry}>다시 시도</button></div> : empty ? <>
         <div className="center" style={{ gap: 8 }}><img src={screenAssets.symbol} alt="" style={{ width: 96, height: 96, marginBottom: 6 }} /><h2 style={{ fontSize: 20, fontWeight: 800 }}>아직 참여한 모임이 없어요</h2><p className="sub">친구와 모임을 만들거나, 받은 초대 코드로 들어가 보세요</p></div>
