@@ -69,28 +69,64 @@ export const LoginPage: React.FC = () => {
 
   return (
     <Screen>
-      <main className="body" style={{ justifyContent: 'center', padding: '24px 28px' }}>
-        <div className="center" style={{ gap: 18, marginTop: -10 }}>
-          <img src={screenAssets.logo} alt="데이유즈" style={{ height: 44 }} />
-          <div><p style={{ fontSize: 17, fontWeight: 700 }}>목표는 각자, 꾸준함은 함께.</p><p className="sub" style={{ marginTop: 4 }}>친구들과 각자의 챌린지를 인증하고 기록해요</p></div>
+      <main className="flex-1 flex flex-col justify-center px-7 py-6">
+        <div className="flex flex-col items-center text-center gap-4 -mt-2">
+          <img src={screenAssets.logo} alt="데이유즈" className="h-11 w-auto" />
+          <div>
+            <p className="text-[17px] font-bold text-slate-800">목표는 각자, 꾸준함은 함께.</p>
+            <p className="text-xs text-slate-500 mt-1">친구들과 각자의 챌린지를 인증하고 기록해요</p>
+          </div>
         </div>
         <InAppBrowserNotice />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 36 }}>
-          <button className="btn kakao lg w100" onClick={handleKakaoLogin} disabled={isLoading}><Kakao className="ic" />{isLoading ? '로그인 처리 중...' : '카카오로 시작하기'}</button>
-          <p className="help" style={{ textAlign: 'center' }}>시작하면 <a className="todo" href="/terms">이용약관</a>과 <a className="todo" href="/privacy">개인정보처리방침</a>에 동의하게 돼요.</p>
-          {loginError && <p className="error" role="alert">{loginError}</p>}
+        <div className="flex flex-col gap-2.5 mt-9">
+          <button
+            className="w-full h-12 rounded-xl bg-[#FEE500] hover:bg-[#FDD835] active:scale-[0.99] text-[#191919] font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow-xs disabled:opacity-50"
+            onClick={handleKakaoLogin}
+            disabled={isLoading}
+          >
+            <Kakao className="w-5 h-5" />
+            {isLoading ? '로그인 처리 중...' : '카카오로 시작하기'}
+          </button>
+          <p className="text-[11px] text-slate-400 text-center">
+            시작하면 <a className="underline hover:text-slate-600" href="/terms">이용약관</a>과{' '}
+            <a className="underline hover:text-slate-600" href="/privacy">개인정보처리방침</a>에 동의하게 돼요.
+          </p>
+          {loginError && (
+            <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3 text-center" role="alert">
+              {loginError}
+            </p>
+          )}
         </div>
-        {import.meta.env.DEV && <div className="dev" style={{ marginTop: 28 }}>
-          <button type="button" aria-expanded={devOpen} onClick={() => setDevOpen(!devOpen)} className="lbl" style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer', padding: 0, border: 0, background: 'none', width: '100%' }}><span style={{ display: 'flex', gap: 6, alignItems: 'center' }}><Info className="ic s" />개발용 빠른 로그인 · 로컬·테스트에서만 보여요</span><Plus className="ic s" /></button>
-          {devOpen && <FormField label="테스트 계정 선택" id="mock-user-select" className="mt-3">
-            <div className="flex gap-2">
-              <Select id="mock-user-select" value={mockUserId} onChange={(e) => setMockUserId(e.target.value)}>
-                <option value="1">사용자 1 (모임장 테스트용)</option><option value="2">사용자 2 (초대 가입 테스트용)</option><option value="3">사용자 3 (비회원 차단 테스트용)</option>
-              </Select>
-              <Button onClick={() => handleMockLogin(`mock-user-${mockUserId}`)} isLoading={isLoading} leftIcon={<UserCheck className="w-4 h-4" />}>접속</Button>
-            </div>
-          </FormField>}
-        </div>}
+        {import.meta.env.DEV && (
+          <div className="mt-7 pt-4 border-t border-slate-200/80">
+            <button
+              type="button"
+              aria-expanded={devOpen}
+              onClick={() => setDevOpen(!devOpen)}
+              className="w-full flex items-center justify-between text-xs text-slate-500 hover:text-slate-800 transition cursor-pointer"
+            >
+              <span className="flex items-center gap-1.5">
+                <Info className="w-4 h-4" />
+                개발용 빠른 로그인 · 로컬·테스트에서만 보여요
+              </span>
+              <Plus className={`w-4 h-4 transition-transform ${devOpen ? 'rotate-45' : ''}`} />
+            </button>
+            {devOpen && (
+              <FormField label="테스트 계정 선택" id="mock-user-select" className="mt-3">
+                <div className="flex gap-2">
+                  <Select id="mock-user-select" value={mockUserId} onChange={(e) => setMockUserId(e.target.value)}>
+                    <option value="1">사용자 1 (모임장 테스트용)</option>
+                    <option value="2">사용자 2 (초대 가입 테스트용)</option>
+                    <option value="3">사용자 3 (비회원 차단 테스트용)</option>
+                  </Select>
+                  <Button onClick={() => handleMockLogin(`mock-user-${mockUserId}`)} isLoading={isLoading} leftIcon={<UserCheck className="w-4 h-4" />}>
+                    접속
+                  </Button>
+                </div>
+              </FormField>
+            )}
+          </div>
+        )}
       </main>
     </Screen>
   );

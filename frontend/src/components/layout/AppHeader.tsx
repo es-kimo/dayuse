@@ -1,12 +1,12 @@
-import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import React from "react";
+import { ArrowLeft } from "lucide-react";
 
 export interface AppHeaderProps {
   /**
    * 'main': 메인 3대 탭(오늘, 모임, 내 정보). 22px 굵은 타이틀.
    * 'sub': 서브 상세/생성/설정 페이지. 17px 볼드 + 뒤로가기 버튼.
    */
-  variant?: 'main' | 'sub';
+  variant?: "main" | "sub";
   /** 헤더 타이틀 */
   title: React.ReactNode;
   /** 좌측 커스텀 슬롯 (예: 데이유 심볼 로고 등). variant='sub'에서 미지정 시 뒤로가기 버튼 표시 */
@@ -21,18 +21,17 @@ export interface AppHeaderProps {
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
-  variant = 'sub',
+  variant = "sub",
   title,
   leftAction,
   rightAction,
   onBack,
-  border = true,
-  className = '',
+  className = "",
 }) => {
   const handleBack = () => {
     if (onBack) {
       onBack();
-    } else if (typeof window !== 'undefined' && window.history.length > 1) {
+    } else if (typeof window !== "undefined" && window.history.length > 1) {
       window.history.back();
     }
   };
@@ -40,14 +39,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <header
       role="banner"
-      className={`bar sticky top-0 z-30 h-14 w-full flex items-center gap-1.5 px-3 bg-slate-50/92 backdrop-blur-md transition-colors ${
-        border ? 'border-b border-slate-200' : 'border-b border-transparent'
-      } ${className}`}
+      className={`bar sticky top-0 z-30 h-14 w-full flex items-center gap-1.5 px-3 bg-slate-50/92 backdrop-blur-md transition-colors ${className}`}
     >
       {/* 좌측 액션 / 뒤로가기 */}
       {leftAction ? (
         <div className="flex items-center shrink-0">{leftAction}</div>
-      ) : variant === 'sub' ? (
+      ) : variant === "sub" ? (
         <button
           type="button"
           onClick={handleBack}
@@ -61,16 +58,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       {/* 중앙 타이틀 */}
       <h1
         className={`t flex-1 min-w-0 font-extrabold tracking-tight truncate ${
-          variant === 'main' ? 'text-[22px] text-slate-900 pl-1' : 'text-[17px] text-slate-900'
+          variant === "main" ? "text-[22px] text-slate-900 pl-1" : "text-[17px] text-slate-900"
         }`}
       >
         {title}
       </h1>
 
       {/* 우측 액션 */}
-      {rightAction && (
-        <div className="flex items-center gap-1 shrink-0">{rightAction}</div>
-      )}
+      {rightAction && <div className="flex items-center gap-1 shrink-0">{rightAction}</div>}
     </header>
   );
 };
