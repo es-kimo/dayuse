@@ -8,6 +8,7 @@ import { HeaderIconButton } from '../components/layout/AppHeader';
 import { X, Copy, Check, MessageCircle, Trophy, ChevronRight, Loader2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { shareToKakao, isKakaoReady } from '../utils/kakao';
+import { BRAND_INVITE_OG } from '../utils/meta';
 
 export const InviteCreatedPage: React.FC = () => {
   const { id, groupId } = useParams<{ id?: string; groupId?: string }>();
@@ -69,7 +70,9 @@ export const InviteCreatedPage: React.FC = () => {
       const shared = shareToKakao({
         title: `'${group.name}' 모임에 초대합니다!`,
         description: '데이유에서 매일 습관을 인증하고 함께 목표를 달성해요.',
+        imageUrl: BRAND_INVITE_OG,
         linkUrl: inviteUrl,
+        buttonTitle: '초대장 열기',
       });
       if (shared) return;
     }

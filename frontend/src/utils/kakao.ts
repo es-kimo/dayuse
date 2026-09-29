@@ -75,18 +75,35 @@ export const preloadKakao = async (): Promise<boolean> => {
   }
 };
 
+/** 카카오 서버가 접근할 수 있는 공개 오리진. 로컬 개발 중에도 썸네일만은 여기서 받아간다. */
+const PUBLIC_ORIGIN = 'https://dayuse.kr';
+
+/** 넘겨받은 이미지가 없을 때 쓰는 브랜드 기본 썸네일. 링크 미리보기 카드를 항상 띄우기 위한 최소 보장이다. */
+const BRAND_FALLBACK_IMAGE = '/assets/brand/og-default.png';
+
 /**
- * 카카오 썸네일로 쓸 수 있는 이미지인지 확인한다.
- * 카카오 스크래퍼는 SVG를 썸네일로 잡지 못하므로 favicon.svg 같은 값은 걸러낸다.
+ * 카카오 썸네일로 실제로 쓸 수 있는 절대 URL로 정리한다. 못 쓰는 값이면 null.
+ *
+ * - SVG는 카카오가 썸네일로 잡지 못하므로 제외한다.
+ * - 상대 경로는 절대 URL로 올린다.
+ * - localhost/사설 IP는 카카오 서버가 받아갈 수 없으므로 공개 오리진의 같은 경로로 바꾼다.
+ *   (로컬에서 공유를 눌러도 그림이 깨지지 않게 하는 용도다.)
  */
-const isScrapableImage = (url?: string | null): url is string => {
-  if (!url) return false;
+export const resolveKakaoImageUrl = (
+  url: string | null | undefined,
+  origin: string
+): string | null => {
+  if (!url) return null;
   try {
-    const parsed = new URL(url, window.location.origin);
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
-    return !/\.svg$/i.test(parsed.pathname);
+    const parsed = new URL(url, origin);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+    if (/\.svg$/i.test(parsed.pathname)) return null;
+    if (/^(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0|192\.168\.|10\.)/.test(parsed.host)) {
+      return new URL(parsed.pathname + parsed.search, PUBLIC_ORIGIN).toString();
+    }
+    return parsed.toString();
   } catch {
-    return false;
+    return null;
   }
 };
 
@@ -95,42 +112,45 @@ interface ShareKakaoParams {
   description: string;
   imageUrl?: string | null;
   linkUrl: string;
+  /** 메시지 하단 버튼 문구. 공유 대상에 맞는 말로 바꿔 쓴다. */
+  buttonTitle?: string;
 }
 
 /**
  * 카카오톡으로 공유한다. 동기 함수이므로 클릭 핸들러에서 await 없이 호출해야 한다.
  *
- * 쓸 수 있는 썸네일이 없으면 feed 대신 text 템플릿을 쓴다.
- * feed 템플릿은 imageUrl이 필수라, 깨진 이미지를 넣으면 메시지 자체가 볼품없어진다.
+ * 항상 feed 템플릿으로 보낸다. text 템플릿은 링크가 도메인 한 줄로만 붙어서
+ * 받는 쪽에 문구만 덩그러니 보이고 눌러볼 만한 카드가 만들어지지 않는다.
+ * 그래서 쓸 만한 썸네일이 없으면 브랜드 기본 이미지로 메꾼다.
  */
 export const shareToKakao = ({
   title,
   description,
   imageUrl,
   linkUrl,
+  buttonTitle = '자세히 보기',
 }: ShareKakaoParams): boolean => {
   if (!isKakaoReady()) return false;
 
   const link = { mobileWebUrl: linkUrl, webUrl: linkUrl };
-  const buttons = [{ title: '카드 보러가기', link }];
+  const buttons = [{ title: buttonTitle, link }];
+  const origin = typeof window !== 'undefined' ? window.location.origin : PUBLIC_ORIGIN;
+  const thumbnail =
+    resolveKakaoImageUrl(imageUrl, origin) ??
+    resolveKakaoImageUrl(BRAND_FALLBACK_IMAGE, origin);
 
   try {
-    if (isScrapableImage(imageUrl)) {
-      window.Kakao.Share.sendDefault({
-        objectType: 'feed',
-        installTalk: isMobile(),
-        content: { title, description, imageUrl, link },
-        buttons,
-      });
-    } else {
-      window.Kakao.Share.sendDefault({
-        objectType: 'text',
-        installTalk: isMobile(),
-        text: `${title}\n${description}`,
+    window.Kakao.Share.sendDefault({
+      objectType: 'feed',
+      installTalk: isMobile(),
+      content: {
+        title,
+        description,
+        imageUrl: thumbnail,
         link,
-        buttons,
-      });
-    }
+      },
+      buttons,
+    });
     return true;
   } catch (err) {
     console.error('카카오톡 공유 전송 실패:', err);

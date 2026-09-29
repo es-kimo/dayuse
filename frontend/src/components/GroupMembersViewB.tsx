@@ -5,6 +5,7 @@ import { DayuAvatar } from './brand/DayuAvatar';
 import { Button, Card, Chip, SectionHead } from './dayu/ui';
 import { useToast } from '../context/ToastContext';
 import { shareToKakao, isKakaoReady } from '../utils/kakao';
+import { BRAND_INVITE_OG } from '../utils/meta';
 import { formatMonthDay } from '../utils/date';
 
 interface GroupMembersViewBProps {
@@ -61,7 +62,9 @@ export const GroupMembersViewB: React.FC<GroupMembersViewBProps> = ({
       const shared = shareToKakao({
         title: `'${group.name}' 모임에 초대합니다!`,
         description: '데이유에서 매일 습관을 인증하고 함께 목표를 달성해요.',
+        imageUrl: BRAND_INVITE_OG,
         linkUrl: displayInviteUrl,
+        buttonTitle: '초대장 열기',
       });
       if (shared) return;
     }

@@ -356,6 +356,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
           description: shareDescription,
           imageUrl: buildOgImageUrl(shareToken),
           linkUrl,
+          buttonTitle: '카드 보러가기',
         })
       ) {
         return;
