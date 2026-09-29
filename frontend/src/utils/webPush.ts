@@ -12,6 +12,11 @@ export function isIos(): boolean {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream;
 }
 
+export function isAndroid(): boolean {
+  if (typeof window === 'undefined') return false;
+  return /Android/i.test(navigator.userAgent);
+}
+
 export function isStandalone(): boolean {
   if (typeof window === 'undefined') return false;
   return (

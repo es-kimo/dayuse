@@ -15,6 +15,7 @@ import {
 import {
   isPushNotificationSupported,
   isIos,
+  isAndroid,
   isStandalone,
   subscribeToPush,
   unsubscribePush,
@@ -34,12 +35,15 @@ export const NotificationSettingsPage: React.FC = () => {
   const [testing, setTesting] = useState(false);
   const [settings, setSettings] = useState<NotificationSettingResponse | null>(null);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  const [guidePlatform, setGuidePlatform] = useState<'ios' | 'android'>('ios');
   const [deviceOutOfSync, setDeviceOutOfSync] = useState(false);
 
   const supported = isPushNotificationSupported();
   const iosEnv = isIos();
+  const androidEnv = isAndroid();
   const standaloneEnv = isStandalone();
   const iosNeedsInstall = iosEnv && !standaloneEnv;
+  const androidCanInstall = androidEnv && !standaloneEnv;
 
   useEffect(() => {
     loadSettings();
@@ -106,6 +110,7 @@ export const NotificationSettingsPage: React.FC = () => {
     if (!settings.enabled) {
       // 알림 켜기 시도
       if (iosNeedsInstall) {
+        setGuidePlatform('ios');
         setShowIosGuide(true);
         return;
       }
@@ -215,8 +220,35 @@ export const NotificationSettingsPage: React.FC = () => {
                 아이폰에서는 홈 화면에 추가된 데이유즈 앱에서만 알림을 수신할 수 있습니다.
               </p>
               <button
-                onClick={() => setShowIosGuide(true)}
-                className="mt-1.5 text-[11px] font-bold text-amber-800 underline hover:text-amber-900"
+                type="button"
+                onClick={() => {
+                  setGuidePlatform('ios');
+                  setShowIosGuide(true);
+                }}
+                className="mt-1.5 text-[11px] font-bold text-amber-800 underline hover:text-amber-900 cursor-pointer"
+              >
+                홈 화면 추가 방법 알아보기 &rarr;
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Android 환경 안내 배너 */}
+        {androidCanInstall && (
+          <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-[14px] flex items-start gap-2.5">
+            <Smartphone className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-xs font-bold text-blue-900">앱으로 더 편리하게 사용하기</h4>
+              <p className="text-[11px] text-blue-700 mt-0.5 leading-relaxed">
+                홈 화면에 데이유즈를 추가하면 브라우저 주소창 없이 앱처럼 깔끔하게 사용하고 알림을 관리할 수 있습니다.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setGuidePlatform('android');
+                  setShowIosGuide(true);
+                }}
+                className="mt-1.5 text-[11px] font-bold text-blue-800 underline hover:text-blue-900 cursor-pointer"
               >
                 홈 화면 추가 방법 알아보기 &rarr;
               </button>
@@ -307,6 +339,17 @@ export const NotificationSettingsPage: React.FC = () => {
               <Help>· 오늘 인증을 모두 마친 날에는 알림이 오지 않아요.</Help>
               <Help>· 알림에는 친구 이름이나 금액이 나오지 않고, 남은 개수만 보여요.</Help>
               <Help>· 브라우저 알림 권한이 꺼져 있으면 받을 수 없어요.</Help>
+              <button
+                type="button"
+                onClick={() => {
+                  setGuidePlatform(androidEnv ? 'android' : 'ios');
+                  setShowIosGuide(true);
+                }}
+                className="mt-1 flex items-center gap-1.5 text-[12px] font-medium text-blue-600 hover:text-blue-700 hover:underline self-start cursor-pointer"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                홈 화면에 앱 추가하는 방법 (iOS / Android) &rarr;
+              </button>
             </div>
           </div>
         ) : null}
@@ -315,6 +358,7 @@ export const NotificationSettingsPage: React.FC = () => {
       <IosInstallGuideModal
         isOpen={showIosGuide}
         onClose={() => setShowIosGuide(false)}
+        initialPlatform={guidePlatform}
       />
     </div>
   );
