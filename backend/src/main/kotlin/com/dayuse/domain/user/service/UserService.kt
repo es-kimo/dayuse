@@ -19,10 +19,15 @@ class UserService(
     }
 
     @Transactional
-    fun updateNickname(userId: Long, newNickname: String): UserResponse {
+    fun updateProfile(userId: Long, newNickname: String?, newProfileImageUrl: String?): UserResponse {
         val user = findUserById(userId)
-        user.updateNickname(newNickname)
+        user.updateProfile(newNickname, newProfileImageUrl)
         return user.toResponse()
+    }
+
+    @Transactional
+    fun updateNickname(userId: Long, newNickname: String): UserResponse {
+        return updateProfile(userId, newNickname, null)
     }
 
     fun findUserById(userId: Long): User {

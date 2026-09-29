@@ -9,7 +9,8 @@ import java.time.LocalDateTime
 data class StatusSummaryResponse(
     val groupId: Long,
     val uncheckedCount: Long,
-    val unpaidPenaltyAmount: Int
+    val unpaidPenaltyAmount: Int,
+    val verifiedUserIds: List<Long> = emptyList()
 )
 
 data class UncheckedRecordResponse(

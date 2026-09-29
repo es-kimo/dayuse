@@ -1,3 +1,5 @@
+import { MessageCircle as ScreenMessageCircle } from './screens/ScreenIcons';
+import { ScreenAvatar } from './screens/Screen';
 import React, { useState } from 'react';
 import type { FeedItem } from '../types';
 import { formatKstTime } from '../utils/date';
@@ -6,15 +8,17 @@ import {
   Trash2,
   Calendar,
   AlertTriangle,
-  User as UserIcon,
   Loader2,
   Share2,
   Maximize2,
 } from 'lucide-react';
 import { ShareCardModal } from './ShareCardModal';
 import { Lightbox } from './ui/Lightbox';
+import { DayuAvatar } from './brand/DayuAvatar';
+import { Button, Card, SectionHead } from './dayu/ui';
 
 interface GroupFeedSectionProps {
+  screen?: boolean;
   feedItems: FeedItem[];
   loading: boolean;
   hasMore: boolean;
@@ -25,6 +29,7 @@ interface GroupFeedSectionProps {
 }
 
 export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
+  screen = false,
   feedItems,
   loading,
   hasMore,
@@ -48,6 +53,117 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
       setDeletingId(null);
     }
   };
+
+  if (screen) {
+    return (
+      <>
+        <SectionHead title="모임 인증 피드" right="최신순" />
+        {loading ? (
+          <p className="py-6 text-center text-[13px] text-slate-500" role="status">
+            인증 피드를 불러오는 중...
+          </p>
+        ) : !feedItems.length ? (
+          <Card className="text-center">
+            <p className="text-[13px] text-slate-500">아직 등록된 인증이 없어요.</p>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {feedItems.map((item) => (
+              <article key={item.id} className="overflow-hidden rounded-[18px] border border-slate-200 bg-white">
+                <div className="flex items-center gap-2.5 px-3.5 pt-3.5 pb-2.5">
+                  <ScreenAvatar image={item.authorProfileImageUrl} className="size-9" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[14.5px] font-bold tracking-[-0.01em] text-slate-800">
+                      {item.authorNickname}
+                    </div>
+                    <div className="truncate text-[13px] text-slate-500">{item.challengeTitle}</div>
+                  </div>
+                  {item.isMine && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        className="grid size-8 cursor-pointer place-items-center rounded-[10px] text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                        onClick={() => setShareItem(item)}
+                        aria-label="인증 공유 카드 만들기"
+                      >
+                        <Share2 className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        className="grid size-8 cursor-pointer place-items-center rounded-[10px] text-slate-400 transition-colors hover:bg-red-50 hover:text-red-700"
+                        onClick={() => handleDelete(item.id)}
+                        disabled={deletingId === item.id}
+                        aria-label="인증 삭제"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="px-3.5">
+                  <button
+                    type="button"
+                    className="block w-full cursor-pointer overflow-hidden rounded-2xl bg-slate-100"
+                    onClick={() =>
+                      setLightboxImage({
+                        src: item.imageUrl,
+                        alt: `${item.authorNickname}님의 인증 사진`,
+                      })
+                    }
+                    aria-label={`${item.authorNickname}님의 인증 사진 확대 보기`}
+                  >
+                    <img
+                      className="max-h-[360px] w-full object-cover"
+                      src={item.imageUrl}
+                      alt="인증 사진"
+                      loading="lazy"
+                    />
+                  </button>
+                </div>
+
+                {item.comment && (
+                  <p className="px-3.5 pt-3 text-[14.5px] leading-[1.5] text-slate-800">{item.comment}</p>
+                )}
+
+                <div className="flex items-center justify-between px-2 pt-1.5 pb-2">
+                  <button
+                    type="button"
+                    onClick={() => onOpenComments(item.id)}
+                    className="flex h-[34px] cursor-pointer items-center gap-1.5 rounded-[10px] px-2.5 text-[13px] font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
+                  >
+                    <ScreenMessageCircle className="size-4" />
+                    <span>댓글 {item.commentCount}</span>
+                  </button>
+                  <span className="pr-1.5 text-[12px] text-slate-400">{formatKstTime(item.createdAt)}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+        {hasMore && (
+          <Button variant="line" onClick={onLoadMore} disabled={loadingMore}>
+            {loadingMore ? '피드 불러오는 중...' : '이전 인증 더보기'}
+          </Button>
+        )}
+        {shareItem && (
+          <ShareCardModal
+            cardType="TODAY_VERIFICATION"
+            targetId={shareItem.id}
+            title={shareItem.challengeTitle}
+            userNickname={shareItem.authorNickname}
+            imageUrl={shareItem.imageUrl}
+            comment={shareItem.comment}
+            targetDate={shareItem.targetDate}
+            onClose={() => setShareItem(null)}
+          />
+        )}
+        {lightboxImage && (
+          <Lightbox open onClose={() => setLightboxImage(null)} src={lightboxImage.src} alt={lightboxImage.alt} />
+        )}
+      </>
+    );
+  }
 
   if (loading) {
     return (
@@ -93,17 +209,12 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
             {/* 상단 작성자 정보 헤더 */}
             <div className="p-3.5 pb-0 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                {item.authorProfileImageUrl ? (
-                  <img
-                    src={item.authorProfileImageUrl}
-                    alt={item.authorNickname}
-                    className="w-8 h-8 rounded-full object-cover border border-slate-200"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
-                    <UserIcon className="w-4 h-4" />
-                  </div>
-                )}
+                <DayuAvatar
+                  profileImageUrl={item.authorProfileImageUrl}
+                  size={32}
+                  alt={item.authorNickname}
+                />
+
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-800">{item.authorNickname}</span>

@@ -37,7 +37,7 @@ module.exports = {
         sheet: '0 -8px 24px rgba(15, 23, 42, 0.08)',
       },
       height: { 'btn-lg': '52px', 'btn-md': '44px', 'btn-sm': '36px', input: '48px', header: '56px' },
-      maxWidth: { app: '480px' },
+      maxWidth: { app: '478px' },
     },
   },
 };

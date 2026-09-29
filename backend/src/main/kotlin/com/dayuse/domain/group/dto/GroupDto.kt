@@ -26,7 +26,9 @@ data class GroupMemberItem(
     val nickname: String,
     val profileImageUrl: String?,
     val role: GroupRole,
-    val joinedAt: LocalDateTime
+    val joinedAt: LocalDateTime,
+    /** 이 모임에서 진행 중인 챌린지 중 해당 멤버가 참여 중(ACTIVE)인 개수 */
+    val participatingChallengeCount: Int = 0
 )
 
 data class GroupDetailResponse(
@@ -50,7 +52,18 @@ data class InviteInfoResponse(
     val groupName: String,
     val hostNickname: String,
     val memberCount: Long,
-    val inviteCode: String
+    val inviteCode: String,
+    val members: List<InviteMemberPreview> = emptyList(),
+    val challenges: List<InviteChallengePreview> = emptyList()
+)
+
+data class InviteMemberPreview(val nickname: String, val profileImageUrl: String?)
+data class InviteChallengePreview(
+    val id: Long,
+    val title: String,
+    val periodType: com.dayuse.domain.challenge.PeriodType,
+    val targetFrequency: Int?,
+    val participantCount: Long
 )
 
 data class JoinGroupResponse(

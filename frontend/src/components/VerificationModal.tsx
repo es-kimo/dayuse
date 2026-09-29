@@ -1,3 +1,4 @@
+import { Camera as ScreenCamera, ImageIcon as ScreenImageIcon, Clipboard as ScreenClipboard, X as ScreenX } from './screens/ScreenIcons';
 import React, { useState, useRef, useEffect } from 'react';
 import { verificationsApi } from '../api/verifications';
 import { recordsApi } from '../api/records';
@@ -14,18 +15,9 @@ import {
   formatMonthDay,
 } from '../utils/date';
 import {
-  X,
-  Camera,
-  Image as ImageIcon,
   Loader2,
-  AlertCircle,
-  RefreshCw,
   CheckCircle2,
   Share2,
-  Clock,
-  Moon,
-  Sun,
-  Clipboard,
   Repeat,
   Trash2,
 } from 'lucide-react';
@@ -278,312 +270,164 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
     <Modal
       open={open}
       animateInitialOpen
-      placement="bottom"
+      placement="screen-bottom"
       disablePointerDismissal={isSubmitting}
       onOpenChange={setOpen}
       onOpenChangeComplete={(isOpen) => {
         if (!isOpen) onClose();
       }}
-      backdropClassName="bg-black/60 backdrop-blur-xs"
-      className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl max-h-[90dvh] overflow-y-auto overscroll-contain p-5 shadow-2xl flex flex-col relative"
+      backdropClassName="bg-slate-900/45"
+      className="bg-white w-full max-w-app rounded-t-[26px] px-5 pt-2.5 pb-5 space-y-3.5 max-h-[92vh] overflow-y-auto"
     >
       <>
-        {/* 상단 헤더 */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <ModalTitle className="text-sm font-bold text-slate-800">
-              {recordId
-                ? '늦은 사진 인증'
-                : isNightGrace
-                ? '심야/새벽 사진 인증'
-                : '오늘 사진 인증'}
+        <div className="w-10 h-[5px] rounded-[2.5px] bg-slate-300 mx-auto" aria-hidden="true" />
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <ModalTitle className="text-[19px] font-extrabold text-slate-800">
+              {recordId ? '늦은 사진 인증' : '오늘 사진 인증'}
             </ModalTitle>
-            <ModalDescription className="text-[11px] text-blue-600 font-medium truncate">
+            <ModalDescription className="text-[13.5px] font-semibold text-blue-600">
               {action.challengeTitle}
             </ModalDescription>
-            {recordId && (
-              <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-1 inline-block">
-                {formatMonthDay(targetDate || yesterdayKst)} 대상 · 익일 오전 9시 이전 등록 시 정상 인정 (지각 제외)
-              </p>
-            )}
           </div>
           <ModalClose
+            className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100"
             disabled={isSubmitting}
             aria-label="닫기"
-            className="touch-target text-slate-400 hover:text-slate-700 rounded-lg focus-ring disabled:opacity-50"
           >
-            <X className="w-5 h-5" aria-hidden="true" />
+            <ScreenX className="size-[22px]" />
           </ModalClose>
         </div>
-
-        {/* 폼 */}
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          {/* 심야/새벽(00:00~09:00) 인증 대상 날짜 선택 세그먼트 */}
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           {!recordId && isNightGrace && (
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-blue-600" />
-                  인증 대상 날짜 선택
-                </span>
-                <span className="text-[10px] text-blue-600 bg-blue-50 font-medium px-2 py-0.5 rounded-full border border-blue-200">
-                  오전 09:00까지 유예 시간
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                {/* 어제 인증 선택 */}
+            <div className="space-y-2">
+              <label htmlFor="verification-date" className="block text-[14px] font-bold text-slate-800">
+                인증할 날짜
+              </label>
+              <select
+                id="verification-date"
+                className="h-[50px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-[15.5px] text-slate-800 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-100 focus:outline-none"
+                value={selectedTargetDate}
+                onChange={(e) => setSelectedTargetDate(e.target.value)}
+                disabled={isSubmitting}
+              >
+                <option value={yesterdayKst}>{formatMonthDay(yesterdayKst)} 어제 인증</option>
+                <option value={todayKst}>{formatMonthDay(todayKst)} 오늘 인증</option>
+              </select>
+            </div>
+          )}
+          <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-[13px] leading-[1.5] text-slate-600">
+            <strong className="mr-1.5 font-bold text-slate-800">인증 기준</strong>
+            {action.verificationCriteria}
+          </div>
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            capture="environment"
+            onChange={handleFileChange}
+            hidden
+          />
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileChange}
+            hidden
+          />
+          {previewUrl ? (
+            <div className="space-y-2">
+              <div className="relative overflow-hidden rounded-2xl bg-slate-100">
+                <img src={previewUrl} alt="인증 사진 미리보기" className="mx-auto max-h-[280px] w-full object-contain" />
                 <button
                   type="button"
-                  onClick={() => setSelectedTargetDate(yesterdayKst)}
-                  className={`p-2.5 rounded-md border text-left transition flex flex-col justify-between ${
-                    selectedTargetDate === yesterdayKst
-                      ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-900 shadow-xs'
-                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
-                  }`}
+                  className="absolute top-2.5 right-2.5 h-[30px] cursor-pointer rounded-[9px] bg-slate-900/72 px-2.5 text-[12px] font-bold text-white transition-colors hover:bg-slate-900/85"
+                  onClick={() => galleryInputRef.current?.click()}
+                  disabled={isSubmitting}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold flex items-center gap-1">
-                      <Moon className="w-3 h-3 text-indigo-500" />
-                      어제 ({formatMonthDay(yesterdayKst)})
-                    </span>
-                    {selectedTargetDate === yesterdayKst && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    )}
-                  </div>
-                  <span className="text-[10px] text-emerald-600 font-medium mt-1 block">
-                    09:00까지 정상 인정
-                  </span>
-                </button>
-
-                {/* 오늘 인증 선택 */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedTargetDate(todayKst)}
-                  className={`p-2.5 rounded-md border text-left transition flex flex-col justify-between ${
-                    selectedTargetDate === todayKst
-                      ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-900 shadow-xs'
-                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold flex items-center gap-1">
-                      <Sun className="w-3 h-3 text-amber-500" />
-                      오늘 ({formatMonthDay(todayKst)})
-                    </span>
-                    {selectedTargetDate === todayKst && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    )}
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-medium mt-1 block">
-                    오늘의 새로운 도전
-                  </span>
+                  사진 변경
                 </button>
               </div>
-
-              <p className="text-[11px] text-slate-500 leading-snug">
-                {selectedTargetDate === yesterdayKst
-                  ? '🌙 어젯밤 인증을 깜빡하셨나요? 오전 9시 이전 등록 시 벌금 없이 정상 인정됩니다.'
-                  : '☀️ 오늘자 실천 내용으로 인증을 등록합니다.'}
+              <button
+                type="button"
+                className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl py-2 text-[13px] font-semibold text-red-700 transition-colors hover:bg-red-50"
+                onClick={handleRemovePhoto}
+                disabled={isSubmitting}
+              >
+                <Trash2 className="size-3.5" />
+                삭제
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3.5">
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={isSubmitting}
+                  className="flex h-[112px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-[1.5px] border-dashed border-slate-300 bg-slate-50 transition-colors hover:border-blue-600 hover:bg-blue-50"
+                >
+                  <ScreenCamera className="size-[26px] text-blue-600" />
+                  <span className="text-[14px] font-bold text-slate-800">카메라 촬영</span>
+                  <span className="text-[12px] text-slate-500">지금 바로 찍기</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  disabled={isSubmitting}
+                  className="flex h-[112px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-[1.5px] border-dashed border-slate-300 bg-slate-50 transition-colors hover:border-blue-600 hover:bg-blue-50"
+                >
+                  <ScreenImageIcon className="size-[26px] text-blue-600" />
+                  <span className="text-[14px] font-bold text-slate-800">갤러리 선택</span>
+                  <span className="text-[12px] text-slate-500">캡처·사진 고르기</span>
+                </button>
+              </div>
+              <p className="flex items-center gap-1.5 text-[12.5px] text-slate-500">
+                <ScreenClipboard className="size-3.5 shrink-0" />
+                캡처한 이미지는 붙여넣기(⌘V · Ctrl+V)로도 올릴 수 있어요
               </p>
             </div>
           )}
-
-          {/* 인증 기준 안내 */}
-          <div className="bg-blue-50/70 border border-blue-100 rounded-md p-3 text-[11px] text-blue-900 leading-relaxed">
-            <span className="font-bold">인증 기준:</span> {action.verificationCriteria}
-          </div>
-
-          {/* 사진 선택 / 미리보기 영역 */}
-          <div>
-            {/* 카메라 직접 촬영용 (capture="environment") */}
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              capture="environment"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-
-            {/* 갤러리/파일 보관함 선택용 (capture 없음) */}
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-
-            {previewUrl ? (
-              <div className="space-y-2">
-                <div className="relative rounded-lg overflow-hidden border border-slate-200 aspect-4/3 bg-slate-950 flex items-center justify-center">
-                  <img
-                    src={previewUrl}
-                    alt="인증 사진 미리보기"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-
-                {/* 첨부 완료 후 교체 / 삭제 액션 바 */}
-                {!isSubmitting && (
-                  <div className="flex items-center justify-between px-1">
-                    <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      사진이 첨부되었습니다
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => galleryInputRef.current?.click()}
-                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 py-1 px-2 hover:bg-blue-50 rounded-md transition"
-                      >
-                        <Repeat className="w-3.5 h-3.5" />
-                        사진 변경
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleRemovePhoto}
-                        className="text-[11px] font-semibold text-rose-500 hover:text-rose-600 flex items-center gap-1 py-1 px-2 hover:bg-rose-50 rounded-md transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        삭제
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                <div className="grid grid-cols-2 gap-3">
-                  {/* 카메라 촬영 버튼 */}
-                  <button
-                    type="button"
-                    onClick={() => !isSubmitting && cameraInputRef.current?.click()}
-                    disabled={isSubmitting}
-                    className="p-4 border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-md flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-blue-50/30 transition active:scale-[0.98] cursor-pointer"
-                  >
-                    <div className="w-11 h-11 rounded-full bg-blue-100/80 text-blue-600 flex items-center justify-center">
-                      <Camera className="w-5 h-5" />
-                    </div>
-                    <div className="text-center">
-                      <span className="text-xs font-bold text-slate-700 block">카메라 촬영</span>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">즉시 사진 찍기</span>
-                    </div>
-                  </button>
-
-                  {/* 갤러리 선택 버튼 */}
-                  <button
-                    type="button"
-                    onClick={() => !isSubmitting && galleryInputRef.current?.click()}
-                    disabled={isSubmitting}
-                    className="p-4 border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-md flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50/30 transition active:scale-[0.98] cursor-pointer"
-                  >
-                    <div className="w-11 h-11 rounded-full bg-indigo-100/80 text-indigo-600 flex items-center justify-center">
-                      <ImageIcon className="w-5 h-5" />
-                    </div>
-                    <div className="text-center">
-                      <span className="text-xs font-bold text-slate-700 block">갤러리 선택</span>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">보관함에서 선택</span>
-                    </div>
-                  </button>
-                </div>
-
-                {/*
-                  클립보드 붙여넣기 안내 힌트 뱃지.
-
-                  한 줄 flex에 문구 조각을 나눠 담으면 좁은 화면에서 조각마다 따로 줄바꿈돼
-                  "캡처한 이미지 / 를", "(또 / 는"처럼 쪼개진다.
-                  아이콘만 flex로 떼어놓고 문구는 하나의 단락으로 흐르게 한다.
-                  키 조합은 whitespace-nowrap으로 묶어 중간에서 끊기지 않게 한다.
-                */}
-                <div className="bg-slate-50/80 border border-slate-200/80 rounded-md p-2.5 flex items-start gap-1.5 text-[11px] text-slate-500">
-                  <Clipboard className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" aria-hidden="true" />
-                  <p className="leading-relaxed">
-                    캡처한 이미지를{' '}
-                    <span className="whitespace-nowrap">
-                      <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-semibold text-slate-700 shadow-2xs">Ctrl+V</kbd>{' '}
-                      또는{' '}
-                      <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-[10px] font-semibold text-slate-700 shadow-2xs">⌘+V</kbd>
-                    </span>
-                    로 바로 붙여넣을 수 있습니다.
-                  </p>
-                </div>
-
-                <p className="text-center text-[10px] text-slate-400">
-                  JPG, PNG, WebP 형식 (최대 10MB)
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* 인증 한마디 문구 입력 */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold text-slate-700">인증 한마디 (선택)</label>
-              <span className="text-[10px] text-slate-400">{comment.length} / 200자</span>
-            </div>
+          <div className="space-y-2">
+            <label htmlFor="verification-comment" className="block text-[14px] font-bold text-slate-800">
+              인증 한마디 <span className="font-normal text-slate-500">(선택)</span>
+            </label>
             <textarea
+              className="min-h-[84px] w-full resize-none rounded-xl border border-slate-300 bg-white px-[15px] py-[13px] text-[15.5px] leading-[1.5] text-slate-800 placeholder:text-slate-800/55 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-100 focus:outline-none"
+              id="verification-comment"
+              maxLength={200}
+              placeholder="오늘 한 일을 한 줄로 남겨 보세요"
               value={comment}
-              onChange={(e) => setComment(e.target.value.slice(0, 200))}
+              onChange={(e) => setComment(e.target.value)}
               disabled={isSubmitting}
-              placeholder="오늘 실천한 소감이나 인증 한마디를 남겨보세요."
-              rows={2}
-              className="w-full text-base p-3 bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-hidden focus:border-blue-500 transition resize-none text-slate-800 placeholder:text-slate-400"
             />
+            <div className="text-right text-[12px] tabular-nums text-slate-400">{comment.length} / 200</div>
           </div>
-
-          {/* 에러 메시지 */}
           {errorMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2 text-red-600 text-[11px]">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <span>{errorMessage}</span>
-                {canRetry && (
-                  <p className="text-[10px] text-red-500 mt-1 font-medium">
-                    작성한 내용이 유지되어 있으니 다시 시도해 보세요.
-                  </p>
-                )}
-              </div>
-            </div>
+            <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
+              {errorMessage}
+            </p>
           )}
-
-          {/* 하단 액션 버튼 */}
-          <div className="flex items-center gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-md text-xs font-medium hover:bg-slate-50 transition"
-            >
-              취소
-            </button>
-            <button
-              type="submit"
-              disabled={!file || isSubmitting}
-              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-md text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>인증 업로드 중...</span>
-                </>
-              ) : canRetry ? (
-                <>
-                  <RefreshCw className="w-4 h-4" />
-                  <span>다시 시도하기</span>
-                </>
-              ) : (
-                <span>
-                  {recordId
-                    ? `${formatMonthDay(targetDate || yesterdayKst)} 늦은 인증 완료하기`
-                    : isNightGrace
-                    ? `${formatMonthDay(selectedTargetDate)} 인증 완료하기`
-                    : '인증 완료하기'}
-                </span>
-              )}
-            </button>
-          </div>
+          <button
+            className="flex h-[54px] w-full cursor-pointer items-center justify-center gap-1.5 rounded-[14px] bg-blue-600 text-base font-bold text-white transition-colors hover:bg-blue-700 active:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+            type="submit"
+            disabled={!file || isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                인증 업로드 중...
+              </>
+            ) : !file ? (
+              '사진을 먼저 올려 주세요'
+            ) : canRetry ? (
+              '다시 시도하기'
+            ) : recordId ? (
+              `${formatMonthDay(targetDate || yesterdayKst)} 늦은 인증 완료하기`
+            ) : (
+              '인증 완료하기'
+            )}
+          </button>
         </form>
 
         {/* 기존 사진 존재 시 클립보드 붙여넣기 사진 교체 확인 다이얼로그 */}

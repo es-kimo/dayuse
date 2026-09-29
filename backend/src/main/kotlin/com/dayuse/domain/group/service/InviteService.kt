@@ -1,5 +1,11 @@
 package com.dayuse.domain.group.service
 
+import com.dayuse.domain.challenge.ChallengeRepository
+import com.dayuse.domain.challenge.ChallengeParticipantRepository
+import com.dayuse.domain.challenge.ChallengeStatus
+import com.dayuse.domain.challenge.ParticipantStatus
+import com.dayuse.domain.group.dto.InviteMemberPreview
+import com.dayuse.domain.group.dto.InviteChallengePreview
 import com.dayuse.domain.group.GroupMember
 import com.dayuse.domain.group.GroupMemberRepository
 import com.dayuse.domain.group.GroupRepository
@@ -19,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional
 class InviteService(
     private val groupRepository: GroupRepository,
     private val groupMemberRepository: GroupMemberRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val challengeRepository: ChallengeRepository,
+    private val participantRepository: ChallengeParticipantRepository
 ) {
 
     /**
@@ -38,7 +46,13 @@ class InviteService(
             groupName = group.name,
             hostNickname = hostUser?.nickname ?: "모임장",
             memberCount = memberCount,
-            inviteCode = group.inviteCode
+            inviteCode = group.inviteCode,
+            members = userRepository.findAllById(groupMemberRepository.findAllByGroupId(group.id).map { it.userId })
+                .map { InviteMemberPreview(it.nickname, it.profileImageUrl) },
+            challenges = challengeRepository.findAllByGroupIdOrderByStartDateAscCreatedAtDesc(group.id)
+                .filter { it.status() == ChallengeStatus.IN_PROGRESS }
+                .map { InviteChallengePreview(it.id, it.title, it.periodType, it.targetFrequency,
+                    participantRepository.countByChallengeIdAndStatus(it.id, ParticipantStatus.ACTIVE)) }
         )
     }
 

@@ -122,9 +122,92 @@ export const MOCK_GROUP_FEED = {
 
 export const MOCK_GROUP_STATUS_SUMMARY = {
   groupId: 1,
-  uncheckedCount: 0,
-  unpaidPenaltyAmount: 0,
+  uncheckedCount: 2,
+  unpaidPenaltyAmount: 5000,
+  verifiedUserIds: [1, 2],
 };
+
+export const MOCK_UNCHECKED_RECORDS = [
+  {
+    id: 101,
+    challengeId: 1,
+    challengeTitle: '매일 1알고리즘 문제 풀기',
+    date: '2026-03-28',
+    status: 'UNCHECKED',
+    penaltyAmount: 5000,
+    verificationCriteria: '제출 성공 화면 캡처 또는 커밋 내역',
+  },
+  {
+    id: 102,
+    challengeId: 2,
+    challengeTitle: '6시 기상 습관',
+    date: '2026-03-27',
+    status: 'UNCHECKED',
+    penaltyAmount: 5000,
+    verificationCriteria: '시간이 보이는 시계/알람 사진',
+  },
+];
+
+export const MOCK_SETTLEMENT_SUMMARY = {
+  groupId: 1,
+  unpaidAmount: 10000,
+  myUnpaidAmount: 5000,
+  waitingAmount: 5000,
+  confirmedAmount: 45000,
+  totalPenaltyAmount: 60000,
+  accountRegistered: true,
+  account: {
+    bankName: '카카오뱅크',
+    accountNumber: '3333-01-9876543',
+    accountHolder: '류코딩',
+  },
+};
+
+export const MOCK_UNPAID_RECORDS = [
+  {
+    id: 201,
+    recordId: 201,
+    challengeId: 1,
+    challengeTitle: '매일 1알고리즘 문제 풀기',
+    date: '2026-03-26',
+    targetDate: '2026-03-26',
+    penaltyAmount: 5000,
+    depositStatus: 'UNPAID',
+  },
+  {
+    id: 202,
+    recordId: 202,
+    challengeId: 2,
+    challengeTitle: '6시 기상 습관',
+    date: '2026-03-25',
+    targetDate: '2026-03-25',
+    penaltyAmount: 5000,
+    depositStatus: 'UNPAID',
+  },
+];
+
+export const MOCK_COMMENTS = [
+  {
+    id: 1,
+    verificationId: 101,
+    userId: 2,
+    authorNickname: '김운동',
+    authorProfileImageUrl: null,
+    content: '대단해요! 오늘 문제 난이도 꽤 높았는데 멋집니다 🔥',
+    isMine: false,
+    createdAt: '2026-03-28T10:00:00Z',
+  },
+  {
+    id: 2,
+    verificationId: 101,
+    userId: 1,
+    authorNickname: '류코딩',
+    authorProfileImageUrl: null,
+    content: '감사합니다! 내일도 같이 화이팅해요 💪',
+    isMine: true,
+    createdAt: '2026-03-28T10:15:00Z',
+  },
+];
 
 export const MOCK_CHALLENGE_DETAIL = {
   id: 1,
@@ -143,6 +226,7 @@ export const MOCK_CHALLENGE_DETAIL = {
   myPenaltyAmount: 0,
   isJoined: true,
   isHost: true,
+  canAbort: true,
   participantCount: 4,
   participants: [
     { id: 1, challengeId: 1, userId: 1, nickname: '류코딩', profileImageUrl: null, isCreator: true, startDate: '2026-03-01', joinedAt: '2026-03-01T00:00:00Z', consecutiveSuccessDays: 7, totalSuccessCount: 28, achievementRate: 100, completionRate: 100, penaltyAmount: 0 },
@@ -241,3 +325,52 @@ export const MOCK_NOTIFICATION_SETTINGS = {
   hasActiveSubscription: true,
   vapidPublicKey: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
 };
+
+export const MOCK_DEPOSIT_REPORTS = [
+  {
+    id: 101,
+    groupId: 6,
+    userId: 2,
+    userNickname: '김운동',
+    userProfileImageUrl: null,
+    depositorName: '김운동',
+    depositDate: '2026-03-28',
+    totalAmount: 5000,
+    status: 'WAITING_CONFIRMATION',
+    createdAt: '2026-03-28T14:20:00Z',
+    items: [
+      {
+        id: 1,
+        challengeId: 1,
+        challengeTitle: '매일 1알고리즘 문제 풀기',
+        date: '2026-03-27',
+        penaltyAmount: 5000,
+      },
+    ],
+    auditLogs: [],
+  },
+  {
+    id: 102,
+    groupId: 6,
+    userId: 3,
+    userNickname: '박기상',
+    userProfileImageUrl: null,
+    depositorName: '박기상',
+    depositDate: '2026-03-26',
+    totalAmount: 5000,
+    status: 'CONFIRMED',
+    processedByNickname: '류코딩',
+    processedAt: '2026-03-26T18:00:00Z',
+    createdAt: '2026-03-26T17:30:00Z',
+    items: [
+      {
+        id: 2,
+        challengeId: 2,
+        challengeTitle: '6시 기상 습관',
+        date: '2026-03-25',
+        penaltyAmount: 5000,
+      },
+    ],
+    auditLogs: [],
+  },
+];

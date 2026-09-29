@@ -1,8 +1,10 @@
+import { Info as ScreenInfo, CreditCard as ScreenCreditCard, ChevronRight as ScreenChevronRight } from './screens/ScreenIcons';
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import type { SettlementSummary, GroupAccountPayload } from "../types";
 import { settlementApi } from "../api/settlement";
 import { Button, FormField, Input, Modal, ModalTitle, ModalClose } from "./ui";
+import { Button as DayuButton, StatTile } from "./dayu/ui";
 import {
   CreditCard,
   Copy,
@@ -18,6 +20,7 @@ import {
 } from "lucide-react";
 
 interface GroupSettlementCardProps {
+  screen?: boolean;
   groupId: number;
   isHost: boolean;
   summary: SettlementSummary | null;
@@ -27,6 +30,7 @@ interface GroupSettlementCardProps {
 }
 
 export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
+  screen = false,
   groupId,
   isHost,
   summary,
@@ -105,7 +109,84 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs space-y-4">
+    <div
+      className={
+        screen
+          ? "flex flex-col gap-3 rounded-[18px] border border-slate-200 bg-white p-4"
+          : "bg-white border border-slate-200 rounded-lg p-4 shadow-xs space-y-4"
+      }
+    >
+      {screen ? <>
+        <div className="flex items-center gap-3">
+          <div aria-hidden className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-blue-50 text-blue-600">
+            <ScreenCreditCard className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[14.5px] font-bold tracking-[-0.01em] text-slate-800">벌금 정산</div>
+            <div className="truncate text-[13px] text-slate-500">
+              내가 낼 벌금 {(summary?.myUnpaidAmount ?? 0).toLocaleString()}원
+            </div>
+          </div>
+          {isHost && (
+            <DayuButton
+              size="sm"
+              variant="ghost"
+              className="shrink-0"
+              onClick={() => navigate(`/groups/${groupId}/settlements`)}
+            >
+              관리
+              <ScreenChevronRight className="size-3.5" />
+            </DayuButton>
+          )}
+          {account && (
+            <DayuButton size="sm" className="shrink-0" onClick={onOpenDepositModal}>
+              입금 신고
+            </DayuButton>
+          )}
+        </div>
+
+        {loading ? (
+          <p className="text-[13px] text-slate-500" role="status">
+            정산 불러오는 중...
+          </p>
+        ) : (
+          <div className="flex gap-2">
+            <StatTile label="쌓인 벌금" value={`${(summary?.unpaidAmount ?? 0).toLocaleString()}원`} />
+            <StatTile label="확인 대기" value={`${(summary?.waitingAmount ?? 0).toLocaleString()}원`} />
+            <StatTile label="입금 완료" value={`${(summary?.confirmedAmount ?? 0).toLocaleString()}원`} />
+          </div>
+        )}
+
+        {account ? (
+          <div className="flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2.5">
+            <span className="min-w-0 flex-1 text-[13px] leading-[1.5] text-slate-600">
+              {account.bankName} {account.accountNumber}
+              <br />
+              {account.accountHolder}
+            </span>
+            <DayuButton size="sm" variant="line" className="shrink-0" onClick={handleCopyAccount}>
+              {copied ? "복사 완료" : "복사"}
+            </DayuButton>
+            {isHost && (
+              <DayuButton size="sm" variant="dark" className="shrink-0" onClick={handleOpenEditAccount}>
+                수정
+              </DayuButton>
+            )}
+          </div>
+        ) : (
+          isHost && (
+            <div className="flex items-center gap-2.5 rounded-xl bg-slate-100 px-3 py-2.5">
+              <ScreenInfo className="size-4 shrink-0 text-slate-400" />
+              <span className="min-w-0 flex-1 text-[13px] leading-[1.5] text-slate-600">
+                모임장만 보여요 · 계좌를 등록하면 멤버들이 입금을 신고할 수 있어요
+              </span>
+              <DayuButton size="sm" variant="dark" className="shrink-0" onClick={handleOpenEditAccount}>
+                등록
+              </DayuButton>
+            </div>
+          )
+        )}
+      </> : <>
       {/* 상단 타이틀 & 모임장 관리 버튼 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -240,6 +321,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
       </button>
 
       {/* 모임장 계좌 등록/수정 모달 */}
+      </>}
       <Modal
         open={isEditingAccount}
         onOpenChange={setIsEditingAccount}

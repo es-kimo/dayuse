@@ -23,6 +23,8 @@ export interface GroupMember {
   profileImageUrl?: string | null;
   role: GroupRole;
   joinedAt: string;
+  /** 이 모임에서 진행 중인 챌린지 중 참여 중인 개수 */
+  participatingChallengeCount?: number;
 }
 
 export interface GroupDetail {
@@ -37,6 +39,8 @@ export interface GroupDetail {
 }
 
 export interface InviteInfo {
+  members?: { nickname: string; profileImageUrl?: string | null }[];
+  challenges?: { id: number; title: string; periodType: PeriodType; targetFrequency?: number | null; participantCount: number }[];
   groupId: number;
   groupName: string;
   hostNickname: string;
@@ -69,6 +73,12 @@ export interface ChallengePeriodInterval {
   isSettled?: boolean;
 }
 
+export interface ChallengeParticipantPreview {
+  userId: number;
+  nickname: string;
+  profileImageUrl?: string | null;
+}
+
 export interface ChallengeSummary {
   id: number;
   groupId: number;
@@ -83,6 +93,7 @@ export interface ChallengeSummary {
   executionType?: ExecutionType;
   status: ChallengeStatus;
   participantCount: number;
+  participants?: ChallengeParticipantPreview[];
   isParticipating: boolean;
   isCreator: boolean;
   myPenaltyAmount?: number | null;
@@ -235,6 +246,7 @@ export interface TodayPeriodInfo {
 }
 
 export interface TodayAction {
+  streakDays?: number;
   challengeId: number;
   challengeTitle: string;
   verificationCriteria: string;
@@ -312,6 +324,7 @@ export type DailyRecordStatus = 'NOT_PARTICIPATED' | 'PLANNED' | 'WAITING' | 'CO
 export type DepositStatus = 'UNPAID' | 'WAITING_CONFIRMATION' | 'CONFIRMED';
 
 export interface StatusSummaryResponse {
+  verifiedUserIds?: number[];
   groupId: number;
   uncheckedCount: number;
   unpaidPenaltyAmount: number;

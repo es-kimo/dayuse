@@ -57,6 +57,67 @@ class GroupAndInviteIntegrationTest {
     private lateinit var memberToken: String
     private lateinit var strangerToken: String
 
+    @Autowired
+    private lateinit var challengeRepository: com.dayuse.domain.challenge.ChallengeRepository
+
+    @Test
+    fun `초대 미리보기에는 해당 모임의 진행 중인 챌린지와 멤버만 포함된다`() {
+        val group = groupService.createGroup(hostUser.id, CreateGroupRequest(name = "미리보기 모임"))
+        val other = groupService.createGroup(hostUser.id, CreateGroupRequest(name = "다른 모임"))
+        val today = com.dayuse.global.util.DateTimeUtils.todayKst()
+        challengeRepository.save(com.dayuse.domain.challenge.Challenge(groupId = group.id, creatorUserId = hostUser.id, title = "진행 중", startDate = today, endDate = today.plusDays(7)))
+        challengeRepository.save(com.dayuse.domain.challenge.Challenge(groupId = group.id, creatorUserId = hostUser.id, title = "종료됨", startDate = today.minusDays(7), endDate = today.minusDays(1)))
+        challengeRepository.save(com.dayuse.domain.challenge.Challenge(groupId = other.id, creatorUserId = hostUser.id, title = "다른 모임 챌린지", startDate = today, endDate = today.plusDays(7)))
+        mockMvc.get("/api/v1/invites/${group.inviteCode}").andExpect {
+            status { isOk() }
+            jsonPath("$.members.length()") { value(1) }
+            jsonPath("$.members[0].nickname") { value(hostUser.nickname) }
+            jsonPath("$.challenges.length()") { value(1) }
+            jsonPath("$.challenges[0].title") { value("진행 중") }
+            jsonPath("$.challenges[0].participantCount") { value(0) }
+        }
+    }
+
+    @Autowired
+    private lateinit var participantRepository: com.dayuse.domain.challenge.ChallengeParticipantRepository
+
+    @Test
+    fun `챌린지 목록은 해당 챌린지의 활성 참여자 프로필만 반환한다`() {
+        hostUser.profileImageUrl = "dayu:mint"
+        val group = groupService.createGroup(hostUser.id, CreateGroupRequest(name = "프로필 모임"))
+        val today = com.dayuse.global.util.DateTimeUtils.todayKst()
+        val challenge = challengeRepository.save(com.dayuse.domain.challenge.Challenge(
+            groupId = group.id, creatorUserId = hostUser.id, title = "프로필 확인",
+            startDate = today, endDate = today.plusDays(7)
+        ))
+        participantRepository.save(com.dayuse.domain.challenge.ChallengeParticipant(
+            challengeId = challenge.id, userId = hostUser.id
+        ))
+        participantRepository.save(com.dayuse.domain.challenge.ChallengeParticipant(
+            challengeId = challenge.id, userId = memberUser.id,
+            status = com.dayuse.domain.challenge.ParticipantStatus.CANCELLED
+        ))
+        val other = challengeRepository.save(com.dayuse.domain.challenge.Challenge(
+            groupId = group.id, creatorUserId = hostUser.id, title = "다른 챌린지",
+            startDate = today.plusDays(1), endDate = today.plusDays(7)
+        ))
+        participantRepository.save(com.dayuse.domain.challenge.ChallengeParticipant(
+            challengeId = other.id, userId = strangerUser.id
+        ))
+        mockMvc.get("/api/v1/groups/${group.id}/challenges") {
+            header("Authorization", hostToken)
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$[0].participantCount") { value(1) }
+            jsonPath("$[0].isParticipating") { value(true) }
+            jsonPath("$[0].participants.length()") { value(1) }
+            jsonPath("$[0].participants[0].userId") { value(hostUser.id.toInt()) }
+            jsonPath("$[0].participants[0].nickname") { value(hostUser.nickname) }
+            jsonPath("$[0].participants[0].profileImageUrl") { value("dayu:mint") }
+            jsonPath("$[1].participants[0].userId") { value(strangerUser.id.toInt()) }
+        }
+    }
+
     @BeforeEach
     fun setUp() {
         hostUser = userRepository.save(User(kakaoId = "kakao_host", nickname = "모임장유저"))

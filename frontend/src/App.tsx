@@ -10,6 +10,7 @@ import { NewGroupPage } from './pages/NewGroupPage';
 import { GroupDetailPage } from './pages/GroupDetailPage';
 import { InviteLandingPage } from './pages/InviteLandingPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { AvatarCustomPage } from './pages/AvatarCustomPage';
 import { NewChallengePage } from './pages/NewChallengePage';
 import { ChallengeDetailPage } from './pages/ChallengeDetailPage';
 import { SettlementManagePage } from './pages/SettlementManagePage';
@@ -21,10 +22,13 @@ import { ContactPage } from './pages/ContactPage';
 import { GuidePage } from './pages/GuidePage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import { InviteCreatedPage } from './pages/InviteCreatedPage';
 import { PageMetaTracker } from './components/PageMetaTracker';
 import { ScrollToTop } from './components/ScrollToTop';
 import { preloadKakao } from './utils/kakao';
 import { registerServiceWorker } from './utils/webPush';
+
+import { UiVersionProvider, UiVersionSwitcherFloat } from './context/UiVersionContext';
 
 export const App: React.FC = () => {
   // 카카오 SDK 및 웹 푸시 Service Worker를 부팅 때 초기화한다.
@@ -39,13 +43,17 @@ export const App: React.FC = () => {
         <BrowserRouter>
           <PageMetaTracker />
           <ScrollToTop />
-          <AuthProvider>
-            <Routes>
+          <UiVersionProvider>
+            <AuthProvider>
+              <UiVersionSwitcherFloat />
+              <Routes>
+
               <Route path="/" element={<Navigate to="/groups" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/oauth/callback/kakao" element={<KakaoCallbackPage />} />
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/groups/new" element={<NewGroupPage />} />
+              <Route path="/groups/:groupId/invite-created" element={<InviteCreatedPage />} />
               <Route path="/groups/:groupId" element={<GroupDetailPage />} />
               <Route path="/groups/:groupId/challenges" element={<GroupDetailPage />} />
               <Route path="/groups/:groupId/challenges/new" element={<NewChallengePage />} />
@@ -55,7 +63,11 @@ export const App: React.FC = () => {
               <Route path="/invite/:inviteCode" element={<InviteLandingPage />} />
               <Route path="/today" element={<TodayPage />} />
               <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
+              <Route path="/me/notifications" element={<NotificationSettingsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/me" element={<ProfilePage />} />
+              <Route path="/profile/avatar" element={<AvatarCustomPage />} />
+              <Route path="/me/avatar" element={<AvatarCustomPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/guide" element={<GuidePage />} />
@@ -64,7 +76,8 @@ export const App: React.FC = () => {
               <Route path="*" element={<Navigate to="/groups" replace />} />
             </Routes>
           </AuthProvider>
-        </BrowserRouter>
+        </UiVersionProvider>
+      </BrowserRouter>
       </ToastProvider>
     </ErrorBoundary>
   );

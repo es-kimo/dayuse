@@ -1,6 +1,7 @@
 package com.dayuse.domain.user.controller
 
 import com.dayuse.domain.user.dto.UpdateNicknameRequest
+import com.dayuse.domain.user.dto.UpdateProfileRequest
 import com.dayuse.domain.user.dto.UserResponse
 import com.dayuse.domain.user.service.UserService
 import com.dayuse.global.security.CurrentUserId
@@ -25,11 +26,12 @@ class UserController(
     }
 
     @PatchMapping("/me")
-    fun updateNickname(
+    fun updateProfile(
         @CurrentUserId userId: Long,
-        @Valid @RequestBody request: UpdateNicknameRequest
+        @Valid @RequestBody request: UpdateProfileRequest
     ): ResponseEntity<UserResponse> {
-        val response = userService.updateNickname(userId, request.nickname)
+        val response = userService.updateProfile(userId, request.nickname, request.profileImageUrl)
         return ResponseEntity.ok(response)
     }
 }
+

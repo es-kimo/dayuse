@@ -1,19 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUiVersion } from '../context/UiVersionContext';
 import { groupsApi } from '../api/groups';
 import type { GroupSummary } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
+import { GroupsScreen } from '../components/screens/GroupsScreen';
 import { EmptyState } from '../components/EmptyState';
+
 import { Button, Input, Tabs, TabsList, TabsTab, TabsPanel } from '../components/ui';
 import { Plus, ChevronRight, Crown, Link as LinkIcon, Loader2 } from 'lucide-react';
 
 export const GroupsPage: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { uiVersion } = useUiVersion();
   const navigate = useNavigate();
   const [groups, setGroups] = useState<GroupSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState('');
+  const [reload, setReload] = useState(0);
   const [inviteInput, setInviteInput] = useState<string>('');
+
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -22,11 +29,14 @@ export const GroupsPage: React.FC = () => {
     }
 
     const fetchGroups = async () => {
+      setLoading(true);
+      setLoadError('');
       try {
         const data = await groupsApi.getMyGroups();
         setGroups(data);
       } catch (err) {
         console.error('Failed to fetch groups:', err);
+        setLoadError('모임 목록을 불러오지 못했어요.');
       } finally {
         setLoading(false);
       }
@@ -35,16 +45,28 @@ export const GroupsPage: React.FC = () => {
     if (isAuthenticated) {
       fetchGroups();
     }
-  }, [authLoading, isAuthenticated, navigate]);
+  }, [authLoading, isAuthenticated, navigate, reload]);
 
   const handleJoinByCode = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanCode = inviteInput.trim();
     if (!cleanCode) return;
-    const code = cleanCode.includes('/invite/') ? cleanCode.split('/invite/')[1] : cleanCode;
+    const code = (cleanCode.includes('/invite/') ? cleanCode.split('/invite/')[1] : cleanCode).split(/[?#/]/)[0];
     navigate(`/invite/${code}`);
   };
 
+  const hostGroups = groups.filter((g) => g.role === 'HOST');
+
+  // ==========================================
+  // 신규 모바일 UI (B) 렌더링 (05-groups.html & 06-groupsEmpty.html)
+  // ==========================================
+  if (uiVersion === 'B') {
+    return <GroupsScreen groups={groups} loading={loading || authLoading} error={loadError} retry={() => setReload(n => n + 1)} inviteInput={inviteInput} setInviteInput={setInviteInput} onJoin={handleJoinByCode} />;
+  }
+
+  // ==========================================
+  // 기존 레거시 UI (A) 온전한 보존
+  // ==========================================
   if (authLoading || loading) {
     return (
       <MobileLayout>
@@ -55,8 +77,6 @@ export const GroupsPage: React.FC = () => {
       </MobileLayout>
     );
   }
-
-  const hostGroups = groups.filter((g) => g.role === 'HOST');
 
   const renderGroupList = (list: GroupSummary[], emptyDesc: string) => {
     if (list.length === 0) {

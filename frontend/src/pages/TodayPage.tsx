@@ -2,17 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, ArrowRight, Calendar, Bell } from 'lucide-react';
 import { MobileLayout } from '../components/MobileLayout';
+import { TodayScreen } from '../components/screens/TodayScreen';
+
 import { VerificationModal } from '../components/VerificationModal';
 import { Lightbox } from '../components/ui/Lightbox';
 import { DayuExpression } from '../components/brand/DayuExpression';
 import { todayApi } from '../api/today';
 import type { TodayAction } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useUiVersion } from '../context/UiVersionContext';
 
 export const TodayPage: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { uiVersion } = useUiVersion();
   const navigate = useNavigate();
   const [actions, setActions] = useState<TodayAction[]>([]);
+  const [loadError, setLoadError] = useState('');
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedAction, setSelectedAction] = useState<TodayAction | null>(null);
   const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
@@ -30,10 +35,12 @@ export const TodayPage: React.FC = () => {
   const loadTodayActions = async () => {
     try {
       setLoading(true);
+      setLoadError('');
       const data = await todayApi.getAllTodayActions();
       setActions(data);
     } catch (err) {
       console.error('오늘 할 일 목록 조회 실패:', err);
+      setLoadError('오늘 할 일을 불러오지 못했어요.');
     } finally {
       setLoading(false);
     }
@@ -41,7 +48,17 @@ export const TodayPage: React.FC = () => {
 
   const pendingActions = actions.filter((a) => !a.isCompletedToday);
   const completedActions = actions.filter((a) => a.isCompletedToday);
+  if (uiVersion === 'B') {
+    return <>
+      <TodayScreen actions={actions} loading={loading} error={loadError} retry={loadTodayActions} onVerify={setSelectedAction} onImage={(src, alt) => setLightboxImage({ src, alt })} />
+      {selectedAction && <VerificationModal action={selectedAction} onClose={() => setSelectedAction(null)} onSuccess={() => { setSelectedAction(null); loadTodayActions(); }} />}
+      {lightboxImage && <Lightbox open onClose={() => setLightboxImage(null)} src={lightboxImage.src} alt={lightboxImage.alt} />}
+    </>;
+  }
 
+  // ==========================================
+  // 기존 레거시 UI (A) 온전한 보존
+  // ==========================================
   return (
     <MobileLayout>
       <div className="space-y-5">
@@ -177,7 +194,12 @@ export const TodayPage: React.FC = () => {
                         {action.myVerification?.imageUrl ? (
                           <button
                             type="button"
-                            onClick={() => setLightboxImage({ src: action.myVerification!.imageUrl, alt: `${action.challengeTitle} 인증 사진` })}
+                            onClick={() =>
+                              setLightboxImage({
+                                src: action.myVerification!.imageUrl,
+                                alt: `${action.challengeTitle} 인증 사진`,
+                              })
+                            }
                             className="w-12 h-12 rounded-md overflow-hidden bg-slate-900 border border-slate-200 cursor-zoom-in shrink-0 focus-ring flex items-center justify-center"
                             title="사진 확대 보기"
                             aria-label="사진 확대 보기"
@@ -189,11 +211,13 @@ export const TodayPage: React.FC = () => {
                             />
                           </button>
                         ) : (
-                          <div className={`w-12 h-12 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${
-                            action.executionType === 'TOGETHER'
-                              ? 'bg-indigo-100 text-indigo-600'
-                              : 'bg-emerald-100 text-emerald-600'
-                          }`}>
+                          <div
+                            className={`w-12 h-12 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${
+                              action.executionType === 'TOGETHER'
+                                ? 'bg-indigo-100 text-indigo-600'
+                                : 'bg-emerald-100 text-emerald-600'
+                            }`}
+                          >
                             완료
                           </div>
                         )}

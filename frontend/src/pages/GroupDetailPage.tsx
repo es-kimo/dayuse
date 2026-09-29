@@ -1,4 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { GroupHomeScreen } from '../components/screens/GroupHomeScreen';
+import { UncheckedRecordsCard } from '../components/screens/UncheckedRecordsCard';
+import { GroupChallengesViewB } from '../components/GroupChallengesViewB';
+import { GroupMembersViewB } from '../components/GroupMembersViewB';
+import { Lightbox } from '../components/ui/Lightbox';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
 import { challengesApi } from '../api/challenges';
@@ -6,6 +11,7 @@ import { todayApi } from '../api/today';
 import { verificationsApi } from '../api/verifications';
 import { recordsApi } from '../api/records';
 import { settlementApi } from '../api/settlement';
+import { useAuth } from '../context/AuthContext';
 import type {
   GroupDetail,
   ChallengeSummary,
@@ -19,6 +25,8 @@ import { MobileLayout } from '../components/MobileLayout';
 import { TodayActionSection } from '../components/TodayActionSection';
 import { VerificationModal } from '../components/VerificationModal';
 import { GroupFeedSection } from '../components/GroupFeedSection';
+import { DayuAvatar } from '../components/brand/DayuAvatar';
+import { useUiVersion } from '../context/UiVersionContext';
 import { CommentsBottomSheet } from '../components/CommentsBottomSheet';
 import { GroupStatusSummaryBanner } from '../components/GroupStatusSummaryBanner';
 import { UncheckedRecordsBottomSheet } from '../components/UncheckedRecordsBottomSheet';
@@ -50,6 +58,8 @@ export const GroupDetailPage: React.FC = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const { uiVersion } = useUiVersion();
+
   const tabParam = searchParams.get('tab');
   const activeTab: 'home' | 'challenges' | 'members' =
     tabParam === 'challenges' || tabParam === 'members'
@@ -77,6 +87,7 @@ export const GroupDetailPage: React.FC = () => {
   // 상태 필터와 별개의 축이라 AND로 함께 적용한다.
   const [onlyParticipating, setOnlyParticipating] = useState<boolean>(false);
 
+  const [homeImage, setHomeImage] = useState<string | null>(null);
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [challenges, setChallenges] = useState<ChallengeSummary[]>([]);
   const [challengesLoading, setChallengesLoading] = useState<boolean>(false);
@@ -117,6 +128,20 @@ export const GroupDetailPage: React.FC = () => {
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  const { user: currentUser } = useAuth();
+  const completedTodayCount = todayActions.filter((a) => a.isCompletedToday).length;
+  const verifiedUserIds = useMemo(() => {
+    if (statusSummary?.verifiedUserIds) return new Set(statusSummary.verifiedUserIds);
+    const set = new Set<number>();
+    feedItems.forEach((f) => {
+      if (f.targetDate === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })) set.add(f.userId);
+    });
+    if (completedTodayCount > 0 && currentUser?.id) {
+      set.add(currentUser.id);
+    }
+    return set;
+  }, [feedItems, completedTodayCount, currentUser?.id, statusSummary]);
 
   const fetchGroup = async () => {
     if (!groupId) return;
@@ -411,8 +436,139 @@ export const GroupDetailPage: React.FC = () => {
     );
   }
 
+  const modals = <>
+      {/* 사진 인증 모달 (오늘 인증) */}
+      {activeVerificationAction && (
+        <VerificationModal
+          action={activeVerificationAction}
+          onClose={() => setActiveVerificationAction(null)}
+          onSuccess={handleVerificationSuccess}
+        />
+      )}
+
+      {/* 미확인 기록 정리 바텀시트 */}
+      <UncheckedRecordsBottomSheet
+        isOpen={showUncheckedSheet}
+        onClose={() => setShowUncheckedSheet(false)}
+        records={uncheckedRecords}
+        loading={uncheckedLoading}
+        onMarkFailed={handleMarkFailed}
+        onStartVerifyLate={handleStartVerifyLate}
+      />
+
+      {/* 사진 인증 모달 (늦은 인증) */}
+      {lateVerificationTarget && (
+        <VerificationModal
+          action={lateVerificationTarget.action}
+          recordId={lateVerificationTarget.recordId}
+          targetDate={lateVerificationTarget.targetDate}
+          onClose={() => setLateVerificationTarget(null)}
+          onSuccess={handleLateVerificationSuccess}
+        />
+      )}
+
+      {/* 댓글 바텀시트 */}
+      <CommentsBottomSheet
+        isOpen={activeCommentVerificationId !== null}
+        verificationId={activeCommentVerificationId}
+        onClose={() => setActiveCommentVerificationId(null)}
+        onCommentCountChange={handleCommentCountChange}
+      />
+
+      {/* 미수행 입금 신고 모달 */}
+      <DepositReportModal
+        groupId={Number(groupId)}
+        isOpen={showDepositModal}
+        account={settlementSummary?.account}
+        onClose={() => setShowDepositModal(false)}
+        onSuccess={() => {
+          fetchSettlementSummary();
+          fetchStatusSummary();
+          fetchUncheckedRecords();
+        }}
+      />
+    {homeImage && <Lightbox open onClose={() => setHomeImage(null)} src={homeImage} alt="인증 사진" />}
+  </>;
+  if (uiVersion === 'B') {
+    return (
+      <>
+        <GroupHomeScreen
+          group={group}
+          challengeCount={challenges.length}
+          tab={activeTab}
+          actions={todayActions}
+          loading={todayLoading}
+          verifiedUserIds={verifiedUserIds}
+          copied={copied}
+          onBack={() => navigate('/groups')}
+          onInvite={handleCopyLink}
+          onTab={handleTabChange}
+          onVerify={setActiveVerificationAction}
+          onImage={setHomeImage}
+          uncheckedSlot={
+            <UncheckedRecordsCard
+              count={statusSummary?.uncheckedCount ?? 0}
+              onOpen={() => {
+                fetchUncheckedRecords();
+                setShowUncheckedSheet(true);
+              }}
+            />
+          }
+        >
+          {activeTab === 'home' && (
+            <>
+              <GroupFeedSection
+                screen
+                feedItems={feedItems}
+                loading={feedLoading}
+                hasMore={hasMoreFeed}
+                onLoadMore={() => fetchFeed(feedPage + 1)}
+                loadingMore={loadingMoreFeed}
+                onOpenComments={setActiveCommentVerificationId}
+                onDeleteVerification={handleDeleteVerification}
+              />
+              <GroupSettlementCard
+                screen
+                groupId={Number(groupId)}
+                isHost={group.isHost}
+                summary={settlementSummary}
+                loading={settlementLoading}
+                onRefresh={() => {
+                  fetchSettlementSummary();
+                  fetchStatusSummary();
+                }}
+                onOpenDepositModal={() => setShowDepositModal(true)}
+              />
+            </>
+          )}
+
+          {activeTab === 'challenges' && (
+            <GroupChallengesViewB
+              groupId={Number(groupId)}
+              challenges={challenges}
+              loading={challengesLoading}
+            />
+          )}
+
+          {activeTab === 'members' && (
+            <GroupMembersViewB
+              group={group}
+              inviteUrl={inviteUrl}
+              isHost={group.isHost}
+              onRefreshInviteCode={handleRefreshInviteCode}
+              isRefreshing={isRefreshing}
+              currentUserId={currentUser?.id}
+              verifiedUserIds={verifiedUserIds}
+            />
+          )}
+        </GroupHomeScreen>
+        {modals}
+      </>
+    );
+  }
+
   return (
-    <MobileLayout>
+    <MobileLayout showHeader={true}>
       {/* 상단 헤더 */}
       <div className="flex items-center gap-2 mb-4">
         <button
@@ -468,12 +624,19 @@ export const GroupDetailPage: React.FC = () => {
       </div>
 
       {activeTab === 'home' && (
-        <div className="space-y-6 flex-1 flex flex-col">
+        <div className="space-y-5 flex-1 flex flex-col">
           {/* 상단: 미확인 기록 및 미납 벌금 요약 배너 */}
           <GroupStatusSummaryBanner
             summary={statusSummary}
             loading={summaryLoading}
             onOpenUncheckedSheet={handleOpenUncheckedSheet}
+          />
+
+          {/* UI(A): 기존 오늘 할 일 */}
+          <TodayActionSection
+            todayActions={todayActions}
+            loading={todayLoading}
+            onOpenVerificationModal={(action) => setActiveVerificationAction(action)}
           />
 
           {/* 모임 정산 & 계좌 카드 (F07) */}
@@ -487,13 +650,6 @@ export const GroupDetailPage: React.FC = () => {
               fetchStatusSummary();
             }}
             onOpenDepositModal={() => setShowDepositModal(true)}
-          />
-
-          {/* 오늘 할 일 */}
-          <TodayActionSection
-            todayActions={todayActions}
-            loading={todayLoading}
-            onOpenVerificationModal={(action) => setActiveVerificationAction(action)}
           />
 
           <hr className="border-slate-200/80 -mx-4" />
@@ -763,18 +919,13 @@ export const GroupDetailPage: React.FC = () => {
               {group.members.map((member) => (
                 <div key={member.id} className="py-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    {member.profileImageUrl ? (
-                      <img
-                        src={member.profileImageUrl}
-                        alt={member.nickname}
-                        className="w-8 h-8 rounded-full object-cover border border-slate-100"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
-                        <UserIcon className="w-4 h-4" />
-                      </div>
-                    )}
+                    <DayuAvatar
+                      profileImageUrl={member.profileImageUrl}
+                      size={32}
+                      alt={member.nickname}
+                    />
                     <div>
+
                       <div className="text-xs font-medium text-slate-800 flex items-center gap-1">
                         {member.nickname}
                         {member.role === 'HOST' && (
@@ -795,56 +946,7 @@ export const GroupDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* 사진 인증 모달 (오늘 인증) */}
-      {activeVerificationAction && (
-        <VerificationModal
-          action={activeVerificationAction}
-          onClose={() => setActiveVerificationAction(null)}
-          onSuccess={handleVerificationSuccess}
-        />
-      )}
-
-      {/* 미확인 기록 정리 바텀시트 */}
-      <UncheckedRecordsBottomSheet
-        isOpen={showUncheckedSheet}
-        onClose={() => setShowUncheckedSheet(false)}
-        records={uncheckedRecords}
-        loading={uncheckedLoading}
-        onMarkFailed={handleMarkFailed}
-        onStartVerifyLate={handleStartVerifyLate}
-      />
-
-      {/* 사진 인증 모달 (늦은 인증) */}
-      {lateVerificationTarget && (
-        <VerificationModal
-          action={lateVerificationTarget.action}
-          recordId={lateVerificationTarget.recordId}
-          targetDate={lateVerificationTarget.targetDate}
-          onClose={() => setLateVerificationTarget(null)}
-          onSuccess={handleLateVerificationSuccess}
-        />
-      )}
-
-      {/* 댓글 바텀시트 */}
-      <CommentsBottomSheet
-        isOpen={activeCommentVerificationId !== null}
-        verificationId={activeCommentVerificationId}
-        onClose={() => setActiveCommentVerificationId(null)}
-        onCommentCountChange={handleCommentCountChange}
-      />
-
-      {/* 미수행 입금 신고 모달 */}
-      <DepositReportModal
-        groupId={Number(groupId)}
-        isOpen={showDepositModal}
-        account={settlementSummary?.account}
-        onClose={() => setShowDepositModal(false)}
-        onSuccess={() => {
-          fetchSettlementSummary();
-          fetchStatusSummary();
-          fetchUncheckedRecords();
-        }}
-      />
+      {modals}
     </MobileLayout>
   );
 };

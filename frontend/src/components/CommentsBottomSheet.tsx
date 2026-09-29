@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { verificationsApi } from '../api/verifications';
 import type { CommentItem } from '../types';
 import { formatKstDateTime } from '../utils/date';
-import { X, Send, Trash2, Loader2, User as UserIcon } from 'lucide-react';
+import { X, Send, Loader2, User as UserIcon } from 'lucide-react';
 import { BottomSheet, BottomSheetTitle, BottomSheetClose } from './ui/BottomSheet';
+import { SheetGrab } from './dayu/ui';
 
 interface CommentsBottomSheetProps {
   isOpen: boolean;
@@ -89,73 +90,67 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
   return (
     <BottomSheet open={isOpen} size="tall" onOpenChange={(next) => !next && onClose()}>
       <>
-        {/* 헤더 */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
-          <BottomSheetTitle className="text-sm font-bold text-slate-800">
-            댓글 <span className="text-blue-600 font-normal">({comments.length})</span>
-          </BottomSheetTitle>
-          <BottomSheetClose
-            className="touch-target text-slate-400 hover:text-slate-700 rounded-md transition focus-ring"
-            aria-label="닫기"
-          >
-            <X className="w-5 h-5" aria-hidden="true" />
-          </BottomSheetClose>
+        {/* 손잡이 · 헤더 */}
+        <div className="flex shrink-0 flex-col gap-3.5 px-5 pt-2.5">
+          <SheetGrab />
+          <div className="flex items-center gap-2">
+            <BottomSheetTitle className="flex-1 text-[18px] font-extrabold text-slate-800">
+              댓글 <span className="text-blue-600">{comments.length}</span>
+            </BottomSheetTitle>
+            <BottomSheetClose
+              className="focus-ring grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100"
+              aria-label="닫기"
+            >
+              <X className="size-[22px]" aria-hidden="true" />
+            </BottomSheetClose>
+          </div>
         </div>
 
         {/* 댓글 목록 */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-5 space-y-4">
+        <div className="flex-1 space-y-3.5 overflow-y-auto overscroll-contain px-5 py-3.5">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
             </div>
           ) : comments.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <p className="text-xs">아직 작성된 댓글이 없습니다.</p>
-              <p className="text-[11px] mt-1">첫 번째 응원의 한마디를 남겨보세요!</p>
+            <div className="py-12 text-center text-slate-500">
+              <p className="text-[14px] font-bold text-slate-800">아직 작성된 댓글이 없어요</p>
+              <p className="mt-1 text-[13px]">첫 번째 응원의 한마디를 남겨 보세요!</p>
             </div>
           ) : (
             comments.map((comment) => (
-              <div key={comment.id} className="flex items-start justify-between gap-3 group">
-                <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                  {comment.authorProfileImageUrl ? (
-                    <img
-                      src={comment.authorProfileImageUrl}
-                      alt={comment.authorNickname}
-                      className="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0 mt-0.5"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 mt-0.5">
-                      <UserIcon className="w-4 h-4" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-slate-800 truncate">
-                        {comment.authorNickname}
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        {formatKstDateTime(comment.createdAt)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-600 mt-1 leading-relaxed break-words whitespace-pre-wrap">
-                      {comment.content}
-                    </p>
+              <div key={comment.id} className="flex items-start gap-2.5">
+                {comment.authorProfileImageUrl ? (
+                  <img
+                    src={comment.authorProfileImageUrl}
+                    alt={comment.authorNickname}
+                    className="mt-0.5 size-9 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-500">
+                    <UserIcon className="size-5" />
                   </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline gap-1.5">
+                    <b className="truncate text-[14px] font-bold text-slate-800">{comment.authorNickname}</b>
+                    <span className="shrink-0 text-[13px] text-slate-500">
+                      {formatKstDateTime(comment.createdAt)}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[14.5px] leading-[1.5] break-words whitespace-pre-wrap text-slate-800">
+                    {comment.content}
+                  </p>
                 </div>
 
                 {comment.isMine && (
                   <button
                     onClick={() => handleDelete(comment.id)}
                     disabled={deletingId === comment.id}
-                    className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 transition opacity-80 shrink-0 rounded-md active:scale-[0.98]"
-                    title="댓글 삭제"
+                    className="shrink-0 cursor-pointer py-1 text-[12.5px] font-bold text-slate-500 transition-colors hover:text-red-700"
                     aria-label="댓글 삭제"
                   >
-                    {deletingId === comment.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
+                    {deletingId === comment.id ? <Loader2 className="size-4 animate-spin" /> : '삭제'}
                   </button>
                 )}
               </div>
@@ -166,27 +161,23 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
         {/* 댓글 작성 폼 */}
         <form
           onSubmit={handleSubmit}
-          className="px-3 pt-3 pb-safe border-t border-slate-100 flex items-center gap-2 shrink-0"
+          className="flex shrink-0 items-center gap-2 border-t border-slate-200 px-4 pt-2.5 pb-[calc(14px+env(safe-area-inset-bottom,0px))]"
         >
           <input
             type="text"
             value={content}
             onChange={(e) => setContent(e.target.value.slice(0, 300))}
             disabled={submitting}
-            placeholder="응원과 격려의 댓글을 남겨보세요..."
-            className="flex-1 text-base min-h-[44px] px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-hidden focus:border-blue-500 transition text-slate-800 placeholder:text-slate-400"
+            placeholder="응원 한마디를 남겨 보세요"
+            className="h-11 min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3.5 text-[15.5px] text-slate-800 placeholder:text-slate-800/55 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-100 focus:outline-none"
           />
           <button
             type="submit"
             disabled={!content.trim() || submitting}
-            className="w-11 h-11 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 text-white rounded-md transition shadow-xs shrink-0 flex items-center justify-center"
+            className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] bg-blue-600 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
             aria-label="댓글 전송"
           >
-            {submitting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
+            {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
           </button>
         </form>
       </>

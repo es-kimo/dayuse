@@ -8,6 +8,7 @@ import com.dayuse.domain.challenge.ExecutionType
 import com.dayuse.domain.challenge.ParticipantStatus
 import com.dayuse.domain.challenge.dto.AbortChallengeRequest
 import com.dayuse.domain.challenge.dto.ChallengeDetailResponse
+import com.dayuse.domain.challenge.dto.ChallengeParticipantPreview
 import com.dayuse.domain.challenge.dto.ChallengeParticipantResponse
 import com.dayuse.domain.challenge.dto.ChallengePeriodIntervalDto
 import com.dayuse.domain.challenge.dto.ChallengeRestartTemplateResponse
@@ -425,6 +426,14 @@ class ChallengeService(
 
         val challenges = challengeRepository.findAllByGroupIdOrderByStartDateAscCreatedAtDesc(groupId)
 
+        val activeParticipants = if (challenges.isEmpty()) emptyList() else
+            challengeParticipantRepository.findAllByChallengeIdInAndStatus(
+                challenges.map { it.id }, ParticipantStatus.ACTIVE
+            )
+        val participantsByChallenge = activeParticipants.sortedBy { it.id }.groupBy { it.challengeId }
+        val participantUsers = userRepository.findAllById(activeParticipants.map { it.userId }.distinct())
+            .associateBy { it.id }
+
         return challenges.mapNotNull { challenge ->
             val status = challenge.status(today)
             if (statusFilter != null && !statusFilter.equals(
@@ -441,15 +450,9 @@ class ChallengeService(
                 }
             }
 
-            val participantCount = challengeParticipantRepository.countByChallengeIdAndStatus(
-                challenge.id,
-                ParticipantStatus.ACTIVE
-            ).toInt()
-            val myParticipant = challengeParticipantRepository.findByChallengeIdAndUserIdAndStatus(
-                challenge.id,
-                userId,
-                ParticipantStatus.ACTIVE
-            )
+            val participants = participantsByChallenge[challenge.id].orEmpty()
+            val participantCount = participants.size
+            val myParticipant = participants.find { it.userId == userId }
 
             val durationDays = ChronoUnit.DAYS.between(
                 challenge.startDate,
@@ -474,7 +477,12 @@ class ChallengeService(
                 isCreator = challenge.creatorUserId == userId,
                 myPenaltyAmount = if (challenge.executionType.isTogether) null else myParticipant?.penaltyAmount,
                 createdAt = challenge.createdAt,
-                abortedAt = challenge.abortedAt
+                abortedAt = challenge.abortedAt,
+                participants = participants.mapNotNull { participant ->
+                    participantUsers[participant.userId]?.let { user ->
+                        ChallengeParticipantPreview(user.id, user.nickname, user.profileImageUrl)
+                    }
+                }
             )
         }
     }

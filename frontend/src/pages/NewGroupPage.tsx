@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
-import { MobileLayout } from '../components/MobileLayout';
-import { Button, FormField, Input } from '../components/ui';
-import { ArrowLeft } from 'lucide-react';
+import { GroupNameSuggestions } from '../components/GroupNameSuggestions';
+import { Button, Card } from '../components/dayu/ui';
+import { SubPageHeader } from '../components/layout/SubPageHeader';
+import { BottomActionBar } from '../components/layout/BottomActionBar';
 
 export const NewGroupPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,10 +31,9 @@ export const NewGroupPage: React.FC = () => {
     setError('');
     try {
       const created = await groupsApi.createGroup(trimmed);
-      navigate(`/groups/${created.id}`);
+      navigate(`/groups/${created.id}/invite-created`);
     } catch (err) {
       console.error('Failed to create group:', err);
-      // 네트워크 오류 시 사용자 입력값 유지
       setError('모임 생성 중 오류가 발생했습니다. 다시 시도해 주세요.');
       nameInputRef.current?.focus();
     } finally {
@@ -42,62 +42,60 @@ export const NewGroupPage: React.FC = () => {
   };
 
   return (
-    <MobileLayout>
-      <div className="flex items-center gap-2 mb-6">
-        <button
-          type="button"
-          onClick={() => navigate('/groups')}
-          aria-label="모임 목록으로 돌아가기"
-          className="p-2 -ml-2 text-ink-secondary hover:text-ink rounded-md focus-ring min-w-[44px] min-h-[44px] inline-flex items-center justify-center cursor-pointer"
-        >
-          <ArrowLeft className="w-5 h-5" aria-hidden="true" />
-        </button>
-        <h1 className="text-title-md font-bold text-ink">새 모임 만들기</h1>
-      </div>
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
+      {/* Header */}
+      <SubPageHeader
+        title="새 모임 만들기"
+        onBack={() => navigate('/groups')}
+      />
 
-      <form onSubmit={handleSubmit} noValidate className="flex-1 flex flex-col justify-between">
-        <div className="bg-card border border-line rounded-lg p-5 shadow-xs space-y-3">
-          <FormField
-            label="모임 이름"
-            required
-            error={error}
-            id="group-name-input"
-            description="생성자는 자동으로 모임장(HOST)이 됩니다."
-          >
-            <Input
-              ref={nameInputRef}
-              id="group-name-input"
-              name="name"
-              placeholder="예: 미라클모닝 챌린지, 주말 러닝 크루"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
+      {/* Main Body */}
+      <main className="mx-auto flex w-full max-w-app flex-1 flex-col px-4 pt-3 pb-28">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3.5">
+          <Card className="flex flex-col gap-2.5">
+            <div>
+              <label htmlFor="group-name-input" className="block text-[14px] font-bold text-slate-800 mb-2">
+                모임 이름 <span className="text-red-700">*</span>
+              </label>
+              <input
+                ref={nameInputRef}
+                id="group-name-input"
+                name="name"
+                type="text"
+                placeholder="예: 미라클모닝 챌린지"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (error) setError('');
+                }}
+                maxLength={50}
+                className="h-[50px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-[15.5px] text-slate-800 placeholder:text-slate-800/55 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-100 focus:outline-none"
+              />
+              {error && <p className="mt-1.5 text-[13px] text-red-700">{error}</p>}
+            </div>
+
+            {/* 추천 이름 칩들 */}
+            <GroupNameSuggestions
+              onSelect={(sug) => {
+                setName(sug);
                 if (error) setError('');
               }}
-              maxLength={50}
-              error={error}
-              required
             />
-          </FormField>
-          <div className="flex justify-end text-caption text-ink-muted">
-            <span aria-label={`현재 ${name.length}자, 최대 50자`}>{name.length}/50</span>
-          </div>
-        </div>
 
-        <div className="pt-6">
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            isLoading={isSubmitting}
-            loadingText="모임 생성 중..."
-            disabled={isSubmitting || !name.trim()}
-          >
-            모임 만들기 완료
-          </Button>
-        </div>
-      </form>
-    </MobileLayout>
+            <div className="flex items-center justify-between text-[12.5px] text-slate-500">
+              <span>만든 사람이 자동으로 모임장이 돼요</span>
+              <span className="text-[12px] tabular-nums text-slate-400">{name.length}/50</span>
+            </div>
+          </Card>
+        </form>
+      </main>
+
+      {/* Bottom Sticky Action */}
+      <BottomActionBar>
+        <Button type="button" size="lg" className="w-full" onClick={handleSubmit} disabled={isSubmitting || !name.trim()}>
+          {isSubmitting ? '모임 만드는 중...' : '모임 만들기'}
+        </Button>
+      </BottomActionBar>
+    </div>
   );
 };

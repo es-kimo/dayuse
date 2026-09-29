@@ -42,7 +42,7 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-1.5">
           <Calendar className="w-4 h-4 text-blue-600" />
-          <h2 className="text-xs font-bold text-slate-800">오늘 할 일</h2>
+          <h2 className="text-xs font-bold text-slate-800">내 오늘 할 일</h2>
         </div>
         <span className="text-[11px] text-slate-400">
           {todayActions.filter((a) => a.isCompletedToday).length} / {todayActions.length} 완료
@@ -53,13 +53,13 @@ export const TodayActionSection: React.FC<TodayActionSectionProps> = ({
         {todayActions.map((action) => (
           <div
             key={action.challengeId}
-            className={`bg-white border rounded-lg p-3.5 shadow-xs transition flex items-center justify-between gap-3 ${
+            className={`bg-white border rounded-[18px] p-3.5 transition flex items-center justify-between gap-3 ${
               action.isCompletedToday ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200'
             }`}
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-xs font-bold text-slate-800 truncate">
+                <span className="text-sm font-bold text-slate-800 break-words">
                   {action.challengeTitle}
                 </span>
                 {action.executionType === 'TOGETHER' && (

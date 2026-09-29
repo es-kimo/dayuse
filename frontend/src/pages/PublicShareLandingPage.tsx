@@ -131,21 +131,21 @@ export const PublicShareLandingPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-dvh bg-[#020617] text-white flex flex-col items-center justify-between p-4 py-8 max-w-md mx-auto relative font-sans">
+    <div className="relative mx-auto flex min-h-dvh max-w-app flex-col bg-[#020617] font-sans text-white">
       {/* 상단 브랜딩 바: 로고 (좌) · 도메인 (우) */}
-      <div className="w-full max-w-[340px] flex items-center justify-between mb-4 px-1 gap-2 min-w-0">
-        <DayuLogo variant="horizontal" theme="dark" className="h-7 w-auto object-contain shrink-0" />
+      <div className="flex h-14 w-full min-w-0 shrink-0 items-center justify-between gap-2 px-5">
+        <DayuLogo variant="horizontal" theme="dark" className="h-6 w-auto shrink-0 object-contain" />
         {card.executionType === 'TOGETHER' ? (
-          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shrink-0">
+          <span className="shrink-0 rounded-[7px] bg-indigo-500/20 px-2 py-1 text-[12px] font-bold text-indigo-300">
             함께하기 · 공동 달성
           </span>
         ) : (
-          <span className="text-xs text-[#94A3B8] font-mono tracking-wider shrink-0">dayuse.kr</span>
+          <span className="shrink-0 font-mono text-[13px] text-slate-500">dayuse.kr</span>
         )}
       </div>
 
       {/* 공유 카드 본체 */}
-      <div className="w-full max-w-[340px] rounded-3xl bg-[#0F172A] border border-[#1E293B] p-6 flex flex-col justify-between my-auto relative shadow-2xl">
+      <div className="mx-5 my-auto flex flex-col justify-between rounded-[28px] border border-[#1E293B] bg-[#0F172A] p-[25px]">
         {/* 카드 중앙 내용 */}
         {card.cardType === 'TODAY_VERIFICATION' ? (
           <div className="flex-1 flex flex-col justify-center py-4 space-y-4">
@@ -193,31 +193,31 @@ export const PublicShareLandingPage: React.FC = () => {
         ) : (
           <div className="flex-1 flex flex-col justify-center py-2 text-center">
             {/* 대표 그래픽: 흰 원 속 해냈어요 데이유 */}
-            <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-md mx-auto mb-4">
-              <DayuExpression expression="done" color="blue" className="w-14 h-14 object-contain" />
+            <div className="mx-auto mb-[18px] flex size-[88px] items-center justify-center rounded-full bg-white">
+              <DayuExpression expression="done" color="blue" className="size-16 object-contain" />
             </div>
 
             {/* 연속 일수 타이포그래피 */}
-            <div className="text-[44px] leading-tight font-extrabold text-white tracking-tight tabular-nums flex items-baseline justify-center">
-              {card.streakDays}
-              <span className="text-xl font-bold text-[#93C5FD] ml-1.5 font-sans">일 연속</span>
+            <div className="flex items-baseline justify-center tabular-nums">
+              <span className="text-[56px] leading-none font-extrabold tracking-[-0.04em] text-white">
+                {card.streakDays}
+              </span>
+              <span className="ml-1 text-[20px] font-extrabold text-[#93C5FD]">일 연속</span>
             </div>
-            <p className="text-xs text-[#CBD5E1] font-normal mt-1 mb-5">
-              목표를 향해 꾸준히 달리는 중이에요
-            </p>
+            <p className="mt-[7px] mb-[18px] text-[14px] text-[#CBD5E1]">목표를 향해 꾸준히 달리는 중이에요</p>
 
             {/* 달성률 (데이터가 있을 때만 노출) */}
             {hasAchievementData && (
-              <div className="w-full mb-5 text-left">
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="text-[#94A3B8] font-medium">이번 챌린지 달성률</span>
-                  <span className="text-white font-bold tabular-nums">
+              <div className="mb-[18px] w-full text-left">
+                <div className="mb-2 flex items-center justify-between text-[13px]">
+                  <span className="text-[#94A3B8]">이번 챌린지 달성률</span>
+                  <span className="font-bold tabular-nums text-white">
                     {completedCount} / {totalDays}일 · {achievementRate}%
                   </span>
                 </div>
-                <div className="w-full h-2 bg-[#1E293B] rounded-full overflow-hidden">
+                <div className="h-2 w-full overflow-hidden rounded bg-[#1E293B]">
                   <div
-                    className="h-full w-full origin-left bg-blue-600 rounded-full transition-transform duration-300 ease-out"
+                    className="h-full w-full origin-left rounded bg-blue-600 transition-transform duration-300 ease-out"
                     style={{
                       transform: `scaleX(${Math.min(100, Math.max(0, achievementRate)) / 100})`,
                     }}
@@ -228,23 +228,19 @@ export const PublicShareLandingPage: React.FC = () => {
 
             {/* 최근 7일 기록 칸 */}
             {recent7Items.length > 0 && (
-              <div className="w-full mb-6">
-                <div className="text-xs text-[#94A3B8] font-medium mb-2.5 text-left">
-                  최근 7일
-                </div>
-                <div className="grid grid-cols-7 gap-2">
+              <div className="mb-[18px] w-full">
+                <div className="mb-2 text-left text-[13px] text-[#94A3B8]">최근 7일</div>
+                <div className="grid grid-cols-7 gap-1.5">
                   {recent7Items.map((item, idx) => (
-                    <div key={idx} className="flex flex-col items-center gap-1.5">
+                    <div key={idx} className="flex flex-col items-center gap-1">
                       <div
-                        className={`w-full aspect-square max-w-[34px] rounded-lg flex items-center justify-center transition ${
-                          item.completed
-                            ? 'bg-blue-600 text-white shadow-xs'
-                            : 'bg-transparent border border-[#1E293B]'
+                        className={`flex aspect-square w-full items-center justify-center rounded-full ${
+                          item.completed ? 'bg-blue-600 text-white' : 'border border-[#1E293B]'
                         }`}
                       >
-                        {item.completed && <Check className="w-4 h-4 text-white stroke-[2.5]" />}
+                        {item.completed && <Check className="size-3.5 stroke-[2.5] text-white" />}
                       </div>
-                      <span className="text-[10px] text-[#94A3B8] tabular-nums font-mono">
+                      <span className="text-[11px] tabular-nums text-slate-500">
                         {item.date ? item.date.slice(8) : ''}
                       </span>
                     </div>
@@ -256,15 +252,13 @@ export const PublicShareLandingPage: React.FC = () => {
         )}
 
         {/* 카드 하단 정보 */}
-        <div className="text-left pt-3 border-t border-[#1E293B]/60">
-          <div className="text-xs font-bold text-[#60A5FA] truncate mb-0.5">
-            {card.title}
-          </div>
-          <div className="text-[17px] font-semibold text-white">
-            {card.userNickname}
+        <div className="border-t border-[#1E293B] pt-3.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <b className="text-[17px] font-bold text-white">{card.userNickname}</b>
+            <span className="min-w-0 truncate text-right text-[12px] text-slate-500">{card.title}</span>
           </div>
           {card.executionType === 'TOGETHER' && card.actualVerifierNickname && (
-            <p className="text-xs text-indigo-300 mt-0.5">
+            <p className="mt-0.5 text-[12px] text-indigo-300">
               {card.actualVerifierNickname}님의 인증으로 달성
             </p>
           )}
@@ -272,24 +266,24 @@ export const PublicShareLandingPage: React.FC = () => {
       </div>
 
       {/* 하단 CTA 바 */}
-      <div className="w-full max-w-[340px] mt-6 space-y-2">
+      <div className="flex w-full shrink-0 flex-col items-center gap-2.5 px-4 pt-3 pb-[calc(15px+env(safe-area-inset-bottom,0px))]">
         <button
           onClick={handleJoinCta}
           disabled={checkingMembership}
-          className="w-full h-[52px] bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+          className="flex h-[54px] w-full cursor-pointer items-center justify-center gap-1.5 rounded-[14px] bg-blue-600 text-base font-bold text-white transition-colors hover:bg-blue-500 disabled:opacity-50"
         >
           {checkingMembership ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="size-4 animate-spin" />
           ) : (
             <>
-              <span>나도 참여하기</span>
-              <ArrowRight className="w-4 h-4" />
+              나도 참여하기
+              <ArrowRight className="size-4" />
             </>
           )}
         </button>
 
-        <p className="text-xs text-[#94A3B8] text-center mt-2.5">
-          데이유즈에서 친구들과 각자의 챌린지를 인증하고 기록해요.
+        <p className="text-center text-[12.5px] text-slate-500">
+          데이유즈에서 친구들과 각자의 챌린지를 인증하고 기록해요
         </p>
       </div>
 

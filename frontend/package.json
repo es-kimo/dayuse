@@ -10,7 +10,7 @@
     "lint": "oxlint",
     "verify:kakao-sdk": "node scripts/verify-kakao-sdk-integrity.mjs",
     "capture:screens": "node scripts/capture-screens.mjs",
-    "test": "vitest run",
+    "test": "vitest run --reporter=dot",
     "preview": "vite preview"
   },
   "dependencies": {

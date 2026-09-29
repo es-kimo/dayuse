@@ -27,8 +27,8 @@
   --spacing-input: 48px;
   --spacing-header: 56px;
 
-  /* 앱 셸 최대 폭(max-w-app). v4에서 max-w-*는 --container-* 네임스페이스를 쓴다. */
-  --container-app: 480px;
+  /* 앱 셸 최대 폭(max-w-app). v4에서 max-w-*는 --container-* 네임스페이스를 쓴다. (앱 최대 너비: 478px) */
+  --container-app: 478px;
 
   /* backdrop-blur-2xs. v4 기본 blur 스케일은 xs(4px)부터라 더 옅은 단계를 직접 정의한다. */
   --blur-2xs: 2px;

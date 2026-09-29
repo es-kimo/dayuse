@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
 import type { ChallengeDetail } from '../types';
 import { challengesApi } from '../api/challenges';
-import { Modal, ModalTitle, ModalClose } from './ui/Modal';
-import { AlertTriangle, X } from 'lucide-react';
+import { Modal, ModalTitle, ModalDescription } from './ui/Modal';
+import { AlertTriangle, Check, Lock, X } from 'lucide-react';
+import { Button, Field, TextAreaField } from './dayu/ui';
 
 interface AbortChallengeModalProps {
   challengeId: number;
+  /** 무엇을 중단하는지 보여 주기 위한 정보 */
+  challengeTitle?: string;
+  participantCount?: number;
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (updatedChallenge: ChallengeDetail) => void;
 }
 
+/** 되돌릴 수 없는 작업이라 바텀시트가 아니라 가운데 팝업을 쓴다. */
 export const AbortChallengeModal: React.FC<AbortChallengeModalProps> = ({
   challengeId,
+  challengeTitle,
+  participantCount,
   isOpen,
   onClose,
   onSuccess,
@@ -37,86 +44,74 @@ export const AbortChallengeModal: React.FC<AbortChallengeModalProps> = ({
     }
   };
 
+  const subtitle = [challengeTitle, participantCount ? `참여자 ${participantCount}명` : null]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <Modal
       open={isOpen}
       onOpenChange={(next) => !next && onClose()}
       disablePointerDismissal={submitting}
-      backdropClassName="bg-black/50 backdrop-blur-xs"
-      className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl relative"
+      backdropClassName="bg-slate-900/45"
+      className="relative flex w-full max-w-app flex-col gap-4 rounded-3xl bg-white px-5 pt-[22px] pb-[18px]"
     >
       <>
-        <ModalClose
-          aria-label="닫기"
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-md focus-ring"
+        <div className="flex flex-col items-center gap-2.5 text-center">
+          <span aria-hidden className="grid size-[52px] place-items-center rounded-2xl bg-red-50 text-red-700">
+            <AlertTriangle className="size-6" />
+          </span>
+          <ModalTitle className="text-[19px] font-extrabold text-slate-800">챌린지를 중단할까요?</ModalTitle>
+          {subtitle && <ModalDescription className="text-[13px] text-slate-500">{subtitle}</ModalDescription>}
+        </div>
+
+        <ul className="flex flex-col gap-2 rounded-[14px] bg-slate-50 px-3.5 py-3 text-[13.5px] text-slate-600">
+          <li className="flex items-center gap-2">
+            <Check className="size-3.5 shrink-0 text-slate-400" />
+            지금까지 인증한 기록은 그대로 남아요
+          </li>
+          <li className="flex items-center gap-2">
+            <X className="size-3.5 shrink-0 text-slate-400" />
+            오늘부터 남은 날은 정산에서 빠져요
+          </li>
+          <li className="flex items-center gap-2">
+            <Lock className="size-3.5 shrink-0 text-slate-400" />
+            중단하면 다시 시작할 수 없어요
+          </li>
+        </ul>
+
+        <Field
+          label={
+            <>
+              중단 이유 <span className="font-normal text-slate-500">(선택) · 참여자에게 보여요</span>
+            </>
+          }
+          htmlFor="abort-reason"
         >
-          <X className="w-5 h-5" aria-hidden="true" />
-        </ModalClose>
-
-        <div className="flex items-center gap-2 mb-3">
-          <div className="p-2 rounded-md bg-rose-50 text-rose-600 border border-rose-200">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div>
-            <ModalTitle className="text-base font-bold text-slate-800">
-              챌린지 중단
-            </ModalTitle>
-            <p className="text-xs text-slate-400">
-              진행 중인 챌린지를 조기 종료합니다
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-rose-50/60 border border-rose-100 rounded-md p-3 mb-4 text-xs text-rose-800 space-y-1.5">
-          <p className="font-semibold">⚠️ 중단 전 꼭 확인해주세요!</p>
-          <ul className="list-disc list-inside space-y-0.5 text-rose-700">
-            <li>오늘 진행 중인 구간과 이후 구간은 정산에서 제외됩니다.</li>
-            <li>지금까지 성공한 인증 기록은 안전하게 보존됩니다.</li>
-            <li>중단 후에는 새로운 인증을 올릴 수 없으며, 되돌릴 수 없습니다.</li>
-          </ul>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-            중단 사유 (선택)
-          </label>
-          <textarea
+          <TextAreaField
+            id="abort-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="중단 사유를 입력해주세요 (예: 모임 사정, 목표 조정 등)"
+            placeholder="예: 모임 일정이 바뀌었어요"
             maxLength={200}
-            rows={3}
-            className="w-full text-xs p-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 resize-none"
+            className="min-h-[72px]"
             disabled={submitting}
           />
-          <div className="text-right text-[10px] text-slate-400 mt-1">
-            {reason.length}/200
-          </div>
-        </div>
+        </Field>
 
         {error && (
-          <div className="mb-3 p-2.5 rounded-md bg-rose-50 border border-rose-200 text-xs text-rose-700">
+          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
             {error}
-          </div>
+          </p>
         )}
 
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="flex-1 py-2.5 border border-slate-200 rounded-md text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            onClick={handleAbort}
-            disabled={submitting}
-            className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white rounded-md text-xs font-semibold transition shadow-xs flex items-center justify-center gap-1.5"
-          >
-            {submitting ? '중단 처리 중...' : '챌린지 중단'}
-          </button>
+          <Button type="button" variant="ghost" className="flex-1" onClick={onClose} disabled={submitting}>
+            계속 진행
+          </Button>
+          <Button type="button" variant="danger" className="flex-1" onClick={handleAbort} disabled={submitting}>
+            {submitting ? '중단 처리 중...' : '중단하기'}
+          </Button>
         </div>
       </>
     </Modal>

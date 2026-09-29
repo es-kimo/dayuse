@@ -1,0 +1,148 @@
+import React from 'react';
+import type { ChallengeDetail, ChallengeCalendarResponse, ParticipantCalendarItem, CalendarDailyRecordItem } from '../types';
+import { Card } from './dayu/ui';
+import { DayuAvatar } from './brand/DayuAvatar';
+import { Users, Check } from 'lucide-react';
+import { getTodayKstString } from '../utils/date';
+
+interface ParticipantsCardProps {
+  challenge: ChallengeDetail;
+  calendarData: ChallengeCalendarResponse | null;
+  currentUserId?: number;
+  totalDurationDays: number;
+}
+
+export const ParticipantsCard: React.FC<ParticipantsCardProps> = ({
+  challenge,
+  calendarData,
+  currentUserId,
+  totalDurationDays,
+}) => {
+  const todayStr = getTodayKstString();
+
+  // 참여자 목록 조합 (calendarData.participants 우선, fallback으로 challenge.participants)
+  const participants = React.useMemo(() => {
+    if (calendarData?.participants && calendarData.participants.length > 0) {
+      return calendarData.participants.map((p: ParticipantCalendarItem, idx: number) => {
+        const isMe = currentUserId ? p.userId === currentUserId : idx === 0;
+        const chPart = challenge.participants?.find((cp) => cp.userId === p.userId);
+
+        const doneRecords = p.records?.filter((r: CalendarDailyRecordItem) => r.status === 'COMPLETED') || [];
+        const doneToday = p.records?.some(
+          (r: CalendarDailyRecordItem) => r.date === todayStr && r.status === 'COMPLETED'
+        ) || false;
+
+        const effectiveTotalDays = Math.max(1, totalDurationDays);
+        const rate = Math.min(100, Math.round((doneRecords.length / effectiveTotalDays) * 100));
+
+        const penaltyTotal = chPart?.penaltyAmount ?? challenge.myPenaltyAmount ?? 0;
+
+        return {
+          userId: p.userId,
+          nickname: p.nickname,
+          profileImageUrl: p.profileImageUrl ?? chPart?.profileImageUrl,
+          rate,
+          penaltyTotal,
+          doneToday,
+          isMe,
+        };
+      });
+    }
+
+    // fallback: challenge.participants
+    return (challenge.participants || []).map((p, idx) => {
+      const isMe = currentUserId ? p.userId === currentUserId : idx === 0;
+      return {
+        userId: p.userId,
+        nickname: p.nickname,
+        profileImageUrl: p.profileImageUrl,
+        rate: 100,
+        penaltyTotal: p.penaltyAmount ?? 0,
+        doneToday: false,
+        isMe,
+      };
+    });
+  }, [calendarData, challenge.participants, challenge.myPenaltyAmount, currentUserId, todayStr, totalDurationDays]);
+
+  const totalCount = participants.length;
+  const certifiedTodayCount = participants.filter((p) => p.doneToday).length;
+
+  return (
+    <Card className="flex flex-col gap-2">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-1">
+        <h3 className="flex items-center gap-1.5 text-[15px] font-extrabold text-slate-900 tracking-[-0.01em]">
+          <Users className="w-4 h-4 text-slate-800 shrink-0" />
+          함께하는 {totalCount}명
+        </h3>
+        <span className="text-[12.5px] text-slate-500 tabular-nums">
+          오늘 {certifiedTodayCount}명 인증
+        </span>
+      </div>
+
+      {/* Participants List */}
+      <div className="flex flex-col">
+        {participants.map((p, idx) => {
+          const isPrevMe = idx > 0 && participants[idx - 1].isMe;
+          const isMe = p.isMe;
+
+          return (
+            <div
+              key={p.userId}
+              className={`flex items-center gap-3 py-3 transition-colors ${
+                isMe
+                  ? '-mx-2.5 rounded-[14px] bg-blue-50 px-2.5'
+                  : idx === 0 || isPrevMe
+                  ? ''
+                  : 'border-t border-slate-200'
+              }`}
+            >
+              {/* Dayu Avatar */}
+              <DayuAvatar profileImageUrl={p.profileImageUrl} alt={p.nickname} size={36} />
+
+              {/* Center Info: Name & Progress bar */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[14.5px] font-bold text-slate-800 truncate">
+                    {p.nickname}
+                  </span>
+                  {isMe && (
+                    <span className="text-[12px] text-slate-400 font-medium">나</span>
+                  )}
+                  {p.doneToday && (
+                    <span className="inline-flex h-5 items-center gap-1 rounded-[7px] bg-emerald-50 px-2 text-[12px] font-bold text-emerald-700">
+                      <Check className="size-3.5" />
+                      오늘
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 mt-1.5">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-slate-100">
+                    <i
+                      className={`block h-full rounded-[3px] transition-all duration-500 ${
+                        p.rate < 75 ? 'bg-amber-500' : 'bg-blue-600'
+                      }`}
+                      style={{ width: `${p.rate}%` }}
+                    />
+                  </div>
+                  <span className="text-[12px] font-bold text-slate-600 tabular-nums w-[34px] text-right">
+                    {p.rate}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Right: Fine / Penalty */}
+              <div className="text-right shrink-0">
+                <span className="block text-[11.5px] text-slate-500">벌금</span>
+                <b className="text-[14px] font-extrabold text-slate-800 tabular-nums">
+                  {p.penaltyTotal.toLocaleString()}원
+                </b>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+};

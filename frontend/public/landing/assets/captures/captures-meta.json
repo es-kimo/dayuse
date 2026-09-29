@@ -11,7 +11,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:24:27.691Z"
+      "capturedAt": "2026-09-29T07:02:17.658Z"
     },
     {
       "id": "02-groups-list",
@@ -24,20 +24,46 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:24:29.233Z"
+      "capturedAt": "2026-09-29T07:02:19.578Z"
     },
     {
       "id": "03-group-feed",
-      "title": "모임 인증 피드 (대표 UI)",
+      "title": "모임 인증 피드 (홈 탭)",
       "caption": "친구들의 일일 챌린지 인증 사진과 한마디 피드 타임라인",
       "isPrimary": true,
       "pngFile": "03-group-feed.png",
       "webpFile": "03-group-feed.webp",
       "assetPath": "/landing/assets/captures/03-group-feed.webp",
       "width": 780,
-      "height": 3490,
-      "aspectRatio": "780/3490",
-      "capturedAt": "2026-09-28T06:24:31.677Z"
+      "height": 3260,
+      "aspectRatio": "780/3260",
+      "capturedAt": "2026-09-29T07:02:21.983Z"
+    },
+    {
+      "id": "03b-group-challenges",
+      "title": "모임 챌린지 탭",
+      "caption": "모임 내 진행 중인 챌린지 목록과 필터 및 개설 옵션",
+      "isPrimary": true,
+      "pngFile": "03b-group-challenges.png",
+      "webpFile": "03b-group-challenges.webp",
+      "assetPath": "/landing/assets/captures/03b-group-challenges.webp",
+      "width": 780,
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T07:02:24.664Z"
+    },
+    {
+      "id": "03c-group-members",
+      "title": "모임 멤버 탭",
+      "caption": "참여 멤버 목록, 방장 권한 표시 및 모임 초대 링크 관리",
+      "isPrimary": true,
+      "pngFile": "03c-group-members.png",
+      "webpFile": "03c-group-members.webp",
+      "assetPath": "/landing/assets/captures/03c-group-members.webp",
+      "width": 780,
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T07:02:26.683Z"
     },
     {
       "id": "04-challenge-calendar",
@@ -48,9 +74,9 @@
       "webpFile": "04-challenge-calendar.webp",
       "assetPath": "/landing/assets/captures/04-challenge-calendar.webp",
       "width": 780,
-      "height": 2970,
-      "aspectRatio": "780/2970",
-      "capturedAt": "2026-09-28T06:24:33.186Z"
+      "height": 2488,
+      "aspectRatio": "780/2488",
+      "capturedAt": "2026-09-29T07:02:28.506Z"
     },
     {
       "id": "05-today-actions",
@@ -63,7 +89,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:24:34.647Z"
+      "capturedAt": "2026-09-29T07:02:30.173Z"
     },
     {
       "id": "06-group-new",
@@ -76,7 +102,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:24:36.071Z"
+      "capturedAt": "2026-09-29T07:02:31.831Z"
     },
     {
       "id": "07-challenge-new",
@@ -87,9 +113,9 @@
       "webpFile": "07-challenge-new.webp",
       "assetPath": "/landing/assets/captures/07-challenge-new.webp",
       "width": 780,
-      "height": 4034,
-      "aspectRatio": "780/4034",
-      "capturedAt": "2026-09-28T06:24:37.675Z"
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T07:02:33.899Z"
     },
     {
       "id": "08-verification-modal",
@@ -102,7 +128,59 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:24:40.154Z"
+      "capturedAt": "2026-09-29T07:02:36.649Z"
+    },
+    {
+      "id": "08b-modal-unchecked-sheet",
+      "title": "미확인 인증 기록 검토 바텀시트",
+      "caption": "전일 미인증 및 유예 시간 대상 기록을 확인하고 인증/소명 지원",
+      "isPrimary": true,
+      "pngFile": "08b-modal-unchecked-sheet.png",
+      "webpFile": "08b-modal-unchecked-sheet.webp",
+      "assetPath": "/landing/assets/captures/08b-modal-unchecked-sheet.webp",
+      "width": 780,
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T07:02:39.575Z"
+    },
+    {
+      "id": "08c-modal-comments-sheet",
+      "title": "피드 댓글 소통 바텀시트",
+      "caption": "친구들의 인증 사진에 댓글과 응원의 메시지를 남기는 소통 공간",
+      "isPrimary": true,
+      "pngFile": "08c-modal-comments-sheet.png",
+      "webpFile": "08c-modal-comments-sheet.webp",
+      "assetPath": "/landing/assets/captures/08c-modal-comments-sheet.webp",
+      "width": 780,
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T07:02:42.485Z"
+    },
+    {
+      "id": "08d-modal-deposit-report",
+      "title": "미수행 벌금 입금 신고 모달",
+      "caption": "미납 벌금 내역 선택 및 모임 계좌로 입금 후 확인 요청",
+      "isPrimary": true,
+      "pngFile": "08d-modal-deposit-report.png",
+      "webpFile": "08d-modal-deposit-report.webp",
+      "assetPath": "/landing/assets/captures/08d-modal-deposit-report.webp",
+      "width": 780,
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T07:02:45.098Z"
+    },
+    {
+      "id": "08e-modal-abort-challenge",
+      "title": "챌린지 중도 포기 확인 모달",
+      "caption": "챌린지 포기 시 누적 페널티 및 주의사항 확인 팝업",
+      "isPrimary": true,
+      "pngFile": "08e-modal-abort-challenge.png",
+      "webpFile": "08e-modal-abort-challenge.webp",
+      "assetPath": "/landing/assets/captures/08e-modal-abort-challenge.webp",
+      "width": 780,
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T07:02:48.636Z"
     },
     {
       "id": "09-share-card",
@@ -115,7 +193,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:24:41.496Z"
+      "capturedAt": "2026-09-29T07:02:50.366Z"
     },
     {
       "id": "10-invite-landing",
@@ -128,7 +206,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:24:42.938Z"
+      "capturedAt": "2026-09-29T07:02:52.072Z"
     },
     {
       "id": "11-login",
@@ -141,7 +219,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:24:44.287Z"
+      "capturedAt": "2026-09-29T07:02:53.786Z"
     },
     {
       "id": "12-profile",
@@ -152,9 +230,9 @@
       "webpFile": "12-profile.webp",
       "assetPath": "/landing/assets/captures/12-profile.webp",
       "width": 780,
-      "height": 1688,
-      "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:24:45.741Z"
+      "height": 1756,
+      "aspectRatio": "780/1756",
+      "capturedAt": "2026-09-29T07:02:55.904Z"
     },
     {
       "id": "13-notification-settings",
@@ -167,7 +245,20 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-28T06:24:48.053Z"
+      "capturedAt": "2026-09-29T07:03:03.355Z"
+    },
+    {
+      "id": "14-settlement-manage",
+      "title": "모임장 정산 및 입금 관리",
+      "caption": "멤버들의 벌금 입금 신고 내역 확인, 승인 및 반려 관리",
+      "isPrimary": true,
+      "pngFile": "14-settlement-manage.png",
+      "webpFile": "14-settlement-manage.webp",
+      "assetPath": "/landing/assets/captures/14-settlement-manage.webp",
+      "width": 780,
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T07:03:06.230Z"
     }
   ]
 }

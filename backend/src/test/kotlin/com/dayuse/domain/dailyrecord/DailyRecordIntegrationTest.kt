@@ -94,6 +94,21 @@ class DailyRecordIntegrationTest {
 
     private val today: LocalDate = DateTimeUtils.todayKst()
 
+    @Test
+    fun `오늘 인증 멤버는 오늘 날짜와 현재 모임으로 한정한다`() {
+        verificationRepository.save(Verification(groupId = group.id, challengeId = challenge1.id, userId = memberUser.id, targetDate = today, imageUrl = "today.jpg"))
+        verificationRepository.save(Verification(groupId = group.id, challengeId = challenge1.id, userId = strangerUser.id, targetDate = today.minusDays(1), imageUrl = "yesterday.jpg"))
+        val otherGroup = groupRepository.save(Group(name = "다른 모임", hostUserId = strangerUser.id))
+        verificationRepository.save(Verification(groupId = otherGroup.id, challengeId = challenge1.id, userId = strangerUser.id, targetDate = today, imageUrl = "other.jpg"))
+        mockMvc.get("/api/v1/groups/${group.id}/status-summary") {
+            header("Authorization", "Bearer $memberToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.verifiedUserIds.length()") { value(1) }
+            jsonPath("$.verifiedUserIds[0]") { value(memberUser.id) }
+        }
+    }
+
     @BeforeEach
     fun setUp() {
         memberUser = userRepository.save(User(kakaoId = "member_1", nickname = "모임원"))

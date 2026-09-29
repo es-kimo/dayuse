@@ -30,6 +30,7 @@ const layerClass = {
 
 const placementClass = {
   center: 'items-center justify-center p-4',
+  'screen-bottom': 'items-end justify-center p-0',
   bottom: 'items-end justify-center p-0 sm:items-center sm:p-4',
 } as const;
 
@@ -38,6 +39,7 @@ const placementClass = {
  * 아래에서 올라오는 모달은 자기 높이만큼(translate-y-full) 아래에서 올라온다.
  */
 const motionClass = {
+  'screen-bottom': 'transition-[translate] duration-300 data-[starting-style]:translate-y-full data-[ending-style]:translate-y-full',
   center:
     'transition duration-200 ease-out data-[starting-style]:opacity-0 data-[starting-style]:scale-95 data-[ending-style]:opacity-0 data-[ending-style]:scale-95',
   bottom:
