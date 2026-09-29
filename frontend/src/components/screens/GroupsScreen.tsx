@@ -204,7 +204,19 @@ export function GroupsScreen({
               );
             })}
             {filter === "host" && !hostGroups.length && (
-              <p className="py-6 text-center text-[13px] text-slate-500">아직 직접 만든 모임이 없어요.</p>
+              <div className="flex flex-col items-center px-4 py-8 text-center">
+                <img src={screenAssets.symbol} alt="" className="size-24" />
+                <h2 className="mt-3.5 text-[20px] leading-[30px] font-extrabold text-slate-800">
+                  아직 직접 만든 모임이 없어요
+                </h2>
+                <p className="mt-2 text-[14px] text-slate-500">
+                  함께하고 싶은 친구들을 초대해 첫 모임을 시작해 보세요
+                </p>
+                <Button size="lg" className="mt-6 w-full max-w-xs" onClick={() => navigate("/groups/new")}>
+                  <Plus className="size-4" />
+                  새 모임 만들기
+                </Button>
+              </div>
             )}
             <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white">
               <button
