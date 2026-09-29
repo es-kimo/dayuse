@@ -454,6 +454,7 @@ export const ChallengeDetailPage: React.FC = () => {
           onOpenCert={handleStartTodayVerify}
           onAbortChallenge={challenge.canAbort ? () => setShowAbortModal(true) : undefined}
           onDeleteChallenge={challenge.isCreator ? () => setShowDeleteConfirm(true) : undefined}
+          onEditChallenge={challenge.isCreator ? () => { setShowEditModal(true); setActionError(null); } : undefined}
           onOpenMidJoin={() => setShowJoinModal(true)}
           onRestartChallenge={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
         />
