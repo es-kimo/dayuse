@@ -323,7 +323,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
                         isSelected ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white hover:bg-slate-50'
                       } ${isCreator ? 'cursor-default' : 'cursor-pointer'}`}
                     >
-                      <DayuAvatar profileImageUrl={m.profileImageUrl} size="sm" />
+                      <DayuAvatar profileImageUrl={m.profileImageUrl} size={36} />
                       <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
                         <span className="truncate text-[14.5px] font-bold text-slate-800">{m.nickname}</span>
                         {isCreator && <span className="shrink-0 text-[13px] text-slate-500">나 · 필수</span>}

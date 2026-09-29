@@ -5,7 +5,7 @@ import { DAYU_FACE_PATH, DAYU_EXPRESSION_WHITE_PATH } from '../../tokens/dayuSvg
 interface DayuAvatarProps {
   profileImageUrl?: string | null;
   colorOption?: DayuColorOption;
-  size?: number | string; // e.g. 40, 48, 88, 136 or Tailwind w-h
+  size?: number; // Pixel size, e.g. 36, 40, 48, 88, 136
   alt?: string;
   className?: string;
   ariaHidden?: boolean;

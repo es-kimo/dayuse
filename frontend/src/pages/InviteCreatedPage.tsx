@@ -91,7 +91,7 @@ export const InviteCreatedPage: React.FC = () => {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
       {/* Header with Close Button */}
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between bg-slate-50/92 pr-2.5 pl-3 backdrop-blur-md">
+      <header className="sticky top-0 z-20 mx-auto flex h-14 w-full max-w-app items-center justify-between bg-slate-50/92 pr-2.5 pl-3 backdrop-blur-md">
         <div className="flex-1" />
         <HeaderIconButton onClick={() => navigate(`/groups/${actualGroupId}`)} aria-label="닫기">
           <X className="size-[22px]" />

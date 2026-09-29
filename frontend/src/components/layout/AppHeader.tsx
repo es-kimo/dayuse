@@ -45,7 +45,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <header
       role="banner"
-      className={`sticky top-0 z-30 flex h-14 w-full shrink-0 items-center gap-1.5 bg-slate-50/92 pr-2.5 pl-3 backdrop-blur-md ${className}`}
+      className={`sticky top-0 z-30 mx-auto flex h-14 w-full max-w-app shrink-0 items-center gap-1.5 bg-slate-50/92 pr-2.5 pl-3 backdrop-blur-md ${className}`}
     >
       {/* 좌측 액션 / 뒤로가기 */}
       {leftAction ? (

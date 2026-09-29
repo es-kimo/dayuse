@@ -4,6 +4,7 @@ import { challengesApi } from '../api/challenges';
 import { recordsApi } from '../api/records';
 import type { ChallengeDetail, ChallengeCalendarResponse, CalendarDailyRecordItem, ChallengePeriodInterval } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
+import { Screen } from '../components/screens/Screen';
 import { ChallengeCalendarSection } from '../components/ChallengeCalendarSection';
 import { ChallengePeriodSection } from '../components/ChallengePeriodSection';
 import { PeriodSettlementModal } from '../components/PeriodSettlementModal';
@@ -424,8 +425,11 @@ export const ChallengeDetailPage: React.FC = () => {
     }
   };
 
+  // B 화면은 자체 헤더와 본문 여백을 소유한다.
+  const DetailLayout = uiVersion === 'B' ? Screen : MobileLayout;
+
   return (
-    <MobileLayout showHeader={uiVersion !== 'B'}>
+    <DetailLayout>
       {uiVersion === 'B' ? (
         <ChallengeDetailViewB
           challenge={challenge}
@@ -1102,6 +1106,6 @@ export const ChallengeDetailPage: React.FC = () => {
           }}
         />
       )}
-    </MobileLayout>
+    </DetailLayout>
   );
 };
