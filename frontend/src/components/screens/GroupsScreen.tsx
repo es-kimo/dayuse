@@ -95,8 +95,8 @@ export function GroupsScreen({
         }
       />
       <main
-        className={`flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto pb-24 ${
-          empty ? "justify-center px-6 pt-6 pb-10" : "px-4 pt-1"
+        className={`flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto pb-screen-nav ${
+          empty ? "justify-center px-6 pt-6" : "px-4 pt-1"
         }`}
       >
         {loading ? (

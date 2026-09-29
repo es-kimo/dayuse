@@ -116,7 +116,7 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 text-slate-800">
       {/* Top Header */}
       <SubPageHeader
         title="챌린지"
@@ -169,7 +169,7 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
       />
 
       {/* Main Body */}
-      <div className="mx-auto flex w-full max-w-app flex-col gap-[14px] px-4 pt-1.5 pb-28">
+      <div className="mx-auto flex w-full max-w-app flex-col gap-[14px] px-4 pt-1.5 pb-action-bar">
         {/* 1. Challenge Hero Card */}
         <ChallengeHeroCard
           challenge={challenge}

@@ -80,7 +80,7 @@ export const InviteCreatedPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-400">
+      <div className="flex min-h-dvh items-center justify-center bg-slate-50 text-slate-400">
         <Loader2 className="w-6 h-6 animate-spin" />
       </div>
     );
@@ -89,7 +89,7 @@ export const InviteCreatedPage: React.FC = () => {
   const groupName = group?.name || '새 모임';
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 text-slate-800">
       {/* Header with Close Button */}
       <header className="sticky top-0 z-20 mx-auto flex h-14 w-full max-w-app items-center justify-between bg-slate-50/92 pr-2.5 pl-3 backdrop-blur-md">
         <div className="flex-1" />
@@ -99,7 +99,7 @@ export const InviteCreatedPage: React.FC = () => {
       </header>
 
       {/* Main Body */}
-      <main className="mx-auto flex w-full max-w-app flex-col gap-[18px] px-5 pt-2 pb-12">
+      <main className="mx-auto flex w-full max-w-app flex-col gap-[18px] px-5 pt-2 pb-[calc(3rem+env(safe-area-inset-bottom,0px))]">
         {/* Dayu Mascot & Headline */}
         <div className="mt-3 flex flex-col items-center text-center">
           <Dayu color="#2563EB" face="cheer" size={92} title="응원하는 데이유" />

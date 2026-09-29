@@ -49,7 +49,7 @@ export function TodayScreen({
           </HeaderIconButton>
         }
       />
-      <main className="flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto px-4 pt-1 pb-24">
+      <main className="flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto px-4 pt-1 pb-screen-nav">
         <p className="text-[14px] text-slate-500">
           {new Date().toLocaleDateString('ko-KR', {
             month: 'long',

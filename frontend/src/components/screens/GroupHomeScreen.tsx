@@ -59,7 +59,7 @@ export function GroupHomeScreen({
           { value: "members", label: "멤버", count: group.members.length },
         ]}
       />
-      <main className="flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto px-4 pt-5 pb-24">
+      <main className="flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto px-4 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom,0px))]">
         {tab === "home" && (
           <>
             <SectionHead

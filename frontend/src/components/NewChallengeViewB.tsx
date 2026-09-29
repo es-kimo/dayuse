@@ -120,7 +120,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 pb-28 text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 pb-action-bar text-slate-800">
       {/* Top Header */}
       <SubPageHeader
         title="새 챌린지 만들기"

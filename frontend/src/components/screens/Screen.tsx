@@ -14,7 +14,7 @@ export const screenAssets = {
 export function Screen({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`mx-auto min-h-screen w-full max-w-app bg-slate-50 text-slate-800 flex flex-col relative font-sans antialiased text-[15px] leading-relaxed ${className}`}
+      className={`mx-auto min-h-dvh w-full max-w-app bg-slate-50 text-slate-800 flex flex-col relative font-sans antialiased text-[15px] leading-relaxed ${className}`}
     >
       {children}
     </div>

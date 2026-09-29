@@ -195,14 +195,14 @@ export const NotificationSettingsPage: React.FC = () => {
 
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 text-slate-800">
       {/* Header */}
       <SubPageHeader
         title="알림 설정"
         onBack={() => navigate(-1)}
       />
 
-      <main className="mx-auto flex w-full max-w-app flex-1 flex-col gap-[14px] px-4 pt-1.5 pb-12">
+      <main className="mx-auto flex w-full max-w-app flex-1 flex-col gap-[14px] px-4 pt-1.5 pb-[calc(3rem+env(safe-area-inset-bottom,0px))]">
         <p className="text-[14px] text-slate-500">오늘 인증을 아직 안 한 챌린지가 있을 때만 알려드려요.</p>
 
         {/* iOS 환경 안내 배너 */}

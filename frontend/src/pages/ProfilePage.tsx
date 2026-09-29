@@ -63,7 +63,7 @@ export const ProfilePage: React.FC = () => {
         {/* 상단 바 */}
         <AppMainHeader title="내 정보" />
 
-        <main className="flex flex-1 flex-col gap-[14px] px-4 pt-1 pb-24">
+        <main className="flex flex-1 flex-col gap-[14px] px-4 pt-1 pb-screen-nav">
           {/* 프로필 아바타 영역 (ProfileHeader) */}
           <ProfileHeader
             nickname={user?.nickname || '사용자'}

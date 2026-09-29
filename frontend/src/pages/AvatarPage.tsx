@@ -39,7 +39,7 @@ export const AvatarPage: React.FC = () => {
   const colorMeta = DAYU_COLORS[selectedColor];
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 text-slate-800">
       {/* Top Header */}
       <SubPageHeader
         title="프로필 데이유"
@@ -47,7 +47,7 @@ export const AvatarPage: React.FC = () => {
       />
 
       {/* Main Body */}
-      <main className="mx-auto flex w-full max-w-app flex-col gap-4 px-4 pt-2 pb-28">
+      <main className="mx-auto flex w-full max-w-app flex-col gap-4 px-4 pt-2 pb-action-bar">
         {/* Large Avatar Preview & Title */}
         <div className="flex flex-col items-center gap-3 py-3 text-center">
           <DayuAvatar color={selectedColor} face="cheer" size={136} />

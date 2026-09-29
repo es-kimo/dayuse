@@ -35,7 +35,7 @@ export const PolicyLayout: React.FC<PolicyLayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased font-sans">
+    <div className="min-h-dvh flex flex-col bg-slate-50 text-slate-800 antialiased font-sans">
       {/* 상단 고정 헤더 */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
@@ -121,7 +121,7 @@ export const PolicyLayout: React.FC<PolicyLayoutProps> = ({
       </main>
 
       {/* 바닥글 */}
-      <footer className="border-t border-slate-200 bg-white py-8 px-4 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 bg-white pt-8 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] px-4 text-center text-xs text-slate-500">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="font-medium text-slate-600">dayuse · 목표는 각자, 꾸준함은 함께.</p>
           <div className="flex items-center gap-4 text-slate-500">

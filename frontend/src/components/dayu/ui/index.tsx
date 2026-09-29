@@ -450,7 +450,7 @@ export function FootBar({ children, className = "" }: { children: ReactNode; cla
 /** 스크롤되는 본문. 화면 좌우 여백 16, 카드 사이 14 */
 export function ScreenBody({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <main className={`flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto px-4 pt-1 pb-6 ${className}`}>
+    <main className={`flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto px-4 pt-1 pb-screen-nav ${className}`}>
       {children}
     </main>
   );
@@ -474,7 +474,7 @@ export function AppTabBar({
   return (
     <nav
       aria-label="주요 메뉴"
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app z-30 grid grid-cols-3 border-t border-slate-200 bg-white/95 backdrop-blur-md px-2 pt-1.5 pb-[calc(8px+env(safe-area-inset-bottom))]"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-app z-30 grid grid-cols-3 border-t border-slate-200 bg-white/95 backdrop-blur-md px-2 pt-1.5 pb-[calc(8px+env(safe-area-inset-bottom,0px))]"
     >
       {items.map(({ key, label, Icon }) => (
         <button

@@ -130,11 +130,27 @@
 
 /* Safe area insets for mobile Safari and Android navigation bar */
 @utility pb-safe {
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
 
 @utility pb-safe-nav {
-  padding-bottom: max(3rem, calc(2.5rem + env(safe-area-inset-bottom)));
+  padding-bottom: max(3rem, calc(2.5rem + env(safe-area-inset-bottom, 0px)));
+}
+
+/*
+ * B버전 모바일 하단 탭 네비게이션(ScreenNav) 높이(약 67px) + safe-area-inset-bottom
+ * + 모바일 스크롤 시 쾌적한 여백(약 45px)을 모두 확보하는 전용 패딩
+ */
+@utility pb-screen-nav {
+  padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+}
+
+/*
+ * 하단 고정 액션 버튼(BottomActionBar) 높이(약 78px) + safe-area-inset-bottom
+ * + 모바일 스크롤 시 쾌적한 여백(약 42px)을 모두 확보하는 전용 패딩
+ */
+@utility pb-action-bar {
+  padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 @utility pt-safe {

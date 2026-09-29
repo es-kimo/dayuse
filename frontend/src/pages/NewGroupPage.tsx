@@ -42,7 +42,7 @@ export const NewGroupPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
+    <div className="flex min-h-dvh flex-col bg-slate-50 text-slate-800">
       {/* Header */}
       <SubPageHeader
         title="새 모임 만들기"
@@ -50,7 +50,7 @@ export const NewGroupPage: React.FC = () => {
       />
 
       {/* Main Body */}
-      <main className="mx-auto flex w-full max-w-app flex-1 flex-col px-4 pt-3 pb-28">
+      <main className="mx-auto flex w-full max-w-app flex-1 flex-col px-4 pt-3 pb-action-bar">
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3.5">
           <Card className="flex flex-col gap-2.5">
             <div>
