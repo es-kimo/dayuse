@@ -56,7 +56,7 @@ webpush:
 features:
   ui-refresh-01:
     enabled: true
-    rollout-percentage: 50
+    rollout-percentage: 100
 
 ---
 spring:
@@ -96,7 +96,7 @@ webpush:
 features:
   ui-refresh-01:
     enabled: true
-    rollout-percentage: 50
+    rollout-percentage: 100
 
 ---
 spring:
@@ -150,4 +150,4 @@ webpush:
 features:
   ui-refresh-01:
     enabled: ${FEATURE_UI_REFRESH_01_ENABLED:true}
-    rollout-percentage: ${FEATURE_UI_REFRESH_01_ROLLOUT_PERCENTAGE:50}
+    rollout-percentage: ${FEATURE_UI_REFRESH_01_ROLLOUT_PERCENTAGE:100}

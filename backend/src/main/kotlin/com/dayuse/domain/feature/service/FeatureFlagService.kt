@@ -18,7 +18,7 @@ class FeatureFlagService(
     private val featureAssignmentRepository: FeatureAssignmentRepository,
     private val featureEventAsyncService: FeatureEventAsyncService,
     @Value("\${features.ui-refresh-01.enabled:true}") private val defaultUiRefreshEnabled: Boolean,
-    @Value("\${features.ui-refresh-01.rollout-percentage:50}") private val defaultRolloutPercentage: Int
+    @Value("\${features.ui-refresh-01.rollout-percentage:100}") private val defaultRolloutPercentage: Int
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
