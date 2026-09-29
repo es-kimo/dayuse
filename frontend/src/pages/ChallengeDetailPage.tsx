@@ -425,7 +425,7 @@ export const ChallengeDetailPage: React.FC = () => {
   };
 
   return (
-    <MobileLayout>
+    <MobileLayout showHeader={uiVersion !== 'B'}>
       {uiVersion === 'B' ? (
         <ChallengeDetailViewB
           challenge={challenge}
@@ -438,6 +438,7 @@ export const ChallengeDetailPage: React.FC = () => {
           isTodayCompleted={isTodayCompleted}
           streakCount={streakCount}
           calendarMonthDays={calendarMonthDays}
+          currentUserId={user?.id}
           onBack={() => {
             if (window.history.length > 1) {
               navigate(-1);
