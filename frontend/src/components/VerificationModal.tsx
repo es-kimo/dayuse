@@ -23,6 +23,7 @@ import {
   Repeat,
   Trash2,
   Smartphone,
+  ChevronRight,
 } from 'lucide-react';
 import { IosInstallGuideModal } from './IosInstallGuideModal';
 import { isStandalone, isIos } from '../utils/webPush';
@@ -298,20 +299,27 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             <ModalTitle className="text-base font-bold text-slate-800">인증이 완료되었습니다! 🎉</ModalTitle>
             <ModalDescription className="text-xs text-slate-500">오늘의 멋진 도전을 기록했습니다.</ModalDescription>
           </div>
-          <div className="pt-2 space-y-2">
-            <button
-              type="button"
-              onClick={() => {
-                setPostSuccessAction('share');
-                setOpen(false);
-              }}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-[0.98] shadow-md shadow-blue-500/20"
-            >
-              <Share2 className="w-4 h-4" />
-              <span>오늘 인증 공유 카드 만들기</span>
-            </button>
 
-            {!isStandalone() && (
+          {/* 친절한 멘트와 함께 스포트라이트를 받는 PWA 홈 화면 추가 카드 */}
+          {!isStandalone() && (
+            <div className="rounded-2xl border border-blue-200/80 bg-gradient-to-b from-blue-50/90 via-sky-50/50 to-white p-4 text-left shadow-2xs">
+              <div className="flex items-start gap-3">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-xs">
+                  <Smartphone className="size-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[14px] font-extrabold text-slate-800">내일도 잊지 않고 인증하려면?</span>
+                    <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[10.5px] font-bold text-blue-700">
+                      설치 3초
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[12.5px] leading-relaxed text-slate-600">
+                    매번 브라우저 찾지 않고, <strong>홈 화면에서 카톡처럼 1초 만에</strong> 바로 열어보세요!
+                  </p>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={() => {
@@ -319,12 +327,31 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                   setPostSuccessAction('install_guide');
                   setOpen(false);
                 }}
-                className="w-full py-2.5 bg-blue-50/80 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
+                className="mt-3.5 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2.5 text-[13px] font-bold text-white shadow-xs transition-all hover:bg-blue-700 active:scale-[0.98]"
               >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>내일도 바로 열기 (홈 화면에 앱 추가)</span>
+                <Smartphone className="size-4" />
+                <span>홈 화면에 앱 추가하기</span>
+                <ChevronRight className="size-3.5 opacity-80" />
               </button>
-            )}
+            </div>
+          )}
+
+          <div className="space-y-2 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setPostSuccessAction('share');
+                setOpen(false);
+              }}
+              className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold transition active:scale-[0.98] ${
+                !isStandalone()
+                  ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                  : 'bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:bg-blue-500'
+              }`}
+            >
+              <Share2 className="size-4" />
+              <span>오늘 인증 공유 카드 만들기</span>
+            </button>
 
             <button
               type="button"
@@ -332,7 +359,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 setPostSuccessAction('success');
                 requestClose();
               }}
-              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition"
+              className="w-full rounded-xl bg-slate-100 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-200"
             >
               확인
             </button>
