@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { isAndroid, isIos, urlBase64ToUint8Array } from './webPush';
 
 describe('webPush 유틸리티 함수', () => {

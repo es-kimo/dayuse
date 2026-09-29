@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { verificationsApi } from '../api/verifications';
 import type { CommentItem } from '../types';
 import { formatKstDateTime } from '../utils/date';
-import { X, Send, Loader2, User as UserIcon } from 'lucide-react';
+import { X, Send, Loader2 } from 'lucide-react';
 import { BottomSheet, BottomSheetTitle, BottomSheetClose } from './ui/BottomSheet';
 import { SheetGrab } from './dayu/ui';
+import { DayuAvatar } from './brand/DayuAvatar';
 
 interface CommentsBottomSheetProps {
   isOpen: boolean;
@@ -120,17 +121,12 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
           ) : (
             comments.map((comment) => (
               <div key={comment.id} className="flex items-start gap-2.5">
-                {comment.authorProfileImageUrl ? (
-                  <img
-                    src={comment.authorProfileImageUrl}
-                    alt={comment.authorNickname}
-                    className="mt-0.5 size-9 shrink-0 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-500">
-                    <UserIcon className="size-5" />
-                  </div>
-                )}
+                <DayuAvatar
+                  profileImageUrl={comment.authorProfileImageUrl}
+                  alt={comment.authorNickname}
+                  size={36}
+                  className="mt-0.5"
+                />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-1.5">
                     <b className="truncate text-[14px] font-bold text-slate-800">{comment.authorNickname}</b>
