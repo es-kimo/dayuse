@@ -79,7 +79,7 @@ export function ScreenNav({ active, pending = 0 }: { active: "today" | "groups" 
             <Icon className={`size-[22px] ${on ? "text-blue-600" : ""}`} />
             <span>{label}</span>
             {key === "today" && pending > 0 && (
-              <span className="absolute top-1 left-1/2 ml-[18px] grid h-4 min-w-4 place-items-center rounded-lg bg-blue-600 px-1 text-[10px] leading-4 font-bold text-white">
+              <span className="absolute top-1 left-1/2 grid h-4 min-w-4 place-items-center rounded-lg bg-blue-600 px-1 text-[10px] leading-4 font-bold text-white">
                 {pending}
               </span>
             )}
