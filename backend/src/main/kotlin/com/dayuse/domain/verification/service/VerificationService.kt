@@ -32,7 +32,8 @@ class VerificationService(
     private val dailyRecordService: DailyRecordService? = null,
     private val dailyRecordRepository: DailyRecordRepository? = null,
     private val shareCardRepository: com.dayuse.domain.share.ShareCardRepository? = null,
-    private val challengeProgressService: com.dayuse.domain.challenge.service.ChallengeProgressService? = null
+    private val challengeProgressService: com.dayuse.domain.challenge.service.ChallengeProgressService? = null,
+    private val featureFlagService: com.dayuse.domain.feature.service.FeatureFlagService? = null
 ) {
 
     fun createVerification(
@@ -112,16 +113,28 @@ class VerificationService(
                 saved,
                 challenge
             )
+            featureFlagService?.evaluateAndLogCertAction(
+                userId = userId,
+                isSuccess = true,
+                metadata = mapOf("challengeId" to challenge.id)
+            )
             return toDetailResponse(saved)
-        } catch (e: DataIntegrityViolationException) {
-            val constraintViolation = generateSequence<Throwable>(e) { it.cause }
-                .filterIsInstance<ConstraintViolationException>()
-                .firstOrNull()
+        } catch (e: Exception) {
+            featureFlagService?.evaluateAndLogCertAction(
+                userId = userId,
+                isSuccess = false,
+                errorMessage = e.message ?: "인증 등록 실패",
+                metadata = mapOf("challengeId" to challenge.id)
+            )
+            if (e is DataIntegrityViolationException) {
+                val constraintViolation = generateSequence<Throwable>(e) { it.cause }
+                    .filterIsInstance<ConstraintViolationException>()
+                    .firstOrNull()
 
-            if (constraintViolation?.constraintName == "uk_verification_challenge_user_date") {
-                throw DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")
+                if (constraintViolation?.constraintName == "uk_verification_challenge_user_date") {
+                    throw DuplicateResourceException("해당 챌린지는 대상 날짜에 이미 인증을 완료했습니다.")
+                }
             }
-
             throw e
         }
     }

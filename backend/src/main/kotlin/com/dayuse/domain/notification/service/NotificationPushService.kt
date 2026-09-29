@@ -33,7 +33,11 @@ class NotificationPushService(
     ): PushDispatchResult {
         val subscriptions = pushSubscriptionRepository.findAllByUserIdAndIsActiveTrue(userId)
         if (subscriptions.isEmpty()) {
-            return PushDispatchResult(0, 0, 0)
+            return PushDispatchResult(
+                0,
+                0,
+                0
+            )
         }
 
         val payloadJson = objectMapper.writeValueAsString(payload)
@@ -64,7 +68,11 @@ class NotificationPushService(
                 rejectedCount++
             }
         }
-        return PushDispatchResult(successCount, expiredCount, rejectedCount)
+        return PushDispatchResult(
+            successCount,
+            expiredCount,
+            rejectedCount
+        )
     }
 
     @Transactional
@@ -79,7 +87,7 @@ class NotificationPushService(
         }
 
         val testPayload = PushPayload(
-            title = "dayuse 테스트 알림",
+            title = "데이유즈 테스트 알림",
             body = "알림 설정이 정상적으로 완료되었습니다! 매일 지정하신 시간에 리마인더를 보내드릴게요.",
             url = "/today",
             tag = "dayuse-test"

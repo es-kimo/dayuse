@@ -53,6 +53,11 @@ webpush:
   private-key: ${VAPID_PRIVATE_KEY:NghqENb7xUAkfU6oc9QJJSjNbO1BRPRMOK_rtJqYjNA}
   subject: ${VAPID_SUBJECT:mailto:support@dayuse.kr}
 
+features:
+  ui-refresh-01:
+    enabled: true
+    rollout-percentage: 50
+
 ---
 spring:
   config:
@@ -87,6 +92,11 @@ webpush:
   public-key: BF5PuGK_jwgfQpNNUcTf75z93uuqrwrN1yl4Vkxnhsfi0vWu_dX6vOxFY6DXUyiWVTxqIxz4-Jwz3gGBD-om-EA
   private-key: NghqENb7xUAkfU6oc9QJJSjNbO1BRPRMOK_rtJqYjNA
   subject: mailto:test@dayuse.kr
+
+features:
+  ui-refresh-01:
+    enabled: true
+    rollout-percentage: 50
 
 ---
 spring:
@@ -136,3 +146,8 @@ webpush:
   public-key: ${VAPID_PUBLIC_KEY}
   private-key: ${VAPID_PRIVATE_KEY}
   subject: ${VAPID_SUBJECT:mailto:support@dayuse.kr}
+
+features:
+  ui-refresh-01:
+    enabled: ${FEATURE_UI_REFRESH_01_ENABLED:true}
+    rollout-percentage: ${FEATURE_UI_REFRESH_01_ROLLOUT_PERCENTAGE:50}
