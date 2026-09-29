@@ -63,8 +63,11 @@ export const App: React.FC = () => {
               <Route path="/invite/:inviteCode" element={<InviteLandingPage />} />
               <Route path="/today" element={<TodayPage />} />
               <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
+              <Route path="/me/notifications" element={<NotificationSettingsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/me" element={<ProfilePage />} />
               <Route path="/profile/avatar" element={<AvatarCustomPage />} />
+              <Route path="/me/avatar" element={<AvatarCustomPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/guide" element={<GuidePage />} />
