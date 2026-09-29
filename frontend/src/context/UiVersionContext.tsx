@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { featuresApi } from '../api/features';
 
 export type UiVersion = 'A' | 'B';
 
@@ -6,6 +7,7 @@ interface UiVersionContextType {
   uiVersion: UiVersion;
   setUiVersion: (version: UiVersion) => void;
   toggleUiVersion: () => void;
+  isKillSwitchActive?: boolean;
 }
 
 const STORAGE_KEY = 'dayuse_ui_version';
@@ -13,7 +15,7 @@ const STORAGE_KEY = 'dayuse_ui_version';
 function getInitialUiVersion(): UiVersion {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
-    const queryVersion = params.get('ui')?.toUpperCase();
+    const queryVersion = (params.get('ui_variant') || params.get('ui'))?.toUpperCase();
     if (queryVersion === 'A' || queryVersion === 'B') {
       return queryVersion as UiVersion;
     }
@@ -29,6 +31,7 @@ const UiVersionContext = createContext<UiVersionContextType | undefined>(undefin
 
 export const UiVersionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [uiVersion, setUiVersionState] = useState<UiVersion>(getInitialUiVersion);
+  const [isKillSwitchActive, setIsKillSwitchActive] = useState<boolean>(false);
 
   const setUiVersion = (version: UiVersion) => {
     setUiVersionState(version);
@@ -40,16 +43,36 @@ export const UiVersionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   useEffect(() => {
-    // 쿼리 파라미터가 있으면 동기화
     const params = new URLSearchParams(window.location.search);
-    const queryVersion = params.get('ui')?.toUpperCase();
+    const queryVersion = (params.get('ui_variant') || params.get('ui'))?.toUpperCase();
+
+    // 1. QA/운영자 쿼리 파라미터가 명시된 경우 즉시 우선 적용
     if (queryVersion === 'A' || queryVersion === 'B') {
       setUiVersion(queryVersion as UiVersion);
     }
+
+    // 2. 서버 피처 플래그 배정 조회 (고정 배정 / 비상 킬스위치 동기화)
+    let isMounted = true;
+    featuresApi.getFeatureAssignment('ui_refresh_01', queryVersion || undefined)
+      .then((assignment) => {
+        if (!isMounted) return;
+        setIsKillSwitchActive(assignment.isKillSwitchActive);
+        // URL 강제 파라미터가 없었던 경우에만 서버 배정 결과 반영
+        if (queryVersion !== 'A' && queryVersion !== 'B') {
+          setUiVersion(assignment.variant);
+        }
+      })
+      .catch((err) => {
+        console.warn('[UiVersionProvider] 피처 플래그 배정 동기화 실패, 로컬 캐시 유지:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
-    <UiVersionContext.Provider value={{ uiVersion, setUiVersion, toggleUiVersion }}>
+    <UiVersionContext.Provider value={{ uiVersion, setUiVersion, toggleUiVersion, isKillSwitchActive }}>
       {children}
     </UiVersionContext.Provider>
   );

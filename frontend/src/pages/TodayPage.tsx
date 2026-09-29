@@ -11,10 +11,12 @@ import { todayApi } from '../api/today';
 import type { TodayAction } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useUiVersion } from '../context/UiVersionContext';
+import { useFeatureImpression } from '../hooks/useFeatureLogging';
 
 export const TodayPage: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { uiVersion } = useUiVersion();
+  useFeatureImpression('ui_refresh_01', uiVersion, 'today', !authLoading && isAuthenticated);
   const navigate = useNavigate();
   const [actions, setActions] = useState<TodayAction[]>([]);
   const [loadError, setLoadError] = useState('');

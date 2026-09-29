@@ -64,6 +64,7 @@ class SecurityConfig(
                     .requestMatchers("/api/v1/auth/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/invites/*").permitAll()
                     .requestMatchers("/api/v1/public/**").permitAll()
+                    .requestMatchers("/api/v1/features/**").permitAll()
                     .requestMatchers("/api/v1/mock-s3/**").permitAll()
                     .requestMatchers("/error", "/favicon.ico").permitAll()
                     .anyRequest().authenticated()

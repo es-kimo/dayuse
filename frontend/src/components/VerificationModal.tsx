@@ -4,6 +4,8 @@ import { verificationsApi } from '../api/verifications';
 import { recordsApi } from '../api/records';
 import type { TodayAction, VerificationDetail } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useUiVersion } from '../context/UiVersionContext';
+import { logCertFlowAction } from '../hooks/useFeatureLogging';
 import { ShareCardModal } from './ShareCardModal';
 import { useClipboardImagePaste, validateImageFile } from '../hooks/useClipboardImagePaste';
 import { Modal, ModalTitle, ModalDescription, ModalClose } from './ui/Modal';
@@ -38,6 +40,12 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   onSuccess,
 }) => {
   const { user } = useAuth();
+  const { uiVersion } = useUiVersion();
+
+  useEffect(() => {
+    void logCertFlowAction(uiVersion, 'CERT_FLOW_ENTER', { challengeId: action.challengeId });
+  }, [uiVersion, action.challengeId]);
+
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pendingReplaceFile, setPendingReplaceFile] = useState<File | null>(null);
@@ -195,6 +203,10 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       }
 
       setCreatedVerification(savedVerification);
+      void logCertFlowAction(uiVersion, 'CERT_FLOW_SUCCESS', {
+        challengeId: action.challengeId,
+        verificationId: savedVerification.id,
+      });
     } catch (err: any) {
       console.error('인증 등록 실패:', err);
       const msg =
@@ -205,6 +217,10 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       setErrorMessage(msg);
       // 업로드 실패 시 입력값 유지 및 재시도 활성화
       setCanRetry(true);
+      void logCertFlowAction(uiVersion, 'CERT_FLOW_FAIL', {
+        challengeId: action.challengeId,
+        error: msg,
+      });
     } finally {
       setIsSubmitting(false);
     }
