@@ -325,3 +325,52 @@ export const MOCK_NOTIFICATION_SETTINGS = {
   hasActiveSubscription: true,
   vapidPublicKey: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
 };
+
+export const MOCK_DEPOSIT_REPORTS = [
+  {
+    id: 101,
+    groupId: 6,
+    userId: 2,
+    userNickname: '김운동',
+    userProfileImageUrl: null,
+    depositorName: '김운동',
+    depositDate: '2026-03-28',
+    totalAmount: 5000,
+    status: 'WAITING_CONFIRMATION',
+    createdAt: '2026-03-28T14:20:00Z',
+    items: [
+      {
+        id: 1,
+        challengeId: 1,
+        challengeTitle: '매일 1알고리즘 문제 풀기',
+        date: '2026-03-27',
+        penaltyAmount: 5000,
+      },
+    ],
+    auditLogs: [],
+  },
+  {
+    id: 102,
+    groupId: 6,
+    userId: 3,
+    userNickname: '박기상',
+    userProfileImageUrl: null,
+    depositorName: '박기상',
+    depositDate: '2026-03-26',
+    totalAmount: 5000,
+    status: 'CONFIRMED',
+    processedByNickname: '류코딩',
+    processedAt: '2026-03-26T18:00:00Z',
+    createdAt: '2026-03-26T17:30:00Z',
+    items: [
+      {
+        id: 2,
+        challengeId: 2,
+        challengeTitle: '6시 기상 습관',
+        date: '2026-03-25',
+        penaltyAmount: 5000,
+      },
+    ],
+    auditLogs: [],
+  },
+];

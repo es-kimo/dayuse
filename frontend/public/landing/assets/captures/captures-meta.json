@@ -11,7 +11,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:14.430Z"
+      "capturedAt": "2026-09-29T07:02:17.658Z"
     },
     {
       "id": "02-groups-list",
@@ -24,7 +24,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:16.328Z"
+      "capturedAt": "2026-09-29T07:02:19.578Z"
     },
     {
       "id": "03-group-feed",
@@ -37,7 +37,7 @@
       "width": 780,
       "height": 3260,
       "aspectRatio": "780/3260",
-      "capturedAt": "2026-09-29T06:57:18.390Z"
+      "capturedAt": "2026-09-29T07:02:21.983Z"
     },
     {
       "id": "03b-group-challenges",
@@ -50,7 +50,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:20.066Z"
+      "capturedAt": "2026-09-29T07:02:24.664Z"
     },
     {
       "id": "03c-group-members",
@@ -63,7 +63,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:22.691Z"
+      "capturedAt": "2026-09-29T07:02:26.683Z"
     },
     {
       "id": "04-challenge-calendar",
@@ -76,7 +76,7 @@
       "width": 780,
       "height": 2488,
       "aspectRatio": "780/2488",
-      "capturedAt": "2026-09-29T06:57:24.574Z"
+      "capturedAt": "2026-09-29T07:02:28.506Z"
     },
     {
       "id": "05-today-actions",
@@ -89,7 +89,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:26.186Z"
+      "capturedAt": "2026-09-29T07:02:30.173Z"
     },
     {
       "id": "06-group-new",
@@ -102,7 +102,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:27.835Z"
+      "capturedAt": "2026-09-29T07:02:31.831Z"
     },
     {
       "id": "07-challenge-new",
@@ -115,7 +115,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:29.504Z"
+      "capturedAt": "2026-09-29T07:02:33.899Z"
     },
     {
       "id": "08-verification-modal",
@@ -128,7 +128,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:31.988Z"
+      "capturedAt": "2026-09-29T07:02:36.649Z"
     },
     {
       "id": "08b-modal-unchecked-sheet",
@@ -141,7 +141,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:34.566Z"
+      "capturedAt": "2026-09-29T07:02:39.575Z"
     },
     {
       "id": "08c-modal-comments-sheet",
@@ -154,7 +154,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:37.165Z"
+      "capturedAt": "2026-09-29T07:02:42.485Z"
     },
     {
       "id": "08d-modal-deposit-report",
@@ -167,7 +167,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:39.957Z"
+      "capturedAt": "2026-09-29T07:02:45.098Z"
     },
     {
       "id": "08e-modal-abort-challenge",
@@ -180,7 +180,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:43.192Z"
+      "capturedAt": "2026-09-29T07:02:48.636Z"
     },
     {
       "id": "09-share-card",
@@ -193,7 +193,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:44.902Z"
+      "capturedAt": "2026-09-29T07:02:50.366Z"
     },
     {
       "id": "10-invite-landing",
@@ -206,7 +206,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:46.567Z"
+      "capturedAt": "2026-09-29T07:02:52.072Z"
     },
     {
       "id": "11-login",
@@ -219,7 +219,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:48.763Z"
+      "capturedAt": "2026-09-29T07:02:53.786Z"
     },
     {
       "id": "12-profile",
@@ -232,7 +232,7 @@
       "width": 780,
       "height": 1756,
       "aspectRatio": "780/1756",
-      "capturedAt": "2026-09-29T06:57:50.434Z"
+      "capturedAt": "2026-09-29T07:02:55.904Z"
     },
     {
       "id": "13-notification-settings",
@@ -245,7 +245,20 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:57:58.211Z"
+      "capturedAt": "2026-09-29T07:03:03.355Z"
+    },
+    {
+      "id": "14-settlement-manage",
+      "title": "모임장 정산 및 입금 관리",
+      "caption": "멤버들의 벌금 입금 신고 내역 확인, 승인 및 반려 관리",
+      "isPrimary": true,
+      "pngFile": "14-settlement-manage.png",
+      "webpFile": "14-settlement-manage.webp",
+      "assetPath": "/landing/assets/captures/14-settlement-manage.webp",
+      "width": 780,
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T07:03:06.230Z"
     }
   ]
 }

@@ -285,6 +285,18 @@ const SCREENS = [
       await new Promise((r) => setTimeout(r, 300));
     },
   },
+  {
+    id: '14-settlement-manage',
+    title: '모임장 정산 및 입금 관리',
+    caption: '멤버들의 벌금 입금 신고 내역 확인, 승인 및 반려 관리',
+    route: '/groups/6/settlements',
+    requiresAuth: true,
+    isPrimary: true,
+    action: async (page) => {
+      await page.waitForSelector('main', { timeout: 5000 }).catch(() => {});
+      await new Promise((r) => setTimeout(r, 400));
+    },
+  },
 ];
 
 async function captureAll(baseUrl = 'http://localhost:5173') {
@@ -366,7 +378,13 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
     } else if (/\/groups\/\d+\/unpaid-records/.test(url) && method === 'GET') {
       respondJson(mock.MOCK_UNPAID_RECORDS);
     } else if (/\/groups\/\d+\/deposit-reports/.test(url) && method === 'GET') {
-      respondJson([]);
+      const parsedUrl = new URL(url);
+      const status = parsedUrl.searchParams.get('status');
+      if (status) {
+        respondJson(mock.MOCK_DEPOSIT_REPORTS.filter((r) => r.status === status));
+      } else {
+        respondJson(mock.MOCK_DEPOSIT_REPORTS);
+      }
     } else if (/\/groups\/\d+\/account/.test(url)) {
       respondJson(mock.MOCK_SETTLEMENT_SUMMARY.account);
     } else if (/\/groups\/\d+\/today/.test(url)) {
