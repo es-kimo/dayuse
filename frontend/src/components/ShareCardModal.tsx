@@ -99,12 +99,12 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
 
   const tokenRequestRef = useRef<Promise<string> | null>(null);
 
-  // 모달 오픈 시 배경 스크롤 방지
+  // 모달 언마운트 시 body overflow 잠금 잔여물 정리 (안전장치)
   useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = originalOverflow;
+      if (document.body.style.overflow === 'hidden') {
+        document.body.style.overflow = '';
+      }
     };
   }, []);
 

@@ -62,6 +62,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const [open, setOpen] = useState<boolean>(true);
   const requestClose = () => setOpen(false);
   const [createdVerification, setCreatedVerification] = useState<VerificationDetail | null>(null);
+  const [postSuccessAction, setPostSuccessAction] = useState<'success' | 'share'>('success');
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -87,17 +88,23 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
   const [selectedTargetDate, setSelectedTargetDate] = useState<string>(initialTargetDate);
 
-  // 모달 오픈 시 배경 스크롤 방지 및 언마운트 시 ObjectURL 해제
+  // previewUrl 변경 또는 언마운트 시 ObjectURL 해제
   useEffect(() => {
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = originalOverflow;
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
       }
     };
   }, [previewUrl]);
+
+  // 모달 언마운트 시 body overflow 잠금 잔여물 정리 (안전장치)
+  useEffect(() => {
+    return () => {
+      if (document.body.style.overflow === 'hidden') {
+        document.body.style.overflow = '';
+      }
+    };
+  }, []);
 
   // 새로운 파일 적용 파이프라인 (검증, 미리보기 URL 생성, 메모리 해제)
   const applyNewFile = (newFile: File) => {
@@ -227,13 +234,34 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   };
 
   if (createdVerification) {
+    if (showShareModal) {
+      return (
+        <ShareCardModal
+          cardType="TODAY_VERIFICATION"
+          targetId={createdVerification.id}
+          title={action.challengeTitle}
+          userNickname={user?.nickname || '참여자'}
+          imageUrl={previewUrl || createdVerification.imageUrl}
+          comment={createdVerification.comment}
+          targetDate={createdVerification.targetDate}
+          onClose={onSuccess}
+        />
+      );
+    }
+
     return (
       <Modal
         open={open}
         animateInitialOpen
         onOpenChange={setOpen}
         onOpenChangeComplete={(isOpen) => {
-          if (!isOpen) onSuccess();
+          if (!isOpen) {
+            if (postSuccessAction === 'share') {
+              setShowShareModal(true);
+            } else {
+              onSuccess();
+            }
+          }
         }}
         backdropClassName="bg-black/60 backdrop-blur-xs"
         className="bg-white w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl space-y-4"
@@ -248,7 +276,11 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           </div>
           <div className="pt-2 space-y-2">
             <button
-              onClick={() => setShowShareModal(true)}
+              type="button"
+              onClick={() => {
+                setPostSuccessAction('share');
+                setOpen(false);
+              }}
               className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-[0.98] shadow-md shadow-blue-500/20"
             >
               <Share2 className="w-4 h-4" />
@@ -256,27 +288,15 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={requestClose}
+              onClick={() => {
+                setPostSuccessAction('success');
+                requestClose();
+              }}
               className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition"
             >
               확인
             </button>
           </div>
-          {showShareModal && (
-            <ShareCardModal
-              cardType="TODAY_VERIFICATION"
-              targetId={createdVerification.id}
-              title={action.challengeTitle}
-              userNickname={user?.nickname || '참여자'}
-              imageUrl={previewUrl || createdVerification.imageUrl}
-              comment={createdVerification.comment}
-              targetDate={createdVerification.targetDate}
-              onClose={() => {
-                setShowShareModal(false);
-                onSuccess();
-              }}
-            />
-          )}
         </>
       </Modal>
     );
