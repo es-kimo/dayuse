@@ -11,7 +11,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:15.479Z"
+      "capturedAt": "2026-09-29T06:07:58.275Z"
     },
     {
       "id": "02-groups-list",
@@ -24,7 +24,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:17.389Z"
+      "capturedAt": "2026-09-29T06:07:59.926Z"
     },
     {
       "id": "03-group-feed",
@@ -37,7 +37,7 @@
       "width": 780,
       "height": 3116,
       "aspectRatio": "780/3116",
-      "capturedAt": "2026-09-29T05:41:19.541Z"
+      "capturedAt": "2026-09-29T06:08:02.025Z"
     },
     {
       "id": "03b-group-challenges",
@@ -50,7 +50,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:21.274Z"
+      "capturedAt": "2026-09-29T06:08:04.020Z"
     },
     {
       "id": "03c-group-members",
@@ -63,7 +63,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:22.961Z"
+      "capturedAt": "2026-09-29T06:08:05.976Z"
     },
     {
       "id": "04-challenge-calendar",
@@ -76,7 +76,7 @@
       "width": 780,
       "height": 2434,
       "aspectRatio": "780/2434",
-      "capturedAt": "2026-09-29T05:41:24.815Z"
+      "capturedAt": "2026-09-29T06:08:07.805Z"
     },
     {
       "id": "05-today-actions",
@@ -89,7 +89,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:26.556Z"
+      "capturedAt": "2026-09-29T06:08:09.427Z"
     },
     {
       "id": "06-group-new",
@@ -102,7 +102,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:28.208Z"
+      "capturedAt": "2026-09-29T06:08:11.050Z"
     },
     {
       "id": "07-challenge-new",
@@ -113,9 +113,9 @@
       "webpFile": "07-challenge-new.webp",
       "assetPath": "/landing/assets/captures/07-challenge-new.webp",
       "width": 780,
-      "height": 4034,
-      "aspectRatio": "780/4034",
-      "capturedAt": "2026-09-29T05:41:30.223Z"
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T06:08:12.695Z"
     },
     {
       "id": "08-verification-modal",
@@ -128,7 +128,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:32.746Z"
+      "capturedAt": "2026-09-29T06:08:15.248Z"
     },
     {
       "id": "08b-modal-unchecked-sheet",
@@ -141,7 +141,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:35.468Z"
+      "capturedAt": "2026-09-29T06:08:17.833Z"
     },
     {
       "id": "08c-modal-comments-sheet",
@@ -154,7 +154,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:38.029Z"
+      "capturedAt": "2026-09-29T06:08:20.356Z"
     },
     {
       "id": "08d-modal-deposit-report",
@@ -167,7 +167,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:40.805Z"
+      "capturedAt": "2026-09-29T06:08:22.911Z"
     },
     {
       "id": "08e-modal-abort-challenge",
@@ -180,7 +180,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:44.064Z"
+      "capturedAt": "2026-09-29T06:08:26.007Z"
     },
     {
       "id": "09-share-card",
@@ -193,7 +193,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:45.787Z"
+      "capturedAt": "2026-09-29T06:08:27.662Z"
     },
     {
       "id": "10-invite-landing",
@@ -206,7 +206,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:48.137Z"
+      "capturedAt": "2026-09-29T06:08:29.326Z"
     },
     {
       "id": "11-login",
@@ -219,7 +219,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:49.717Z"
+      "capturedAt": "2026-09-29T06:08:30.901Z"
     },
     {
       "id": "12-profile",
@@ -232,7 +232,7 @@
       "width": 780,
       "height": 1764,
       "aspectRatio": "780/1764",
-      "capturedAt": "2026-09-29T05:41:51.407Z"
+      "capturedAt": "2026-09-29T06:08:32.573Z"
     },
     {
       "id": "13-notification-settings",
@@ -245,7 +245,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T05:41:58.793Z"
+      "capturedAt": "2026-09-29T06:08:39.976Z"
     }
   ]
 }

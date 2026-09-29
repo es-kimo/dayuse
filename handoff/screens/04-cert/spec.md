@@ -1,8 +1,8 @@
 # 04 사진 인증
 
-- 라우트: `(오늘/모임 홈 위 바텀시트)`
-- 기존 페이지(추정): `CertifyModal`
-- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). mock.html의 `<i data-icon="X">`는 lucide-react `X`, `<i data-dayu="색" data-face="표정">`은 `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
+- 라우트/위치: `(오늘/모임 홈 위 바텀시트)`
+- 기존 파일(추정): `CertifyModal`
+- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). `<i data-icon="X">` = lucide-react `X`, `<i data-dayu="색" data-face="표정">` = `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
 
 ## 바꾸는 이유와 변경점
 구성은 좋았어요. 닫기 버튼 포커스 링이 과하게 커 보였고, 사진을 고른 뒤 상태가 없었어요.
@@ -13,4 +13,4 @@
 카메라 촬영이나 갤러리 선택을 눌러 보세요.
 
 ## 데이터 · 상태 · 동작
-상태: idle → photoSelected(미리보기+다시 선택) → submitting. 사진 없으면 제출 버튼 disabled + 문구 "사진을 먼저 올려 주세요". 제출 성공 시 시트 닫고 토스트 "인증했어요 · N일 연속". 닫기 버튼 40px, 포커스 링은 기본 2px.
+상태: idle → photoSelected(미리보기+다시 선택) → submitting. 사진 없으면 제출 버튼 disabled + "사진을 먼저 올려 주세요". 성공 시 시트 닫고 토스트 "인증했어요 · N일 연속". 닫기 버튼 40px, 포커스 링 2px.

@@ -321,4 +321,17 @@ textarea.inp{height:auto;min-height:84px;padding:12px 14px;line-height:1.5;resiz
 .swatch button{border:0;background:transparent;padding:3px;border-radius:50%;box-shadow:0 0 0 2px transparent;transition:box-shadow .15s}
 .swatch button.on{box-shadow:0 0 0 2.5px var(--c)}
 .stack .av.dy{border:2px solid #fff}
+.btn.danger{background:#DC2626}.btn.danger:hover{background:#B91C1C}
+.linkbtn{border:0;background:none;padding:4px 0;display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;color:var(--ink3)}
+.pendrow{width:100%;border-color:var(--warnln);background:#FFFDF5;text-align:left}
+.scrim.mid{align-items:center;justify-content:center;padding:16px}.modal{text-align:left}
+.modal{width:100%;background:#fff;border-radius:24px;padding:22px 20px 18px;display:flex;flex-direction:column;gap:16px;animation:up .25s cubic-bezier(.2,.8,.2,1)}
+.stoplist{list-style:none;margin:0;padding:12px 14px;border-radius:14px;background:var(--page);display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--ink2)}
+.stoplist li{display:flex;gap:8px;align-items:center}
+.cmts{overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:4px 0}
+.cmt{display:flex;gap:10px;align-items:flex-start}
+.cmt b{font-size:14px}.cmt p{font-size:14.5px;margin-top:2px}
+.cmtbar{display:flex;gap:8px;align-items:center;padding:10px 0 14px;border-top:1px solid var(--line);margin:0 -20px;padding-left:16px;padding-right:16px}
+.cmtbar .inp{height:44px}
+.cmtbar .btn{width:44px;padding:0;height:44px}
 @media (prefers-reduced-motion:reduce){.sheet{animation:none}.prog i,.toast,.switch,.switch::after{transition:none}.body{scroll-behavior:auto}}

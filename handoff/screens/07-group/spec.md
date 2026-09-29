@@ -1,8 +1,8 @@
 # 07 모임 홈
 
-- 라우트: `/groups/:id`
-- 기존 페이지(추정): `GroupDetailPage`
-- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). mock.html의 `<i data-icon="X">`는 lucide-react `X`, `<i data-dayu="색" data-face="표정">`은 `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
+- 라우트/위치: `/groups/:id (홈 탭)`
+- 기존 파일(추정): `GroupDetailPage`
+- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). `<i data-icon="X">` = lucide-react `X`, `<i data-dayu="색" data-face="표정">` = `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
 
 ## 바꾸는 이유와 변경점
 모임 홈 맨 위를 정산·계좌 카드가 차지해서, 매일 확인하는 오늘 할 일과 피드가 한참 아래에 있었어요.
@@ -13,4 +13,4 @@
 챌린지 탭, 오늘 할 일의 인증하기를 눌러 보세요.
 
 ## 데이터 · 상태 · 동작
-탭: 홈/챌린지/멤버. 홈 순서 = 내 오늘 할 일 → 오늘 누가 했을까(멤버 데이유 + 완료 체크) → 인증 피드 → 정산 요약(한 카드). 계좌 미등록 안내는 isHost일 때만. 응원 버튼 없음(제외 결정).
+홈 순서 = 내 오늘 할 일 → 확인 안 된 기록 N건 줄(있을 때만, 누르면 미확인 기록 시트) → 오늘 누가 했을까 → 인증 피드(댓글 버튼 → 댓글 시트) → 벌금 정산 카드(내가 낼 금액 + "입금 신고" → 입금 신고 시트, 신고 후 "확인 대기"). 응원 버튼 없음.

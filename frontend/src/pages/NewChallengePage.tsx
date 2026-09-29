@@ -3,6 +3,8 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { groupsApi } from '../api/groups';
 import { useAuth } from '../context/AuthContext';
+import { useUiVersion } from '../context/UiVersionContext';
+import { NewChallengeViewB } from '../components/NewChallengeViewB';
 import { MobileLayout } from '../components/MobileLayout';
 import {
   ArrowLeft,
@@ -429,6 +431,52 @@ export const NewChallengePage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  const { uiVersion } = useUiVersion();
+
+  if (uiVersion === 'B') {
+    return (
+      <NewChallengeViewB
+        title={title}
+        setTitle={setTitle}
+        description={description}
+        setDescription={setDescription}
+        verificationCriteria={verificationCriteria}
+        setVerificationCriteria={setVerificationCriteria}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        selectedPreset={selectedPreset}
+        setSelectedPreset={setSelectedPreset}
+        periodType={periodType}
+        setPeriodType={setPeriodType}
+        targetFrequency={targetFrequency}
+        setTargetFrequency={setTargetFrequency}
+        executionType={executionType}
+        setExecutionType={setExecutionType}
+        penaltyAmount={penaltyAmount}
+        setPenaltyAmount={setPenaltyAmount}
+        groupMembers={groupMembers}
+        selectedMemberIds={selectedMemberIds}
+        onToggleMember={handleToggleMember}
+        memberPenalties={memberPenalties}
+        onMemberPenaltyChange={handleMemberPenaltyChange}
+        durationDays={durationDays}
+        isSubmitting={isSubmitting}
+        onBack={() => {
+          if (window.history.length > 1) {
+            navigate(-1);
+          } else {
+            navigate(`/groups/${groupId}?tab=challenges`);
+          }
+        }}
+        onSubmit={handleConfirmSubmit}
+        onOpenHistory={handleOpenHistoryModal}
+        currentUserId={currentUser?.id}
+      />
+    );
+  }
 
   return (
     <MobileLayout>

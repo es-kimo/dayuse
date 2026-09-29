@@ -1,8 +1,8 @@
 # 01 로그인
 
-- 라우트: `/login`
-- 기존 페이지(추정): `LoginPage`
-- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). mock.html의 `<i data-icon="X">`는 lucide-react `X`, `<i data-dayu="색" data-face="표정">`은 `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
+- 라우트/위치: `/login`
+- 기존 파일(추정): `LoginPage`
+- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). `<i data-icon="X">` = lucide-react `X`, `<i data-dayu="색" data-face="표정">` = `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
 
 ## 바꾸는 이유와 변경점
 첫 화면에 앱 아이콘과 로고가 두 번 나와서 시선이 흩어졌고, 개발용 테스트 로그인이 실제 로그인과 같은 무게로 보였어요.
@@ -13,4 +13,4 @@
 개발용 빠른 로그인을 눌러 펼쳐 보세요.
 
 ## 데이터 · 상태 · 동작
-카카오 로그인 버튼, 약관 동의 안내. 개발용 테스트 로그인은 `import.meta.env.DEV`(또는 동등 플래그)일 때만 렌더, 기본 접힘.
+카카오 로그인 버튼, 약관 동의 안내. 개발용 테스트 로그인은 개발 환경일 때만 렌더, 기본 접힘.

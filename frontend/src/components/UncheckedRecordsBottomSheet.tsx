@@ -27,80 +27,59 @@ const UncheckedRecordCard: React.FC<UncheckedRecordCardProps> = ({
   onStartVerifyLate,
   onMarkFailed,
 }) => {
-  const { isGracePeriod, formattedTime } = useGracePeriodTimer(record.date);
+  const { isGracePeriod } = useGracePeriodTimer(record.date);
 
   return (
-    <div className="bg-slate-50 border border-slate-200/90 rounded-lg p-3.5 space-y-2.5 shadow-xs">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
-            <Calendar className="w-3.5 h-3.5 text-blue-600" />
-            <span>{record.date} 대상 기록</span>
-          </div>
-          <span className="text-xs font-bold text-slate-700 mt-1 block">
-            {record.challengeTitle}
-          </span>
-        </div>
-        <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">
-          미확인
+    <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-xs">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+          <span>{record.date} 대상 기록</span>
         </span>
-      </div>
-
-      {/* 유예 시간 카운트다운 타이머 vs 마감 경과 안내 */}
-      {isGracePeriod ? (
-        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[11px]">
-          <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" aria-hidden="true" />
-          <span>
-            정상 인정 마감까지 <b className="font-bold text-amber-700">{formattedTime}</b> 남음 (익일 09시)
-          </span>
-        </div>
-      ) : (
-        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[11px]">
-          <AlertCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span>유예 마감 경과 (인증 등록 시 지각으로 처리됩니다)</span>
-        </div>
-      )}
-
-      {record.verificationCriteria && (
-        <p className="text-[11px] text-slate-500 bg-white/80 p-2 rounded-md border border-slate-100">
-          <span className="font-medium text-slate-600">기준:</span> {record.verificationCriteria}
-        </p>
-      )}
-
-      <div className="flex items-center justify-between text-[11px] pt-1">
-        <span className="text-slate-500">
-          미수행 확정 시 벌금:{' '}
-          <b className="text-red-600 font-bold">
-            {record.penaltyAmount.toLocaleString()}원
-          </b>
-        </span>
-      </div>
-
-      {/* 액션 버튼 2개: 인증 올리기 vs 미수행 확정 */}
-      <div className="flex gap-2 pt-1 border-t border-slate-200/60">
-        <button
-          onClick={() => onStartVerifyLate(record)}
-          disabled={isBusy}
-          className={`flex-1 py-2 text-white rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${
+        <span
+          className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
             isGracePeriod
-              ? 'bg-primary hover:bg-primary-hover'
-              : 'bg-warning hover:bg-amber-800'
+              ? 'bg-amber-50 text-amber-700'
+              : 'bg-rose-50 text-rose-600'
           }`}
         >
+          {isGracePeriod ? '9시 전 · 정상 인정' : '9시 지남 · 지각 처리'}
+        </span>
+      </div>
+
+      <div className="text-[15px] font-extrabold text-slate-900">
+        {record.challengeTitle}
+      </div>
+
+      {record.verificationCriteria && (
+        <div className="text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded-xl p-2.5">
+          <b className="text-slate-700 font-bold mr-1.5">인증 기준</b>
+          <span>{record.verificationCriteria}</span>
+        </div>
+      )}
+
+      {/* 액션 버튼 2개: 늦은 인증 올리기 vs 못 했어요 · 벌금 */}
+      <div className="flex gap-2 pt-1">
+        <button
+          type="button"
+          onClick={() => onStartVerifyLate(record)}
+          disabled={isBusy}
+          className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-xs"
+        >
           <Upload className="w-3.5 h-3.5" />
-          <span>{isGracePeriod ? '인증 올리기 (정상 인정)' : '늦은 인증 올리기 (지각)'}</span>
+          <span>{isGracePeriod ? '인증 올리기' : '늦은 인증 올리기'}</span>
         </button>
         <button
+          type="button"
           onClick={() => onMarkFailed(record.id)}
           disabled={isBusy}
-          className="flex-1 py-2 bg-slate-200 hover:bg-red-50 hover:text-red-600 text-slate-700 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-[0.98]"
+          className="px-3.5 py-2.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 rounded-xl text-xs font-bold transition active:scale-98 shrink-0 flex items-center justify-center gap-1"
         >
           {isBusy ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <XCircle className="w-3.5 h-3.5" />
+            <span>못 했어요 · {(record.penaltyAmount || 0).toLocaleString()}원</span>
           )}
-          <span>미수행 확정</span>
         </button>
       </div>
     </div>
@@ -148,13 +127,13 @@ export const UncheckedRecordsBottomSheet: React.FC<UncheckedRecordsBottomSheetPr
     <BottomSheet open={isOpen} onOpenChange={(next) => !next && onClose()}>
       <>
         {/* 상단 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
+        <div className="flex items-start justify-between p-4 border-b border-slate-100 shrink-0">
           <div>
-            <BottomSheetTitle className="text-sm font-bold text-slate-800">
-              미확인 기록 정리
+            <BottomSheetTitle className="text-[17px] font-extrabold text-slate-900">
+              확인 안 된 기록 {records.length}건
             </BottomSheetTitle>
-            <BottomSheetDescription className="text-[11px] text-slate-500 mt-0.5">
-              총 {records.length}건의 미확인 날짜가 있습니다
+            <BottomSheetDescription className="text-xs text-slate-500 mt-0.5">
+              지난 인증이 비어 있어요. 올리거나, 못 했다고 확정해 주세요.
             </BottomSheetDescription>
           </div>
           <BottomSheetClose
@@ -166,10 +145,10 @@ export const UncheckedRecordsBottomSheet: React.FC<UncheckedRecordsBottomSheetPr
         </div>
 
         {/* 안내 문구 */}
-        <div className="bg-amber-50/70 border-b border-amber-100 px-4 py-2.5 text-[11px] text-amber-800 flex items-start gap-2">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <div className="bg-amber-50/80 border-b border-amber-100 px-4 py-2.5 text-xs text-amber-900 flex items-center gap-2">
+          <Clock className="w-4 h-4 text-amber-600 shrink-0" />
           <span>
-            지난 날짜의 인증 누락 건입니다. 익일 오전 9시 이전 등록 시 정상 인정되며, 이후 등록 시 지각 처리됩니다.
+            다음 날 <b className="font-bold">오전 9시 전</b>에 올리면 정상 인증, 그 뒤에는 <b className="font-bold">지각</b>으로 기록돼요.
           </span>
         </div>
 

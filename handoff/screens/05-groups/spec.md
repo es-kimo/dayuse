@@ -1,8 +1,8 @@
 # 05 내 모임
 
-- 라우트: `/groups`
-- 기존 페이지(추정): `MyGroupsPage`
-- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). mock.html의 `<i data-icon="X">`는 lucide-react `X`, `<i data-dayu="색" data-face="표정">`은 `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
+- 라우트/위치: `/groups`
+- 기존 파일(추정): `MyGroupsPage`
+- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). `<i data-icon="X">` = lucide-react `X`, `<i data-dayu="색" data-face="표정">` = `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
 
 ## 바꾸는 이유와 변경점
 모임 목록이 이름과 멤버 수뿐이라, 어느 모임에 오늘 할 일이 남았는지 들어가 봐야 알았어요.

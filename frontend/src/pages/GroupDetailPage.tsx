@@ -1,4 +1,6 @@
 import { GroupHomeScreen } from '../components/screens/GroupHomeScreen';
+import { GroupChallengesViewB } from '../components/GroupChallengesViewB';
+import { GroupMembersViewB } from '../components/GroupMembersViewB';
 import { Lightbox } from '../components/ui/Lightbox';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
@@ -785,6 +787,14 @@ export const GroupDetailPage: React.FC = () => {
       )}
 
       {activeTab === 'challenges' && (
+        uiVersion === 'B' ? (
+          <GroupChallengesViewB
+            groupId={Number(groupId)}
+            challenges={challenges}
+            loading={challengesLoading}
+            currentUserId={currentUser?.id}
+          />
+        ) : (
         <div className="space-y-4 flex-1 flex flex-col">
           {/*
             챌린지 상단 바.
@@ -986,9 +996,21 @@ export const GroupDetailPage: React.FC = () => {
             </div>
           )}
         </div>
+        )
       )}
 
       {activeTab === 'members' && (
+        uiVersion === 'B' ? (
+          <GroupMembersViewB
+            group={group}
+            inviteUrl={inviteUrl}
+            isHost={group.isHost}
+            onRefreshInviteCode={handleRefreshInviteCode}
+            isRefreshing={isRefreshing}
+            currentUserId={currentUser?.id}
+            verifiedUserIds={verifiedUserIds}
+          />
+        ) : (
         <div className="space-y-4 flex-1">
           {/* 초대 링크 관리 카드 */}
           <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
@@ -1061,6 +1083,7 @@ export const GroupDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+        )
       )}
 
       {modals}

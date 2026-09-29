@@ -165,17 +165,21 @@ export const MOCK_SETTLEMENT_SUMMARY = {
 
 export const MOCK_UNPAID_RECORDS = [
   {
+    id: 201,
     recordId: 201,
     challengeId: 1,
     challengeTitle: '매일 1알고리즘 문제 풀기',
+    date: '2026-03-26',
     targetDate: '2026-03-26',
     penaltyAmount: 5000,
     depositStatus: 'UNPAID',
   },
   {
+    id: 202,
     recordId: 202,
     challengeId: 2,
     challengeTitle: '6시 기상 습관',
+    date: '2026-03-25',
     targetDate: '2026-03-25',
     penaltyAmount: 5000,
     depositStatus: 'UNPAID',

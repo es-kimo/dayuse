@@ -1,8 +1,8 @@
 # 03 오늘의 할 일
 
-- 라우트: `/today`
-- 기존 페이지(추정): `TodayPage`
-- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). mock.html의 `<i data-icon="X">`는 lucide-react `X`, `<i data-dayu="색" data-face="표정">`은 `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
+- 라우트/위치: `/today`
+- 기존 파일(추정): `TodayPage`
+- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). `<i data-icon="X">` = lucide-react `X`, `<i data-dayu="색" data-face="표정">` = `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
 
 ## 바꾸는 이유와 변경점
 잘 만든 화면이라 뼈대는 그대로 두고, 진행 상황이 한눈에 보이도록만 다듬었어요.

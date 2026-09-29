@@ -1,8 +1,8 @@
 # 02 모임 초대장
 
-- 라우트: `/invite/:code`
-- 기존 페이지(추정): `InvitePage`
-- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). mock.html의 `<i data-icon="X">`는 lucide-react `X`, `<i data-dayu="색" data-face="표정">`은 `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
+- 라우트/위치: `/invite/:code`
+- 기존 파일(추정): `InvitePage`
+- 참고: `mock.png`(눈으로 확인), `mock.html`(구조·문구). `<i data-icon="X">` = lucide-react `X`, `<i data-dayu="색" data-face="표정">` = `<DayuAvatar color face />`(data-bare면 `<Dayu />`).
 
 ## 바꾸는 이유와 변경점
 초대장에 멤버 수만 있고 화면 절반이 비어 있어서, 들어가면 뭘 하게 되는지 알 수 없었어요.
