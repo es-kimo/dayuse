@@ -329,7 +329,7 @@
 
 .screen-ui .body{overflow:visible!important;flex:1 0 auto}
 .screen-ui{--font:"ScreenPretendard",-apple-system,"Apple SD Gothic Neo",sans-serif;font-family:var(--font);-webkit-font-smoothing:antialiased}
-.screen-ui.screen-app{position:relative;inset:auto;width:100%;max-width:448px;min-height:100dvh;margin:auto}
+.screen-ui.screen-app{position:relative;inset:auto;width:100%;max-width:390px;min-height:100dvh;margin:auto}
 .screen-ui button{cursor:pointer}
 .screen-ui button:disabled{cursor:not-allowed}
 .screen-ui h1,.screen-ui h2,.screen-ui h3,.screen-ui h4,.screen-ui p{margin:0}

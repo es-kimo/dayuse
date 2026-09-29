@@ -2,8 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Plus, Check } from 'lucide-react';
 import type { ChallengeSummary } from '../types';
-import { Dayu, DayuAvatar } from './dayu/DayuAvatar';
-import { parseDayuColor } from '../tokens/dayuColors';
+import { Dayu } from './dayu/DayuAvatar';
 
 interface GroupChallengesViewBProps {
   groupId: number;
@@ -19,7 +18,6 @@ export const GroupChallengesViewB: React.FC<GroupChallengesViewBProps> = ({
   groupId,
   challenges,
   loading,
-  currentUserId,
 }) => {
   const navigate = useNavigate();
   const [scope, setScope] = useState<ScopeFilter>('ALL');
@@ -208,7 +206,7 @@ export const GroupChallengesViewB: React.FC<GroupChallengesViewBProps> = ({
                     ● 진행 중
                   </span>
                   <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                    {c.executionType === 'TEAM' ? '함께하기' : '각자하기'}
+                    {c.executionType === 'TOGETHER' ? '함께하기' : '각자하기'}
                   </span>
                   {c.isParticipating && (
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600">

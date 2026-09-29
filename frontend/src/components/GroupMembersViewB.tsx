@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Copy, Check, MessageCircle, RefreshCw } from 'lucide-react';
-import type { GroupDetail, GroupMember } from '../types';
-import { DayuAvatar } from './dayu/DayuAvatar';
+import type { GroupDetail } from '../types';
+import { DayuAvatar } from './brand/DayuAvatar';
 import { useToast } from '../context/ToastContext';
 import { shareToKakao, isKakaoReady } from '../utils/kakao';
 

@@ -4,9 +4,9 @@ import type { DepositReportDetail, DepositReportStatus } from '../types';
 import { settlementApi } from '../api/settlement';
 import { groupsApi } from '../api/groups';
 import { MobileLayout } from '../components/MobileLayout';
+import { SubPageHeader } from '../components/layout/SubPageHeader';
 import { Button, FormField, Textarea, Modal, ModalTitle, ModalClose } from '../components/ui';
 import {
-  ArrowLeft,
   Loader2,
   Clock,
   CheckCircle2,
@@ -162,27 +162,24 @@ export const SettlementManagePage: React.FC = () => {
   };
 
   return (
-    <MobileLayout>
+    <MobileLayout showHeader={false}>
       {/* 상단 헤더 */}
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          onClick={() => {
-            if (window.history.length > 1) {
-              navigate(-1);
-            } else {
-              navigate(`/groups/${groupId}`);
-            }
-          }}
-          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
-          aria-label="뒤로가기"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-base font-bold text-slate-800 truncate">정산 및 입금 관리</h1>
-          <p className="text-[10px] text-slate-400 truncate">{groupName || '모임 정산 대시보드'}</p>
-        </div>
-      </div>
+      <SubPageHeader
+        title={
+          <div className="min-w-0">
+            <h1 className="text-[17px] font-extrabold text-slate-900 tracking-[-0.02em] truncate">정산 및 입금 관리</h1>
+            <p className="text-[11px] text-slate-400 truncate">{groupName || '모임 정산 대시보드'}</p>
+          </div>
+        }
+        onBack={() => {
+          if (window.history.length > 1) {
+            navigate(-1);
+          } else {
+            navigate(`/groups/${groupId}`);
+          }
+        }}
+        className="-mt-4 -mx-4 mb-3 border-b border-slate-200"
+      />
 
       {/* 탭 네비게이션 */}
       <div className="flex border-b border-slate-200 mb-4">

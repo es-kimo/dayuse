@@ -11,7 +11,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:07:58.275Z"
+      "capturedAt": "2026-09-29T06:35:15.467Z"
     },
     {
       "id": "02-groups-list",
@@ -24,7 +24,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:07:59.926Z"
+      "capturedAt": "2026-09-29T06:35:17.473Z"
     },
     {
       "id": "03-group-feed",
@@ -37,7 +37,7 @@
       "width": 780,
       "height": 3116,
       "aspectRatio": "780/3116",
-      "capturedAt": "2026-09-29T06:08:02.025Z"
+      "capturedAt": "2026-09-29T06:35:20.058Z"
     },
     {
       "id": "03b-group-challenges",
@@ -50,7 +50,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:04.020Z"
+      "capturedAt": "2026-09-29T06:35:21.790Z"
     },
     {
       "id": "03c-group-members",
@@ -63,7 +63,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:05.976Z"
+      "capturedAt": "2026-09-29T06:35:23.477Z"
     },
     {
       "id": "04-challenge-calendar",
@@ -76,7 +76,7 @@
       "width": 780,
       "height": 2434,
       "aspectRatio": "780/2434",
-      "capturedAt": "2026-09-29T06:08:07.805Z"
+      "capturedAt": "2026-09-29T06:35:25.442Z"
     },
     {
       "id": "05-today-actions",
@@ -89,7 +89,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:09.427Z"
+      "capturedAt": "2026-09-29T06:35:27.152Z"
     },
     {
       "id": "06-group-new",
@@ -102,7 +102,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:11.050Z"
+      "capturedAt": "2026-09-29T06:35:28.749Z"
     },
     {
       "id": "07-challenge-new",
@@ -115,7 +115,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:12.695Z"
+      "capturedAt": "2026-09-29T06:35:30.437Z"
     },
     {
       "id": "08-verification-modal",
@@ -128,7 +128,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:15.248Z"
+      "capturedAt": "2026-09-29T06:35:33.176Z"
     },
     {
       "id": "08b-modal-unchecked-sheet",
@@ -141,7 +141,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:17.833Z"
+      "capturedAt": "2026-09-29T06:35:35.739Z"
     },
     {
       "id": "08c-modal-comments-sheet",
@@ -154,7 +154,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:20.356Z"
+      "capturedAt": "2026-09-29T06:35:38.430Z"
     },
     {
       "id": "08d-modal-deposit-report",
@@ -167,7 +167,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:22.911Z"
+      "capturedAt": "2026-09-29T06:35:41.019Z"
     },
     {
       "id": "08e-modal-abort-challenge",
@@ -180,7 +180,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:26.007Z"
+      "capturedAt": "2026-09-29T06:35:43.984Z"
     },
     {
       "id": "09-share-card",
@@ -193,7 +193,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:27.662Z"
+      "capturedAt": "2026-09-29T06:35:45.653Z"
     },
     {
       "id": "10-invite-landing",
@@ -206,7 +206,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:29.326Z"
+      "capturedAt": "2026-09-29T06:35:47.323Z"
     },
     {
       "id": "11-login",
@@ -219,7 +219,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:30.901Z"
+      "capturedAt": "2026-09-29T06:35:48.956Z"
     },
     {
       "id": "12-profile",
@@ -232,7 +232,7 @@
       "width": 780,
       "height": 1764,
       "aspectRatio": "780/1764",
-      "capturedAt": "2026-09-29T06:08:32.573Z"
+      "capturedAt": "2026-09-29T06:35:50.672Z"
     },
     {
       "id": "13-notification-settings",
@@ -245,7 +245,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T06:08:39.976Z"
+      "capturedAt": "2026-09-29T06:35:58.067Z"
     }
   ]
 }

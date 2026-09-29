@@ -5,13 +5,10 @@ import { useGracePeriodTimer } from '../hooks/useGracePeriodTimer';
 import {
   X,
   Calendar,
-  AlertTriangle,
   Upload,
-  XCircle,
   Loader2,
   CheckCircle2,
   Clock,
-  AlertCircle,
 } from 'lucide-react';
 
 interface UncheckedRecordCardProps {

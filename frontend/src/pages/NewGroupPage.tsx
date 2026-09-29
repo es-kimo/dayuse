@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
 import { GroupNameSuggestions } from '../components/GroupNameSuggestions';
 import { Card } from '../components/dayu/ui';
-import { ArrowLeft } from 'lucide-react';
+import { SubPageHeader } from '../components/layout/SubPageHeader';
+import { BottomActionBar } from '../components/layout/BottomActionBar';
 
 export const NewGroupPage: React.FC = () => {
   const navigate = useNavigate();
@@ -43,22 +44,13 @@ export const NewGroupPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center px-3 h-14 bg-[#F8FAFC]/95 backdrop-blur-md">
-        <button
-          type="button"
-          onClick={() => navigate('/groups')}
-          aria-label="뒤로"
-          className="w-10 h-10 rounded-xl grid place-items-center text-slate-600 hover:bg-slate-100 transition active:scale-95"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-[17px] font-extrabold text-slate-900 tracking-[-0.02em] ml-1">
-          새 모임 만들기
-        </h1>
-      </header>
+      <SubPageHeader
+        title="새 모임 만들기"
+        onBack={() => navigate('/groups')}
+      />
 
       {/* Main Body */}
-      <main className="w-full max-w-[390px] mx-auto px-4 pt-3 pb-24 flex-1 flex flex-col justify-between">
+      <main className="w-full max-w-[390px] mx-auto px-4 pt-3 pb-28 flex-1 flex flex-col justify-between">
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3.5">
           <Card className="flex flex-col gap-2.5">
             <div>
@@ -99,7 +91,7 @@ export const NewGroupPage: React.FC = () => {
       </main>
 
       {/* Bottom Sticky Action */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-[390px] mx-auto p-[12px_16px_16px] bg-[#F8FAFC] border-t border-slate-200 z-30">
+      <BottomActionBar>
         <button
           type="button"
           onClick={handleSubmit}
@@ -108,7 +100,7 @@ export const NewGroupPage: React.FC = () => {
         >
           {isSubmitting ? '모임 만드는 중...' : '모임 만들기'}
         </button>
-      </div>
+      </BottomActionBar>
     </div>
   );
 };

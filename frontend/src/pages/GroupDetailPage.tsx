@@ -2,6 +2,7 @@ import { GroupHomeScreen } from '../components/screens/GroupHomeScreen';
 import { GroupChallengesViewB } from '../components/GroupChallengesViewB';
 import { GroupMembersViewB } from '../components/GroupMembersViewB';
 import { Lightbox } from '../components/ui/Lightbox';
+import { SubPageHeader } from '../components/layout/SubPageHeader';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
@@ -503,26 +504,21 @@ export const GroupDetailPage: React.FC = () => {
     <MobileLayout showHeader={uiVersion !== 'B'}>
       {/* 상단 헤더 */}
       {uiVersion === 'B' ? (
-        <header className="flex items-center justify-between h-14 -mt-4 -mx-4 px-4 bg-slate-50/95 sticky top-0 z-20 border-b border-slate-200">
-          <button
-            onClick={() => navigate('/groups')}
-            className="w-10 h-10 -ml-2 text-slate-700 hover:text-slate-900 rounded-full flex items-center justify-center transition active:scale-95"
-            aria-label="뒤로"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="text-base font-bold text-slate-900 truncate px-2 flex-1">
-            {group.name}
-          </div>
-          <button
-            onClick={handleCopyLink}
-            className="w-10 h-10 -mr-2 text-slate-700 hover:text-slate-900 rounded-full flex items-center justify-center transition active:scale-95"
-            aria-label="친구 초대"
-            title="초대 링크 복사"
-          >
-            <UserPlus className="w-5 h-5" />
-          </button>
-        </header>
+        <SubPageHeader
+          title={group.name}
+          onBack={() => navigate('/groups')}
+          className="-mt-4 -mx-4 border-b border-slate-200"
+          rightAction={
+            <button
+              onClick={handleCopyLink}
+              className="w-10 h-10 rounded-xl grid place-items-center text-slate-600 hover:bg-slate-100 transition active:scale-95 cursor-pointer"
+              aria-label="친구 초대"
+              title="초대 링크 복사"
+            >
+              <UserPlus className="w-5 h-5" />
+            </button>
+          }
+        />
       ) : (
         <div className="flex items-center gap-2 mb-4">
           <button

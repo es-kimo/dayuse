@@ -5,6 +5,7 @@ import { useUiVersion } from '../context/UiVersionContext';
 import { MobileLayout } from '../components/MobileLayout';
 import { ProfileHeader } from '../components/ProfileHeader';
 import { AppTabBar } from '../components/dayu/ui';
+import { AppMainHeader } from '../components/layout/AppMainHeader';
 import {
   ArrowLeft,
   User as UserIcon,
@@ -58,9 +59,7 @@ export const ProfilePage: React.FC = () => {
     return (
       <div className="max-w-app mx-auto min-h-dvh bg-[#F8FAFC] flex flex-col border-x border-slate-200 text-slate-800 font-sans relative">
         {/* 상단 바 */}
-        <header className="sticky top-0 z-header h-14 bg-[#F8FAFC]/95 backdrop-blur-xs border-b border-transparent flex items-center px-4">
-          <h1 className="text-[22px] font-extrabold tracking-tight text-slate-900">내 정보</h1>
-        </header>
+        <AppMainHeader title="내 정보" />
 
         <main className="flex-1 p-4 pb-8 flex flex-col gap-3.5">
           {/* 프로필 아바타 영역 (ProfileHeader) */}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
 import type { GroupMember, ExecutionType, PeriodType } from '../types';
 import { DayuAvatar } from './brand/DayuAvatar';
+import { SubPageHeader } from './layout/SubPageHeader';
+import { BottomActionBar } from './layout/BottomActionBar';
 
 interface NewChallengeViewBProps {
   title: string;
@@ -108,24 +109,20 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[var(--page,#F8FAFC)] text-[var(--ink,#0F172A)] pb-24">
+    <div className="flex flex-col min-h-screen bg-[var(--page,#F8FAFC)] text-[var(--ink,#0F172A)] pb-28">
       {/* Top Header */}
-      <header className="sticky top-0 z-20 flex items-center justify-between px-4 h-12 bg-white/80 backdrop-blur-md border-b border-slate-200">
-        <button
-          onClick={handlePrev}
-          aria-label="뒤로"
-          className="p-1.5 -ml-1 text-slate-600 hover:text-slate-900 rounded-lg active:scale-95 transition"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div className="font-bold text-base text-slate-800">새 챌린지 만들기</div>
-        <span className="text-xs font-semibold text-slate-400 tabular-nums px-2">
-          {step}/3
-        </span>
-      </header>
+      <SubPageHeader
+        title="새 챌린지 만들기"
+        onBack={handlePrev}
+        rightAction={
+          <span className="text-xs font-semibold text-slate-400 tabular-nums px-2">
+            {step}/3
+          </span>
+        }
+      />
 
       {/* 3 Steps indicator */}
-      <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-1.5">
+      <div className="w-full max-w-[390px] mx-auto px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-1.5">
         <div className="flex items-center gap-1.5 grow">
           <div className={`h-1.5 rounded-full flex-1 transition-all ${step >= 1 ? 'bg-blue-600' : 'bg-slate-200'}`} />
           <div className={`h-1.5 rounded-full flex-1 transition-all ${step >= 2 ? 'bg-blue-600' : 'bg-slate-200'}`} />
@@ -143,7 +140,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
       </div>
 
       {/* Step Content */}
-      <div className="p-4 space-y-5">
+      <div className="w-full max-w-[390px] mx-auto p-4 space-y-5">
         {step === 1 && (
           <div className="space-y-4">
             <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">
@@ -426,7 +423,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
       </div>
 
       {/* Floating Bottom Action */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-white/95 backdrop-blur-md border-t border-slate-200 z-30">
+      <BottomActionBar>
         <button
           onClick={handleNext}
           disabled={(step === 1 && !canProceedStep1) || isSubmitting}
@@ -444,7 +441,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
             <span>다음</span>
           )}
         </button>
-      </div>
+      </BottomActionBar>
     </div>
   );
 };

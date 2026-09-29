@@ -5,7 +5,8 @@ import { useToast } from '../context/ToastContext';
 import { DAYU_COLORS, type DayuColor } from '../components/dayu/dayuColors';
 import { DayuAvatar } from '../components/dayu/DayuAvatar';
 import { DayuColorPicker } from '../components/DayuColorPicker';
-import { ArrowLeft } from 'lucide-react';
+import { SubPageHeader } from '../components/layout/SubPageHeader';
+import { BottomActionBar } from '../components/layout/BottomActionBar';
 
 function parseUserDayuColor(profileImageUrl?: string | null): DayuColor {
   if (profileImageUrl && profileImageUrl.startsWith('dayu:')) {
@@ -47,19 +48,10 @@ export const AvatarPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col">
       {/* Top Header */}
-      <header className="sticky top-0 z-20 flex items-center px-3 h-14 bg-[#F8FAFC]/95 backdrop-blur-md">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로"
-          className="w-10 h-10 rounded-xl grid place-items-center text-slate-600 hover:bg-slate-100 transition active:scale-95 cursor-pointer"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-[17px] font-extrabold text-slate-900 tracking-[-0.02em] ml-1">
-          프로필 데이유
-        </h1>
-      </header>
+      <SubPageHeader
+        title="프로필 데이유"
+        onBack={() => navigate(-1)}
+      />
 
       {/* Main Body */}
       <main className="w-full max-w-[390px] mx-auto px-4 pt-2 pb-28 flex flex-col gap-4">
@@ -112,7 +104,7 @@ export const AvatarPage: React.FC = () => {
       </main>
 
       {/* Bottom Sticky Action */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-[390px] mx-auto p-[12px_16px_16px] bg-[#F8FAFC] border-t border-slate-200 z-30">
+      <BottomActionBar>
         <button
           type="button"
           onClick={handleSave}
@@ -121,7 +113,7 @@ export const AvatarPage: React.FC = () => {
         >
           {isSaving ? '저장 중...' : isCurrentColor ? '지금 쓰는 색이에요' : '이 색으로 바꾸기'}
         </button>
-      </div>
+      </BottomActionBar>
     </div>
   );
 };

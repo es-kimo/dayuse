@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Send, ShieldAlert, AlertCircle, Smartphone, ArrowLeft } from 'lucide-react';
+import { Clock, Send, ShieldAlert, AlertCircle, Smartphone } from 'lucide-react';
 import { MobileLayout } from '../components/MobileLayout';
+import { SubPageHeader } from '../components/layout/SubPageHeader';
 import { IosInstallGuideModal } from '../components/IosInstallGuideModal';
 import { useToast } from '../context/ToastContext';
 import {
@@ -197,18 +198,10 @@ export const NotificationSettingsPage: React.FC = () => {
     <MobileLayout showHeader={false}>
       <div className="w-full max-w-[390px] mx-auto flex flex-col gap-3.5 pb-12">
         {/* Header */}
-        <header className="flex items-center gap-2 h-12 -mx-1">
-          <button
-            onClick={() => navigate(-1)}
-            aria-label="뒤로"
-            className="w-10 h-10 rounded-xl grid place-items-center text-slate-600 hover:bg-slate-100 transition active:scale-95 cursor-pointer"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-[17px] font-extrabold text-slate-900 tracking-[-0.02em]">
-            알림 설정
-          </h1>
-        </header>
+        <SubPageHeader
+          title="알림 설정"
+          onBack={() => navigate(-1)}
+        />
 
         <p className="text-[13.5px] text-slate-500 leading-normal -mt-1 px-1">
           오늘 인증을 아직 안 한 챌린지가 있을 때만 알려드려요.

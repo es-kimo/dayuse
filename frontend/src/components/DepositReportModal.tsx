@@ -6,11 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { getTodayKstString } from '../utils/date';
 import {
   X,
-  CreditCard,
   Copy,
   Check,
-  Calendar,
-  User,
   Loader2,
   AlertCircle,
   CheckSquare,
@@ -148,7 +145,6 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
     <BottomSheet
       open={isOpen}
       onOpenChange={(next) => !next && onClose()}
-      backdropClassName="bg-black/50 backdrop-blur-xs"
       className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[90dvh] flex flex-col shadow-xl overflow-hidden"
     >
       {/* 헤더 */}
@@ -159,14 +155,12 @@ export const DepositReportModal: React.FC<DepositReportModalProps> = ({
             모임 계좌로 보낸 뒤, 어떤 기록을 냈는지 알려 주세요.
           </BottomSheetDescription>
         </div>
-        <BottomSheetClose asChild>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-lg transition shrink-0"
-            aria-label="닫기"
-          >
-            <X className="w-5 h-5" />
-          </button>
+        <BottomSheetClose
+          onClick={onClose}
+          className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-lg transition shrink-0"
+          aria-label="닫기"
+        >
+          <X className="w-5 h-5" />
         </BottomSheetClose>
       </div>
 
