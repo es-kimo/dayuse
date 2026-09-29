@@ -12,8 +12,6 @@ import { Modal, ModalTitle, ModalDescription, ModalClose } from './ui/Modal';
 import {
   getTodayKstString,
   addDaysKst,
-  isNightGraceWindow,
-  getKstHour,
   formatMonthDay,
 } from '../utils/date';
 import {
@@ -75,25 +73,17 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  // KST 기준 날짜 및 심야 유예 시간(00:00 ~ 09:00) 판별
+  // KST 기준 날짜
   const todayKst = getTodayKstString();
   const yesterdayKst = addDaysKst(todayKst, -1);
-  const isNightGrace = isNightGraceWindow();
 
-  // 기본 대상 날짜 결정:
-  // - targetDate가 직접 명시된 경우 최우선 사용
-  // - recordId가 있는 늦은 인증인 경우: targetDate 없으면 yesterdayKst 기본
-  // - 일반 인증이면서 심야(00:00~05:00)인 경우: 전날 밤 인증을 마무리하려는 경우가 많으므로 yesterdayKst 추천
-  // - 그 외(05:00~09:00 아침 또는 09:00 이후): todayKst 기본
-  const initialTargetDate = targetDate
-    ? targetDate
-    : recordId
-    ? yesterdayKst
-    : isNightGrace && getKstHour() < 5
-    ? yesterdayKst
-    : todayKst;
-
-  const [selectedTargetDate, setSelectedTargetDate] = useState<string>(initialTargetDate);
+  /*
+   * 일반 인증의 대상 날짜는 부모가 명시한 targetDate, 없으면 항상 오늘이다.
+   * 과거 날짜 인증은 recordId 기반 늦은 인증(verifyLate) 경로로만 처리한다.
+   * 모달에서 임의로 과거 날짜를 고르게 하면 해당 날짜 인증 여부를 모르는 상태로
+   * S3 업로드까지 끝낸 뒤 서버 중복 검사에서만 실패한다.
+   */
+  const effectiveTargetDate = targetDate || todayKst;
 
   // previewUrl 변경 또는 언마운트 시 ObjectURL 해제
   useEffect(() => {
@@ -219,7 +209,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           challengeId: action.challengeId,
           imageUrl: uploadedKey,
           comment: comment.trim() || undefined,
-          targetDate: selectedTargetDate,
+          targetDate: effectiveTargetDate,
         });
       }
 
@@ -393,23 +383,6 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           </ModalClose>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3.5">
-          {!recordId && isNightGrace && (
-            <div className="space-y-2">
-              <label htmlFor="verification-date" className="block text-[14px] font-bold text-slate-800">
-                인증할 날짜
-              </label>
-              <select
-                id="verification-date"
-                className="h-[50px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-[15.5px] text-slate-800 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-100 focus:outline-none"
-                value={selectedTargetDate}
-                onChange={(e) => setSelectedTargetDate(e.target.value)}
-                disabled={isSubmitting}
-              >
-                <option value={yesterdayKst}>{formatMonthDay(yesterdayKst)} 어제 인증</option>
-                <option value={todayKst}>{formatMonthDay(todayKst)} 오늘 인증</option>
-              </select>
-            </div>
-          )}
           <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-[13px] leading-[1.5] text-slate-600">
             <strong className="mr-1.5 font-bold text-slate-800">인증 기준</strong>
             {action.verificationCriteria}
