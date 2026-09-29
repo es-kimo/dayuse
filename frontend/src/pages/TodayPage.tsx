@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, ArrowRight, Calendar, Bell } from 'lucide-react';
 import { MobileLayout } from '../components/MobileLayout';
-import { BottomNav } from '../components/BottomNav';
-import { DayuLogo } from '../components/brand/DayuLogo';
+import { TodayScreen } from '../components/screens/TodayScreen';
+
 import { VerificationModal } from '../components/VerificationModal';
 import { Lightbox } from '../components/ui/Lightbox';
 import { DayuExpression } from '../components/brand/DayuExpression';
@@ -17,6 +17,7 @@ export const TodayPage: React.FC = () => {
   const { uiVersion } = useUiVersion();
   const navigate = useNavigate();
   const [actions, setActions] = useState<TodayAction[]>([]);
+  const [loadError, setLoadError] = useState('');
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedAction, setSelectedAction] = useState<TodayAction | null>(null);
   const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
@@ -34,10 +35,12 @@ export const TodayPage: React.FC = () => {
   const loadTodayActions = async () => {
     try {
       setLoading(true);
+      setLoadError('');
       const data = await todayApi.getAllTodayActions();
       setActions(data);
     } catch (err) {
       console.error('오늘 할 일 목록 조회 실패:', err);
+      setLoadError('오늘 할 일을 불러오지 못했어요.');
     } finally {
       setLoading(false);
     }
@@ -45,232 +48,12 @@ export const TodayPage: React.FC = () => {
 
   const pendingActions = actions.filter((a) => !a.isCompletedToday);
   const completedActions = actions.filter((a) => a.isCompletedToday);
-  const progressRatio = actions.length > 0 ? (completedActions.length / actions.length) * 100 : 0;
-
-  const todayDateString = new Date().toLocaleDateString('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long',
-  });
-
-  // ==========================================
-  // 신규 모바일 UI (B) 렌더링 (03-today.html)
-  // ==========================================
   if (uiVersion === 'B') {
-    return (
-      <div className="max-w-app mx-auto min-h-dvh bg-slate-50 flex flex-col border-x border-slate-200 text-slate-800 font-sans relative">
-        {/* 상단 헤더 바 */}
-        <header className="sticky top-0 z-header h-14 bg-slate-50/95 backdrop-blur-xs border-b border-transparent flex items-center justify-between px-3">
-          <div className="flex items-center gap-2">
-            <DayuLogo variant="symbol" className="h-7 w-auto" />
-            <h1 className="text-lg font-extrabold tracking-tight text-slate-900">오늘</h1>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('/settings/notifications')}
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 focus-ring cursor-pointer"
-            aria-label="알림 설정"
-          >
-            <Bell className="w-5 h-5" />
-          </button>
-        </header>
-
-        <main className="flex-1 p-4 pb-12 flex flex-col gap-4">
-          <p className="text-xs font-semibold text-slate-400">{todayDateString}</p>
-
-          {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center gap-2 text-slate-400">
-              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs">오늘 할 일을 불러오는 중...</p>
-            </div>
-          ) : actions.length === 0 ? (
-            <div className="py-16 text-center bg-white border border-slate-200 rounded-3xl p-6 space-y-3 shadow-2xs">
-              <DayuExpression expression="rest" color="blue" className="w-16 h-16 mx-auto mb-2" />
-              <h3 className="text-base font-bold text-slate-900">참여 중인 챌린지가 없어요</h3>
-              <p className="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
-                새 모임에 참여하거나 챌린지를 만들어 보세요
-              </p>
-              <button
-                type="button"
-                onClick={() => navigate('/groups')}
-                className="mt-2 inline-flex items-center gap-1.5 py-2.5 px-5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold rounded-xl transition active:scale-[0.98] cursor-pointer"
-              >
-                <span>모임 둘러보기</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* 히어로 섹션 */}
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-5 text-white shadow-md flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-xs flex items-center justify-center shrink-0">
-                  {pendingActions.length === 0 ? (
-                    <DayuExpression expression="done" color="white" className="w-12 h-12 object-contain" />
-                  ) : (
-                    <DayuExpression expression="cheer" color="white" className="w-12 h-12 object-contain" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-base font-extrabold leading-snug">
-                    {pendingActions.length === 0
-                      ? '오늘 할 일을 모두 마쳤어요! 🎉'
-                      : `인증할 챌린지가 ${pendingActions.length}개 남았어요`}
-                  </h2>
-                  <p className="text-xs text-blue-100 mt-0.5">
-                    {pendingActions.length === 0 ? '내일도 함께 꾸준히 달려봐요.' : '자정 전에 사진 한 장이면 끝나요.'}
-                  </p>
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="flex-1 h-2 rounded-full bg-white/20 overflow-hidden">
-                      <div
-                        className="h-full bg-white rounded-full transition-all duration-300"
-                        style={{ width: `${progressRatio}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-bold font-mono">
-                      {completedActions.length}/{actions.length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 인증 대기 섹션 */}
-              {pendingActions.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-extrabold text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
-                      <AlertCircle className="w-4 h-4 text-amber-500" />
-                      인증 대기 <span className="text-slate-700">{pendingActions.length}</span>
-                    </h3>
-                  </div>
-                  <div className="space-y-3">
-                    {pendingActions.map((action) => (
-                      <div
-                        key={action.challengeId}
-                        className="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs hover:border-blue-300 transition space-y-3"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
-                            {action.groupName}
-                          </span>
-                          {action.executionType === 'TOGETHER' && (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                              함께하기
-                            </span>
-                          )}
-                        </div>
-
-                        <div>
-                          <h4 className="text-base font-bold text-slate-900">{action.challengeTitle}</h4>
-                          <div className="mt-2 p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-600">
-                            <span className="font-bold text-slate-700">인증 기준: </span>
-                            {action.verificationCriteria || '인증 사진 제출'}
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedAction(action)}
-                          className="w-full py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] cursor-pointer"
-                        >
-                          <span>사진 찍고 인증하기</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 완료됨 섹션 */}
-              {completedActions.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-extrabold text-emerald-600 uppercase tracking-wider flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      완료 <span className="text-slate-700">{completedActions.length}</span>
-                    </h3>
-                  </div>
-                  <div className="space-y-2.5">
-                    {completedActions.map((action) => (
-                      <div
-                        key={action.challengeId}
-                        className="p-3.5 bg-white border border-slate-200 rounded-2xl flex items-center gap-3 shadow-2xs"
-                      >
-                        {action.myVerification?.imageUrl ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setLightboxImage({
-                                src: action.myVerification!.imageUrl,
-                                alt: `${action.challengeTitle} 인증 사진`,
-                              })
-                            }
-                            className="w-14 h-14 rounded-xl overflow-hidden bg-slate-900 border border-slate-200 cursor-zoom-in shrink-0 focus-ring flex items-center justify-center"
-                            aria-label="사진 확대 보기"
-                          >
-                            <img
-                              src={action.myVerification.imageUrl}
-                              alt="인증 사진"
-                              className="w-full h-full object-contain"
-                            />
-                          </button>
-                        ) : (
-                          <div className="w-14 h-14 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center font-bold text-xs shrink-0">
-                            완료
-                          </div>
-                        )}
-
-                        <div className="flex-1 min-w-0">
-                          <span className="text-[11px] font-semibold text-slate-400 block truncate">
-                            {action.groupName}
-                          </span>
-                          <h4 className="text-sm font-bold text-slate-900 truncate">{action.challengeTitle}</h4>
-                          {action.executionType === 'TOGETHER' && action.todayVerifierNickname ? (
-                            <p className="text-[11px] text-indigo-600 font-medium truncate mt-0.5">
-                              {action.todayVerifierNickname}님이 인증 완료
-                            </p>
-                          ) : action.myVerification?.comment ? (
-                            <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                              "{action.myVerification.comment}"
-                            </p>
-                          ) : null}
-                        </div>
-
-                        <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shrink-0">
-                          완료
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </main>
-
-        {/* 바텀 네비게이션 바 */}
-        <BottomNav todayBadgeCount={pendingActions.length} />
-
-        {selectedAction && (
-          <VerificationModal
-            action={selectedAction}
-            onClose={() => setSelectedAction(null)}
-            onSuccess={() => {
-              setSelectedAction(null);
-              loadTodayActions();
-            }}
-          />
-        )}
-
-        {lightboxImage && (
-          <Lightbox
-            open={true}
-            onClose={() => setLightboxImage(null)}
-            src={lightboxImage.src}
-            alt={lightboxImage.alt}
-          />
-        )}
-      </div>
-    );
+    return <>
+      <TodayScreen actions={actions} loading={loading} error={loadError} retry={loadTodayActions} onVerify={setSelectedAction} onImage={(src, alt) => setLightboxImage({ src, alt })} />
+      {selectedAction && <VerificationModal action={selectedAction} onClose={() => setSelectedAction(null)} onSuccess={() => { setSelectedAction(null); loadTodayActions(); }} />}
+      {lightboxImage && <Lightbox open onClose={() => setLightboxImage(null)} src={lightboxImage.src} alt={lightboxImage.alt} />}
+    </>;
   }
 
   // ==========================================

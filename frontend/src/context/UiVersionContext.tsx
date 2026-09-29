@@ -70,6 +70,8 @@ export const useUiVersion = (): UiVersionContextType => {
 export const UiVersionSwitcherFloat: React.FC = () => {
   const { uiVersion, toggleUiVersion } = useUiVersion();
 
+  if (!new URLSearchParams(window.location.search).has('ui')) return null;
+
   return (
     <div
       className="fixed bottom-20 right-4 z-toast flex items-center shadow-lg rounded-full bg-slate-900/90 text-white text-xs font-semibold px-3 py-1.5 backdrop-blur-xs cursor-pointer select-none active:scale-95 transition"

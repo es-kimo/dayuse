@@ -1,3 +1,5 @@
+import { GroupHomeScreen } from '../components/screens/GroupHomeScreen';
+import { Lightbox } from '../components/ui/Lightbox';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
@@ -85,6 +87,7 @@ export const GroupDetailPage: React.FC = () => {
   // 상태 필터와 별개의 축이라 AND로 함께 적용한다.
   const [onlyParticipating, setOnlyParticipating] = useState<boolean>(false);
 
+  const [homeImage, setHomeImage] = useState<string | null>(null);
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [challenges, setChallenges] = useState<ChallengeSummary[]>([]);
   const [challengesLoading, setChallengesLoading] = useState<boolean>(false);
@@ -129,15 +132,16 @@ export const GroupDetailPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const completedTodayCount = todayActions.filter((a) => a.isCompletedToday).length;
   const verifiedUserIds = useMemo(() => {
+    if (statusSummary?.verifiedUserIds) return new Set(statusSummary.verifiedUserIds);
     const set = new Set<number>();
     feedItems.forEach((f) => {
-      set.add(f.userId);
+      if (f.targetDate === new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })) set.add(f.userId);
     });
     if (completedTodayCount > 0 && currentUser?.id) {
       set.add(currentUser.id);
     }
     return set;
-  }, [feedItems, completedTodayCount, currentUser?.id]);
+  }, [feedItems, completedTodayCount, currentUser?.id, statusSummary]);
 
   const fetchGroup = async () => {
     if (!groupId) return;
@@ -432,11 +436,72 @@ export const GroupDetailPage: React.FC = () => {
     );
   }
 
+  const modals = <>
+      {/* 사진 인증 모달 (오늘 인증) */}
+      {activeVerificationAction && (
+        <VerificationModal
+          action={activeVerificationAction}
+          onClose={() => setActiveVerificationAction(null)}
+          onSuccess={handleVerificationSuccess}
+        />
+      )}
+
+      {/* 미확인 기록 정리 바텀시트 */}
+      <UncheckedRecordsBottomSheet
+        isOpen={showUncheckedSheet}
+        onClose={() => setShowUncheckedSheet(false)}
+        records={uncheckedRecords}
+        loading={uncheckedLoading}
+        onMarkFailed={handleMarkFailed}
+        onStartVerifyLate={handleStartVerifyLate}
+      />
+
+      {/* 사진 인증 모달 (늦은 인증) */}
+      {lateVerificationTarget && (
+        <VerificationModal
+          action={lateVerificationTarget.action}
+          recordId={lateVerificationTarget.recordId}
+          targetDate={lateVerificationTarget.targetDate}
+          onClose={() => setLateVerificationTarget(null)}
+          onSuccess={handleLateVerificationSuccess}
+        />
+      )}
+
+      {/* 댓글 바텀시트 */}
+      <CommentsBottomSheet
+        isOpen={activeCommentVerificationId !== null}
+        verificationId={activeCommentVerificationId}
+        onClose={() => setActiveCommentVerificationId(null)}
+        onCommentCountChange={handleCommentCountChange}
+      />
+
+      {/* 미수행 입금 신고 모달 */}
+      <DepositReportModal
+        groupId={Number(groupId)}
+        isOpen={showDepositModal}
+        account={settlementSummary?.account}
+        onClose={() => setShowDepositModal(false)}
+        onSuccess={() => {
+          fetchSettlementSummary();
+          fetchStatusSummary();
+          fetchUncheckedRecords();
+        }}
+      />
+    {homeImage && <Lightbox open onClose={() => setHomeImage(null)} src={homeImage} alt="인증 사진" />}
+  </>;
+  if (uiVersion === 'B' && activeTab === 'home') return <>
+    <GroupHomeScreen group={group} challengeCount={challenges.length} actions={todayActions} loading={todayLoading} verifiedUserIds={verifiedUserIds} copied={copied} onBack={() => navigate('/groups')} onInvite={handleCopyLink} onTab={handleTabChange} onVerify={setActiveVerificationAction} onImage={setHomeImage}>
+      <GroupFeedSection screen feedItems={feedItems} loading={feedLoading} hasMore={hasMoreFeed} onLoadMore={() => fetchFeed(feedPage + 1)} loadingMore={loadingMoreFeed} onOpenComments={setActiveCommentVerificationId} onDeleteVerification={handleDeleteVerification} />
+      <GroupSettlementCard screen uncheckedCount={statusSummary?.uncheckedCount} onOpenUnchecked={() => { fetchUncheckedRecords(); setShowUncheckedSheet(true); }} groupId={Number(groupId)} isHost={group.isHost} summary={settlementSummary} loading={settlementLoading} onRefresh={() => { fetchSettlementSummary(); fetchStatusSummary(); }} onOpenDepositModal={() => setShowDepositModal(true)} />
+    </GroupHomeScreen>
+    {modals}
+  </>;
+
   return (
-    <MobileLayout>
+    <MobileLayout showHeader={uiVersion !== 'B'}>
       {/* 상단 헤더 */}
       {uiVersion === 'B' ? (
-        <header className="flex items-center justify-between h-14 -mx-4 px-4 bg-slate-50/95 sticky top-0 z-20 border-b border-slate-200">
+        <header className="flex items-center justify-between h-14 -mt-4 -mx-4 px-4 bg-slate-50/95 sticky top-0 z-20 border-b border-slate-200">
           <button
             onClick={() => navigate('/groups')}
             className="w-10 h-10 -ml-2 text-slate-700 hover:text-slate-900 rounded-full flex items-center justify-center transition active:scale-95"
@@ -444,7 +509,7 @@ export const GroupDetailPage: React.FC = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="text-base font-bold text-slate-900 truncate px-2 flex-1 text-center">
+          <div className="text-base font-bold text-slate-900 truncate px-2 flex-1">
             {group.name}
           </div>
           <button
@@ -998,56 +1063,7 @@ export const GroupDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* 사진 인증 모달 (오늘 인증) */}
-      {activeVerificationAction && (
-        <VerificationModal
-          action={activeVerificationAction}
-          onClose={() => setActiveVerificationAction(null)}
-          onSuccess={handleVerificationSuccess}
-        />
-      )}
-
-      {/* 미확인 기록 정리 바텀시트 */}
-      <UncheckedRecordsBottomSheet
-        isOpen={showUncheckedSheet}
-        onClose={() => setShowUncheckedSheet(false)}
-        records={uncheckedRecords}
-        loading={uncheckedLoading}
-        onMarkFailed={handleMarkFailed}
-        onStartVerifyLate={handleStartVerifyLate}
-      />
-
-      {/* 사진 인증 모달 (늦은 인증) */}
-      {lateVerificationTarget && (
-        <VerificationModal
-          action={lateVerificationTarget.action}
-          recordId={lateVerificationTarget.recordId}
-          targetDate={lateVerificationTarget.targetDate}
-          onClose={() => setLateVerificationTarget(null)}
-          onSuccess={handleLateVerificationSuccess}
-        />
-      )}
-
-      {/* 댓글 바텀시트 */}
-      <CommentsBottomSheet
-        isOpen={activeCommentVerificationId !== null}
-        verificationId={activeCommentVerificationId}
-        onClose={() => setActiveCommentVerificationId(null)}
-        onCommentCountChange={handleCommentCountChange}
-      />
-
-      {/* 미수행 입금 신고 모달 */}
-      <DepositReportModal
-        groupId={Number(groupId)}
-        isOpen={showDepositModal}
-        account={settlementSummary?.account}
-        onClose={() => setShowDepositModal(false)}
-        onSuccess={() => {
-          fetchSettlementSummary();
-          fetchStatusSummary();
-          fetchUncheckedRecords();
-        }}
-      />
+      {modals}
     </MobileLayout>
   );
 };

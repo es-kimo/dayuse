@@ -1,3 +1,5 @@
+import { MessageCircle as ScreenMessageCircle } from './screens/ScreenIcons';
+import { ScreenAvatar } from './screens/Screen';
 import React, { useState } from 'react';
 import type { FeedItem } from '../types';
 import { formatKstTime } from '../utils/date';
@@ -15,6 +17,7 @@ import { Lightbox } from './ui/Lightbox';
 import { DayuAvatar } from './brand/DayuAvatar';
 
 interface GroupFeedSectionProps {
+  screen?: boolean;
   feedItems: FeedItem[];
   loading: boolean;
   hasMore: boolean;
@@ -25,6 +28,7 @@ interface GroupFeedSectionProps {
 }
 
 export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
+  screen = false,
   feedItems,
   loading,
   hasMore,
@@ -48,6 +52,19 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
       setDeletingId(null);
     }
   };
+
+  if (screen) return <>
+    <div className="sec"><h3>모임 인증 피드</h3><span>최신순</span></div>
+    {loading ? <p className="sub" role="status">인증 피드를 불러오는 중...</p> : !feedItems.length ? <div className="card"><p className="sub">아직 등록된 인증이 없어요.</p></div> : <div className="feed">{feedItems.map(item => <article className="card post" key={item.id}>
+      <div className="ph"><ScreenAvatar image={item.authorProfileImageUrl} /><div className="grow"><div className="t1" style={{ fontSize: 14.5 }}>{item.authorNickname}</div><div className="t2">{item.challengeTitle}</div></div>{item.isMine && <><button className="ib" onClick={() => setShareItem(item)} aria-label="인증 공유 카드 만들기"><Share2 className="ic s" /></button><button className="ib" onClick={() => handleDelete(item.id)} disabled={deletingId === item.id} aria-label="인증 삭제"><Trash2 className="ic s" /></button></>}</div>
+      <div style={{ padding: '0 14px' }}><button className="photo w100" onClick={() => setLightboxImage({ src: item.imageUrl, alt: `${item.authorNickname}님의 인증 사진` })} aria-label={`${item.authorNickname}님의 인증 사진 확대 보기`} style={{ display: 'block' }}><img className="screen-photo" src={item.imageUrl} alt="인증 사진" loading="lazy" /></button></div>
+      {item.comment && <p className="memo">{item.comment}</p>}
+      <div className="acts"><button onClick={() => onOpenComments(item.id)}><ScreenMessageCircle className="ic s" />댓글 {item.commentCount}</button><span className="time">{formatKstTime(item.createdAt)}</span></div>
+    </article>)}</div>}
+    {hasMore && <button className="btn line w100" disabled={loadingMore} onClick={onLoadMore}>{loadingMore ? '피드 불러오는 중...' : '이전 인증 더보기'}</button>}
+    {shareItem && <ShareCardModal cardType="TODAY_VERIFICATION" targetId={shareItem.id} title={shareItem.challengeTitle} userNickname={shareItem.authorNickname} imageUrl={shareItem.imageUrl} comment={shareItem.comment} targetDate={shareItem.targetDate} onClose={() => setShareItem(null)} />}
+    {lightboxImage && <Lightbox open onClose={() => setLightboxImage(null)} src={lightboxImage.src} alt={lightboxImage.alt} />}
+  </>;
 
   if (loading) {
     return (

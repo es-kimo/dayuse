@@ -1,3 +1,4 @@
+import { Info as ScreenInfo, CreditCard as ScreenCreditCard, ChevronRight as ScreenChevronRight } from './screens/ScreenIcons';
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import type { SettlementSummary, GroupAccountPayload } from "../types";
@@ -18,6 +19,9 @@ import {
 } from "lucide-react";
 
 interface GroupSettlementCardProps {
+  screen?: boolean;
+  uncheckedCount?: number;
+  onOpenUnchecked?: () => void;
   groupId: number;
   isHost: boolean;
   summary: SettlementSummary | null;
@@ -27,6 +31,9 @@ interface GroupSettlementCardProps {
 }
 
 export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
+  screen = false,
+  uncheckedCount = 0,
+  onOpenUnchecked,
   groupId,
   isHost,
   summary,
@@ -105,7 +112,13 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs space-y-4">
+    <div className={screen ? "card" : "bg-white border border-slate-200 rounded-lg p-4 shadow-xs space-y-4"} style={screen ? { display: "flex", flexDirection: "column", gap: 12 } : undefined}>
+      {screen ? <>
+        <div className="row"><div className="gi" style={{ width: 36, height: 36, borderRadius: 11 }}><ScreenCreditCard className="ic s" /></div><div className="grow"><div className="t1" style={{ fontSize: 14.5 }}>정산</div><button className="t2" style={{ display: "block", textAlign: "left" }} onClick={onOpenUnchecked} disabled={!uncheckedCount}>미확인 기록 {uncheckedCount}건 · {uncheckedCount ? "지난 기록 확인하기" : "지난 기록 모두 확인"}</button></div>{isHost && <button className="btn ghost sm" onClick={() => navigate(`/groups/${groupId}/settlements`)}>관리<ScreenChevronRight className="ic xs" /></button>}</div>
+        {loading ? <p className="sub" role="status">정산 불러오는 중...</p> : <div className="money"><div><small>쌓인 벌금</small><b>{(summary?.unpaidAmount ?? 0).toLocaleString()}원</b></div><div><small>확인 대기</small><b>{(summary?.waitingAmount ?? 0).toLocaleString()}원</b></div><div><small>입금 완료</small><b>{(summary?.confirmedAmount ?? 0).toLocaleString()}원</b></div></div>}
+        {account ? <div className="notice soft" style={{ alignItems: "center" }}><span className="grow">{account.bankName} {account.accountNumber}<br />{account.accountHolder}</span><button className="btn ghost sm" onClick={handleCopyAccount}>{copied ? "복사 완료" : "복사"}</button>{isHost && <button className="btn dark sm" onClick={handleOpenEditAccount}>수정</button>}</div> : isHost && <div className="notice soft" style={{ alignItems: "center" }}><ScreenInfo className="ic s" /><span className="grow">모임장만 보여요 · 계좌를 등록하면 멤버들이 입금을 신고할 수 있어요</span><button className="btn sm dark" style={{ height: 30, fontSize: 12.5 }} onClick={handleOpenEditAccount}>등록</button></div>}
+        {account && <button className="btn line w100" onClick={onOpenDepositModal}>입금 신고하기</button>}
+      </> : <>
       {/* 상단 타이틀 & 모임장 관리 버튼 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -240,6 +253,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
       </button>
 
       {/* 모임장 계좌 등록/수정 모달 */}
+      </>}
       <Modal
         open={isEditingAccount}
         onOpenChange={setIsEditingAccount}

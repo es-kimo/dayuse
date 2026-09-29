@@ -1,3 +1,4 @@
+import { Trophy, Info } from '../components/screens/ScreenIcons';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -5,8 +6,8 @@ import { invitesApi, inviteStorage } from '../api/invites';
 import { groupsApi } from '../api/groups';
 import type { InviteInfo } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
-import { Users, AlertTriangle, ArrowRight, Loader2, CheckCircle2, Home } from 'lucide-react';
-import { DayuLogo } from '../components/brand/DayuLogo';
+import { AlertTriangle, Loader2, Home } from 'lucide-react';
+import { Screen, ScreenAvatar, screenAssets } from '../components/screens/Screen';
 import { usePageMeta } from '../hooks/usePageMeta';
 
 export const InviteLandingPage: React.FC = () => {
@@ -134,127 +135,28 @@ export const InviteLandingPage: React.FC = () => {
     );
   }
 
-  return (
-    <MobileLayout showHeader={false}>
-      <div className="flex-1 flex flex-col justify-between py-12 px-2">
-        <div className="flex flex-col items-center text-center">
-          <div className="mb-6">
-            <DayuLogo variant="app-icon" className="w-14 h-14 rounded-2xl shadow-sm" />
-          </div>
-
-          {isAlreadyJoined ? (
-            <span className="text-xs font-semibold text-success bg-success-bg border border-success-border px-3 py-1 rounded-full mb-3 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-success-icon" />
-              이미 참여 중인 모임
-            </span>
-          ) : (
-            <span className="text-xs font-semibold text-primary bg-primary-subtle border border-primary-muted px-3 py-1 rounded-full mb-3">
-              모임 초대장
-            </span>
-          )}
-
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">
-            '{inviteInfo.groupName}'
-          </h1>
-          <p className="text-xs text-slate-500 mb-6">
-            모임장 <span className="font-semibold text-slate-700">{inviteInfo.hostNickname}</span>님의 초대를 받았습니다.
-          </p>
-
-          {/* 모임 정보 요약 카드 */}
-          <div className="w-full bg-white border border-slate-200 rounded-lg p-4 flex items-center justify-around shadow-xs mb-4">
-            <div className="text-center">
-              <span className="text-[11px] text-slate-400 block mb-1">현재 멤버</span>
-              <span className="text-base font-bold text-slate-800 flex items-center justify-center gap-1">
-                <Users className="w-4 h-4 text-slate-500" />
-                {inviteInfo.memberCount}명
-              </span>
-            </div>
-          </div>
-
-          {isAlreadyJoined && (
-            <div className="w-full p-3.5 bg-emerald-50/70 border border-emerald-100 rounded-md mb-4 text-left flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <div className="text-xs text-emerald-900 leading-relaxed">
-                <p className="font-semibold mb-0.5">이미 가입된 멤버입니다</p>
-                <p className="text-[11px] text-emerald-700">
-                  모임 홈으로 바로 이동하거나 내 모임 목록으로 돌아갈 수 있습니다.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {errorMessage && !isAlreadyJoined && (
-            <div className="w-full p-3 bg-red-50 text-red-600 text-xs rounded-md mb-4 text-center">
-              {errorMessage}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2.5">
-          {isAlreadyJoined ? (
-            <>
-              <button
-                onClick={() => navigate(`/groups/${inviteInfo.groupId}`)}
-                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md text-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98]"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>모임 홈으로 바로 가기</span>
-              </button>
-              <button
-                onClick={() => navigate('/groups')}
-                className="w-full py-3 bg-card hover:bg-sunken border border-line text-ink font-semibold rounded-md text-xs flex items-center justify-center gap-1.5 transition active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <Home className="w-3.5 h-3.5 text-ink-muted" />
-                <span>내 모임 목록(홈)으로 가기</span>
-              </button>
-            </>
-          ) : isAuthenticated ? (
-            <>
-              <button
-                onClick={handleJoin}
-                disabled={isJoining}
-                className="w-full py-3.5 bg-primary hover:bg-primary-hover active:bg-primary-active disabled:bg-line disabled:text-ink-disabled text-white font-semibold rounded-md text-body-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-4 focus-visible:ring-primary-muted"
-              >
-                {isJoining ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>참여 처리 중...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>모임 참여하기</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => navigate('/groups')}
-                className="w-full py-3 bg-card hover:bg-sunken border border-line text-ink font-semibold rounded-md text-xs flex items-center justify-center gap-1.5 transition active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <Home className="w-3.5 h-3.5 text-ink-muted" />
-                <span>홈으로 둘러보기</span>
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={handleGoToLogin}
-                className="w-full py-3.5 bg-primary hover:bg-primary-hover active:bg-primary-active text-white font-semibold rounded-md text-body-sm flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-4 focus-visible:ring-primary-muted"
-              >
-                <span>로그인하고 모임 참여하기</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => navigate('/groups')}
-                className="w-full py-3 bg-card hover:bg-sunken border border-line text-ink font-semibold rounded-md text-xs flex items-center justify-center gap-1.5 transition active:scale-[0.98] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <Home className="w-3.5 h-3.5 text-ink-muted" />
-                <span>홈으로 둘러보기</span>
-              </button>
-            </>
-          )}
-        </div>
+  return <Screen>
+    <main className="body" style={{ paddingTop: 28, gap: 18 }}>
+      <div className="center" style={{ gap: 10 }}>
+        <img src={screenAssets.invite} alt="" style={{ width: 64, height: 64, borderRadius: 18 }} />
+        <span className="chip blue">{isAlreadyJoined ? '이미 참여 중인 모임' : '모임 초대장'}</span>
+        <h1 className="h1">{inviteInfo.groupName}</h1>
+        <p className="sub">모임장 <b style={{ color: 'var(--ink)' }}>{inviteInfo.hostNickname}</b>님이 초대했어요</p>
       </div>
-    </MobileLayout>
-  );
+      <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="stack">{inviteInfo.members?.slice(0, 4).map((m, i) => <ScreenAvatar key={i} image={m.profileImageUrl} />)}</div>
+        <div className="grow"><div className="t1">{inviteInfo.memberCount}명이 함께하고 있어요</div><div className="t2">{inviteInfo.members?.map(m => m.nickname).join(', ')}</div></div>
+      </div>
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="sec" style={{ margin: 0 }}><h3><Trophy className="ic s" />진행 중인 챌린지</h3><span>{inviteInfo.challenges?.length ?? 0}개</span></div>
+        {inviteInfo.challenges?.map((c, i) => <div key={c.id} className="row"><div className="gi" style={{ width: 38, height: 38, fontSize: 14, ...(i % 2 ? { background: '#F1F5F9', color: '#475569' } : {}) }}>{c.title.replace(/^(매일\s*)?\d*시?\s*/, '').slice(0, 1)}</div><div className="grow"><div className="t1" style={{ fontSize: 14.5 }}>{c.title}</div><div className="t2">{c.periodType === 'WEEKLY_N' ? `주 ${c.targetFrequency}회` : '매일'} · {c.participantCount}명 참여</div></div></div>)}
+        <div className="notice soft"><Info className="ic s" /><span>들어가서 하고 싶은 챌린지만 골라 참여하면 돼요. 모든 챌린지를 할 필요는 없어요.</span></div>
+      </div>
+      {errorMessage && !isAlreadyJoined && <p className="error" role="alert">{errorMessage}</p>}
+    </main>
+    <footer className="foot" style={{ flexDirection: 'column', border: 0, background: 'transparent' }}>
+      <button className="btn lg w100" disabled={isJoining} onClick={isAlreadyJoined ? () => navigate(`/groups/${inviteInfo.groupId}`) : isAuthenticated ? handleJoin : handleGoToLogin}>{isJoining ? '참여 처리 중...' : isAlreadyJoined ? '모임 홈으로 바로 가기' : isAuthenticated ? '모임 참여하기' : '카카오로 시작하고 참여하기'}</button>
+      <button className="btn line w100" onClick={() => navigate('/login')} style={{ height: 44, border: 0, background: 'transparent', color: 'var(--ink3)', fontWeight: 600 }}>데이유즈 둘러보기</button>
+    </footer>
+  </Screen>;
 };

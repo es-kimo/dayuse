@@ -37,6 +37,8 @@ export interface GroupDetail {
 }
 
 export interface InviteInfo {
+  members?: { nickname: string; profileImageUrl?: string | null }[];
+  challenges?: { id: number; title: string; periodType: PeriodType; targetFrequency?: number | null; participantCount: number }[];
   groupId: number;
   groupName: string;
   hostNickname: string;
@@ -235,6 +237,7 @@ export interface TodayPeriodInfo {
 }
 
 export interface TodayAction {
+  streakDays?: number;
   challengeId: number;
   challengeTitle: string;
   verificationCriteria: string;
@@ -312,6 +315,7 @@ export type DailyRecordStatus = 'NOT_PARTICIPATED' | 'PLANNED' | 'WAITING' | 'CO
 export type DepositStatus = 'UNPAID' | 'WAITING_CONFIRMATION' | 'CONFIRMED';
 
 export interface StatusSummaryResponse {
+  verifiedUserIds?: number[];
   groupId: number;
   uncheckedCount: number;
   unpaidPenaltyAmount: number;

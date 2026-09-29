@@ -1,11 +1,12 @@
+import { Info, Plus, Kakao } from '../components/screens/ScreenIcons';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/auth';
 import { handlePostLoginNavigation, inviteStorage } from '../api/invites';
-import { MobileLayout } from '../components/MobileLayout';
-import { DayuLogo } from '../components/brand/DayuLogo';
-import { MessageCircle, UserCheck } from 'lucide-react';
+import { Screen, screenAssets } from '../components/screens/Screen';
+
+import { UserCheck } from 'lucide-react';
 import { InAppBrowserNotice } from '../components/InAppBrowserNotice';
 
 import { Button, Select, FormField } from '../components/ui';
@@ -14,6 +15,7 @@ export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [devOpen, setDevOpen] = useState(false);
   const [mockUserId, setMockUserId] = useState<string>('1');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loginError, setLoginError] = useState<string>('');
@@ -66,87 +68,30 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <MobileLayout showHeader={false}>
-      <div className="flex-1 flex flex-col justify-center items-center px-4 py-8">
-        <div className="mb-6 flex flex-col items-center">
-          <DayuLogo variant="app-icon" className="w-16 h-16 rounded-2xl shadow-sm mb-4" />
-          <DayuLogo variant="horizontal" className="h-8 w-auto mb-2" />
+    <Screen>
+      <main className="body" style={{ justifyContent: 'center', padding: '24px 28px' }}>
+        <div className="center" style={{ gap: 18, marginTop: -10 }}>
+          <img src={screenAssets.logo} alt="데이유즈" style={{ height: 44 }} />
+          <div><p style={{ fontSize: 17, fontWeight: 700 }}>목표는 각자, 꾸준함은 함께.</p><p className="sub" style={{ marginTop: 4 }}>친구들과 각자의 챌린지를 인증하고 기록해요</p></div>
         </div>
-
-        <p className="text-body-sm text-ink-secondary font-medium text-center mb-1">
-          목표는 각자, 꾸준함은 함께.
-        </p>
-        <p className="text-caption text-ink-muted text-center mb-6 max-w-xs">
-          친구들과 각자의 챌린지를 인증하고 기록해요
-        </p>
-
-        {/* 인앱 브라우저 감지 시 외부 브라우저 오픈 안내 배너 */}
-        <InAppBrowserNotice className="max-w-xs mb-6" />
-
-        {/* 카카오 로그인 버튼 (카카오 공식 디자인 가이드 준수) */}
-        <button
-          type="button"
-          onClick={handleKakaoLogin}
-          disabled={isLoading}
-          aria-busy={isLoading ? 'true' : undefined}
-          className="w-full max-w-xs min-h-[48px] py-3.5 px-4 bg-[#FEE500] hover:bg-[#FADA0A] text-[#191919] font-semibold rounded-md flex items-center justify-center gap-2.5 shadow-sm active:scale-[0.98] transition focus-ring disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-        >
-          <MessageCircle className="w-5 h-5 fill-current shrink-0" aria-hidden="true" />
-          <span>{isLoading ? '로그인 처리 중...' : '카카오로 시작하기'}</span>
-        </button>
-
-        {loginError && (
-          <div role="alert" aria-live="polite" className="mt-3 text-caption font-medium text-danger text-center max-w-xs">
-            {loginError}
-          </div>
-        )}
-
-        <p className="text-xs text-slate-400 text-center mt-3">
-          시작하면{' '}
-          <a href="/terms" className="underline underline-offset-2 hover:text-slate-600 focus-ring rounded">
-            이용약관
-          </a>
-          과{' '}
-          <a href="/privacy" className="underline underline-offset-2 hover:text-slate-600 focus-ring rounded">
-            개인정보처리방침
-          </a>
-          에 동의하게 돼요.
-        </p>
-
-
-        {/* 로컬 개발/학습용 모의 로그인 영역 (개발 환경에서만 노출) */}
-        {import.meta.env.DEV && (
-          <div className="w-full max-w-xs mt-10 pt-6 border-t border-line">
-            <div className="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-3 text-center">
-              로컬 개발·테스트용 빠른 로그인
+        <InAppBrowserNotice />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 36 }}>
+          <button className="btn kakao lg w100" onClick={handleKakaoLogin} disabled={isLoading}><Kakao className="ic" />{isLoading ? '로그인 처리 중...' : '카카오로 시작하기'}</button>
+          <p className="help" style={{ textAlign: 'center' }}>시작하면 <a className="todo" href="/terms">이용약관</a>과 <a className="todo" href="/privacy">개인정보처리방침</a>에 동의하게 돼요.</p>
+          {loginError && <p className="error" role="alert">{loginError}</p>}
+        </div>
+        {import.meta.env.DEV && <div className="dev" style={{ marginTop: 28 }}>
+          <button type="button" aria-expanded={devOpen} onClick={() => setDevOpen(!devOpen)} className="lbl" style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer', padding: 0, border: 0, background: 'none', width: '100%' }}><span style={{ display: 'flex', gap: 6, alignItems: 'center' }}><Info className="ic s" />개발용 빠른 로그인 · 로컬·테스트에서만 보여요</span><Plus className="ic s" /></button>
+          {devOpen && <FormField label="테스트 계정 선택" id="mock-user-select" className="mt-3">
+            <div className="flex gap-2">
+              <Select id="mock-user-select" value={mockUserId} onChange={(e) => setMockUserId(e.target.value)}>
+                <option value="1">사용자 1 (모임장 테스트용)</option><option value="2">사용자 2 (초대 가입 테스트용)</option><option value="3">사용자 3 (비회원 차단 테스트용)</option>
+              </Select>
+              <Button onClick={() => handleMockLogin(`mock-user-${mockUserId}`)} isLoading={isLoading} leftIcon={<UserCheck className="w-4 h-4" />}>접속</Button>
             </div>
-            <FormField label="테스트 계정 선택" id="mock-user-select" className="mb-2">
-              <div className="flex items-center gap-2">
-                <Select
-                  id="mock-user-select"
-                  value={mockUserId}
-                  onChange={(e) => setMockUserId(e.target.value)}
-                  className="flex-1"
-                >
-                  <option value="1">사용자 1 (모임장 테스트용)</option>
-                  <option value="2">사용자 2 (초대 가입 테스트용)</option>
-                  <option value="3">사용자 3 (비회원 차단 테스트용)</option>
-                </Select>
-                <Button
-                  variant="dark"
-                  size="md"
-                  onClick={() => handleMockLogin(`mock-user-${mockUserId}`)}
-                  isLoading={isLoading}
-                  className="shrink-0"
-                  leftIcon={<UserCheck className="w-4 h-4" />}
-                >
-                  접속
-                </Button>
-              </div>
-            </FormField>
-          </div>
-        )}
-      </div>
-    </MobileLayout>
+          </FormField>}
+        </div>}
+      </main>
+    </Screen>
   );
 };
