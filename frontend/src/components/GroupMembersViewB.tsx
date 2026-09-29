@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Copy, Check, MessageCircle, RefreshCw, Link2, Users } from 'lucide-react';
+import React, { useId, useState } from 'react';
+import { Copy, Check, MessageCircle, RefreshCw, Link2, Users, ChevronDown } from 'lucide-react';
 import type { GroupDetail } from '../types';
 import { DayuAvatar } from './brand/DayuAvatar';
 import { Button, Card, Chip, SectionHead } from './dayu/ui';
@@ -28,6 +28,18 @@ export const GroupMembersViewB: React.FC<GroupMembersViewBProps> = ({
 }) => {
   const { showToast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [showCode, setShowCode] = useState(false);
+  const codePanelId = useId();
+
+  const handleCopyCode = async () => {
+    if (!group.inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(group.inviteCode);
+      showToast('초대 코드가 복사되었습니다!', 'success');
+    } catch {
+      showToast('코드를 길게 눌러 직접 복사해 주세요.', 'info');
+    }
+  };
 
   const displayInviteUrl = inviteUrl.includes('localhost')
     ? inviteUrl.replace(/https?:\/\/localhost:\d+/, 'https://dayuse.kr')
@@ -71,26 +83,51 @@ export const GroupMembersViewB: React.FC<GroupMembersViewBProps> = ({
           </Button>
         </div>
 
+        <p className="mt-1.5 text-[12px] text-slate-500">7일 뒤 만료</p>
+
         <Button variant="kakao" className="mt-3 w-full" onClick={handleKakaoShare}>
           <MessageCircle className="size-4 fill-[#191600]" />
           카카오톡으로 보내기
         </Button>
 
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-[13px] text-slate-500">
-            코드 <b className="font-bold tracking-[0.06em] text-slate-800">{group.inviteCode || 'SAMPLE'}</b> · 7일 뒤 만료
-          </span>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3">
+          <button
+            type="button"
+            aria-expanded={showCode}
+            aria-controls={codePanelId}
+            onClick={() => setShowCode((value) => !value)}
+            className="flex min-h-11 cursor-pointer items-center gap-1 whitespace-nowrap text-[12.5px] font-medium text-slate-500 hover:text-slate-800"
+          >
+            초대 코드 {showCode ? '접기' : '보기'}
+            <ChevronDown className={`size-3.5 transition-transform ${showCode ? 'rotate-180' : ''}`} />
+          </button>
           {isHost && (
             <button
               type="button"
               onClick={onRefreshInviteCode}
               disabled={isRefreshing}
-              className="flex cursor-pointer items-center gap-1.5 text-[12.5px] font-bold text-slate-500 transition-colors hover:text-slate-800 disabled:opacity-50"
+              className="flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-[12.5px] font-bold text-slate-500 transition-colors hover:text-slate-800 disabled:opacity-50"
             >
-              <RefreshCw className={`size-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`size-3.5 shrink-0 ${isRefreshing ? 'animate-spin' : ''}`} />
               새 코드 받기
             </button>
           )}
+        </div>
+        <div id={codePanelId} hidden={!showCode}>
+          <div className="min-w-0 border-t border-slate-100 pt-3">
+            <p className="select-all break-all font-mono text-[13px] leading-5 text-slate-700">
+              {group.inviteCode || '발급된 코드가 없어요'}
+            </p>
+            <button
+              type="button"
+              onClick={handleCopyCode}
+              disabled={!group.inviteCode}
+              className="mt-1 flex min-h-11 cursor-pointer items-center gap-1.5 text-[12.5px] font-semibold text-slate-600 hover:text-slate-800 disabled:opacity-50"
+            >
+              <Copy className="size-3.5" />
+              코드 복사
+            </button>
+          </div>
         </div>
       </Card>
 
