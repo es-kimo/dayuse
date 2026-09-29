@@ -7,7 +7,7 @@ export const MOCK_USER = {
   id: 1,
   kakaoId: '12345678',
   nickname: '류코딩',
-  profileImageUrl: null,
+  profileImageUrl: 'dayu:blue',
 };
 
 export const MOCK_GROUPS_EMPTY = [];

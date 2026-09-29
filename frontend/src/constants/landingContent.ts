@@ -124,8 +124,8 @@ export const LANDING_SCREEN_CAPTURES: Record<string, ScreenAsset> = {
     webpPath: '/landing/assets/captures/03-group-feed.webp',
     pngPath: '/landing/assets/captures/03-group-feed.png',
     width: 780,
-    height: 1976,
-    aspectRatio: '780/1976',
+    height: 3426,
+    aspectRatio: '780/3426',
     alt: '데이유즈 모임 인증 피드 화면 캡처',
   },
   calendar: {

@@ -356,8 +356,19 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
       });
     };
 
+    // 0. 피처 플래그 및 이벤트 (v0.8 신규 UI 보장)
+    if (url.includes('/features/assignment')) {
+      respondJson({
+        featureKey: 'ui_refresh_01',
+        variant: 'B',
+        isOverride: false,
+        isKillSwitchActive: false,
+      });
+    } else if (url.includes('/features/events')) {
+      respondJson({ status: 'accepted' }, 202);
+    }
     // 1. 내 정보
-    if (url.endsWith('/auth/me')) {
+    else if (url.endsWith('/auth/me')) {
       respondJson(mock.MOCK_USER);
     }
     // 2. 그룹 목록
@@ -429,7 +440,8 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
 
   for (const screen of SCREENS) {
     currentEmptyGroups = !!screen.emptyGroups;
-    const targetUrl = `${baseUrl}${screen.route}`;
+    const separator = screen.route.includes('?') ? '&' : '?';
+    const targetUrl = `${baseUrl}${screen.route}${separator}ui=B`;
     console.log(`  📸 실제 화면 캡처: ${screen.id} -> ${screen.route}`);
 
     try {
@@ -437,6 +449,7 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
         await page.evaluateOnNewDocument(() => {
           localStorage.setItem('accessToken', 'mock-access-token');
           localStorage.setItem('refreshToken', 'mock-refresh-token');
+          localStorage.setItem('dayuse_ui_version', 'B');
 
           // 웹 푸시 ServiceWorker & PushManager 모의 주입 (블로킹 방지 및 정상 구독 상태 재현)
           if ('serviceWorker' in navigator) {
@@ -472,6 +485,7 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
         await page.evaluateOnNewDocument(() => {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
+          localStorage.setItem('dayuse_ui_version', 'B');
         });
       }
 

@@ -11,7 +11,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:17.658Z"
+      "capturedAt": "2026-09-29T13:06:41.472Z"
     },
     {
       "id": "02-groups-list",
@@ -24,7 +24,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:19.578Z"
+      "capturedAt": "2026-09-29T13:06:43.301Z"
     },
     {
       "id": "03-group-feed",
@@ -35,9 +35,9 @@
       "webpFile": "03-group-feed.webp",
       "assetPath": "/landing/assets/captures/03-group-feed.webp",
       "width": 780,
-      "height": 3260,
-      "aspectRatio": "780/3260",
-      "capturedAt": "2026-09-29T07:02:21.983Z"
+      "height": 3426,
+      "aspectRatio": "780/3426",
+      "capturedAt": "2026-09-29T13:06:45.293Z"
     },
     {
       "id": "03b-group-challenges",
@@ -50,7 +50,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:24.664Z"
+      "capturedAt": "2026-09-29T13:06:46.957Z"
     },
     {
       "id": "03c-group-members",
@@ -61,9 +61,9 @@
       "webpFile": "03c-group-members.webp",
       "assetPath": "/landing/assets/captures/03c-group-members.webp",
       "width": 780,
-      "height": 1688,
-      "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:26.683Z"
+      "height": 1794,
+      "aspectRatio": "780/1794",
+      "capturedAt": "2026-09-29T13:06:48.612Z"
     },
     {
       "id": "04-challenge-calendar",
@@ -74,9 +74,9 @@
       "webpFile": "04-challenge-calendar.webp",
       "assetPath": "/landing/assets/captures/04-challenge-calendar.webp",
       "width": 780,
-      "height": 2488,
-      "aspectRatio": "780/2488",
-      "capturedAt": "2026-09-29T07:02:28.506Z"
+      "height": 2356,
+      "aspectRatio": "780/2356",
+      "capturedAt": "2026-09-29T13:06:50.320Z"
     },
     {
       "id": "05-today-actions",
@@ -89,7 +89,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:30.173Z"
+      "capturedAt": "2026-09-29T13:06:52.020Z"
     },
     {
       "id": "06-group-new",
@@ -100,9 +100,9 @@
       "webpFile": "06-group-new.webp",
       "assetPath": "/landing/assets/captures/06-group-new.webp",
       "width": 780,
-      "height": 1688,
-      "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:31.831Z"
+      "height": 112,
+      "aspectRatio": "780/112",
+      "capturedAt": "2026-09-29T13:06:53.623Z"
     },
     {
       "id": "07-challenge-new",
@@ -113,9 +113,9 @@
       "webpFile": "07-challenge-new.webp",
       "assetPath": "/landing/assets/captures/07-challenge-new.webp",
       "width": 780,
-      "height": 1688,
-      "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:33.899Z"
+      "height": 112,
+      "aspectRatio": "780/112",
+      "capturedAt": "2026-09-29T13:06:55.242Z"
     },
     {
       "id": "08-verification-modal",
@@ -128,7 +128,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:36.649Z"
+      "capturedAt": "2026-09-29T13:06:57.757Z"
     },
     {
       "id": "08b-modal-unchecked-sheet",
@@ -141,7 +141,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:39.575Z"
+      "capturedAt": "2026-09-29T13:07:04.263Z"
     },
     {
       "id": "08c-modal-comments-sheet",
@@ -154,7 +154,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:42.485Z"
+      "capturedAt": "2026-09-29T13:07:06.914Z"
     },
     {
       "id": "08d-modal-deposit-report",
@@ -167,7 +167,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:45.098Z"
+      "capturedAt": "2026-09-29T13:07:09.682Z"
     },
     {
       "id": "08e-modal-abort-challenge",
@@ -180,7 +180,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:48.636Z"
+      "capturedAt": "2026-09-29T13:07:12.692Z"
     },
     {
       "id": "09-share-card",
@@ -193,7 +193,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:50.366Z"
+      "capturedAt": "2026-09-29T13:07:14.371Z"
     },
     {
       "id": "10-invite-landing",
@@ -206,7 +206,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:52.072Z"
+      "capturedAt": "2026-09-29T13:07:16.009Z"
     },
     {
       "id": "11-login",
@@ -219,7 +219,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:02:53.786Z"
+      "capturedAt": "2026-09-29T13:07:17.587Z"
     },
     {
       "id": "12-profile",
@@ -230,9 +230,9 @@
       "webpFile": "12-profile.webp",
       "assetPath": "/landing/assets/captures/12-profile.webp",
       "width": 780,
-      "height": 1756,
-      "aspectRatio": "780/1756",
-      "capturedAt": "2026-09-29T07:02:55.904Z"
+      "height": 1688,
+      "aspectRatio": "780/1688",
+      "capturedAt": "2026-09-29T13:07:19.214Z"
     },
     {
       "id": "13-notification-settings",
@@ -243,9 +243,9 @@
       "webpFile": "13-notification-settings.webp",
       "assetPath": "/landing/assets/captures/13-notification-settings.webp",
       "width": 780,
-      "height": 1688,
-      "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:03:03.355Z"
+      "height": 112,
+      "aspectRatio": "780/112",
+      "capturedAt": "2026-09-29T13:07:26.523Z"
     },
     {
       "id": "14-settlement-manage",
@@ -258,7 +258,7 @@
       "width": 780,
       "height": 1688,
       "aspectRatio": "780/1688",
-      "capturedAt": "2026-09-29T07:03:06.230Z"
+      "capturedAt": "2026-09-29T13:07:29.030Z"
     }
   ]
 }
