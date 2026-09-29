@@ -18,13 +18,14 @@ import {
 } from '../utils/date';
 import {
   Loader2,
-  CheckCircle2,
   Share2,
   Repeat,
   Trash2,
   Smartphone,
   ChevronRight,
 } from 'lucide-react';
+import { Dayu } from './dayu/DayuAvatar';
+import { Button } from './dayu/ui';
 import { IosInstallGuideModal } from './IosInstallGuideModal';
 import { isStandalone, isIos } from '../utils/webPush';
 import { logPwaImpression, logPwaGuideOpen } from '../utils/pwaAnalytics';
@@ -288,83 +289,73 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             }
           }
         }}
-        backdropClassName="bg-black/60 backdrop-blur-xs"
-        className="bg-white w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl space-y-4"
+        placement="bottom"
+        backdropClassName="bg-slate-900/45"
+        className="flex max-h-[92dvh] w-full max-w-app flex-col gap-5 overflow-y-auto overscroll-contain rounded-t-[26px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom,0px))] sm:rounded-[26px]"
       >
-        <>
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-8 h-8" />
+        <div className="flex justify-end">
+          <ModalClose
+            aria-label="닫기"
+            className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-600 hover:bg-slate-100"
+          >
+            <ScreenX className="size-[22px]" />
+          </ModalClose>
+        </div>
+        <div className="flex flex-col items-center gap-3 text-center">
+          <Dayu face="cheer" size={72} />
+          <div>
+            <ModalTitle className="text-[21px] font-extrabold tracking-[-0.02em] text-slate-800">인증을 완료했어요!</ModalTitle>
+            <ModalDescription className="mt-2 text-[14px] leading-relaxed text-slate-500">
+              오늘의 도전이 기록됐어요. 수고했어요!
+            </ModalDescription>
           </div>
-          <div className="space-y-1">
-            <ModalTitle className="text-base font-bold text-slate-800">인증이 완료되었습니다! 🎉</ModalTitle>
-            <ModalDescription className="text-xs text-slate-500">오늘의 멋진 도전을 기록했습니다.</ModalDescription>
-          </div>
+          <p className="max-w-full break-words text-[14px] font-semibold text-slate-700">{action.challengeTitle}</p>
+        </div>
 
-          {/* 친절한 멘트와 함께 스포트라이트를 받는 PWA 홈 화면 추가 카드 */}
-          {!isStandalone() && (
-            <div className="rounded-2xl border border-blue-200/80 bg-gradient-to-b from-blue-50/90 via-sky-50/50 to-white p-4 text-left shadow-2xs">
-              <div className="flex items-start gap-3">
-                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-xs">
-                  <Smartphone className="size-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[14px] font-extrabold text-slate-800">내일도 잊지 않고 인증하려면?</span>
-                    <span className="rounded-full bg-blue-100 px-1.5 py-0.2 text-[10.5px] font-bold text-blue-700">
-                      설치 3초
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[12.5px] leading-relaxed text-slate-600">
-                    매번 브라우저 찾지 않고, <strong>홈 화면에서 카톡처럼 1초 만에</strong> 바로 열어보세요!
-                  </p>
-                </div>
-              </div>
+        <div className="flex flex-col gap-2">
+          <Button
+            size="lg"
+            className="w-full shrink-0"
+            onClick={() => {
+              setPostSuccessAction('success');
+              requestClose();
+            }}
+          >
+            확인
+          </Button>
+          <Button
+            variant="line"
+            className="w-full shrink-0"
+            onClick={() => {
+              setPostSuccessAction('share');
+              setOpen(false);
+            }}
+          >
+            <Share2 className="size-4 shrink-0" />
+            인증 카드 공유하기
+          </Button>
+        </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  logPwaGuideOpen('verification_success');
-                  setPostSuccessAction('install_guide');
-                  setOpen(false);
-                }}
-                className="mt-3.5 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-2.5 text-[13px] font-bold text-white shadow-xs transition-all hover:bg-blue-700 active:scale-[0.98]"
-              >
-                <Smartphone className="size-4" />
-                <span>홈 화면에 앱 추가하기</span>
-                <ChevronRight className="size-3.5 opacity-80" />
-              </button>
-            </div>
-          )}
-
-          <div className="space-y-2 pt-1">
-            <button
-              type="button"
-              onClick={() => {
-                setPostSuccessAction('share');
-                setOpen(false);
-              }}
-              className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold transition active:scale-[0.98] ${
-                !isStandalone()
-                  ? 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-                  : 'bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:bg-blue-500'
-              }`}
-            >
-              <Share2 className="size-4" />
-              <span>오늘 인증 공유 카드 만들기</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setPostSuccessAction('success');
-                requestClose();
-              }}
-              className="w-full rounded-xl bg-slate-100 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-200"
-            >
-              확인
-            </button>
-          </div>
-        </>
+        {!isStandalone() && (
+          <button
+            type="button"
+            onClick={() => {
+              logPwaGuideOpen('verification_success');
+              setPostSuccessAction('install_guide');
+              setOpen(false);
+            }}
+            className="flex w-full shrink-0 cursor-pointer items-center gap-3 rounded-[18px] bg-slate-50 p-4 text-left transition-colors hover:bg-slate-100"
+          >
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600">
+              <Smartphone className="size-5" />
+            </span>
+            <span className="min-w-0 flex-1 break-words">
+              <span className="block text-[14px] font-bold text-slate-800">홈 화면에 추가하기</span>
+              <span className="mt-1 block text-[12.5px] leading-relaxed text-slate-500">내일은 홈 화면에서 바로 열어보세요.</span>
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-slate-400" />
+          </button>
+        )}
       </Modal>
     );
   }
