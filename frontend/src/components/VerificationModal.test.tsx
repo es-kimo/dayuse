@@ -38,7 +38,7 @@ describe('인증 완료 모달', () => {
   it('확인 버튼으로 완료 콜백을 실행한다', async () => {
     await completeVerification();
     expect(screen.getByRole('button', { name: /홈 화면에 추가하기/ })).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: '확인', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: '확인' }));
     await waitFor(() => expect(mocks.success).toHaveBeenCalledTimes(1));
   });
   it('설치형 앱에서는 설치 안내 없이 공유 카드를 열 수 있다', async () => {
