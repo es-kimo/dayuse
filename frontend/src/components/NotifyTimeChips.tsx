@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Pill } from './dayu/ui';
 
 interface NotifyTimeChipsProps {
   selectedTime: string;
@@ -22,36 +23,22 @@ export const NotifyTimeChips: React.FC<NotifyTimeChipsProps> = ({
         {PRESET_TIMES.map((time) => {
           const isSelected = selectedTime === time;
           return (
-            <button
+            <Pill
               key={time}
-              type="button"
+              active={isSelected}
               disabled={disabled}
               onClick={() => {
                 setShowCustomInput(false);
                 onTimeChange(time);
               }}
-              className={`h-[34px] px-3 rounded-[10px] text-[13.5px] font-semibold transition active:scale-95 cursor-pointer disabled:cursor-not-allowed ${
-                isSelected
-                  ? 'border border-blue-600 bg-blue-50 text-blue-600 font-bold'
-                  : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-              }`}
             >
               {time}
-            </button>
+            </Pill>
           );
         })}
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => setShowCustomInput(!showCustomInput)}
-          className={`h-[34px] px-3 rounded-[10px] text-[13.5px] font-semibold transition active:scale-95 cursor-pointer disabled:cursor-not-allowed ${
-            isCustomTime || showCustomInput
-              ? 'border border-blue-600 bg-blue-50 text-blue-600 font-bold'
-              : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-          }`}
-        >
+        <Pill active={isCustomTime || showCustomInput} disabled={disabled} onClick={() => setShowCustomInput(!showCustomInput)}>
           직접
-        </button>
+        </Pill>
       </div>
 
       {showCustomInput && (

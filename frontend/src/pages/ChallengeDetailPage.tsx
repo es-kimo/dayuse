@@ -1092,6 +1092,8 @@ export const ChallengeDetailPage: React.FC = () => {
       {showAbortModal && challenge && (
         <AbortChallengeModal
           challengeId={challenge.id}
+          challengeTitle={challenge.title}
+          participantCount={challenge.participants?.length}
           isOpen={showAbortModal}
           onClose={() => setShowAbortModal(false)}
           onSuccess={(updated) => {

@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useUiVersion } from '../context/UiVersionContext';
 import { MobileLayout } from '../components/MobileLayout';
 import { ProfileHeader } from '../components/ProfileHeader';
-import { AppTabBar } from '../components/dayu/ui';
+import { Button } from '../components/dayu/ui';
+import { ScreenNav } from '../components/screens/Screen';
 import { AppMainHeader } from '../components/layout/AppMainHeader';
 import {
   ArrowLeft,
@@ -57,11 +58,11 @@ export const ProfilePage: React.FC = () => {
   // ==========================================
   if (uiVersion === 'B') {
     return (
-      <div className="max-w-app mx-auto min-h-dvh bg-[#F8FAFC] flex flex-col border-x border-slate-200 text-slate-800 font-sans relative">
+      <div className="relative mx-auto flex min-h-dvh max-w-app flex-col bg-slate-50 font-sans text-slate-800">
         {/* 상단 바 */}
         <AppMainHeader title="내 정보" />
 
-        <main className="flex-1 p-4 pb-24 flex flex-col gap-3.5">
+        <main className="flex flex-1 flex-col gap-[14px] px-4 pt-1 pb-24">
           {/* 프로필 아바타 영역 (ProfileHeader) */}
           <ProfileHeader
             nickname={user?.nickname || '사용자'}
@@ -84,85 +85,81 @@ export const ProfilePage: React.FC = () => {
                   setErrorMsg('');
                 }}
                 maxLength={20}
-                className="flex-1 h-12 px-3.5 text-[15px] bg-white border border-slate-300 rounded-xl outline-hidden focus:border-blue-600 focus:ring-3 focus:ring-blue-100 transition"
+                className="h-[50px] min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3.5 text-[15.5px] text-slate-800 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-100 focus:outline-none"
               />
-              <button
-                type="submit"
-                disabled={isUpdating || !nickname.trim() || nickname.trim() === user?.nickname}
-                className="h-12 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-[15px] font-bold rounded-xl transition active:scale-[0.98] flex items-center justify-center cursor-pointer disabled:cursor-not-allowed shrink-0"
-              >
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : '저장'}
-              </button>
+              <Button type="submit" className="shrink-0" disabled={isUpdating || !nickname.trim() || nickname.trim() === user?.nickname}>
+                {isUpdating ? <Loader2 className="size-4 animate-spin" /> : '저장'}
+              </Button>
             </div>
-            <span className="text-[12.5px] text-slate-400">모임 피드와 공유 카드에 이 이름이 보여요</span>
-            {errorMsg && <p className="text-xs text-red-500 mt-0.5">{errorMsg}</p>}
+            <span className="text-[12.5px] text-slate-500">모임 피드와 공유 카드에 이 이름이 보여요</span>
+            {errorMsg && <p className="text-[13px] text-red-700">{errorMsg}</p>}
             {successMsg && (
-              <p className="text-xs text-emerald-600 mt-0.5 flex items-center gap-1">
-                <Check className="w-3.5 h-3.5" />
+              <p className="flex items-center gap-1 text-[13px] text-emerald-700">
+                <Check className="size-3.5" />
                 {successMsg}
               </p>
             )}
           </form>
 
           {/* 서비스 설정 및 안내 메뉴 */}
-          <div className="bg-white border border-slate-200 rounded-[18px] overflow-hidden divide-y divide-slate-100 shadow-2xs">
+          <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white py-1.5 [&>button+button]:border-t [&>button+button]:border-slate-200">
             <button
               type="button"
               onClick={() => navigate('/settings/notifications')}
-              className="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer"
+              className="flex w-full cursor-pointer items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-[11px] bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <div className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-blue-50 text-blue-600">
                   <Bell className="w-4 h-4" />
                 </div>
                 <div>
                   <span className="text-[15px] font-semibold text-slate-800">미인증 알림</span>
-                  <p className="text-[12.5px] text-slate-400">매일 21:00에 알려드려요</p>
+                  <p className="text-[12.5px] text-slate-500">매일 21:00에 알려드려요</p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+              <ChevronRight className="size-4 shrink-0 text-slate-400" />
             </button>
 
             <button
               type="button"
               onClick={() => navigate('/about')}
-              className="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer"
+              className="flex w-full cursor-pointer items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-[11px] bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <div className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-indigo-50 text-indigo-600">
                   <Info className="w-4 h-4" />
                 </div>
                 <span className="text-[15px] font-semibold text-slate-800">dayuse 소개</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+              <ChevronRight className="size-4 shrink-0 text-slate-400" />
             </button>
 
             <button
               type="button"
               onClick={() => navigate('/terms')}
-              className="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer"
+              className="flex w-full cursor-pointer items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-[11px] bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                <div className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-slate-100 text-slate-600">
                   <FileText className="w-4 h-4" />
                 </div>
                 <span className="text-[15px] font-semibold text-slate-800">이용약관</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+              <ChevronRight className="size-4 shrink-0 text-slate-400" />
             </button>
 
             <button
               type="button"
               onClick={() => navigate('/privacy')}
-              className="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition cursor-pointer"
+              className="flex w-full cursor-pointer items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-[11px] bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                <div className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-slate-100 text-slate-600">
                   <Shield className="w-4 h-4" />
                 </div>
                 <span className="text-[15px] font-semibold text-slate-800">개인정보처리방침</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+              <ChevronRight className="size-4 shrink-0 text-slate-400" />
             </button>
           </div>
 
@@ -170,24 +167,17 @@ export const ProfilePage: React.FC = () => {
           <button
             type="button"
             onClick={logout}
-            className="w-full h-12 bg-white border border-slate-200 text-red-600 hover:bg-red-50/50 font-bold rounded-xl text-[15px] flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-[0.99]"
+            className="flex h-12 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white text-[15px] font-bold text-red-700 transition-colors hover:bg-red-50"
           >
-            <LogOut className="w-4 h-4" />
-            <span>로그아웃</span>
+            <LogOut className="size-4" />
+            로그아웃
           </button>
 
-          <p className="text-[12.5px] text-slate-400 text-center py-1">버전 0.1.0</p>
+          <p className="py-1 text-center text-[12.5px] text-slate-500">버전 0.1.0</p>
         </main>
 
         {/* 모바일 하단 탭 바 (AppTabBar) */}
-        <AppTabBar
-          active="me"
-          onNavigate={(to) => {
-            if (to === 'today') navigate('/today');
-            else if (to === 'groups') navigate('/groups');
-            else if (to === 'me') navigate('/profile');
-          }}
-        />
+        <ScreenNav active="me" />
       </div>
     );
   }

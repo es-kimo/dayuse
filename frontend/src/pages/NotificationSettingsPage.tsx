@@ -24,6 +24,7 @@ import {
 
 import { NotifyTimeChips } from '../components/NotifyTimeChips';
 import { PushPreview } from '../components/PushPreview';
+import { Button, Card, Help, Switch } from '../components/dayu/ui';
 
 export const NotificationSettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -194,17 +195,15 @@ export const NotificationSettingsPage: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
       {/* Header */}
       <SubPageHeader
         title="알림 설정"
         onBack={() => navigate(-1)}
       />
 
-      <main className="w-full max-w-[390px] mx-auto px-4 pt-3 pb-12 flex-1 flex flex-col gap-3.5">
-        <p className="text-[13.5px] text-slate-500 leading-normal -mt-1 px-1">
-          오늘 인증을 아직 안 한 챌린지가 있을 때만 알려드려요.
-        </p>
+      <main className="mx-auto flex w-full max-w-app flex-1 flex-col gap-[14px] px-4 pt-1.5 pb-12">
+        <p className="text-[14px] text-slate-500">오늘 인증을 아직 안 한 챌린지가 있을 때만 알려드려요.</p>
 
         {/* iOS 환경 안내 배너 */}
         {iosNeedsInstall && (
@@ -242,39 +241,29 @@ export const NotificationSettingsPage: React.FC = () => {
         ) : settings ? (
           <div className="flex flex-col gap-3.5">
             {/* 알림 받기 토글 카드 */}
-            <div className="p-4 bg-white border border-slate-200 rounded-[18px] flex items-center justify-between shadow-2xs">
-              <div>
-                <span className="text-[15.5px] font-bold text-slate-900">미인증 챌린지 알림</span>
-                <p className="text-[13px] text-slate-500 mt-0.5">
-                  하루 한 번, 남은 인증이 있을 때만
-                </p>
+            <Card className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[15.5px] font-bold tracking-[-0.01em] text-slate-800">미인증 챌린지 알림</div>
+                <p className="text-[13px] text-slate-500">하루 한 번, 남은 인증이 있을 때만</p>
               </div>
-
-              <button
-                type="button"
-                role="switch"
-                aria-checked={settings.enabled}
-                aria-label="미인증 챌린지 알림"
+              <Switch
+                checked={settings.enabled}
+                onChange={handleToggle}
                 disabled={saving}
-                onClick={handleToggle}
-                className={`w-[52px] h-[30px] rounded-[15px] border-0 transition-colors p-[3px] flex items-center cursor-pointer shrink-0 ${
-                  settings.enabled ? 'bg-blue-600 justify-end' : 'bg-slate-300 justify-start'
-                } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <span className="w-6 h-6 rounded-full bg-white shadow-xs" />
-              </button>
-            </div>
+                label="미인증 챌린지 알림"
+              />
+            </Card>
 
             {/* 알림 시간 설정 및 미리보기 영역 */}
             <div className={`flex flex-col gap-3.5 transition-opacity ${
               settings.enabled ? 'opacity-100' : 'opacity-40 pointer-events-none'
             }`}>
               {/* 알림 시간 카드 */}
-              <div className="p-4 bg-white border border-slate-200 rounded-[18px] flex flex-col gap-3 shadow-2xs">
-                <div className="flex items-center gap-1.5 text-[15px] font-bold text-slate-900">
-                  <Clock className="w-4 h-4 text-slate-800" />
-                  <span>알림 시간</span>
-                  <span className="text-[13px] text-slate-400 font-normal">한국 시간</span>
+              <Card className="flex flex-col gap-3">
+                <div className="flex items-center gap-1.5 text-[15.5px] font-bold text-slate-800">
+                  <Clock className="size-4" />
+                  알림 시간
+                  <span className="text-[13px] font-normal text-slate-500">한국 시간</span>
                 </div>
 
                 <NotifyTimeChips
@@ -282,21 +271,22 @@ export const NotificationSettingsPage: React.FC = () => {
                   onTimeChange={handleTimeChange}
                   disabled={!settings.enabled || saving}
                 />
-              </div>
+              </Card>
 
               {/* 푸시 잠금화면 미리보기 */}
               <PushPreview time={settings.reminderTime} />
 
               {/* 테스트 알림 전송 버튼 */}
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                className="w-full"
                 disabled={testing || !settings.hasActiveSubscription || deviceOutOfSync}
                 onClick={handleTestPush}
-                className="w-full h-12 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[15px] flex items-center justify-center gap-1.5 transition active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
-                <Send className="w-4 h-4" />
-                <span>{testing ? '발송 중...' : '테스트 알림 보내기'}</span>
-              </button>
+                <Send className="size-4" />
+                {testing ? '발송 중...' : '테스트 알림 보내기'}
+              </Button>
 
               {deviceOutOfSync ? (
                 <p className="text-xs text-amber-600 flex items-center gap-1 px-1">
@@ -312,11 +302,11 @@ export const NotificationSettingsPage: React.FC = () => {
             </div>
 
             {/* 알아 두세요 안내사항 */}
-            <div className="flex flex-col gap-1.5 pt-1 px-1">
-              <div className="text-[14px] font-bold text-slate-900">알아 두세요</div>
-              <p className="text-[12.5px] text-slate-500 leading-normal">· 오늘 인증을 모두 마친 날에는 알림이 오지 않아요.</p>
-              <p className="text-[12.5px] text-slate-500 leading-normal">· 알림에는 친구 이름이나 금액이 나오지 않고, 남은 개수만 보여요.</p>
-              <p className="text-[12.5px] text-slate-500 leading-normal">· 브라우저 알림 권한이 꺼져 있으면 받을 수 없어요.</p>
+            <div className="flex flex-col gap-1.5 px-1 pt-1">
+              <div className="text-[14px] font-bold text-slate-800">알아 두세요</div>
+              <Help>· 오늘 인증을 모두 마친 날에는 알림이 오지 않아요.</Help>
+              <Help>· 알림에는 친구 이름이나 금액이 나오지 않고, 남은 개수만 보여요.</Help>
+              <Help>· 브라우저 알림 권한이 꺼져 있으면 받을 수 없어요.</Help>
             </div>
           </div>
         ) : null}

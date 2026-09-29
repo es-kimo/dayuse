@@ -10,7 +10,7 @@ import type {
   InputHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
-import { CalendarCheck, Users, User } from "lucide-react";
+import { CalendarCheck, User, Users, X } from "lucide-react";
 
 export function Card({
   children,
@@ -30,7 +30,7 @@ export function Card({
   );
 }
 
-type ChipTone = "blue" | "ok" | "warn" | "gray" | "host";
+type ChipTone = "blue" | "ok" | "warn" | "bad" | "gray" | "host";
 export function Chip({
   tone = "gray",
   children,
@@ -44,6 +44,7 @@ export function Chip({
     blue: "bg-blue-50 text-blue-600",
     ok: "bg-emerald-50 text-emerald-700",
     warn: "bg-amber-50 text-amber-700",
+    bad: "bg-red-50 text-red-700",
     gray: "bg-slate-100 text-slate-500",
     host: "bg-yellow-100 text-yellow-800",
   }[tone];
@@ -86,7 +87,7 @@ export function ProgressBar({
   );
 }
 
-type BtnVariant = "primary" | "ghost" | "line" | "dark" | "kakao";
+type BtnVariant = "primary" | "ghost" | "line" | "dark" | "danger" | "kakao";
 export function Button({
   variant = "primary",
   size = "md",
@@ -98,6 +99,7 @@ export function Button({
     ghost: "bg-slate-100 text-slate-800 hover:bg-slate-200",
     line: "bg-white text-slate-800 border border-slate-200 hover:bg-slate-50",
     dark: "bg-slate-800 text-white hover:bg-slate-900",
+    danger: "bg-red-600 text-white hover:bg-red-700",
     kakao: "bg-[#FEE500] text-[#191600] hover:bg-[#F5DC00]",
   }[variant];
   const s = {
@@ -246,6 +248,64 @@ export function PageTabs<T extends string>({ value, onChange, options, label, cl
         );
       })}
     </nav>
+  );
+}
+
+/** 바텀시트 맨 위의 손잡이 */
+export function SheetGrab() {
+  return <div aria-hidden className="mx-auto h-[5px] w-10 shrink-0 rounded-[3px] bg-slate-300" />;
+}
+
+/** 바텀시트 제목 줄: 제목(+설명)과 닫기 버튼 */
+export function SheetHead({ title, desc, onClose, titleId }: {
+  title: ReactNode;
+  desc?: ReactNode;
+  onClose: () => void;
+  titleId?: string;
+}) {
+  return (
+    <div className="flex items-start gap-2">
+      <div className="min-w-0 flex-1">
+        <h3 id={titleId} className="text-[19px] font-extrabold text-slate-800">{title}</h3>
+        {desc && <p className="text-[13px] text-slate-500">{desc}</p>}
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="닫기"
+        className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100"
+      >
+        <X className="size-[22px]" />
+      </button>
+    </div>
+  );
+}
+
+/** 켜짐/꺼짐 토글. 52×30, 손잡이 24 */
+export function Switch({ checked, onChange, label, disabled = false }: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  label: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`relative h-[30px] w-[52px] shrink-0 cursor-pointer rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+        checked ? "bg-blue-600" : "bg-slate-300"
+      }`}
+    >
+      <span
+        className={`absolute top-[3px] left-[3px] size-6 rounded-full bg-white shadow transition-transform ${
+          checked ? "translate-x-[22px]" : ""
+        }`}
+      />
+    </button>
   );
 }
 

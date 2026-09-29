@@ -48,11 +48,11 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
     disablePointerDismissal={disablePointerDismissal}
   >
     <BaseDialog.Portal>
-      <BaseDialog.Backdrop className="fixed inset-0 z-sheet bg-night/60 backdrop-blur-xs transition-opacity duration-300 ease-drawer data-[starting-style]:opacity-0 data-[ending-style]:opacity-0" />
+      <BaseDialog.Backdrop className="fixed inset-0 z-sheet bg-slate-900/45 transition-opacity duration-300 ease-drawer data-[starting-style]:opacity-0 data-[ending-style]:opacity-0" />
       <div className="fixed inset-0 z-sheet flex items-end justify-center p-0 sm:items-center sm:p-4 pointer-events-none">
         <BaseDialog.Popup
-          className={`pointer-events-auto w-full max-w-md bg-card rounded-t-3xl sm:rounded-2xl shadow-sheet flex flex-col overflow-hidden focus-ring ${
-            size === 'tall' ? 'h-[70dvh] max-h-[600px]' : 'max-h-[90dvh]'
+          className={`focus-ring pointer-events-auto flex w-full max-w-app flex-col overflow-hidden rounded-t-[26px] bg-white sm:rounded-[26px] ${
+            size === 'tall' ? 'h-[78dvh] max-h-[640px]' : 'max-h-[92dvh]'
           } transition-[translate] duration-300 ease-drawer data-[starting-style]:translate-y-full data-[ending-style]:translate-y-full ${className}`}
         >
           {children}

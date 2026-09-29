@@ -21,9 +21,9 @@ describe('AbortChallengeModal (F05)', () => {
       />
     );
 
-    expect(screen.getByRole('heading', { name: '챌린지 중단' })).toBeInTheDocument();
-    expect(screen.getByText(/⚠️ 중단 전 꼭 확인해주세요!/)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/중단 사유를 입력해주세요/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '챌린지를 중단할까요?' })).toBeInTheDocument();
+    expect(screen.getByText(/중단하면 다시 시작할 수 없어요/)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/모임 일정이 바뀌었어요/)).toBeInTheDocument();
   });
 
   it('사유 입력 후 중단하기 버튼을 클릭하면 abortChallenge API를 호출한다', async () => {
@@ -42,10 +42,10 @@ describe('AbortChallengeModal (F05)', () => {
       />
     );
 
-    const textarea = screen.getByPlaceholderText(/중단 사유를 입력해주세요/);
+    const textarea = screen.getByPlaceholderText(/모임 일정이 바뀌었어요/);
     fireEvent.change(textarea, { target: { value: '일정 변경으로 중단' } });
 
-    const submitBtn = screen.getByRole('button', { name: '챌린지 중단' });
+    const submitBtn = screen.getByRole('button', { name: '중단하기' });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {

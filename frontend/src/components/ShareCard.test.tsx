@@ -77,7 +77,7 @@ describe('PublicShareLandingPage Brand v1.1 Card (BR-06)', () => {
     // 5. CTA 및 공식 브랜드 하단 카피 확인
     expect(screen.getByRole('button', { name: /나도 참여하기/i })).toBeInTheDocument();
     expect(
-      screen.getByText('데이유즈에서 친구들과 각자의 챌린지를 인증하고 기록해요.')
+      screen.getByText('데이유즈에서 친구들과 각자의 챌린지를 인증하고 기록해요')
     ).toBeInTheDocument();
   });
 

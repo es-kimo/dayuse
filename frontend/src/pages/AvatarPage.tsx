@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { DAYU_COLORS, type DayuColor } from '../components/dayu/dayuColors';
 import { DayuAvatar } from '../components/dayu/DayuAvatar';
 import { DayuColorPicker } from '../components/DayuColorPicker';
+import { Button } from '../components/dayu/ui';
 import { SubPageHeader } from '../components/layout/SubPageHeader';
 import { BottomActionBar } from '../components/layout/BottomActionBar';
 
@@ -46,7 +47,7 @@ export const AvatarPage: React.FC = () => {
   const colorMeta = DAYU_COLORS[selectedColor];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
       {/* Top Header */}
       <SubPageHeader
         title="프로필 데이유"
@@ -54,17 +55,13 @@ export const AvatarPage: React.FC = () => {
       />
 
       {/* Main Body */}
-      <main className="w-full max-w-[390px] mx-auto px-4 pt-2 pb-28 flex flex-col gap-4">
+      <main className="mx-auto flex w-full max-w-app flex-col gap-4 px-4 pt-2 pb-28">
         {/* Large Avatar Preview & Title */}
         <div className="flex flex-col items-center gap-3 py-3 text-center">
           <DayuAvatar color={selectedColor} face="cheer" size={136} />
           <div>
-            <div className="text-[18px] font-bold text-slate-900 tracking-tight">
-              {user?.nickname || '사용자'}
-            </div>
-            <div className="text-[13px] text-slate-500 mt-0.5">
-              {colorMeta.name} 데이유
-            </div>
+            <div className="text-[18px] font-bold tracking-[-0.01em] text-slate-800">{user?.nickname || '사용자'}</div>
+            <div className="text-[13px] text-slate-500">{colorMeta.name} 데이유</div>
           </div>
         </div>
 
@@ -83,36 +80,28 @@ export const AvatarPage: React.FC = () => {
           <div className="flex items-center gap-3 pt-1">
             <DayuAvatar color={selectedColor} face="default" size={36} />
             <div className="flex-1 min-w-0">
-              <div className="text-[14.5px] font-bold text-slate-800 truncate">
-                {user?.nickname || '사용자'}{' '}
-                <span className="text-[12px] font-semibold text-slate-400">· 나</span>
+              <div className="truncate text-[14.5px] font-bold tracking-[-0.01em] text-slate-800">
+                {user?.nickname || '사용자'} <span className="text-[13px] font-semibold text-slate-500">· 나</span>
               </div>
-              <div className="text-[13px] text-slate-500 truncate">
-                매일 1알고리즘 문제 풀기
-              </div>
+              <div className="truncate text-[13px] text-slate-500">매일 1알고리즘 문제 풀기</div>
             </div>
-            <span className="text-[12px] text-slate-400 shrink-0">방금</span>
+            <span className="shrink-0 text-[13px] text-slate-500">방금</span>
           </div>
 
-          <div className="flex -space-x-2 mt-1">
-            <DayuAvatar color={selectedColor} face="default" size={36} className="border-2 border-white relative z-10" />
-            <DayuAvatar color="mint" face="default" size={36} className="border-2 border-white relative z-9" />
-            <DayuAvatar color="orange" face="default" size={36} className="border-2 border-white relative z-8" />
-            <DayuAvatar color="purple" face="default" size={36} className="border-2 border-white relative z-7" />
+          <div className="mt-1 flex -space-x-2">
+            <DayuAvatar color={selectedColor} face="default" size={30} className="relative z-10 border-2 border-white" />
+            <DayuAvatar color="mint" face="default" size={30} className="relative z-9 border-2 border-white" />
+            <DayuAvatar color="orange" face="default" size={30} className="relative z-8 border-2 border-white" />
+            <DayuAvatar color="purple" face="default" size={30} className="relative z-7 border-2 border-white" />
           </div>
         </div>
       </main>
 
       {/* Bottom Sticky Action */}
       <BottomActionBar>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={isCurrentColor || isSaving}
-          className="w-full h-[54px] rounded-[14px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold text-base transition flex items-center justify-center cursor-pointer disabled:cursor-not-allowed shadow-xs active:scale-[0.99]"
-        >
+        <Button type="button" size="lg" className="w-full" onClick={handleSave} disabled={isCurrentColor || isSaving}>
           {isSaving ? '저장 중...' : isCurrentColor ? '지금 쓰는 색이에요' : '이 색으로 바꾸기'}
-        </button>
+        </Button>
       </BottomActionBar>
     </div>
   );

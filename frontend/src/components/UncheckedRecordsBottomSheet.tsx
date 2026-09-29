@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { UncheckedRecordItem } from '../types';
 import { BottomSheet, BottomSheetTitle, BottomSheetDescription, BottomSheetClose } from './ui/BottomSheet';
 import { useGracePeriodTimer } from '../hooks/useGracePeriodTimer';
+import { Button, Card, Chip, Notice, SheetGrab } from './dayu/ui';
 import {
   X,
   Calendar,
@@ -27,59 +28,41 @@ const UncheckedRecordCard: React.FC<UncheckedRecordCardProps> = ({
   const { isGracePeriod } = useGracePeriodTimer(record.date);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-xs">
+    <Card className="flex flex-col gap-2.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-          <span>{record.date} 대상 기록</span>
+        <span className="flex items-center gap-1.5 text-[13px] font-bold text-slate-800">
+          <Calendar className="size-3.5 text-slate-500" />
+          {record.date}
         </span>
-        <span
-          className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
-            isGracePeriod
-              ? 'bg-amber-50 text-amber-700'
-              : 'bg-rose-50 text-rose-600'
-          }`}
-        >
+        <Chip tone={isGracePeriod ? 'warn' : 'bad'}>
           {isGracePeriod ? '9시 전 · 정상 인정' : '9시 지남 · 지각 처리'}
-        </span>
+        </Chip>
       </div>
 
-      <div className="text-[15px] font-extrabold text-slate-900">
-        {record.challengeTitle}
-      </div>
+      <div className="text-[16px] font-bold tracking-[-0.01em] text-slate-800">{record.challengeTitle}</div>
 
       {record.verificationCriteria && (
-        <div className="text-xs text-slate-600 bg-slate-50 border border-slate-100 rounded-xl p-2.5">
-          <b className="text-slate-700 font-bold mr-1.5">인증 기준</b>
-          <span>{record.verificationCriteria}</span>
-        </div>
+        <Notice>
+          <b className="mr-1.5 font-bold text-slate-800">인증 기준</b>
+          {record.verificationCriteria}
+        </Notice>
       )}
 
       {/* 액션 버튼 2개: 늦은 인증 올리기 vs 못 했어요 · 벌금 */}
-      <div className="flex gap-2 pt-1">
-        <button
-          type="button"
-          onClick={() => onStartVerifyLate(record)}
-          disabled={isBusy}
-          className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98 shadow-xs"
-        >
-          <Upload className="w-3.5 h-3.5" />
-          <span>{isGracePeriod ? '인증 올리기' : '늦은 인증 올리기'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => onMarkFailed(record.id)}
-          disabled={isBusy}
-          className="px-3.5 py-2.5 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 rounded-xl text-xs font-bold transition active:scale-98 shrink-0 flex items-center justify-center gap-1"
-        >
+      <div className="flex gap-2">
+        <Button type="button" className="flex-1" onClick={() => onStartVerifyLate(record)} disabled={isBusy}>
+          <Upload className="size-4" />
+          {isGracePeriod ? '인증 올리기' : '늦은 인증 올리기'}
+        </Button>
+        <Button type="button" variant="ghost" className="shrink-0" onClick={() => onMarkFailed(record.id)} disabled={isBusy}>
           {isBusy ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <Loader2 className="size-4 animate-spin" />
           ) : (
-            <span>못 했어요 · {(record.penaltyAmount || 0).toLocaleString()}원</span>
+            `못 했어요 · ${(record.penaltyAmount || 0).toLocaleString()}원`
           )}
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 };
 
@@ -123,43 +106,44 @@ export const UncheckedRecordsBottomSheet: React.FC<UncheckedRecordsBottomSheetPr
   return (
     <BottomSheet open={isOpen} onOpenChange={(next) => !next && onClose()}>
       <>
-        {/* 상단 헤더 */}
-        <div className="flex items-start justify-between p-4 border-b border-slate-100 shrink-0">
-          <div>
-            <BottomSheetTitle className="text-[17px] font-extrabold text-slate-900">
-              확인 안 된 기록 {records.length}건
-            </BottomSheetTitle>
-            <BottomSheetDescription className="text-xs text-slate-500 mt-0.5">
-              지난 인증이 비어 있어요. 올리거나, 못 했다고 확정해 주세요.
-            </BottomSheetDescription>
+        {/* 상단 손잡이 · 제목 */}
+        <div className="flex shrink-0 flex-col gap-3.5 px-5 pt-2.5">
+          <SheetGrab />
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <BottomSheetTitle className="text-[19px] font-extrabold text-slate-800">
+                확인 안 된 기록 {records.length}건
+              </BottomSheetTitle>
+              <BottomSheetDescription className="text-[13px] text-slate-500">
+                지난 인증이 비어 있어요. 올리거나, 못 했다고 확정해 주세요.
+              </BottomSheetDescription>
+            </div>
+            <BottomSheetClose
+              aria-label="닫기"
+              className="focus-ring grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100"
+            >
+              <X className="size-[22px]" aria-hidden="true" />
+            </BottomSheetClose>
           </div>
-          <BottomSheetClose
-            aria-label="닫기"
-            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md transition focus-ring"
-          >
-            <X className="w-5 h-5" aria-hidden="true" />
-          </BottomSheetClose>
-        </div>
 
-        {/* 안내 문구 */}
-        <div className="bg-amber-50/80 border-b border-amber-100 px-4 py-2.5 text-xs text-amber-900 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-          <span>
-            다음 날 <b className="font-bold">오전 9시 전</b>에 올리면 정상 인증, 그 뒤에는 <b className="font-bold">지각</b>으로 기록돼요.
-          </span>
+          {/* 안내 문구 */}
+          <Notice icon={<Clock className="size-4" />}>
+            다음 날 <b className="font-bold text-slate-800">오전 9시 전</b>에 올리면 정상 인증, 그 뒤에는{' '}
+            <b className="font-bold text-slate-800">지각</b>으로 기록돼요.
+          </Notice>
         </div>
 
         {/* 목록 스크롤 영역 */}
-        <div className="p-4 overflow-y-auto overscroll-contain space-y-3 flex-1">
+        <div className="flex-1 space-y-3.5 overflow-y-auto overscroll-contain px-5 pt-3.5 pb-5">
           {loading ? (
-            <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
-              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-              <span className="text-xs">기록을 불러오는 중...</span>
+            <div className="flex flex-col items-center justify-center gap-2 py-12 text-slate-500">
+              <Loader2 className="size-6 animate-spin text-blue-600" />
+              <span className="text-[13px]">기록을 불러오는 중...</span>
             </div>
           ) : records.length === 0 ? (
-            <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
-              <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-              <span className="text-xs font-semibold text-slate-700">모든 미확인 기록이 정리되었습니다!</span>
+            <div className="flex flex-col items-center justify-center gap-2 py-12">
+              <CheckCircle2 className="size-8 text-emerald-700" />
+              <span className="text-[14px] font-bold text-slate-800">모든 미확인 기록이 정리되었습니다!</span>
             </div>
           ) : (
             records.map((record) => (

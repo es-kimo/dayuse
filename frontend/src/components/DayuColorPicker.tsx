@@ -27,10 +27,10 @@ export const DayuColorPicker: React.FC<DayuColorPickerProps> = ({
         <button
           type="button"
           onClick={handleRandomize}
-          className="h-8 px-2.5 rounded-[9px] bg-slate-100 hover:bg-slate-200 text-slate-800 text-[12.5px] font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+          className="flex h-9 cursor-pointer items-center gap-1.5 rounded-[10px] bg-slate-100 px-3 text-[13.5px] font-bold text-slate-800 transition-colors hover:bg-slate-200"
         >
-          <Shuffle className="w-3.5 h-3.5 text-slate-600" />
-          <span>랜덤으로 바꾸기</span>
+          <Shuffle className="size-4 text-slate-600" />
+          랜덤으로 바꾸기
         </button>
       </div>
 
