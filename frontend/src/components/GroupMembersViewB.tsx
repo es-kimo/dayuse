@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Copy, Check, MessageCircle, RefreshCw } from 'lucide-react';
+import { Copy, Check, MessageCircle, RefreshCw, Link2, Users } from 'lucide-react';
 import type { GroupDetail } from '../types';
 import { DayuAvatar } from './brand/DayuAvatar';
+import { Button, Card, Chip, SectionHead } from './dayu/ui';
 import { useToast } from '../context/ToastContext';
 import { shareToKakao, isKakaoReady } from '../utils/kakao';
+import { formatMonthDay } from '../utils/date';
 
 interface GroupMembersViewBProps {
   group: GroupDetail;
@@ -55,131 +57,82 @@ export const GroupMembersViewB: React.FC<GroupMembersViewBProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-12">
+    <div className="flex flex-col gap-[14px] pb-12">
       {/* 모임 초대 링크 관리 카드 */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-slate-800">모임 초대 링크</span>
-          <span className="text-[11px] text-slate-400">초대 코드로 친구 부르기</span>
+      <Card>
+        <SectionHead icon={<Link2 className="size-4 text-blue-600" />} title="친구 초대" right="비공개 모임" />
+        <p className="mt-2 text-[13px] text-slate-500">초대 링크를 받은 사람만 들어올 수 있어요.</p>
+
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-[7px] pr-[7px] pl-[15px]">
+          <span className="min-w-0 flex-1 truncate text-[14px] text-slate-600">{displayInviteUrl}</span>
+          <Button size="sm" className="shrink-0" onClick={handleCopyLink}>
+            {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+            {copied ? '복사 완료' : '복사'}
+          </Button>
         </div>
 
-        {/* 링크 & 코드 박스 */}
-        <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1.5">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500 font-medium">초대 코드</span>
-            <span className="font-extrabold text-blue-600 tracking-wider">
-              {group.inviteCode || 'SAMPLE'}
-            </span>
-          </div>
-          <div className="text-[11px] text-slate-400 truncate">
-            {displayInviteUrl}
-          </div>
-        </div>
+        <Button variant="kakao" className="mt-3 w-full" onClick={handleKakaoShare}>
+          <MessageCircle className="size-4 fill-[#191600]" />
+          카카오톡으로 보내기
+        </Button>
 
-        {/* 버튼 액션: 링크 복사 + 카카오톡 공유 */}
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            className="h-10 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-blue-600" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? '복사 완료' : '링크 복사'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleKakaoShare}
-            className="h-10 px-3 rounded-xl bg-[#FEE500] hover:bg-[#F5DC00] text-[#191600] text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-98"
-          >
-            <MessageCircle className="w-3.5 h-3.5 fill-[#191600]" />
-            <span>카카오톡 공유</span>
-          </button>
-        </div>
-
-        {/* 모임장: 새 코드 받기 */}
-        {isHost && (
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-            <span>링크가 외부에 유출되었거나 만료되었나요?</span>
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-[13px] text-slate-500">
+            코드 <b className="font-bold tracking-[0.06em] text-slate-800">{group.inviteCode || 'SAMPLE'}</b> · 7일 뒤 만료
+          </span>
+          {isHost && (
             <button
               type="button"
               onClick={onRefreshInviteCode}
               disabled={isRefreshing}
-              className="text-slate-500 hover:text-blue-600 font-semibold flex items-center gap-1 transition"
+              className="flex cursor-pointer items-center gap-1.5 text-[12.5px] font-bold text-slate-500 transition-colors hover:text-slate-800 disabled:opacity-50"
             >
-              <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>새 코드 받기</span>
+              <RefreshCw className={`size-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              새 코드 받기
             </button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </Card>
 
       {/* 모임 멤버 목록 */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-slate-800">
-            모임 멤버 ({group.members.length}명)
-          </h3>
-          <span className="text-[11px] text-slate-400">
-            오늘 인증 {verifiedUserIds?.size || 0}명
-          </span>
-        </div>
+      <Card className="pb-1">
+        <SectionHead
+          icon={<Users className="size-4 text-blue-600" />}
+          title={`멤버 ${group.members.length}명`}
+          right={`오늘 ${verifiedUserIds?.size || 0}명 인증`}
+        />
 
-        <div className="space-y-1.5 pt-1">
-          {group.members.map((member) => {
+        <div className="mt-1">
+          {group.members.map((member, i) => {
             const isMe = currentUserId !== undefined && member.userId === currentUserId;
             const hasVerifiedToday = verifiedUserIds?.has(member.userId);
 
             return (
               <div
                 key={member.id}
-                className={`p-2.5 rounded-xl flex items-center justify-between transition ${
-                  isMe ? 'bg-blue-50/60 border border-blue-100' : 'hover:bg-slate-50'
+                className={`flex items-center gap-3 py-3 ${
+                  isMe ? '-mx-2.5 rounded-[14px] bg-blue-50 px-2.5' : i > 0 ? 'border-t border-slate-200' : ''
                 }`}
               >
-                {/* 프로필 아바타 + 닉네임 + 방장 배지 */}
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <DayuAvatar
-                    profileImageUrl={member.profileImageUrl}
-                    size={36}
-                    alt={member.nickname}
-                  />
-                  <div className="truncate">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-bold text-slate-800 truncate">
-                        {member.nickname}
-                      </span>
-                      {isMe && (
-                        <span className="text-[10px] font-bold text-blue-600">
-                          · 나
-                        </span>
-                      )}
-                      {member.role === 'HOST' && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-                          모임장
-                        </span>
-                      )}
-                    </div>
+                <DayuAvatar profileImageUrl={member.profileImageUrl} size={36} alt={member.nickname} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-[14.5px] font-bold text-slate-800">{member.nickname}</span>
+                    {isMe && <span className="shrink-0 text-[13px] font-bold text-slate-500">나</span>}
+                    {member.role === 'HOST' && <Chip tone="host" className="shrink-0">모임장</Chip>}
+                  </div>
+                  <div className="truncate text-[13px] text-slate-500">
+                    {formatMonthDay(member.joinedAt)} 가입 · 챌린지 {member.participatingChallengeCount ?? 0}개
                   </div>
                 </div>
-
-                {/* 상태 칩 */}
-                <div className="flex items-center gap-2 shrink-0">
-                  {hasVerifiedToday ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 flex items-center gap-1">
-                      <Check className="w-3 h-3" />
-                      오늘 완료
-                    </span>
-                  ) : (
-                    <span className="text-[11px] font-medium text-slate-400">
-                      인증 대기
-                    </span>
-                  )}
-                </div>
+                <Chip tone={hasVerifiedToday ? 'ok' : 'warn'} className="shrink-0">
+                  {hasVerifiedToday ? '오늘 완료' : '오늘 남음'}
+                </Chip>
               </div>
             );
           })}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

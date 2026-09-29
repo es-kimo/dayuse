@@ -210,6 +210,138 @@ export function Segmented<T extends string>({ value, onChange, options, label, c
   );
 }
 
+/** 헤더 아래에 붙는 화면 안 탭(홈 · 챌린지 · 멤버). 밑줄로 현재 탭을 표시한다. */
+export function PageTabs<T extends string>({ value, onChange, options, label, className = "" }: {
+  value: T;
+  onChange: (next: T) => void;
+  options: { value: T; label: string; count?: number }[];
+  label: string;
+  className?: string;
+}) {
+  return (
+    <nav
+      aria-label={label}
+      className={`sticky top-14 z-20 grid shrink-0 border-b border-slate-200 bg-slate-50/92 backdrop-blur-md ${className}`}
+      style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}
+    >
+      {options.map((o) => {
+        const on = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            aria-current={on ? "page" : undefined}
+            onClick={() => onChange(o.value)}
+            className={`h-11 cursor-pointer border-b-2 text-[14px] font-bold transition-colors ${
+              on ? "border-slate-800 text-slate-800" : "border-transparent text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            {o.label}
+            {o.count !== undefined && (
+              <span className={`ml-1 text-[12px] tabular-nums ${on ? "text-blue-600" : "text-slate-400"}`}>
+                {o.count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+/** 라벨 + 입력 한 묶음. 필수 표시와 (선택) 표시를 함께 다룬다. */
+export function Field({ label, htmlFor, required = false, optional = false, help, children, className = "" }: {
+  label: ReactNode;
+  htmlFor?: string;
+  required?: boolean;
+  optional?: boolean;
+  help?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`flex flex-col gap-2 ${className}`}>
+      <label htmlFor={htmlFor} className="text-[14px] leading-[21px] font-bold text-slate-800">
+        {label}
+        {required && <span className="text-red-700"> *</span>}
+        {optional && <span className="font-normal text-slate-500"> (선택)</span>}
+      </label>
+      {children}
+      {help && <Help>{help}</Help>}
+    </div>
+  );
+}
+
+/** 설명이 붙은 큰 선택지 카드(각자하기 / 함께하기 등) */
+export function ChoiceCard({ active = false, title, desc, className = "", ...p }: ButtonHTMLAttributes<HTMLButtonElement> & {
+  active?: boolean;
+  title: ReactNode;
+  desc?: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      {...p}
+      className={`flex flex-1 cursor-pointer flex-col items-start gap-1 rounded-[14px] border-[1.5px] px-[13.5px] py-[13.5px] text-left transition-colors ${
+        active ? "border-blue-600 bg-blue-50" : "border-slate-200 bg-white hover:bg-slate-50"
+      } ${className}`}
+    >
+      <b className={`text-[14.5px] font-bold ${active ? "text-blue-600" : "text-slate-800"}`}>{title}</b>
+      {desc && <span className="text-[12px] leading-[1.45] text-slate-500">{desc}</span>}
+    </button>
+  );
+}
+
+/** 3단계 진행 막대 */
+export function StepBar({ step, total = 3, className = "" }: { step: number; total?: number; className?: string }) {
+  return (
+    <div className={`flex gap-1.5 ${className}`} role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={total}>
+      {Array.from({ length: total }, (_, i) => (
+        <i key={i} className={`h-1 flex-1 rounded-sm ${i < step ? "bg-blue-600" : "bg-slate-200"}`} />
+      ))}
+    </div>
+  );
+}
+
+/** 가로로 늘어놓는 필터 알약. 눌린 것만 파란 테두리를 쓴다. */
+export function Pill({ active = false, className = "", ...p }: ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      {...p}
+      className={`h-[34px] shrink-0 cursor-pointer rounded-[10px] border px-3 text-[13.5px] font-semibold whitespace-nowrap transition-colors ${
+        active ? "border-blue-600 bg-blue-50 text-blue-600" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+      } ${className}`}
+    />
+  );
+}
+
+/** 겹쳐 놓은 프로필 목록. 넘치는 인원은 +N으로 접는다. */
+export function AvatarStack({ children, extra = 0, className = "" }: { children: ReactNode; extra?: number; className?: string }) {
+  return (
+    <div className={`flex -space-x-2 ${className}`}>
+      {children}
+      {extra > 0 && (
+        <div className="grid size-[30px] place-items-center rounded-full border-2 border-white bg-slate-400 text-[11px] font-extrabold text-white">
+          +{extra}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** 회색 면에 담은 숫자 한 칸(쌓인 벌금 · 확인 대기 …) */
+export function StatTile({ label, value, className = "" }: { label: ReactNode; value: ReactNode; className?: string }) {
+  return (
+    <div className={`min-w-0 flex-1 rounded-xl bg-slate-100 px-2.5 py-2.5 ${className}`}>
+      <div className="truncate text-[11.5px] text-slate-500">{label}</div>
+      <div className="truncate text-[15px] font-extrabold tabular-nums text-slate-800">{value}</div>
+    </div>
+  );
+}
+
 /** 회색 면에 담은 짧은 안내문 */
 export function Notice({
   icon,

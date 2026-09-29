@@ -7,7 +7,7 @@ import { todayApi } from "../../api/today";
 import type { GroupSummary, GroupDetail, ChallengeSummary, TodayAction } from "../../types";
 import { Screen, ScreenAvatar, ScreenNav, screenAssets } from "./Screen";
 import { AppHeader } from "../layout/AppHeader";
-import { Button, Card, Chip, GroupIcon, RowText, ScreenTitle, Segmented, TextField } from "../dayu/ui";
+import { Button, Card, Chip, GroupIcon, RowText, Segmented, TextField } from "../dayu/ui";
 
 type Details = { group?: GroupDetail; challenges?: ChallengeSummary[] };
 
@@ -96,7 +96,7 @@ export function GroupsScreen({
       />
       <main
         className={`flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto pb-24 ${
-          empty ? "justify-center px-6 pt-10" : "px-4 pt-1"
+          empty ? "justify-center px-6 pt-6 pb-10" : "px-4 pt-1"
         }`}
       >
         {loading ? (
@@ -112,17 +112,18 @@ export function GroupsScreen({
           </div>
         ) : empty ? (
           <>
-            <div className="flex flex-col items-center gap-2 text-center">
-              <img src={screenAssets.symbol} alt="" className="mb-1 size-24" />
-              <ScreenTitle sub="친구와 모임을 만들거나, 받은 초대 코드로 들어가 보세요">
+            <div className="flex flex-col items-center text-center">
+              <img src={screenAssets.symbol} alt="" className="size-24" />
+              <h2 className="mt-3.5 text-[20px] leading-[30px] font-extrabold text-slate-800">
                 아직 참여한 모임이 없어요
-              </ScreenTitle>
+              </h2>
+              <p className="mt-2 text-[14px] text-slate-500">친구와 모임을 만들거나, 받은 초대 코드로 들어가 보세요</p>
             </div>
-            <Button size="lg" className="mt-6 w-full" onClick={() => navigate("/groups/new")}>
+            <Button size="lg" className="mt-[38px] w-full" onClick={() => navigate("/groups/new")}>
               <Plus className="size-4" />
               모임 만들기
             </Button>
-            <div className="my-4 flex items-center gap-2.5 text-[12.5px] text-slate-500">
+            <div className="mt-8 mb-[26px] flex items-center gap-2.5 text-[12px] text-slate-400">
               <span className="h-px flex-1 bg-slate-200" />
               초대를 받았다면
               <span className="h-px flex-1 bg-slate-200" />

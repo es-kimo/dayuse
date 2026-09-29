@@ -92,7 +92,7 @@ export const MyRecordCard: React.FC<MyRecordCardProps> = ({
       </div>
 
       {/* Footer: Legend & Next streak hint */}
-      <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 text-xs">
+      <div className="flex items-center justify-between gap-2 border-t border-slate-200 pt-3.5 text-xs">
         <StreakLegend />
         <span className="text-[13px] text-slate-500 font-medium">
           {isTodayCompleted ? '오늘 인증 완료!' : `오늘 하면 ${streakCount + 1}일 연속`}

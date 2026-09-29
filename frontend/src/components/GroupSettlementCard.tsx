@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { SettlementSummary, GroupAccountPayload } from "../types";
 import { settlementApi } from "../api/settlement";
 import { Button, FormField, Input, Modal, ModalTitle, ModalClose } from "./ui";
+import { Button as DayuButton, StatTile } from "./dayu/ui";
 import {
   CreditCard,
   Copy,
@@ -20,8 +21,6 @@ import {
 
 interface GroupSettlementCardProps {
   screen?: boolean;
-  uncheckedCount?: number;
-  onOpenUnchecked?: () => void;
   groupId: number;
   isHost: boolean;
   summary: SettlementSummary | null;
@@ -32,8 +31,6 @@ interface GroupSettlementCardProps {
 
 export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
   screen = false,
-  uncheckedCount = 0,
-  onOpenUnchecked,
   groupId,
   isHost,
   summary,
@@ -112,12 +109,83 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
   };
 
   return (
-    <div className={screen ? "card" : "bg-white border border-slate-200 rounded-lg p-4 shadow-xs space-y-4"} style={screen ? { display: "flex", flexDirection: "column", gap: 12 } : undefined}>
+    <div
+      className={
+        screen
+          ? "flex flex-col gap-3 rounded-[18px] border border-slate-200 bg-white p-4"
+          : "bg-white border border-slate-200 rounded-lg p-4 shadow-xs space-y-4"
+      }
+    >
       {screen ? <>
-        <div className="row"><div className="gi" style={{ width: 36, height: 36, borderRadius: 11 }}><ScreenCreditCard className="ic s" /></div><div className="grow"><div className="t1" style={{ fontSize: 14.5 }}>정산</div><button className="t2" style={{ display: "block", textAlign: "left" }} onClick={onOpenUnchecked} disabled={!uncheckedCount}>미확인 기록 {uncheckedCount}건 · {uncheckedCount ? "지난 기록 확인하기" : "지난 기록 모두 확인"}</button></div>{isHost && <button className="btn ghost sm" onClick={() => navigate(`/groups/${groupId}/settlements`)}>관리<ScreenChevronRight className="ic xs" /></button>}</div>
-        {loading ? <p className="sub" role="status">정산 불러오는 중...</p> : <div className="money"><div><small>쌓인 벌금</small><b>{(summary?.unpaidAmount ?? 0).toLocaleString()}원</b></div><div><small>확인 대기</small><b>{(summary?.waitingAmount ?? 0).toLocaleString()}원</b></div><div><small>입금 완료</small><b>{(summary?.confirmedAmount ?? 0).toLocaleString()}원</b></div></div>}
-        {account ? <div className="notice soft" style={{ alignItems: "center" }}><span className="grow">{account.bankName} {account.accountNumber}<br />{account.accountHolder}</span><button className="btn ghost sm" onClick={handleCopyAccount}>{copied ? "복사 완료" : "복사"}</button>{isHost && <button className="btn dark sm" onClick={handleOpenEditAccount}>수정</button>}</div> : isHost && <div className="notice soft" style={{ alignItems: "center" }}><ScreenInfo className="ic s" /><span className="grow">모임장만 보여요 · 계좌를 등록하면 멤버들이 입금을 신고할 수 있어요</span><button className="btn sm dark" style={{ height: 30, fontSize: 12.5 }} onClick={handleOpenEditAccount}>등록</button></div>}
-        {account && <button className="btn line w100" onClick={onOpenDepositModal}>입금 신고하기</button>}
+        <div className="flex items-center gap-3">
+          <div aria-hidden className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-blue-50 text-blue-600">
+            <ScreenCreditCard className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[14.5px] font-bold tracking-[-0.01em] text-slate-800">벌금 정산</div>
+            <div className="truncate text-[13px] text-slate-500">
+              내가 낼 벌금 {(summary?.myUnpaidAmount ?? 0).toLocaleString()}원
+            </div>
+          </div>
+          {isHost && (
+            <DayuButton
+              size="sm"
+              variant="ghost"
+              className="shrink-0"
+              onClick={() => navigate(`/groups/${groupId}/settlements`)}
+            >
+              관리
+              <ScreenChevronRight className="size-3.5" />
+            </DayuButton>
+          )}
+          {account && (
+            <DayuButton size="sm" className="shrink-0" onClick={onOpenDepositModal}>
+              입금 신고
+            </DayuButton>
+          )}
+        </div>
+
+        {loading ? (
+          <p className="text-[13px] text-slate-500" role="status">
+            정산 불러오는 중...
+          </p>
+        ) : (
+          <div className="flex gap-2">
+            <StatTile label="쌓인 벌금" value={`${(summary?.unpaidAmount ?? 0).toLocaleString()}원`} />
+            <StatTile label="확인 대기" value={`${(summary?.waitingAmount ?? 0).toLocaleString()}원`} />
+            <StatTile label="입금 완료" value={`${(summary?.confirmedAmount ?? 0).toLocaleString()}원`} />
+          </div>
+        )}
+
+        {account ? (
+          <div className="flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2.5">
+            <span className="min-w-0 flex-1 text-[13px] leading-[1.5] text-slate-600">
+              {account.bankName} {account.accountNumber}
+              <br />
+              {account.accountHolder}
+            </span>
+            <DayuButton size="sm" variant="line" className="shrink-0" onClick={handleCopyAccount}>
+              {copied ? "복사 완료" : "복사"}
+            </DayuButton>
+            {isHost && (
+              <DayuButton size="sm" variant="dark" className="shrink-0" onClick={handleOpenEditAccount}>
+                수정
+              </DayuButton>
+            )}
+          </div>
+        ) : (
+          isHost && (
+            <div className="flex items-center gap-2.5 rounded-xl bg-slate-100 px-3 py-2.5">
+              <ScreenInfo className="size-4 shrink-0 text-slate-400" />
+              <span className="min-w-0 flex-1 text-[13px] leading-[1.5] text-slate-600">
+                모임장만 보여요 · 계좌를 등록하면 멤버들이 입금을 신고할 수 있어요
+              </span>
+              <DayuButton size="sm" variant="dark" className="shrink-0" onClick={handleOpenEditAccount}>
+                등록
+              </DayuButton>
+            </div>
+          )
+        )}
       </> : <>
       {/* 상단 타이틀 & 모임장 관리 버튼 */}
       <div className="flex items-center justify-between">

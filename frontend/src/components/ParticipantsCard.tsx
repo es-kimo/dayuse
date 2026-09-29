@@ -99,10 +99,10 @@ export const ParticipantsCard: React.FC<ParticipantsCardProps> = ({
               key={p.userId}
               className={`flex items-center gap-3 py-3 transition-colors ${
                 isMe
-                  ? 'bg-blue-50/70 -mx-2 px-2.5 rounded-[14px] border border-blue-100 my-0.5'
+                  ? '-mx-2.5 rounded-[14px] bg-blue-50 px-2.5'
                   : idx === 0 || isPrevMe
-                  ? 'border-t-0'
-                  : 'border-t border-slate-100'
+                  ? ''
+                  : 'border-t border-slate-200'
               }`}
             >
               {/* Dayu Avatar */}
@@ -118,17 +118,17 @@ export const ParticipantsCard: React.FC<ParticipantsCardProps> = ({
                     <span className="text-[12px] text-slate-400 font-medium">나</span>
                   )}
                   {p.doneToday && (
-                    <span className="inline-flex items-center gap-0.5 h-5 px-1.5 rounded-[5px] bg-emerald-50 text-emerald-700 text-[11px] font-bold">
-                      <Check className="w-3 h-3 stroke-[2.5]" />
+                    <span className="inline-flex h-5 items-center gap-1 rounded-[7px] bg-emerald-50 px-2 text-[12px] font-bold text-emerald-700">
+                      <Check className="size-3.5" />
                       오늘
                     </span>
                   )}
                 </div>
 
                 <div className="flex items-center gap-2 mt-1.5">
-                  <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-[3px] bg-slate-100">
                     <i
-                      className={`block h-full rounded-full transition-all duration-500 ${
+                      className={`block h-full rounded-[3px] transition-all duration-500 ${
                         p.rate < 75 ? 'bg-amber-500' : 'bg-blue-600'
                       }`}
                       style={{ width: `${p.rate}%` }}
@@ -142,7 +142,7 @@ export const ParticipantsCard: React.FC<ParticipantsCardProps> = ({
 
               {/* Right: Fine / Penalty */}
               <div className="text-right shrink-0">
-                <span className="text-[11px] text-slate-400 block">벌금</span>
+                <span className="block text-[11.5px] text-slate-500">벌금</span>
                 <b className="text-[14px] font-extrabold text-slate-800 tabular-nums">
                   {p.penaltyTotal.toLocaleString()}원
                 </b>

@@ -27,13 +27,13 @@ export const HowToCertifyCard: React.FC<HowToCertifyCardProps> = ({ challenge })
 
       {/* Example thumbnail & Criteria */}
       <div className="flex items-start gap-3">
-        <div className="w-16 h-16 rounded-xl bg-[#0B1222] p-3 flex flex-col justify-center gap-1.5 shrink-0 overflow-hidden shadow-xs">
-          <i className="block h-1 rounded-sm bg-[#60A5FA]" style={{ width: '46%' }} />
-          <i className="block h-1 rounded-sm bg-[#334155]" style={{ width: '78%' }} />
-          <i className="block h-1 rounded-sm bg-[#334155]" style={{ width: '64%' }} />
-          <i className="block h-1 rounded-sm bg-[#34D399]" style={{ width: '30%' }} />
-          <i className="block h-1 rounded-sm bg-[#334155]" style={{ width: '84%' }} />
-          <i className="block h-1 rounded-sm bg-[#334155]" style={{ width: '52%' }} />
+        <div className="flex size-16 shrink-0 flex-col justify-center gap-1 overflow-hidden rounded-xl bg-[#0B1222] p-2">
+          <i className="block h-[2.5px] rounded-full bg-[#60A5FA]" style={{ width: '46%' }} />
+          <i className="block h-[2.5px] rounded-full bg-[#334155]" style={{ width: '78%' }} />
+          <i className="block h-[2.5px] rounded-full bg-[#334155]" style={{ width: '64%' }} />
+          <i className="block h-[2.5px] rounded-full bg-[#34D399]" style={{ width: '30%' }} />
+          <i className="block h-[2.5px] rounded-full bg-[#334155]" style={{ width: '84%' }} />
+          <i className="block h-[2.5px] rounded-full bg-[#334155]" style={{ width: '52%' }} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[15px] font-bold text-slate-900 leading-snug tracking-[-0.01em]">
@@ -60,7 +60,7 @@ export const HowToCertifyCard: React.FC<HowToCertifyCardProps> = ({ challenge })
       </div>
 
       {/* Lock Notice */}
-      <p className="flex items-center gap-1.5 text-[12.5px] text-slate-400">
+      <p className="flex items-center gap-1.5 text-[12.5px] text-slate-500">
         <Lock className="w-3.5 h-3.5 shrink-0" />
         <span>시작한 뒤에는 참여자와 규칙을 바꿀 수 없어요</span>
       </p>

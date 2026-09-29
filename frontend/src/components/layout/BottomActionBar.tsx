@@ -17,7 +17,7 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
 }) => {
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 max-w-[390px] mx-auto p-[12px_16px_calc(16px+env(safe-area-inset-bottom,0px))] bg-[#F8FAFC]/95 backdrop-blur-md border-t border-slate-200 z-30 ${className}`}
+      className={`fixed right-0 bottom-0 left-0 z-30 mx-auto max-w-app border-t border-slate-200 bg-slate-50/95 px-4 pt-[13px] pb-[calc(16px+env(safe-area-inset-bottom,0px))] backdrop-blur-md ${className}`}
     >
       {children}
     </div>

@@ -15,6 +15,7 @@ import {
 import { ShareCardModal } from './ShareCardModal';
 import { Lightbox } from './ui/Lightbox';
 import { DayuAvatar } from './brand/DayuAvatar';
+import { Button, Card, SectionHead } from './dayu/ui';
 
 interface GroupFeedSectionProps {
   screen?: boolean;
@@ -56,55 +57,54 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
   if (screen) {
     return (
       <>
-        <div className="flex items-center justify-between mt-1">
-          <h3 className="text-xs font-bold text-slate-700">모임 인증 피드</h3>
-          <span className="text-xs font-medium text-slate-400">최신순</span>
-        </div>
+        <SectionHead title="모임 인증 피드" right="최신순" />
         {loading ? (
-          <p className="py-6 text-center text-xs text-slate-400" role="status">
+          <p className="py-6 text-center text-[13px] text-slate-500" role="status">
             인증 피드를 불러오는 중...
           </p>
         ) : !feedItems.length ? (
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 text-center">
-            <p className="text-xs text-slate-400">아직 등록된 인증이 없어요.</p>
-          </div>
+          <Card className="text-center">
+            <p className="text-[13px] text-slate-500">아직 등록된 인증이 없어요.</p>
+          </Card>
         ) : (
-          <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-3">
             {feedItems.map((item) => (
-              <article key={item.id} className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden flex flex-col gap-3 p-4">
-                <div className="flex items-center gap-2.5">
-                  <ScreenAvatar image={item.authorProfileImageUrl} className="w-9 h-9" />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-slate-800 truncate">{item.authorNickname}</div>
-                    <div className="text-xs text-slate-400 truncate">{item.challengeTitle}</div>
+              <article key={item.id} className="overflow-hidden rounded-[18px] border border-slate-200 bg-white">
+                <div className="flex items-center gap-2.5 px-3.5 pt-3.5 pb-2.5">
+                  <ScreenAvatar image={item.authorProfileImageUrl} className="size-9" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[14.5px] font-bold tracking-[-0.01em] text-slate-800">
+                      {item.authorNickname}
+                    </div>
+                    <div className="truncate text-[13px] text-slate-500">{item.challengeTitle}</div>
                   </div>
                   {item.isMine && (
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                        className="grid size-8 cursor-pointer place-items-center rounded-[10px] text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-800"
                         onClick={() => setShareItem(item)}
                         aria-label="인증 공유 카드 만들기"
                       >
-                        <Share2 className="w-4 h-4" />
+                        <Share2 className="size-4" />
                       </button>
                       <button
                         type="button"
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                        className="grid size-8 cursor-pointer place-items-center rounded-[10px] text-slate-400 transition-colors hover:bg-red-50 hover:text-red-700"
                         onClick={() => handleDelete(item.id)}
                         disabled={deletingId === item.id}
                         aria-label="인증 삭제"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="size-4" />
                       </button>
                     </div>
                   )}
                 </div>
 
-                <div className="rounded-xl overflow-hidden bg-slate-100 border border-slate-200/60">
+                <div className="px-3.5">
                   <button
                     type="button"
-                    className="w-full block cursor-pointer"
+                    className="block w-full cursor-pointer overflow-hidden rounded-2xl bg-slate-100"
                     onClick={() =>
                       setLightboxImage({
                         src: item.imageUrl,
@@ -114,7 +114,7 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
                     aria-label={`${item.authorNickname}님의 인증 사진 확대 보기`}
                   >
                     <img
-                      className="w-full max-h-[360px] object-cover"
+                      className="max-h-[360px] w-full object-cover"
                       src={item.imageUrl}
                       alt="인증 사진"
                       loading="lazy"
@@ -123,35 +123,28 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
                 </div>
 
                 {item.comment && (
-                  <p className="text-xs text-slate-700 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 leading-relaxed">
-                    {item.comment}
-                  </p>
+                  <p className="px-3.5 pt-3 text-[14.5px] leading-[1.5] text-slate-800">{item.comment}</p>
                 )}
 
-                <div className="flex items-center justify-between pt-1 text-xs text-slate-400">
+                <div className="flex items-center justify-between px-2 pt-1.5 pb-2">
                   <button
                     type="button"
                     onClick={() => onOpenComments(item.id)}
-                    className="flex items-center gap-1 font-semibold text-slate-600 hover:text-blue-600 transition cursor-pointer"
+                    className="flex h-[34px] cursor-pointer items-center gap-1.5 rounded-[10px] px-2.5 text-[13px] font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
                   >
-                    <ScreenMessageCircle className="w-4 h-4" />
+                    <ScreenMessageCircle className="size-4" />
                     <span>댓글 {item.commentCount}</span>
                   </button>
-                  <span className="text-[11px]">{formatKstTime(item.createdAt)}</span>
+                  <span className="pr-1.5 text-[12px] text-slate-400">{formatKstTime(item.createdAt)}</span>
                 </div>
               </article>
             ))}
           </div>
         )}
         {hasMore && (
-          <button
-            type="button"
-            className="w-full h-11 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition cursor-pointer mt-1"
-            disabled={loadingMore}
-            onClick={onLoadMore}
-          >
+          <Button variant="line" onClick={onLoadMore} disabled={loadingMore}>
             {loadingMore ? '피드 불러오는 중...' : '이전 인증 더보기'}
-          </button>
+          </Button>
         )}
         {shareItem && (
           <ShareCardModal

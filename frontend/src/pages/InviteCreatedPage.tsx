@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
 import type { GroupDetail } from '../types';
 import { Dayu } from '../components/dayu/DayuAvatar';
-import { Card, Button } from '../components/dayu/ui';
+import { Card, Button, RowText } from '../components/dayu/ui';
+import { HeaderIconButton } from '../components/layout/AppHeader';
 import { X, Copy, Check, MessageCircle, Trophy, ChevronRight, Loader2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { shareToKakao, isKakaoReady } from '../utils/kakao';
@@ -79,7 +80,7 @@ export const InviteCreatedPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center text-slate-400">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-400">
         <Loader2 className="w-6 h-6 animate-spin" />
       </div>
     );
@@ -88,29 +89,25 @@ export const InviteCreatedPage: React.FC = () => {
   const groupName = group?.name || '새 모임';
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
       {/* Header with Close Button */}
-      <header className="sticky top-0 z-20 flex items-center justify-between px-3 h-14 bg-[#F8FAFC]/95 backdrop-blur-md">
-        <div className="w-10" />
-        <button
-          onClick={() => navigate(`/groups/${actualGroupId}`)}
-          aria-label="닫기"
-          className="w-10 h-10 rounded-xl grid place-items-center text-slate-600 hover:bg-slate-100 transition active:scale-95"
-        >
-          <X className="w-5 h-5" />
-        </button>
+      <header className="sticky top-0 z-20 flex h-14 items-center justify-between bg-slate-50/92 pr-2.5 pl-3 backdrop-blur-md">
+        <div className="flex-1" />
+        <HeaderIconButton onClick={() => navigate(`/groups/${actualGroupId}`)} aria-label="닫기">
+          <X className="size-[22px]" />
+        </HeaderIconButton>
       </header>
 
       {/* Main Body */}
-      <main className="w-full max-w-[390px] mx-auto px-5 pt-2 pb-12 flex flex-col gap-4.5">
+      <main className="mx-auto flex w-full max-w-app flex-col gap-[18px] px-5 pt-2 pb-12">
         {/* Dayu Mascot & Headline */}
-        <div className="flex flex-col items-center text-center gap-2 mt-3">
+        <div className="mt-3 flex flex-col items-center text-center">
           <Dayu color="#2563EB" face="cheer" size={92} title="응원하는 데이유" />
-          <h1 className="text-[24px] font-extrabold tracking-[-0.03em] text-slate-900 mt-1">
+          <h1 className="mt-2 text-[24px] leading-[1.3] font-extrabold tracking-[-0.03em] text-slate-800">
             모임을 만들었어요
           </h1>
-          <p className="text-[14px] text-slate-500 break-keep">
-            <strong className="text-slate-800 font-bold">{groupName}</strong>에 함께할 친구를 불러 보세요
+          <p className="mt-[7px] text-[14px] break-keep text-slate-500">
+            <strong className="font-bold text-slate-800">{groupName}</strong>에 함께할 친구를 불러 보세요
           </p>
         </div>
 
@@ -120,32 +117,22 @@ export const InviteCreatedPage: React.FC = () => {
             초대 링크
           </div>
 
-          <div className="flex items-center gap-2 p-[6px_6px_6px_14px] rounded-xl bg-[#F8FAFC] border border-slate-200">
-            <span className="flex-1 min-w-0 text-[14px] text-slate-600 font-mono truncate select-all">
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-[7px] pr-[7px] pl-[15px]">
+            <span className="min-w-0 flex-1 truncate text-[14px] text-slate-600 select-all">
               {inviteUrl.replace(/^https?:\/\//, '')}
             </span>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleCopyLink}
-              className="gap-1 px-3 h-9 shrink-0 text-[13px]"
-            >
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? '복사됨' : '링크 복사'}</span>
+            <Button size="sm" onClick={handleCopyLink} className="shrink-0">
+              {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+              {copied ? '복사됨' : '링크 복사'}
             </Button>
           </div>
 
           <div className="text-[13px] text-slate-500">
-            초대 코드 <b className="text-slate-900 font-bold tracking-[0.08em]">{inviteCode}</b> · 7일 동안 쓸 수 있어요
+            초대 코드 <b className="font-bold tracking-[0.08em] text-slate-800">{inviteCode}</b> · 7일 동안 쓸 수 있어요
           </div>
 
-          <Button
-            variant="kakao"
-            size="md"
-            onClick={handleKakaoShare}
-            className="w-full gap-2 text-[14.5px]"
-          >
-            <MessageCircle className="w-4 h-4 fill-current shrink-0" />
+          <Button variant="kakao" onClick={handleKakaoShare} className="w-full">
+            <MessageCircle className="size-4 shrink-0 fill-current" />
             카카오톡으로 보내기
           </Button>
         </Card>
@@ -161,20 +148,13 @@ export const InviteCreatedPage: React.FC = () => {
               navigate(`/groups/${actualGroupId}/challenges/new`);
             }
           }}
-          className="rounded-[18px] border border-slate-200 bg-white p-4 flex items-center gap-3 cursor-pointer hover:border-slate-300 transition active:scale-[0.99] select-none"
+          className="flex cursor-pointer items-center gap-3 rounded-[18px] border border-slate-200 bg-white p-4 transition-colors select-none hover:border-slate-300"
         >
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 grid place-items-center shrink-0">
-            <Trophy className="w-5 h-5" />
+          <div aria-hidden className="grid size-10 shrink-0 place-items-center rounded-[14px] bg-blue-50 text-blue-600">
+            <Trophy className="size-4" />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[15.5px] font-bold text-slate-900 tracking-[-0.01em]">
-              첫 챌린지 만들기
-            </div>
-            <div className="text-[13px] text-slate-500 mt-0.5 truncate">
-              친구가 들어오기 전에 만들어 둬도 돼요
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
+          <RowText title="첫 챌린지 만들기" desc="친구가 들어오기 전에 만들어 둬도 돼요" />
+          <ChevronRight className="size-[22px] shrink-0 text-slate-400" />
         </div>
       </main>
     </div>

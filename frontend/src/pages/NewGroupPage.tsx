@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { groupsApi } from '../api/groups';
 import { GroupNameSuggestions } from '../components/GroupNameSuggestions';
-import { Card } from '../components/dayu/ui';
+import { Button, Card } from '../components/dayu/ui';
 import { SubPageHeader } from '../components/layout/SubPageHeader';
 import { BottomActionBar } from '../components/layout/BottomActionBar';
 
@@ -42,7 +42,7 @@ export const NewGroupPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] flex flex-col">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
       {/* Header */}
       <SubPageHeader
         title="새 모임 만들기"
@@ -50,12 +50,12 @@ export const NewGroupPage: React.FC = () => {
       />
 
       {/* Main Body */}
-      <main className="w-full max-w-[390px] mx-auto px-4 pt-3 pb-28 flex-1 flex flex-col justify-between">
+      <main className="mx-auto flex w-full max-w-app flex-1 flex-col px-4 pt-3 pb-28">
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3.5">
           <Card className="flex flex-col gap-2.5">
             <div>
               <label htmlFor="group-name-input" className="block text-[14px] font-bold text-slate-800 mb-2">
-                모임 이름 <span className="text-rose-500 font-normal">*</span>
+                모임 이름 <span className="text-red-700">*</span>
               </label>
               <input
                 ref={nameInputRef}
@@ -69,9 +69,9 @@ export const NewGroupPage: React.FC = () => {
                   if (error) setError('');
                 }}
                 maxLength={50}
-                className="w-full h-[50px] px-3.5 bg-white border border-slate-300 rounded-xl text-[15.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-100 transition"
+                className="h-[50px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-[15.5px] text-slate-800 placeholder:text-slate-800/55 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-100 focus:outline-none"
               />
-              {error && <p className="text-xs text-rose-500 mt-1.5 font-medium">{error}</p>}
+              {error && <p className="mt-1.5 text-[13px] text-red-700">{error}</p>}
             </div>
 
             {/* 추천 이름 칩들 */}
@@ -82,9 +82,9 @@ export const NewGroupPage: React.FC = () => {
               }}
             />
 
-            <div className="flex justify-between items-center pt-2 text-[12.5px] text-slate-500 border-t border-slate-100">
+            <div className="flex items-center justify-between text-[12.5px] text-slate-500">
               <span>만든 사람이 자동으로 모임장이 돼요</span>
-              <span className="text-xs text-slate-400 tabular-nums">{name.length}/50</span>
+              <span className="text-[12px] tabular-nums text-slate-400">{name.length}/50</span>
             </div>
           </Card>
         </form>
@@ -92,14 +92,9 @@ export const NewGroupPage: React.FC = () => {
 
       {/* Bottom Sticky Action */}
       <BottomActionBar>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting || !name.trim()}
-          className="w-full h-[54px] rounded-[14px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold text-base transition flex items-center justify-center cursor-pointer disabled:cursor-not-allowed shadow-xs active:scale-[0.99]"
-        >
+        <Button type="button" size="lg" className="w-full" onClick={handleSubmit} disabled={isSubmitting || !name.trim()}>
           {isSubmitting ? '모임 만드는 중...' : '모임 만들기'}
-        </button>
+        </Button>
       </BottomActionBar>
     </div>
   );

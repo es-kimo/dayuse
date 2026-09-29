@@ -22,7 +22,7 @@ export const GroupNameSuggestions: React.FC<GroupNameSuggestionsProps> = ({
           key={sug}
           type="button"
           onClick={() => onSelect(sug)}
-          className="h-[34px] px-3 rounded-[10px] border border-dashed border-slate-300 bg-white hover:bg-slate-50 text-[13.5px] font-semibold text-slate-600 transition active:scale-95 cursor-pointer whitespace-nowrap"
+          className="h-[34px] px-3 rounded-[10px] border border-dashed border-slate-200 bg-white hover:bg-slate-50 text-[13.5px] font-semibold text-slate-600 cursor-pointer whitespace-nowrap transition-colors"
         >
           {sug}
         </button>

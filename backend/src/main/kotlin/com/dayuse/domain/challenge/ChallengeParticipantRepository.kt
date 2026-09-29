@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 interface ChallengeParticipantRepository : JpaRepository<ChallengeParticipant, Long> {
     fun findAllByChallengeId(challengeId: Long): List<ChallengeParticipant>
     fun findAllByChallengeIdAndStatus(challengeId: Long, status: ParticipantStatus): List<ChallengeParticipant>
+    fun findAllByChallengeIdInAndStatus(challengeIds: Collection<Long>, status: ParticipantStatus): List<ChallengeParticipant>
     fun findAllByUserId(userId: Long): List<ChallengeParticipant>
     fun findAllByUserIdAndStatus(userId: Long, status: ParticipantStatus): List<ChallengeParticipant>
     fun findByChallengeIdAndUserId(challengeId: Long, userId: Long): ChallengeParticipant?

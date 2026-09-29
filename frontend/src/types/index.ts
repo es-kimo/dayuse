@@ -23,6 +23,8 @@ export interface GroupMember {
   profileImageUrl?: string | null;
   role: GroupRole;
   joinedAt: string;
+  /** 이 모임에서 진행 중인 챌린지 중 참여 중인 개수 */
+  participatingChallengeCount?: number;
 }
 
 export interface GroupDetail {

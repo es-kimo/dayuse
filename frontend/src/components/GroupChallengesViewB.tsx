@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Plus, Check } from 'lucide-react';
 import type { ChallengeSummary } from '../types';
 import { Dayu } from './dayu/DayuAvatar';
+import { Button, Card, Chip, Pill, ProgressBar, Segmented } from './dayu/ui';
 
 interface GroupChallengesViewBProps {
   groupId: number;
@@ -78,77 +79,34 @@ export const GroupChallengesViewB: React.FC<GroupChallengesViewBProps> = ({
   return (
     <div className="space-y-3.5 pb-12">
       {/* 범위 세그먼트 (전체 / 내 참여) */}
-      <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl">
-        <button
-          type="button"
-          onClick={() => setScope('ALL')}
-          className={`py-2 text-[14px] font-bold rounded-lg transition ${
-            scope === 'ALL'
-              ? 'bg-white text-slate-900 shadow-xs'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          전체 {challenges.length}
-        </button>
-        <button
-          type="button"
-          onClick={() => setScope('MINE')}
-          className={`py-2 text-[14px] font-bold rounded-lg transition ${
-            scope === 'MINE'
-              ? 'bg-white text-slate-900 shadow-xs'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          내 참여 {myChallengesCount}
-        </button>
-      </div>
+      <Segmented
+        label="챌린지 범위"
+        value={scope}
+        onChange={setScope}
+        options={[
+          { value: 'ALL', label: `전체 ${challenges.length}` },
+          { value: 'MINE', label: `내 참여 ${myChallengesCount}` },
+        ]}
+      />
 
-      {/* 상태 필터 칩 + 만들기 버튼 */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-          <button
-            type="button"
-            onClick={() => setStatus('IN_PROGRESS')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition shrink-0 ${
-              status === 'IN_PROGRESS'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
+      {/* 상태 필터 알약 + 만들기 버튼 */}
+      <div className="flex items-center gap-2">
+        <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-0.5">
+          <Pill active={status === 'IN_PROGRESS'} onClick={() => setStatus('IN_PROGRESS')}>
             진행 중 {countByStatus.IN_PROGRESS}
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatus('NOT_STARTED')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition shrink-0 ${
-              status === 'NOT_STARTED'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
+          </Pill>
+          <Pill active={status === 'NOT_STARTED'} onClick={() => setStatus('NOT_STARTED')}>
             예정 {countByStatus.NOT_STARTED}
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatus('ENDED')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition shrink-0 ${
-              status === 'ENDED'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
+          </Pill>
+          <Pill active={status === 'ENDED'} onClick={() => setStatus('ENDED')}>
             종료 {countByStatus.ENDED}
-          </button>
+          </Pill>
         </div>
 
-        <button
-          type="button"
-          onClick={() => navigate(`/groups/${groupId}/challenges/new`)}
-          className="h-8 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 shrink-0 transition active:scale-95 shadow-xs"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>만들기</span>
-        </button>
+        <Button size="sm" className="shrink-0" onClick={() => navigate(`/groups/${groupId}/challenges/new`)}>
+          <Plus className="size-4" />
+          만들기
+        </Button>
       </div>
 
       {/* 챌린지 카드 목록 */}
@@ -163,27 +121,21 @@ export const GroupChallengesViewB: React.FC<GroupChallengesViewBProps> = ({
           ))}
         </div>
       ) : filteredChallenges.length === 0 ? (
-        <div className="bg-white border border-dashed border-slate-200 rounded-2xl p-8 text-center my-4 flex flex-col items-center gap-3">
+        <div className="my-4 flex flex-col items-center gap-3 rounded-[18px] border border-dashed border-slate-300 bg-white p-8 text-center">
           <Dayu face="rest" size={64} />
           <div>
-            <h4 className="text-sm font-bold text-slate-800">
+            <h4 className="text-[15.5px] font-bold text-slate-800">
               {status === 'IN_PROGRESS'
                 ? '진행 중인 챌린지가 없어요'
                 : status === 'NOT_STARTED'
                 ? '시작 예정인 챌린지가 없어요'
                 : '종료된 챌린지가 없어요'}
             </h4>
-            <p className="text-xs text-slate-400 mt-1">
-              새로운 목표를 세우고 모임원들과 함께 도전해 보세요!
-            </p>
+            <p className="mt-1 text-[13px] text-slate-500">새로운 목표를 세우고 모임원들과 함께 도전해 보세요!</p>
           </div>
-          <button
-            type="button"
-            onClick={() => navigate(`/groups/${groupId}/challenges/new`)}
-            className="mt-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-xs hover:bg-blue-700 transition"
-          >
+          <Button size="sm" className="mt-2" onClick={() => navigate(`/groups/${groupId}/challenges/new`)}>
             첫 챌린지 만들기
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -192,83 +144,53 @@ export const GroupChallengesViewB: React.FC<GroupChallengesViewBProps> = ({
             const isCompletedToday = (c as any).isCompletedToday;
 
             return (
-              <div
+              <Card
                 key={c.id}
                 role="button"
                 tabIndex={0}
                 onClick={() => navigate(`/challenges/${c.id}`)}
                 onKeyDown={(e) => e.key === 'Enter' && navigate(`/challenges/${c.id}`)}
-                className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs hover:border-blue-300 transition flex flex-col gap-3 cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="cursor-pointer text-left transition-colors hover:border-slate-300"
               >
                 {/* 상단 칩 + 화살표 */}
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">
-                    ● 진행 중
-                  </span>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                    {c.executionType === 'TOGETHER' ? '함께하기' : '각자하기'}
-                  </span>
-                  {c.isParticipating && (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600">
-                      참여 중
-                    </span>
-                  )}
+                  <Chip tone="ok">● 진행 중</Chip>
+                  <Chip tone="gray">{c.executionType === 'TOGETHER' ? '함께하기' : '각자하기'}</Chip>
+                  {c.isParticipating && <Chip tone="blue">참여 중</Chip>}
                   <span className="flex-1" />
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                  <ChevronRight className="size-4 shrink-0 text-slate-400" />
                 </div>
 
                 {/* 챌린지 타이틀 및 설명 */}
-                <div>
-                  <h3 className="text-[16px] font-extrabold text-slate-900 tracking-tight leading-snug">
-                    {c.title}
-                  </h3>
-                  {c.description && (
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">
-                      {c.description}
-                    </p>
-                  )}
-                </div>
+                <h3 className="mt-3 text-[17px] leading-[1.5] font-bold tracking-[-0.01em] text-slate-800">{c.title}</h3>
+                {c.description && <p className="line-clamp-1 text-[13px] text-slate-500">{c.description}</p>}
 
                 {/* 진행 막대 및 기간 */}
-                <div className="space-y-1.5">
-                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-600 rounded-full transition-all duration-300"
-                      style={{ width: `${percent}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <div className="mt-3 space-y-1.5">
+                  <ProgressBar value={percent / 100} />
+                  <div className="flex items-center justify-between text-[13px] text-slate-500">
                     <span>{formatDateRange(c.startDate, c.endDate)}</span>
-                    <span className="tabular-nums font-medium text-slate-500">
-                      <b className="text-slate-800 font-bold">{dayIndex}일째</b> / {totalDays}일
+                    <span className="tabular-nums">
+                      <b className="font-bold text-slate-800">{dayIndex}일째</b> / {totalDays}일
                     </span>
                   </div>
                 </div>
 
-                {/* 하단 구분선 + 참여자 아바타 스택 + 오늘 완료 칩 */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-500">
-                      {c.participantCount}명 참여
-                    </span>
-                  </div>
+                {/* 하단 구분선 + 참여 인원 + 오늘 상태 칩 */}
+                <div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-[13px]">
+                  <span className="text-[13px] text-slate-500">{c.participantCount}명 참여</span>
 
-                  {c.isParticipating && (
-                    <div>
-                      {isCompletedToday ? (
-                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 flex items-center gap-1">
-                          <Check className="w-3 h-3" />
-                          오늘 완료
-                        </span>
-                      ) : (
-                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-amber-50 text-amber-700">
-                          오늘 남음
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  {c.isParticipating &&
+                    (isCompletedToday ? (
+                      <Chip tone="ok">
+                        <Check className="size-3.5" />
+                        오늘 완료
+                      </Chip>
+                    ) : (
+                      <Chip tone="warn">오늘 남음</Chip>
+                    ))}
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>

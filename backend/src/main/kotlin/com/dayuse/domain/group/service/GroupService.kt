@@ -1,5 +1,9 @@
 package com.dayuse.domain.group.service
 
+import com.dayuse.domain.challenge.ChallengeParticipantRepository
+import com.dayuse.domain.challenge.ChallengeRepository
+import com.dayuse.domain.challenge.ChallengeStatus
+import com.dayuse.domain.challenge.ParticipantStatus
 import com.dayuse.domain.group.Group
 import com.dayuse.domain.group.GroupMember
 import com.dayuse.domain.group.GroupMemberRepository
@@ -22,8 +26,27 @@ import java.util.UUID
 class GroupService(
     private val groupRepository: GroupRepository,
     private val groupMemberRepository: GroupMemberRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val challengeRepository: ChallengeRepository,
+    private val challengeParticipantRepository: ChallengeParticipantRepository
 ) {
+
+    /**
+     * 모임에서 진행 중인 챌린지에 참여(ACTIVE) 중인 멤버별 개수.
+     * 진행 중인 챌린지가 없으면 빈 맵을 돌려주고 추가 조회를 하지 않는다.
+     */
+    private fun countParticipatingChallengesByUser(groupId: Long): Map<Long, Int> {
+        val inProgressChallengeIds = challengeRepository.findAllByGroupId(groupId)
+            .filter { it.status() == ChallengeStatus.IN_PROGRESS }
+            .map { it.id }
+
+        if (inProgressChallengeIds.isEmpty()) return emptyMap()
+
+        return challengeParticipantRepository
+            .findAllByChallengeIdInAndStatus(inProgressChallengeIds, ParticipantStatus.ACTIVE)
+            .groupingBy { it.userId }
+            .eachCount()
+    }
 
     @Transactional
     fun createGroup(userId: Long, request: CreateGroupRequest): GroupDetailResponse {
@@ -96,6 +119,7 @@ class GroupService(
 
         val allMembers = groupMemberRepository.findAllByGroupId(groupId)
         val userMap = userRepository.findAllById(allMembers.map { it.userId }).associateBy { it.id }
+        val participatingCountByUserId = countParticipatingChallengesByUser(groupId)
 
         val memberItems = allMembers.map { member ->
             val memberUser = userMap[member.userId]
@@ -105,7 +129,8 @@ class GroupService(
                 nickname = memberUser?.nickname ?: "탈퇴한 사용자",
                 profileImageUrl = memberUser?.profileImageUrl,
                 role = member.role,
-                joinedAt = member.joinedAt
+                joinedAt = member.joinedAt,
+                participatingChallengeCount = participatingCountByUserId[member.userId] ?: 0
             )
         }
 

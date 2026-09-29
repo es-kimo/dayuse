@@ -26,7 +26,9 @@ data class GroupMemberItem(
     val nickname: String,
     val profileImageUrl: String?,
     val role: GroupRole,
-    val joinedAt: LocalDateTime
+    val joinedAt: LocalDateTime,
+    /** 이 모임에서 진행 중인 챌린지 중 해당 멤버가 참여 중(ACTIVE)인 개수 */
+    val participatingChallengeCount: Int = 0
 )
 
 data class GroupDetailResponse(

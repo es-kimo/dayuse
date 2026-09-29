@@ -1,4 +1,5 @@
 import { GroupHomeScreen } from '../components/screens/GroupHomeScreen';
+import { UncheckedRecordsCard } from '../components/screens/UncheckedRecordsCard';
 import { GroupChallengesViewB } from '../components/GroupChallengesViewB';
 import { GroupMembersViewB } from '../components/GroupMembersViewB';
 import { Lightbox } from '../components/ui/Lightbox';
@@ -504,6 +505,15 @@ export const GroupDetailPage: React.FC = () => {
           onTab={handleTabChange}
           onVerify={setActiveVerificationAction}
           onImage={setHomeImage}
+          uncheckedSlot={
+            <UncheckedRecordsCard
+              count={statusSummary?.uncheckedCount ?? 0}
+              onOpen={() => {
+                fetchUncheckedRecords();
+                setShowUncheckedSheet(true);
+              }}
+            />
+          }
         >
           {activeTab === 'home' && (
             <>
@@ -519,11 +529,6 @@ export const GroupDetailPage: React.FC = () => {
               />
               <GroupSettlementCard
                 screen
-                uncheckedCount={statusSummary?.uncheckedCount}
-                onOpenUnchecked={() => {
-                  fetchUncheckedRecords();
-                  setShowUncheckedSheet(true);
-                }}
                 groupId={Number(groupId)}
                 isHost={group.isHost}
                 summary={settlementSummary}

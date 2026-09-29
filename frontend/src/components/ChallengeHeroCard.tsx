@@ -62,7 +62,7 @@ export const ChallengeHeroCard: React.FC<ChallengeHeroCardProps> = ({
   };
 
   return (
-    <div className="rounded-[22px] bg-blue-50 border border-blue-100 p-[18px_18px_16px] flex flex-col gap-3">
+    <div className="flex flex-col gap-3 rounded-[22px] border border-blue-100 bg-blue-50 px-[19px] pt-[19px] pb-[17px]">
       {/* Upper Chips & D-Day */}
       <div className="flex items-center gap-1.5">
         {getStatusChip()}
@@ -90,7 +90,7 @@ export const ChallengeHeroCard: React.FC<ChallengeHeroCardProps> = ({
           <Dayu
             color="#2563EB"
             face={isTodayCompleted ? 'done' : 'cheer'}
-            size={64}
+            size={76}
             title={isTodayCompleted ? '완료한 데이유' : '응원하는 데이유'}
           />
         </div>
@@ -98,9 +98,9 @@ export const ChallengeHeroCard: React.FC<ChallengeHeroCardProps> = ({
 
       {/* Progress Track & Period Info */}
       <div className="flex flex-col gap-1.5 pt-1">
-        <div className="relative h-2 rounded-full bg-white">
+        <div className="relative h-2 rounded bg-white">
           <i
-            className="block h-full rounded-full bg-blue-600 transition-all duration-500"
+            className="block h-full rounded bg-blue-600 transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
           <b

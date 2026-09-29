@@ -9,6 +9,7 @@ import { HowToCertifyCard } from './HowToCertifyCard';
 import { ParticipantsCard } from './ParticipantsCard';
 
 import { SubPageHeader } from './layout/SubPageHeader';
+import { HeaderIconButton } from './layout/AppHeader';
 import { BottomActionBar } from './layout/BottomActionBar';
 
 interface ChallengeDetailViewBProps {
@@ -95,7 +96,7 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
     if (isTodayCompleted) {
       return (
         <Button variant="ghost" size="lg" disabled className="w-full text-slate-400 gap-1.5">
-          <Check className="w-5 h-5 text-emerald-500" />
+          <Check className="size-5 text-emerald-700" />
           오늘 인증 완료
         </Button>
       );
@@ -106,42 +107,38 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
         variant="primary"
         size="lg"
         onClick={onOpenCert}
-        className="w-full text-base shadow-sm gap-2"
+        className="w-full gap-2"
       >
-        <Camera className="w-5 h-5" />
+        <Camera className="size-4" />
         오늘 인증하기
       </Button>
     );
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8FAFC] text-[#1E293B]">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800">
       {/* Top Header */}
       <SubPageHeader
         title="챌린지"
         onBack={onBack}
         rightAction={
           <>
-            <button
-              onClick={onShare}
-              aria-label="공유"
-              className="w-10 h-10 rounded-xl grid place-items-center text-slate-600 hover:bg-slate-100 transition active:scale-95 cursor-pointer"
-            >
-              <Share2 className="w-5 h-5" />
-            </button>
+            <HeaderIconButton onClick={onShare} aria-label="공유">
+              <Share2 className="size-[22px]" />
+            </HeaderIconButton>
             {(challenge.isCreator || challenge.canAbort) && (
               <Menu>
                 <MenuTrigger
-                  className="w-10 h-10 rounded-xl grid place-items-center text-slate-600 hover:bg-slate-100 transition active:scale-95 cursor-pointer"
+                  className="grid size-10 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100"
                   aria-label="더보기"
                 >
-                  <MoreVertical className="w-5 h-5" />
+                  <MoreVertical className="size-[22px]" />
                 </MenuTrigger>
                 <MenuPopup sideOffset={6}>
                   {challenge.canAbort && onAbortChallenge && (
                     <MenuItem
                       onSelect={onAbortChallenge}
-                      className="text-rose-600 hover:bg-rose-50 cursor-pointer"
+                      className="cursor-pointer text-red-700 hover:bg-red-50"
                     >
                       챌린지 중단
                     </MenuItem>
@@ -149,7 +146,7 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
                   {challenge.isCreator && onDeleteChallenge && (
                     <MenuItem
                       onSelect={onDeleteChallenge}
-                      className="text-rose-600 hover:bg-rose-50 cursor-pointer"
+                      className="cursor-pointer text-red-700 hover:bg-red-50"
                     >
                       챌린지 삭제
                     </MenuItem>
@@ -172,7 +169,7 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
       />
 
       {/* Main Body */}
-      <div className="w-full max-w-[390px] mx-auto px-4 pt-1.5 pb-28 flex flex-col gap-3.5">
+      <div className="mx-auto flex w-full max-w-app flex-col gap-[14px] px-4 pt-1.5 pb-28">
         {/* 1. Challenge Hero Card */}
         <ChallengeHeroCard
           challenge={challenge}
