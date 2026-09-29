@@ -2,20 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { DAYU_COLORS, type DayuColor } from '../components/dayu/dayuColors';
+import { DAYU_COLORS, parseUserDayuColor, type DayuColor } from '../components/dayu/dayuColors';
 import { DayuAvatar } from '../components/dayu/DayuAvatar';
 import { DayuColorPicker } from '../components/DayuColorPicker';
 import { Button } from '../components/dayu/ui';
 import { SubPageHeader } from '../components/layout/SubPageHeader';
 import { BottomActionBar } from '../components/layout/BottomActionBar';
-
-function parseUserDayuColor(profileImageUrl?: string | null): DayuColor {
-  if (profileImageUrl && profileImageUrl.startsWith('dayu:')) {
-    const raw = profileImageUrl.replace('dayu:', '');
-    if (raw in DAYU_COLORS) return raw as DayuColor;
-  }
-  return 'blue';
-}
 
 export const AvatarPage: React.FC = () => {
   const navigate = useNavigate();

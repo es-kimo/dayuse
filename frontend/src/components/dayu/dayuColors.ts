@@ -19,3 +19,11 @@ export function randomDayuColor(except?: DayuColor): DayuColor {
   const pool = DAYU_COLOR_IDS.filter((c) => c !== except);
   return pool[Math.floor(Math.random() * pool.length)];
 }
+
+export function parseUserDayuColor(profileImageUrl?: string | null): DayuColor {
+  if (profileImageUrl && profileImageUrl.startsWith('dayu:')) {
+    const raw = profileImageUrl.replace('dayu:', '');
+    if (raw in DAYU_COLORS) return raw as DayuColor;
+  }
+  return 'blue';
+}

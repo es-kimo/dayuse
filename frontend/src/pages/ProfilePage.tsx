@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useUiVersion } from '../context/UiVersionContext';
 import { MobileLayout } from '../components/MobileLayout';
 import { ProfileHeader } from '../components/ProfileHeader';
+import { parseUserDayuColor } from '../components/dayu/dayuColors';
 import { Button } from '../components/dayu/ui';
 import { ScreenNav } from '../components/screens/Screen';
 import { AppMainHeader } from '../components/layout/AppMainHeader';
@@ -66,7 +67,7 @@ export const ProfilePage: React.FC = () => {
           {/* 프로필 아바타 영역 (ProfileHeader) */}
           <ProfileHeader
             nickname={user?.nickname || '사용자'}
-            dayuColor={(user as any)?.dayuColor || 'blue'}
+            dayuColor={parseUserDayuColor(user?.profileImageUrl)}
             onAvatarClick={() => navigate('/profile/avatar')}
           />
 
