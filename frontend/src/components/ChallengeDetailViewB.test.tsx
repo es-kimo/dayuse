@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+import { ParticipantsCard } from './ParticipantsCard';
 import { ChallengeDetailViewB } from './ChallengeDetailViewB';
 import type { ChallengeDetail, ChallengeCalendarResponse } from '../types';
 
@@ -160,6 +161,23 @@ describe('ChallengeDetailViewB (08 챌린지 상세 화면)', () => {
     expect(screen.getByText('매일 한 번, 자정까지')).toBeInTheDocument();
     expect(screen.getByText('못 한 날 1,000원')).toBeInTheDocument();
     expect(screen.getByText('시작한 뒤에는 참여자와 규칙을 바꿀 수 없어요')).toBeInTheDocument();
+  });
+
+  it.each([true, false])('참여자 프로필을 실제 저장 값으로 표시한다 (캘린더: %s)', (withCalendar) => {
+    const profiles = ['dayu:purple', 'https://example.com/avatar.png', null, 'dayu:mint'];
+    const challenge = {
+      ...mockChallenge,
+      participants: mockChallenge.participants.map((p, i) => ({ ...p, profileImageUrl: profiles[i] })),
+    };
+    const calendar = withCalendar ? {
+      ...mockCalendarData,
+      participants: mockCalendarData.participants.map((p, i) => ({ ...p, profileImageUrl: profiles[i] })),
+    } : null;
+    render(<ParticipantsCard challenge={challenge} calendarData={calendar} totalDurationDays={30} currentUserId={101} />);
+    expect(screen.getByRole('img', { name: '류코딩' })).toHaveStyle({ backgroundColor: '#EDE9FE' });
+    expect(screen.getByRole('img', { name: '김운동' })).toHaveAttribute('src', profiles[1]);
+    expect(screen.getByRole('img', { name: '박기상' })).toHaveStyle({ backgroundColor: '#DBEAFE' });
+    expect(screen.getByRole('img', { name: '최독서' })).toHaveStyle({ backgroundColor: '#CCFBF1' });
   });
 
   it('ParticipantsCard에서 참여자 목록과 내 하이라이트가 올바르게 렌더링된다', () => {

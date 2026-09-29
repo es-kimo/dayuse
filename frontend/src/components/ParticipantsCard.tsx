@@ -1,8 +1,7 @@
 import React from 'react';
 import type { ChallengeDetail, ChallengeCalendarResponse, ParticipantCalendarItem, CalendarDailyRecordItem } from '../types';
 import { Card } from './dayu/ui';
-import { DayuAvatar } from './dayu/DayuAvatar';
-import { DAYU_COLORS, type DayuColor, DAYU_COLOR_IDS } from './dayu/dayuColors';
+import { DayuAvatar } from './brand/DayuAvatar';
 import { Users, Check } from 'lucide-react';
 import { getTodayKstString } from '../utils/date';
 
@@ -11,13 +10,6 @@ interface ParticipantsCardProps {
   calendarData: ChallengeCalendarResponse | null;
   currentUserId?: number;
   totalDurationDays: number;
-}
-
-function resolveDayuColor(color?: string | null, fallbackIndex: number = 0): DayuColor {
-  if (color && color in DAYU_COLORS) {
-    return color as DayuColor;
-  }
-  return DAYU_COLOR_IDS[fallbackIndex % DAYU_COLOR_IDS.length];
 }
 
 export const ParticipantsCard: React.FC<ParticipantsCardProps> = ({
@@ -48,7 +40,7 @@ export const ParticipantsCard: React.FC<ParticipantsCardProps> = ({
         return {
           userId: p.userId,
           nickname: p.nickname,
-          dayuColor: resolveDayuColor((chPart as any)?.dayuColor || (p as any)?.dayuColor, idx),
+          profileImageUrl: p.profileImageUrl ?? chPart?.profileImageUrl,
           rate,
           penaltyTotal,
           doneToday,
@@ -63,7 +55,7 @@ export const ParticipantsCard: React.FC<ParticipantsCardProps> = ({
       return {
         userId: p.userId,
         nickname: p.nickname,
-        dayuColor: resolveDayuColor((p as any).dayuColor, idx),
+        profileImageUrl: p.profileImageUrl,
         rate: 100,
         penaltyTotal: p.penaltyAmount ?? 0,
         doneToday: false,
@@ -106,7 +98,7 @@ export const ParticipantsCard: React.FC<ParticipantsCardProps> = ({
               }`}
             >
               {/* Dayu Avatar */}
-              <DayuAvatar color={p.dayuColor} face="default" size={36} />
+              <DayuAvatar profileImageUrl={p.profileImageUrl} alt={p.nickname} size={36} />
 
               {/* Center Info: Name & Progress bar */}
               <div className="flex-1 min-w-0">
