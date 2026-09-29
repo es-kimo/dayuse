@@ -81,8 +81,8 @@ class NotificationSchedulerService(
 
 
             val payload = PushPayload(
-                title = "dayuse 오늘 인증 리마인더",
-                body = "오늘 인증할 챌린지가 ${pendingCount}개 남아 있어요! 잊지 말고 인증해 주세요.",
+                title = "데이유즈",
+                body = "오늘 인증할 챌린지가 ${pendingCount}개 남아 있어요.",
                 url = "/today",
                 tag = "dayuse-daily-reminder"
             )
