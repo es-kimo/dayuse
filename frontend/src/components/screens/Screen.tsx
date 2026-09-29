@@ -14,7 +14,7 @@ export const screenAssets = {
 export function Screen({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`w-full max-w-[390px] mx-auto min-h-screen bg-slate-50 text-slate-800 flex flex-col relative font-sans antialiased text-[15px] leading-relaxed ${className}`}
+      className={`mx-auto min-h-screen w-full max-w-app bg-slate-50 text-slate-800 flex flex-col relative font-sans antialiased text-[15px] leading-relaxed ${className}`}
     >
       {children}
     </div>
@@ -52,48 +52,40 @@ export function ScreenAvatar({
   );
 }
 
+const NAV_ITEMS = [
+  { key: "today", label: "오늘", to: "/today", Icon: CalendarCheck },
+  { key: "groups", label: "모임", to: "/groups", Icon: Users },
+  { key: "me", label: "내 정보", to: "/profile", Icon: UserRound },
+] as const;
+
 export function ScreenNav({ active, pending = 0 }: { active: "today" | "groups" | "me"; pending?: number }) {
   const navigate = useNavigate();
   return (
     <nav
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[390px] z-40 grid grid-cols-3 border-t border-slate-200 bg-white/95 backdrop-blur-md px-2 py-1 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
+      className="fixed bottom-0 left-1/2 z-40 grid w-full max-w-app -translate-x-1/2 grid-cols-3 border-t border-slate-200 bg-white px-2 pt-1.5 pb-[calc(8px+env(safe-area-inset-bottom,0px))]"
       aria-label="주요 메뉴"
     >
-      <button
-        onClick={() => navigate("/today")}
-        className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-semibold transition cursor-pointer relative ${
-          active === "today" ? "text-blue-600 font-bold" : "text-slate-400 hover:text-slate-600"
-        }`}
-        aria-current={active === "today" ? "page" : undefined}
-      >
-        <CalendarCheck className="w-[22px] h-[22px]" />
-        <span>오늘</span>
-        {pending > 0 && (
-          <span className="absolute top-1 right-[calc(50%-18px)] px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500 text-white leading-tight">
-            {pending}
-          </span>
-        )}
-      </button>
-      <button
-        onClick={() => navigate("/groups")}
-        className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-semibold transition cursor-pointer ${
-          active === "groups" ? "text-blue-600 font-bold" : "text-slate-400 hover:text-slate-600"
-        }`}
-        aria-current={active === "groups" ? "page" : undefined}
-      >
-        <Users className="w-[22px] h-[22px]" />
-        <span>모임</span>
-      </button>
-      <button
-        onClick={() => navigate("/profile")}
-        className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl text-[11px] font-semibold transition cursor-pointer ${
-          active === "me" ? "text-blue-600 font-bold" : "text-slate-400 hover:text-slate-600"
-        }`}
-        aria-current={active === "me" ? "page" : undefined}
-      >
-        <UserRound className="w-[22px] h-[22px]" />
-        <span>내 정보</span>
-      </button>
+      {NAV_ITEMS.map(({ key, label, to, Icon }) => {
+        const on = active === key;
+        return (
+          <button
+            key={key}
+            onClick={() => navigate(to)}
+            aria-current={on ? "page" : undefined}
+            className={`relative flex cursor-pointer flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-bold transition-colors ${
+              on ? "text-slate-800" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <Icon className={`size-[22px] ${on ? "text-blue-600" : ""}`} />
+            <span>{label}</span>
+            {key === "today" && pending > 0 && (
+              <span className="absolute top-1 left-1/2 ml-[18px] grid h-4 min-w-4 place-items-center rounded-lg bg-blue-600 px-1 text-[10px] leading-4 font-bold text-white">
+                {pending}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </nav>
   );
 }

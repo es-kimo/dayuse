@@ -9,6 +9,17 @@ import { MobileLayout } from '../components/MobileLayout';
 import { AlertTriangle, Loader2, Home } from 'lucide-react';
 import { Screen, ScreenAvatar, screenAssets } from '../components/screens/Screen';
 import { usePageMeta } from '../hooks/usePageMeta';
+import {
+  Button as DayuButton,
+  Card,
+  Chip,
+  FootBar,
+  GroupIcon,
+  Notice,
+  RowText,
+  ScreenTitle,
+  SectionHead,
+} from '../components/dayu/ui';
 
 export const InviteLandingPage: React.FC = () => {
   const { inviteCode } = useParams<{ inviteCode: string }>();
@@ -137,71 +148,68 @@ export const InviteLandingPage: React.FC = () => {
 
   return (
     <Screen>
-      <main className="flex-1 overflow-y-auto px-4 pt-7 pb-6 flex flex-col gap-4">
-        <div className="flex flex-col items-center text-center gap-2">
-          <img src={screenAssets.invite} alt="" className="w-16 h-16 rounded-2xl shadow-xs mb-1" />
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
+      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-7 pb-6">
+        <div className="flex flex-col items-center text-center">
+          <img src={screenAssets.invite} alt="" className="size-16" />
+          <Chip tone="blue" className="mt-2.5">
             {isAlreadyJoined ? '이미 참여 중인 모임' : '모임 초대장'}
-          </span>
-          <h1 className="text-xl font-extrabold text-slate-800">{inviteInfo.groupName}</h1>
-          <p className="text-xs text-slate-500">
-            모임장 <b className="text-slate-800 font-bold">{inviteInfo.hostNickname}</b>님이 초대했어요
-          </p>
+          </Chip>
+          <ScreenTitle
+            className="mt-2.5"
+            sub={
+              <>
+                모임장 <b className="font-bold text-slate-800">{inviteInfo.hostNickname}</b>님이 초대했어요
+              </>
+            }
+          >
+            {inviteInfo.groupName}
+          </ScreenTitle>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex items-center gap-3">
-          <div className="flex -space-x-1.5 shrink-0">
+        <Card className="mt-[18px] flex items-center gap-3">
+          <div className="flex shrink-0 -space-x-2">
             {inviteInfo.members?.slice(0, 4).map((m, i) => (
-              <ScreenAvatar key={i} image={m.profileImageUrl} className="w-8 h-8 text-[10px]" />
+              <ScreenAvatar key={i} image={m.profileImageUrl} className="size-[30px] border-2 text-[10px]" />
             ))}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold text-slate-800">{inviteInfo.memberCount}명이 함께하고 있어요</div>
-            <div className="text-xs text-slate-500 truncate">{inviteInfo.members?.map((m) => m.nickname).join(', ')}</div>
-          </div>
-        </div>
+          <RowText
+            title={`${inviteInfo.memberCount}명이 함께하고 있어요`}
+            desc={inviteInfo.members?.map((m) => m.nickname).join(', ')}
+          />
+        </Card>
 
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-amber-500" />
-              진행 중인 챌린지
-            </h3>
-            <span className="text-xs font-medium text-slate-400">{inviteInfo.challenges?.length ?? 0}개</span>
-          </div>
+        <Card className="mt-3.5 flex flex-col gap-3">
+          <SectionHead
+            icon={<Trophy className="size-4 text-amber-500" />}
+            title="진행 중인 챌린지"
+            right={`${inviteInfo.challenges?.length ?? 0}개`}
+          />
           {inviteInfo.challenges?.map((c, i) => (
-            <div key={c.id} className="flex items-center gap-3 py-1">
-              <div
-                className={`w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 ${
-                  i % 2 ? 'bg-slate-100 text-slate-600' : 'bg-blue-50 text-blue-600'
-                }`}
-              >
+            <div key={c.id} className="flex items-center gap-3">
+              <GroupIcon size="sm" tone={i % 2 ? 'gray' : 'blue'}>
                 {c.title.replace(/^(매일\s*)?\d*시?\s*/, '').slice(0, 1)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-slate-800 truncate">{c.title}</div>
-                <div className="text-xs text-slate-500">
-                  {c.periodType === 'WEEKLY_N' ? `주 ${c.targetFrequency}회` : '매일'} · {c.participantCount}명 참여
-                </div>
-              </div>
+              </GroupIcon>
+              <RowText
+                title={c.title}
+                desc={`${c.periodType === 'WEEKLY_N' ? `주 ${c.targetFrequency}회` : '매일'} · ${c.participantCount}명 참여`}
+              />
             </div>
           ))}
-          <div className="flex items-start gap-2 p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-600 leading-relaxed mt-1">
-            <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-            <span>들어가서 하고 싶은 챌린지만 골라 참여하면 돼요. 모든 챌린지를 할 필요는 없어요.</span>
-          </div>
-        </div>
+          <Notice icon={<Info className="size-4" />}>
+            들어가서 하고 싶은 챌린지만 골라 참여하면 돼요. 모든 챌린지를 할 필요는 없어요.
+          </Notice>
+        </Card>
 
         {errorMessage && !isAlreadyJoined && (
-          <p className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3 text-center" role="alert">
+          <p className="mt-3.5 rounded-xl border border-red-200 bg-red-50 p-3 text-center text-[13px] text-red-700" role="alert">
             {errorMessage}
           </p>
         )}
       </main>
 
-      <footer className="p-4 pt-2 flex flex-col gap-2">
-        <button
-          className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold text-sm flex items-center justify-center gap-2 transition active:scale-[0.99] cursor-pointer"
+      <FootBar>
+        <DayuButton
+          size="lg"
           disabled={isJoining}
           onClick={
             isAlreadyJoined
@@ -218,14 +226,14 @@ export const InviteLandingPage: React.FC = () => {
               : isAuthenticated
                 ? '모임 참여하기'
                 : '카카오로 시작하고 참여하기'}
-        </button>
+        </DayuButton>
         <button
-          className="w-full h-11 rounded-xl text-slate-500 hover:text-slate-700 font-semibold text-xs transition cursor-pointer"
+          className="h-11 w-full cursor-pointer rounded-xl text-[15px] font-semibold text-slate-500 transition-colors hover:text-slate-800"
           onClick={() => navigate('/login')}
         >
           데이유즈 둘러보기
         </button>
-      </footer>
+      </FootBar>
     </Screen>
   );
 };

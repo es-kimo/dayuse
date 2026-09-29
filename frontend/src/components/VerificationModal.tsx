@@ -276,37 +276,37 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       onOpenChangeComplete={(isOpen) => {
         if (!isOpen) onClose();
       }}
-      backdropClassName="bg-black/60 backdrop-blur-xs"
-      className="bg-white w-full max-w-[390px] rounded-t-3xl p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+      backdropClassName="bg-slate-900/45"
+      className="bg-white w-full max-w-app rounded-t-[26px] px-5 pt-2.5 pb-5 space-y-3.5 max-h-[92vh] overflow-y-auto"
     >
       <>
-        <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto -mt-1 mb-2" aria-hidden="true" />
-        <div className="flex items-start justify-between gap-3">
+        <div className="w-10 h-[5px] rounded-[2.5px] bg-slate-300 mx-auto" aria-hidden="true" />
+        <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <ModalTitle className="text-lg font-bold text-slate-800">
+            <ModalTitle className="text-[19px] font-extrabold text-slate-800">
               {recordId ? '늦은 사진 인증' : '오늘 사진 인증'}
             </ModalTitle>
-            <ModalDescription className="text-xs text-blue-600 font-semibold mt-0.5">
+            <ModalDescription className="text-[13.5px] font-semibold text-blue-600">
               {action.challengeTitle}
             </ModalDescription>
           </div>
           <ModalClose
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+            className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100"
             disabled={isSubmitting}
             aria-label="닫기"
           >
-            <ScreenX className="w-5 h-5" />
+            <ScreenX className="size-[22px]" />
           </ModalClose>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           {!recordId && isNightGrace && (
-            <div className="space-y-1.5">
-              <label htmlFor="verification-date" className="block text-xs font-bold text-slate-700">
+            <div className="space-y-2">
+              <label htmlFor="verification-date" className="block text-[14px] font-bold text-slate-800">
                 인증할 날짜
               </label>
               <select
                 id="verification-date"
-                className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:border-blue-600 transition"
+                className="h-[50px] w-full rounded-xl border border-slate-300 bg-white px-3.5 text-[15.5px] text-slate-800 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-100 focus:outline-none"
                 value={selectedTargetDate}
                 onChange={(e) => setSelectedTargetDate(e.target.value)}
                 disabled={isSubmitting}
@@ -316,8 +316,9 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               </select>
             </div>
           )}
-          <div className="text-xs text-slate-600 bg-blue-50/70 border border-blue-100 rounded-xl px-3.5 py-2.5 leading-relaxed">
-            <strong className="font-bold text-slate-800 mr-1.5">인증 기준</strong> {action.verificationCriteria}
+          <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-[13px] leading-[1.5] text-slate-600">
+            <strong className="mr-1.5 font-bold text-slate-800">인증 기준</strong>
+            {action.verificationCriteria}
           </div>
           <input
             ref={cameraInputRef}
@@ -336,15 +337,11 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           />
           {previewUrl ? (
             <div className="space-y-2">
-              <div className="relative rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
-                <img
-                  src={previewUrl}
-                  alt="인증 사진 미리보기"
-                  className="w-full max-h-[280px] object-contain mx-auto"
-                />
+              <div className="relative overflow-hidden rounded-2xl bg-slate-100">
+                <img src={previewUrl} alt="인증 사진 미리보기" className="mx-auto max-h-[280px] w-full object-contain" />
                 <button
                   type="button"
-                  className="absolute bottom-2.5 right-2.5 px-3 py-1.5 rounded-lg bg-black/70 hover:bg-black/80 text-white font-semibold text-xs backdrop-blur-xs transition cursor-pointer"
+                  className="absolute top-2.5 right-2.5 h-[30px] cursor-pointer rounded-[9px] bg-slate-900/72 px-2.5 text-[12px] font-bold text-white transition-colors hover:bg-slate-900/85"
                   onClick={() => galleryInputRef.current?.click()}
                   disabled={isSubmitting}
                 >
@@ -353,53 +350,50 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               </div>
               <button
                 type="button"
-                className="w-full py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer"
+                className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl py-2 text-[13px] font-semibold text-red-700 transition-colors hover:bg-red-50"
                 onClick={handleRemovePhoto}
                 disabled={isSubmitting}
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="size-3.5" />
                 삭제
               </button>
             </div>
           ) : (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3.5">
+              <div className="grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
                   disabled={isSubmitting}
-                  className="flex flex-col items-center justify-center p-4 rounded-2xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 bg-slate-50 transition cursor-pointer text-slate-700 gap-1.5"
+                  className="flex h-[112px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-[1.5px] border-dashed border-slate-300 bg-slate-50 transition-colors hover:border-blue-600 hover:bg-blue-50"
                 >
-                  <ScreenCamera className="w-6 h-6 text-blue-600" />
-                  <span className="text-xs font-bold">카메라 촬영</span>
-                  <span className="text-[11px] text-slate-400">지금 바로 찍기</span>
+                  <ScreenCamera className="size-[26px] text-blue-600" />
+                  <span className="text-[14px] font-bold text-slate-800">카메라 촬영</span>
+                  <span className="text-[12px] text-slate-500">지금 바로 찍기</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => galleryInputRef.current?.click()}
                   disabled={isSubmitting}
-                  className="flex flex-col items-center justify-center p-4 rounded-2xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 bg-slate-50 transition cursor-pointer text-slate-700 gap-1.5"
+                  className="flex h-[112px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-[1.5px] border-dashed border-slate-300 bg-slate-50 transition-colors hover:border-blue-600 hover:bg-blue-50"
                 >
-                  <ScreenImageIcon className="w-6 h-6 text-blue-600" />
-                  <span className="text-xs font-bold">갤러리 선택</span>
-                  <span className="text-[11px] text-slate-400">캡처·사진 고르기</span>
+                  <ScreenImageIcon className="size-[26px] text-blue-600" />
+                  <span className="text-[14px] font-bold text-slate-800">갤러리 선택</span>
+                  <span className="text-[12px] text-slate-500">캡처·사진 고르기</span>
                 </button>
               </div>
-              <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1">
-                <ScreenClipboard className="w-3.5 h-3.5" />
+              <p className="flex items-center gap-1.5 text-[12.5px] text-slate-500">
+                <ScreenClipboard className="size-3.5 shrink-0" />
                 캡처한 이미지는 붙여넣기(⌘V · Ctrl+V)로도 올릴 수 있어요
               </p>
             </div>
           )}
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center">
-              <label htmlFor="verification-comment" className="text-xs font-bold text-slate-700">
-                인증 한마디 <span className="font-normal text-slate-400">(선택)</span>
-              </label>
-              <div className="text-[11px] text-slate-400">{comment.length} / 200</div>
-            </div>
+          <div className="space-y-2">
+            <label htmlFor="verification-comment" className="block text-[14px] font-bold text-slate-800">
+              인증 한마디 <span className="font-normal text-slate-500">(선택)</span>
+            </label>
             <textarea
-              className="w-full h-20 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition resize-none"
+              className="min-h-[84px] w-full resize-none rounded-xl border border-slate-300 bg-white px-[15px] py-[13px] text-[15.5px] leading-[1.5] text-slate-800 placeholder:text-slate-800/55 focus:border-blue-600 focus:ring-[3px] focus:ring-blue-100 focus:outline-none"
               id="verification-comment"
               maxLength={200}
               placeholder="오늘 한 일을 한 줄로 남겨 보세요"
@@ -407,14 +401,15 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               onChange={(e) => setComment(e.target.value)}
               disabled={isSubmitting}
             />
+            <div className="text-right text-[12px] tabular-nums text-slate-400">{comment.length} / 200</div>
           </div>
           {errorMessage && (
-            <p role="alert" className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3">
+            <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">
               {errorMessage}
             </p>
           )}
           <button
-            className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-bold text-sm flex items-center justify-center gap-2 transition active:scale-[0.99] cursor-pointer"
+            className="flex h-[54px] w-full cursor-pointer items-center justify-center gap-1.5 rounded-[14px] bg-blue-600 text-base font-bold text-white transition-colors hover:bg-blue-700 active:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
             type="submit"
             disabled={!file || isSubmitting}
           >
