@@ -150,6 +150,8 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
           <ShareCardModal
             cardType="TODAY_VERIFICATION"
             targetId={shareItem.id}
+            challengeId={shareItem.challengeId}
+            groupId={shareItem.groupId}
             title={shareItem.challengeTitle}
             userNickname={shareItem.authorNickname}
             imageUrl={shareItem.imageUrl}
@@ -345,6 +347,8 @@ export const GroupFeedSection: React.FC<GroupFeedSectionProps> = ({
         <ShareCardModal
           cardType="TODAY_VERIFICATION"
           targetId={shareItem.id}
+          challengeId={shareItem.challengeId}
+          groupId={shareItem.groupId}
           title={shareItem.challengeTitle}
           userNickname={shareItem.authorNickname}
           imageUrl={shareItem.imageUrl}

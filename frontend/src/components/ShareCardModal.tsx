@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { shareApi } from '../api/share';
+import { track } from '../utils/tracker';
 import { Modal, ModalTitle, ModalClose } from './ui/Modal';
 import { absoluteApiUrl } from '../api/client';
 import { isKakaoReady, shareToKakao } from '../utils/kakao';
@@ -34,6 +35,9 @@ import { DayuExpression } from './brand/DayuExpression';
 interface ShareCardModalProps {
   cardType: ShareCardType;
   targetId: number; // verificationId (for TODAY_VERIFICATION) or challengeId (for STREAK)
+  /** 공유 이벤트 문맥용 내부 식별자. 화면이 알고 있으면 내려준다. */
+  challengeId?: number;
+  groupId?: number;
   title: string;
   userNickname: string;
   imageUrl?: string | null;
@@ -49,6 +53,8 @@ interface ShareCardModalProps {
 export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   cardType,
   targetId,
+  challengeId,
+  groupId,
   title,
   userNickname,
   imageUrl: initialImageUrl,
@@ -287,8 +293,23 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
       : requestShareToken().then(buildShareUrl);
 
   // 1. 이미지 저장
+  /*
+   * 공유 실행 기록. 사용자가 공유 수단을 명시적으로 고른 시점에만 부른다.
+   * 카드 제목·닉네임·이미지 URL 같은 콘텐츠는 싣지 않고 내부 식별자와 경로만 남긴다.
+   */
+  const trackShare = (channel: 'save_image' | 'kakao' | 'copy_link') => {
+    track('share_clicked', {
+      channel,
+      surface: 'share_card',
+      cardType,
+      challengeId: challengeId ?? (cardType === 'STREAK' ? targetId : null),
+      groupId: groupId ?? null,
+    });
+  };
+
   const handleSaveImage = async () => {
     if (savingImage || initializing) return;
+    trackShare('save_image');
     setSavingImage(true);
 
     try {
@@ -345,6 +366,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
    */
   const handleKakaoShare = () => {
     if (sharingKakao || preparingLink) return;
+    trackShare('kakao');
 
     if (shareToken) {
       const linkUrl = buildShareUrl(shareToken);
@@ -400,6 +422,7 @@ export const ShareCardModal: React.FC<ShareCardModalProps> = ({
   // 3. 링크 복사
   const handleCopyLink = () => {
     if (copyingLink || preparingLink) return;
+    trackShare('copy_link');
     setCopyingLink(true);
 
     void copyWithFallback(shareUrlPromise(), '공유 링크가 클립보드에 복사되었습니다!')

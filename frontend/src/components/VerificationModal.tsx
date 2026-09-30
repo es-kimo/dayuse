@@ -6,6 +6,9 @@ import type { TodayAction, VerificationDetail } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useUiVersion } from '../context/UiVersionContext';
 import { logCertFlowAction } from '../hooks/useFeatureLogging';
+import { track } from '../utils/tracker';
+import { useTrackOnce } from '../hooks/useTrackOnce';
+import { toFailureReason, toStatusCode } from '../utils/trackErrorReason';
 import { ShareCardModal } from './ShareCardModal';
 import { useClipboardImagePaste, validateImageFile } from '../hooks/useClipboardImagePaste';
 import { Modal, ModalTitle, ModalDescription, ModalClose } from './ui/Modal';
@@ -29,7 +32,9 @@ import { isStandalone, isIos } from '../utils/webPush';
 import { logPwaImpression, logPwaGuideOpen } from '../utils/pwaAnalytics';
 
 interface VerificationModalProps {
-  action: TodayAction | { challengeId: number; challengeTitle: string; verificationCriteria?: string };
+  action:
+    | TodayAction
+    | { challengeId: number; challengeTitle: string; verificationCriteria?: string; groupId?: number };
   recordId?: number;
   targetDate?: string;
   onClose: () => void;
@@ -46,6 +51,22 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const { user } = useAuth();
   const { uiVersion } = useUiVersion();
 
+  /*
+   * 인증 퍼널 문맥. 내부 식별자만 싣는다.
+   * 인증 사진·문구·닉네임 등 사용자 콘텐츠는 이벤트 properties에 절대 넣지 않는다.
+   */
+  const certContext = {
+    challengeId: action.challengeId,
+    groupId: action.groupId ?? null,
+    isLate: !!recordId,
+  };
+
+  /*
+   * 인증 작성 흐름 진입. 모달 인스턴스당 1회만 기록한다.
+   * v0.8 A/B 실험 로그(CERT_FLOW_*)는 ui_refresh_01 변형 비교용으로 남기되,
+   * 공통 tracker와 같은 시점에서만 발화하도록 한 곳에 모아 두 측정이 어긋나지 않게 한다.
+   */
+  useTrackOnce('certification_started', certContext);
   useEffect(() => {
     void logCertFlowAction(uiVersion, 'CERT_FLOW_ENTER', { challengeId: action.challengeId });
   }, [uiVersion, action.challengeId]);
@@ -214,6 +235,11 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       }
 
       setCreatedVerification(savedVerification);
+      // 인증 저장 API가 실제로 성공한 뒤에만 completed를 기록한다(failed와 배타적).
+      track('certification_completed', {
+        ...certContext,
+        verificationId: savedVerification.id,
+      });
       void logCertFlowAction(uiVersion, 'CERT_FLOW_SUCCESS', {
         challengeId: action.challengeId,
         verificationId: savedVerification.id,
@@ -228,6 +254,12 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       setErrorMessage(msg);
       // 업로드 실패 시 입력값 유지 및 재시도 활성화
       setCanRetry(true);
+      // 실패 사유는 거친 분류값으로만 남긴다. 서버 메시지 원문은 싣지 않는다.
+      track('certification_failed', {
+        ...certContext,
+        reason: toFailureReason(err),
+        statusCode: toStatusCode(err),
+      });
       void logCertFlowAction(uiVersion, 'CERT_FLOW_FAIL', {
         challengeId: action.challengeId,
         error: msg,
@@ -243,6 +275,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         <ShareCardModal
           cardType="TODAY_VERIFICATION"
           targetId={createdVerification.id}
+          challengeId={action.challengeId}
+          groupId={action.groupId}
           title={action.challengeTitle}
           userNickname={user?.nickname || '참여자'}
           imageUrl={previewUrl || createdVerification.imageUrl}
