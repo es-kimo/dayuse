@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { challengesApi } from '../api/challenges';
 import { track } from '../utils/tracker';
+import { useExperiment } from '../hooks/useExperiment';
+import { useExperimentExposure } from '../hooks/useExperimentExposure';
+import {
+  CHALLENGE_INVITE_COPY_EXPERIMENT,
+  resolveChallengeInviteCopy,
+} from '../constants/experiments';
 import { BottomSheet, BottomSheetTitle, BottomSheetDescription, BottomSheetClose } from './ui/BottomSheet';
 import type { JoinPreviewResponse, StartDateType } from '../types';
 import {
@@ -33,6 +39,16 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
   const [preview, setPreview] = useState<JoinPreviewResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * 첫 Dayuse A/B Test (challenge-invite-copy-v1).
+   *
+   * 시트가 닫혀 있는 동안에는 조회하지 않는다(enabled=isOpen). 참여 화면을 열지도 않은 사용자를
+   * 실험 배정 대상으로 계산할 이유가 없다. 문구는 미확정·미참여·오류일 때 항상 기본값(A)이므로
+   * 실험 시스템이 죽어도 이 시트의 참여 흐름은 그대로 동작한다.
+   */
+  const inviteCopyExperiment = useExperiment(CHALLENGE_INVITE_COPY_EXPERIMENT, isOpen);
+  const inviteCopy = resolveChallengeInviteCopy(inviteCopyExperiment);
 
   const [selectedType, setSelectedType] = useState<StartDateType>('TOMORROW');
   const [penaltyAmount, setPenaltyAmount] = useState<number>(5000);
@@ -67,6 +83,12 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
   }, [challengeId, isOpen]);
 
   /*
+   * 배정 ≠ 노출. 시트가 열리고 참여 옵션까지 그려져 문구가 실제로 사용자 눈에 닿은 시점에만
+   * experiment_exposed를 기록한다. 로딩 스피너만 보이는 동안은 노출이 아니다.
+   */
+  useExperimentExposure(inviteCopyExperiment, isOpen && !loading && preview !== null);
+
+  /*
    * isOpen으로 조기 return하지 않는다.
    * 닫힐 때 바로 null을 반환하면 이탈 전환이 시작되기 전에 노드가 사라진다.
    * 닫힌 동안 내용이 렌더되지 않는 것은 BottomSheet(Base UI Portal)가 처리한다.
@@ -86,11 +108,16 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
         startDateType: selectedType,
       });
       // 참여 API가 성공해 실제로 합류한 뒤에만 기록한다.
-      track('challenge_joined', {
-        challengeId,
-        groupId: groupId ?? null,
-        startDateType: selectedType,
-      });
+      // Experiment Context는 실제 노출된 참여자일 때만 붙는다(tracker가 판별).
+      track(
+        'challenge_joined',
+        {
+          challengeId,
+          groupId: groupId ?? null,
+          startDateType: selectedType,
+        },
+        inviteCopyExperiment
+      );
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -151,6 +178,20 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                   <span>{error}</span>
                 </div>
               )}
+
+              {/*
+                초대 안내 문구 (A/B 실험: challenge-invite-copy-v1).
+                Variant 확정 전에는 자리(높이)만 잡고 문구를 렌더하지 않는다. A를 먼저 보여준 뒤 B로 바꾸면
+                B 그룹 사용자가 두 문구를 모두 본 셈이 되어 실험 결과가 오염된다.
+              */}
+              <div className="min-h-10 flex items-start gap-2 p-3 rounded-xl bg-slate-50 text-[11px] leading-relaxed text-slate-600">
+                {inviteCopyExperiment.isReady && (
+                  <>
+                    <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-400" aria-hidden="true" />
+                    <span>{inviteCopy}</span>
+                  </>
+                )}
+              </div>
 
               {/* 시작일 선택 섹션 */}
               {preview.isStarted ? (
