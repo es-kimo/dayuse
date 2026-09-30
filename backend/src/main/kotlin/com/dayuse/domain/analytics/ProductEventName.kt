@@ -9,7 +9,10 @@ enum class ProductEventName(val value: String) {
     CERTIFICATION_FAILED("certification_failed"),
     CHALLENGE_CREATED("challenge_created"),
     CHALLENGE_JOINED("challenge_joined"),
-    SHARE_CLICKED("share_clicked");
+    SHARE_CLICKED("share_clicked"),
+
+    /** 실험 대상 UI가 실제로 사용자에게 노출된 시점의 Exposure 기록. (v0.10 F05) */
+    EXPERIMENT_EXPOSED("experiment_exposed");
 
     companion object {
         private val SNAKE_CASE_REGEX = Regex("^[a-z][a-z0-9_]*$")

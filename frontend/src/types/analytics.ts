@@ -9,7 +9,8 @@ export type EventName =
   | 'certification_failed'
   | 'challenge_created'
   | 'challenge_joined'
-  | 'share_clicked';
+  | 'share_clicked'
+  | 'experiment_exposed';
 
 /** 백엔드 검증 기준: 값은 원시 타입(String, Number, Boolean)과 null만 허용 */
 export type EventPropertyValue = string | number | boolean | null;
