@@ -1,8 +1,4 @@
-import { sendTrackedEvent } from '../api/events';
-import { APP_VERSION, EVENT_SCHEMA_VERSION } from '../constants/appVersion';
 import type { EventName, EventProperties, TrackedEventPayload } from '../types/analytics';
-import { getOrCreateSessionId } from './analytics';
-import { sanitizeProperties } from './trackerSanitizer';
 
 /**
  * Frontend Tracker (F02)
@@ -13,7 +9,7 @@ import { sanitizeProperties } from './trackerSanitizer';
 
 /** 첫 전송 이후 재시도 간격(ms). 총 최대 3회 전송(첫 시도 + 2회 재시도). */
 export const RETRY_DELAYS_MS = [1000, 3000] as const;
-const JITTER_RATIO = 0.2;
+export const JITTER_RATIO = 0.2;
 
 const pad = (value: number, length = 2) => String(value).padStart(length, '0');
 
@@ -29,7 +25,7 @@ export function toOffsetIsoString(date: Date): string {
   );
 }
 
-function generateEventId(): string {
+export function generateEventId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
@@ -37,46 +33,35 @@ function generateEventId(): string {
 }
 
 /**
- * 이벤트 발생 시점에 공통 메타데이터를 고정한다.
- * eventId와 occurredAt은 여기서 딱 한 번 만들어지고, 이후 재시도는 이 객체를 그대로 재사용한다.
+ * 이벤트 발생 시점에 공통 메타데이터를 고정해 페이로드를 만든다.
  */
 export function buildEvent(
-  eventName: EventName,
-  properties: Record<string, unknown> = {}
+  _eventName: EventName,
+  _properties: Record<string, unknown> = {}
 ): TrackedEventPayload {
-  return {
-    eventId: generateEventId(),
-    eventName,
-    occurredAt: toOffsetIsoString(new Date()),
-    sessionId: getOrCreateSessionId(),
-    schemaVersion: EVENT_SCHEMA_VERSION,
-    appVersion: APP_VERSION,
-    properties: sanitizeProperties(properties),
-  };
+  // TODO [사용자 미션 1]: 공통 메타데이터를 채운 TrackedEventPayload를 만들어 반환하세요.
+  //   - eventId, occurredAt, sessionId, schemaVersion, appVersion을 각각 어디서, 언제 만들어야 할까요?
+  //   - properties는 전송 전에 어떤 처리를 거쳐야 할까요?
+  //   - 쓸 수 있는 재료: generateEventId(), toOffsetIsoString(), getOrCreateSessionId()(./analytics),
+  //     APP_VERSION / EVENT_SCHEMA_VERSION(../constants/appVersion), sanitizeProperties(./trackerSanitizer)
+  throw new Error('TODO [사용자 미션 1]: buildEvent 구현 필요');
 }
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-const withJitter = (ms: number) =>
+export const withJitter = (ms: number) =>
   Math.round(ms * (1 - JITTER_RATIO + Math.random() * JITTER_RATIO * 2));
 
 /**
- * 같은 페이로드(동일 eventId·occurredAt)로 일시 오류만 재시도한다.
- * 절대 reject하지 않는다. 4xx는 재시도해도 소용없으므로 즉시 포기한다.
+ * 페이로드를 Event API로 전달한다. 일시 오류일 때만 재시도한다.
  */
-export async function deliver(payload: TrackedEventPayload): Promise<void> {
-  try {
-    for (let attempt = 0; ; attempt += 1) {
-      const result = await sendTrackedEvent(payload);
-      if (result !== 'retry') return;
-
-      const delay = RETRY_DELAYS_MS[attempt];
-      if (delay === undefined) return;
-      await sleep(withJitter(delay));
-    }
-  } catch {
-    // 분석 전송 실패는 사용자 흐름에 영향을 주지 않는다.
-  }
+export async function deliver(_payload: TrackedEventPayload): Promise<void> {
+  // TODO [사용자 미션 2]: 전송과 재시도 제어를 구현하세요.
+  //   - 재시도할 때 eventId와 occurredAt은 어떻게 유지해야 할까요?
+  //   - 어떤 결과(SendResult: 'ok' | 'retry' | 'drop')에서 재시도하고, 어디서 멈춰야 할까요?
+  //   - 재시도 간격은 RETRY_DELAYS_MS 기준에 JITTER_RATIO만큼 흔들어 주세요 (sleep, withJitter 사용 가능).
+  //   - 이 함수가 reject되면 호출부는 어떻게 될까요? 어떤 경우에도 호출 측이 영향받지 않게 하세요.
+  //   - 전송 1회는 sendTrackedEvent(../api/events)가 담당합니다. 절대 throw하지 않고 SendResult를 돌려줍니다.
 }
 
 /**

@@ -1,73 +1,71 @@
-# 사용자 학습 미션: Product Event 모델·이벤트 규칙 정의 (F01)
+# 사용자 학습 미션: Frontend Tracker 구축 (F02)
 
-본 미션은 이슈 [#86](https://github.com/es-kimo/dayuse/issues/86)의 핵심 학습 영역인 **`ProductEvent` 도메인 엔티티 설계(`occurredAt`/`receivedAt` 분리, Unique 제약조건 및 집계 인덱스), 초기 표준 이벤트 이름 검증(`ProductEventName`), 그리고 민감정보·콘텐츠 유입을 차단하는 `properties` 검증기(`ProductEventPropertiesValidator`)**를 직접 완성하는 실무 과제입니다.
+이슈 [#87](https://github.com/es-kimo/dayuse/issues/87)의 핵심 학습 영역인 **`track()` 공통 메타데이터 생성, 동일 `eventId` 재시도와 비차단 격리, 클라이언트 민감정보 1차 방어 필터**를 직접 완성하는 과제입니다.
 
----
-
-## 🎯 학습 목표 및 핵심 질문
-
-이 미션을 직접 해결하면서 아래 3가지 핵심 질문에 대한 답을 코드로 체득해 보세요:
-
-1. **"이벤트 발생 시각(`occurredAt`)과 서버 수신 시각(`receivedAt`)을 분리하여 저장하는 이유는 무엇이며, 이를 통해 네트워크 지연이나 오프라인 재전송 상황에서 어떻게 시계열 정합성을 보장할 수 있는가?"**
-2. **"Product Event를 인증·챌린지·정산 같은 핵심 비즈니스 도메인 테이블과 논리적으로 분리하고, 도메인 데이터를 복제하지 않으면서도 분석에 필요한 엔티티 연결(`challengeId`, `groupId` 등)을 어떻게 설계했는가?"**
-3. **"이벤트 `properties`에 인증 사진·댓글·계좌번호·표시 이름 등의 민감정보/콘텐츠 유입을 원천 차단하기 위해 도메인 모델에서 어떤 검증 규칙(Whitelist/Sanitization)을 적용했는가?"**
+`git diff HEAD~1`로 빈칸이 뚫린 위치를 확인하고, 풀이 후에는 같은 명령으로 레퍼런스 구현과 비교하세요.
 
 ---
 
-## 🧭 미션 안내 및 대상 파일
+## 🎯 이 미션을 끝내고 답할 수 있어야 하는 질문
 
-터미널에서 `git diff HEAD~1` 명령어를 실행하면 에이전트가 사전 검증을 마친 레퍼런스 구현과 현재 빈칸(`TODO`)의 차이를 확인할 수 있습니다.
-
-### 대상 파일
-- **도메인 엔티티**: [`ProductEvent.kt`](file:///Users/kihyun/orgs/personal/dayuse/backend/src/main/kotlin/com/dayuse/domain/analytics/ProductEvent.kt)
-- **표준 이벤트 이름 검증기**: [`ProductEventName.kt`](file:///Users/kihyun/orgs/personal/dayuse/backend/src/main/kotlin/com/dayuse/domain/analytics/ProductEventName.kt)
-- **민감 속성/콘텐츠 검증기**: [`ProductEventPropertiesValidator.kt`](file:///Users/kihyun/orgs/personal/dayuse/backend/src/main/kotlin/com/dayuse/domain/analytics/ProductEventPropertiesValidator.kt)
-- **검증 테스트**: [`ProductEventTest.kt`](file:///Users/kihyun/orgs/personal/dayuse/backend/src/test/kotlin/com/dayuse/domain/analytics/ProductEventTest.kt)
+1. 기능 컴포넌트가 분석 API 스펙이나 인프라 변경에 영향받지 않도록 `track(eventName, properties)` 추상화 계층을 어떻게 설계했는가?
+2. 네트워크 일시 오류로 재전송이 발생해도 서버에서 중복 저장이 일어나지 않도록, `eventId` 생성 시점과 재시도 페이로드를 어떻게 관리했는가?
+3. 분석 이벤트의 전송 지연·실패가 화면 이동, 폼 제출, 사용자 피드백 같은 본래 UX를 블로킹하거나 에러로 노출하지 않도록 어떻게 격리했는가?
 
 ---
 
-### [미션 1] `ProductEvent` 테이블 제약조건·인덱스 설계 및 생성 팩토리 구현
-- **위치**: [`ProductEvent.kt`](file:///Users/kihyun/orgs/personal/dayuse/backend/src/main/kotlin/com/dayuse/domain/analytics/ProductEvent.kt)
-- **요구사항**:
-  1. **`TODO [사용자 미션 1-1]` (`@Table` 설정)**:
-     - 동일 `eventId`가 중복 저장되지 않도록 `event_id` 컬럼에 Unique 제약조건(`uk_product_events_event_id`)을 선언하세요.
-     - 향후 이벤트별 기간 조회 및 퍼널 집계를 위한 복합 인덱스 2종을 선언하세요:
-       - `idx_product_events_name_occurred`: `event_name, occurred_at`
-       - `idx_product_events_user_occurred`: `user_id, occurred_at`
-  2. **`TODO [사용자 미션 1-2]` (`ProductEvent.create(...)` 팩토리)**:
-     - `ProductEventName.validate(eventName)`와 `ProductEventPropertiesValidator.validateAndSanitize(properties)`를 호출해 검증된 값을 사용하세요.
-     - `occurredAt`(실제 행동 발생 시각)과 `receivedAt`(서버 수신 시각)이 서로 덮어쓰이지 않고 각각 정확히 매핑되도록 설정하세요.
-     - `userId`에는 클라이언트 임의 값이 아닌 서버 인증 컨텍스트 기반의 `authenticatedUserId`를 바인딩하세요.
+## 🧭 대상 파일
+
+| 미션 | 파일 | 함수 |
+|---|---|---|
+| 1 | [tracker.ts](frontend/src/utils/tracker.ts) | `buildEvent` |
+| 2 | [tracker.ts](frontend/src/utils/tracker.ts) | `deliver` |
+| 3 | [trackerSanitizer.ts](frontend/src/utils/trackerSanitizer.ts) | `sanitizeProperties` |
+
+이미 구현되어 있어 그대로 쓰는 것: `track()`(진입점), `toOffsetIsoString`, `generateEventId`, `sleep`, `withJitter`, [sendTrackedEvent](frontend/src/api/events.ts)(전송 1회), 이벤트 타입([analytics.ts](frontend/src/types/analytics.ts)), `APP_VERSION`.
+
+### [미션 1] `buildEvent`: 공통 메타데이터 생성
+- `TrackedEventPayload`의 `eventId`, `occurredAt`, `sessionId`, `schemaVersion`, `appVersion`, `properties`를 채워 반환하세요.
+- 생각해 볼 것
+  - `eventId`와 `occurredAt`은 **언제, 몇 번** 만들어져야 재시도·지연 전송에서도 행동 시각과 식별자가 보존될까요?
+  - `occurredAt`은 왜 UTC(`Z`)가 아니라 오프셋을 포함한 형식일까요? (백엔드 `receivedAt`은 KST `LocalDateTime`)
+  - 페이로드에 `userId`가 있으면 안 되는 이유는 무엇일까요?
+
+### [미션 2] `deliver`: 동일 `eventId` 재시도와 비차단 격리
+- 일시 오류에서만 **같은 페이로드**로 재시도하고, 그 밖의 경우는 멈추세요.
+- 재시도 횟수와 간격은 `RETRY_DELAYS_MS`(1초, 3초)와 `JITTER_RATIO`(±20%)를 따릅니다. 첫 시도 포함 총 3회가 상한입니다.
+- 생각해 볼 것
+  - `sendTrackedEvent`가 돌려주는 `'ok' | 'retry' | 'drop'` 중 어떤 값에서 계속하고 어떤 값에서 멈출까요? 비로그인 사용자의 이벤트(서버 4xx)는 어떻게 되어야 할까요?
+  - 재시도 때 `buildEvent`를 다시 부르면 무슨 일이 생길까요? 서버의 `uk_product_events_event_id`와 연결해 보세요.
+  - 이 함수가 reject되면 `track()`을 부른 화면은 어떻게 될까요?
+  - 재시도 간격에 지터를 넣는 이유는 무엇일까요?
+
+### [미션 3] `sanitizeProperties`: 민감정보 1차 방어 필터
+- 금지 키와 위험한 값을 제거한 **새 객체**를 반환하세요. 입력 객체는 변경하지 않습니다.
+- 재료: `FORBIDDEN_NORMALIZED_KEYS`, `FORBIDDEN_VALUE_PREFIXES`, `normalizeKey`, `MAX_STRING_PROPERTY_LENGTH`.
+- 생각해 볼 것
+  - `photoUrl`, `photo_url`, `Photo-Url`을 같은 키로 다루려면 어떻게 비교해야 할까요?
+  - 서버(`ProductEventPropertiesValidator`)는 400으로 거부하는데, 클라이언트는 왜 항목만 제거하는 편이 나을까요?
+  - 클라이언트 필터만으로 충분할까요? 서버 검증이 별도로 필요한 이유는 무엇일까요?
 
 ---
 
-### [미션 2] 초기 표준 이벤트 이름(`ProductEventName`) 형식 및 허용 목록 검증
-- **위치**: [`ProductEventName.kt`](file:///Users/kihyun/orgs/personal/dayuse/backend/src/main/kotlin/com/dayuse/domain/analytics/ProductEventName.kt) -> `validate(eventName: String)`
-- **요구사항**:
-  1. 전달된 `eventName`의 앞뒤 공백을 제거(`trim()`)하고 빈 문자열이면 [`BadRequestException`](file:///Users/kihyun/orgs/personal/dayuse/backend/src/main/kotlin/com/dayuse/global/exception/DayuseException.kt#L14)을 던집니다.
-  2. `SNAKE_CASE_REGEX`(`^[a-z][a-z0-9_]*$`)에 부합하는지 확인합니다.
-  3. 초기 표준 이벤트 7종(`home_viewed`, `certification_started`, `certification_completed`, `certification_failed`, `challenge_created`, `challenge_joined`, `share_clicked`)에 속하는지 `isAllowed(...)`로 확인하고, 허용되지 않은 이름이면 `BadRequestException`을 던집니다.
+## ✅ 테스트
 
----
-
-### [미션 3] `properties` 민감정보·콘텐츠·URL 차단 검증기 구현
-- **위치**: [`ProductEventPropertiesValidator.kt`](file:///Users/kihyun/orgs/personal/dayuse/backend/src/main/kotlin/com/dayuse/domain/analytics/ProductEventPropertiesValidator.kt) -> `validateAndSanitize(properties: Map<String, Any?>)`
-- **요구사항**:
-  1. `properties`의 각 `(rawKey, value)`를 순회하며 `key = rawKey.trim()`이 비어 있으면 `BadRequestException`을 던집니다.
-  2. `normalizeKey(key)`(소문자 변환 및 `_`, `-` 제거)가 `FORBIDDEN_NORMALIZED_KEYS`(사진 URL, 댓글/문구 원문, 이름/닉네임, 계좌번호/예금주, 토큰, 클라이언트 `userId` 등)에 포함되면 `BadRequestException`으로 차단합니다.
-  3. `validateValue(key, value)`를 호출해 값에 이미지/외부 URL(`http://`, `https://`, `s3://`, `data:image/`)이 들어가거나 허용 길이를 초과한 자유 입력 문자열이 유입되는 경우를 차단합니다.
-  4. 검증을 통과한 안전한 `Map<String, Any?>`를 반환합니다.
-
----
-
-## 🧪 테스트 실행 및 검증 명령어
-
-### 1. 백엔드 미션 테스트 실행 (현재 RED 실패 -> 미션 완료 후 전체 GREEN 통과 확인)
 ```bash
-cd backend && ./gradlew test --tests com.dayuse.domain.analytics.ProductEventTest
+# 전체 (기존 71건 + 신규, dot 리포터)
+cd /Users/kihyun/orgs/personal/dayuse/frontend && npm test
+
+# 미션 1·2
+cd /Users/kihyun/orgs/personal/dayuse/frontend && npm test -- src/utils/tracker.test.ts
+
+# 미션 3
+cd /Users/kihyun/orgs/personal/dayuse/frontend && npm test -- src/utils/trackerSanitizer.test.ts
 ```
 
-### 2. 정답 레퍼런스 비교 (미션 완료 후 확인용)
-```bash
-git diff HEAD~1 backend/src/main/kotlin/com/dayuse/domain/analytics/
-```
+현재 상태는 신규 22건 중 19건이 RED, 기존 71건과 나머지 3건은 GREEN입니다. 전부 GREEN이 되면 완료입니다. 타입체크는 `npm run build`로 확인하세요.
+
+## 참고
+
+- Event API(`POST /api/v1/events`)는 #88에서 별도 워크트리로 구현 중입니다. 이 미션의 테스트는 `fetch`를 목으로 대체하므로 서버 없이 검증됩니다.
+- 기능 코드에서는 `fetch`/`axios`로 Event API를 직접 호출하지 않고 `track()`만 씁니다. 실제 호출부 적용은 #89 범위입니다.
