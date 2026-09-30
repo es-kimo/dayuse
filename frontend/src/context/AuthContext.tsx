@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '../types';
 import { authApi } from '../api/auth';
+import { clearExperimentCache } from '../utils/experiment';
+import { clearPendingExperimentRequests } from '../hooks/useExperiment';
 
 interface AuthContextType {
   user: User | null;
@@ -40,12 +42,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (accessToken: string, refreshToken: string, userData: User) => {
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
+    // 이전 사용자의 Experiment 배정·Exposure 기록이 새 사용자에게 새지 않게 비운다.
+    clearExperimentCache();
+    clearPendingExperimentRequests();
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    clearExperimentCache();
+    clearPendingExperimentRequests();
     setUser(null);
     window.location.href = '/login';
   };
