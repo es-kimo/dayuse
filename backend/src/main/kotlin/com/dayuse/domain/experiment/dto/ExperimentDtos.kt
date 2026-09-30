@@ -1,0 +1,98 @@
+package com.dayuse.domain.experiment.dto
+
+import com.dayuse.domain.experiment.Experiment
+import com.dayuse.domain.experiment.ExperimentFallbackReason
+import com.dayuse.domain.experiment.ExperimentResolution
+import com.dayuse.domain.experiment.ExperimentStatus
+import com.dayuse.domain.experiment.ExperimentVariant
+import com.dayuse.domain.experiment.ExperimentVariantRatio
+import java.time.LocalDateTime
+
+data class ExperimentCreateRequest(
+    val experimentKey: String = "",
+    val name: String = "",
+    val rolloutPercentage: Int = Experiment.DEFAULT_ROLLOUT_PERCENTAGE,
+    val variantARatio: Int = ExperimentVariantRatio.DEFAULT_A_RATIO,
+    val variantBRatio: Int = ExperimentVariantRatio.DEFAULT_B_RATIO
+)
+
+data class ExperimentRolloutUpdateRequest(
+    val rolloutPercentage: Int
+)
+
+data class ExperimentVariantRatioUpdateRequest(
+    val variantARatio: Int,
+    val variantBRatio: Int
+)
+
+data class ExperimentVariantRatioResponse(
+    val a: Int,
+    val b: Int
+) {
+    companion object {
+        fun from(ratio: ExperimentVariantRatio): ExperimentVariantRatioResponse {
+            return ExperimentVariantRatioResponse(
+                a = ratio.a,
+                b = ratio.b
+            )
+        }
+    }
+}
+
+data class ExperimentResponse(
+    val id: Long,
+    val experimentKey: String,
+    val name: String,
+    val status: ExperimentStatus,
+    val rolloutPercentage: Int,
+    val variants: List<ExperimentVariant>,
+    val variantRatio: ExperimentVariantRatioResponse,
+    val defaultVariant: ExperimentVariant,
+    val createdAt: LocalDateTime,
+    val startedAt: LocalDateTime?,
+    val endedAt: LocalDateTime?
+) {
+    companion object {
+        fun from(experiment: Experiment): ExperimentResponse {
+            return ExperimentResponse(
+                id = experiment.id,
+                experimentKey = experiment.experimentKey,
+                name = experiment.name,
+                status = experiment.status,
+                rolloutPercentage = experiment.rolloutPercentage,
+                variants = experiment.variants,
+                variantRatio = ExperimentVariantRatioResponse.from(experiment.variantRatio),
+                defaultVariant = experiment.defaultVariant,
+                createdAt = experiment.createdAt,
+                startedAt = experiment.startedAt,
+                endedAt = experiment.endedAt
+            )
+        }
+    }
+}
+
+data class ExperimentResolutionResponse(
+    val experimentKey: String,
+    val status: ExperimentStatus?,
+    val variant: ExperimentVariant,
+    val participating: Boolean,
+    val rolloutPercentage: Int,
+    val variantRatio: ExperimentVariantRatioResponse,
+    val isFallback: Boolean,
+    val fallbackReason: ExperimentFallbackReason
+) {
+    companion object {
+        fun from(resolution: ExperimentResolution): ExperimentResolutionResponse {
+            return ExperimentResolutionResponse(
+                experimentKey = resolution.experimentKey,
+                status = resolution.status,
+                variant = resolution.variant,
+                participating = resolution.participating,
+                rolloutPercentage = resolution.rolloutPercentage,
+                variantRatio = ExperimentVariantRatioResponse.from(resolution.variantRatio),
+                isFallback = resolution.isFallback,
+                fallbackReason = resolution.fallbackReason
+            )
+        }
+    }
+}
