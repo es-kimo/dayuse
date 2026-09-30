@@ -1,6 +1,8 @@
 package com.dayuse.domain.experiment.service
 
 import com.dayuse.domain.experiment.Experiment
+import com.dayuse.domain.experiment.ExperimentAssigner
+import com.dayuse.domain.experiment.ExperimentAssignment
 import com.dayuse.domain.experiment.ExperimentFallbackPolicy
 import com.dayuse.domain.experiment.ExperimentRepository
 import com.dayuse.domain.experiment.ExperimentResolution
@@ -17,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 /**
- * Experiment 정의·상태 전이 및 Fallback 판정 서비스. (F01, F08)
+ * Experiment 정의·상태 전이, 결정론적 Variant 배정 및 Fallback 판정 서비스. (F01, F02, F03, F08)
  */
 @Service
 class ExperimentService(
@@ -146,6 +148,82 @@ class ExperimentService(
                 ex
             )
             ExperimentFallbackPolicy.fallbackForError(trimmedKey)
+        }
+    }
+
+    /**
+     * 특정 `experimentKey`와 로그인 `userId`에 대해 결정론적 해시 기반 Rollout 참여 여부 및
+     * `A`/`B` Variant 배정 결과를 반환한다. (F02, F03)
+     *
+     * 실험이 `ACTIVE`가 아니거나 조회 오류가 발생하더라도 예외를 던지지 않고
+     * 안전하게 미참여(`participating = false`) 및 Control(`variant = A`)을 반환한다.
+     */
+    @Transactional(readOnly = true)
+    fun assignVariant(
+        experimentKey: String,
+        userId: Long
+    ): ExperimentAssignment {
+        val trimmedKey = experimentKey.trim()
+        if (trimmedKey.isEmpty()) {
+            return ExperimentAssigner.assign(
+                requestedKey = trimmedKey,
+                userId = userId,
+                experiment = null
+            )
+        }
+
+        return try {
+            val experiment = experimentRepository.findByExperimentKey(trimmedKey)
+            ExperimentAssigner.assign(
+                requestedKey = trimmedKey,
+                userId = userId,
+                experiment = experiment
+            )
+        } catch (ex: Exception) {
+            log.warn(
+                "Failed to assign variant for experiment '{}' and user '{}'. Returning safe Control(A) fallback.",
+                trimmedKey,
+                userId,
+                ex
+            )
+            ExperimentAssigner.fallbackForError(trimmedKey, userId)
+        }
+    }
+
+    /**
+     * 지정된 `experimentKeys` 목록(생략 시 현재 `ACTIVE` 상태인 모든 실험)에 대한
+     * 사용자의 결정론적 배정 결과 목록을 반환한다. (F02-2)
+     */
+    @Transactional(readOnly = true)
+    fun assignVariants(
+        userId: Long,
+        experimentKeys: List<String>? = null
+    ): List<ExperimentAssignment> {
+        val cleanedKeys = experimentKeys
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.distinct()
+
+        if (!cleanedKeys.isNullOrEmpty()) {
+            return cleanedKeys.map { key -> assignVariant(key, userId) }
+        }
+
+        return try {
+            experimentRepository.findAllByStatusOrderByCreatedAtDesc(ExperimentStatus.ACTIVE)
+                .map { experiment ->
+                    ExperimentAssigner.assign(
+                        requestedKey = experiment.experimentKey,
+                        userId = userId,
+                        experiment = experiment
+                    )
+                }
+        } catch (ex: Exception) {
+            log.warn(
+                "Failed to list active experiment assignments for user '{}'. Returning empty list.",
+                userId,
+                ex
+            )
+            emptyList()
         }
     }
 
