@@ -44,21 +44,43 @@ class ProductEventService(
             throw BadRequestException("유효하지 않은 eventId입니다.")
         }
 
-        // TODO [사용자 미션 1]: 순차 중복 확인 및 서버 인증 userId / receivedAt 바인딩을 통한 ProductEvent 도메인 생성
-        // 1) productEventRepository.findByEventId(trimmedEventId)로 이미 저장된 이벤트인지 확인하고,
-        //    존재한다면 추가 저장 없이 ProductEventRecordResponse.duplicateIgnored(existingEvent)를 즉시 반환하세요.
-        // 2) 신규 이벤트라면 request.resolveOccurredAtKst()로 클라이언트 발생 시각(occurredAt)을 파싱하고,
-        //    DateTimeUtils.nowKst()로 서버 수신 시각(receivedAt)을 구하세요.
-        // 3) ProductEvent.create(...)를 호출해 도메인 엔티티(newEvent)를 생성하세요.
-        //    (주의: 클라이언트가 보낸 request.userId는 절대 사용하지 말고, 서버 인증 세션의 authenticatedUserId를 전달해야 합니다!)
+        val existingEvent = productEventRepository.findByEventId(trimmedEventId)
+        if (existingEvent != null) {
+            return ProductEventRecordResponse.duplicateIgnored(existingEvent)
+        }
 
-        // TODO [사용자 미션 2]: 독립 트랜잭션 저장 및 동시 재전송(Race Condition) 시 DataIntegrityViolationException 멱등 흡수
-        // 1) requiresNewTransactionTemplate.execute { productEventRepository.saveAndFlush(newEvent) }!! 로 저장한 뒤
-        //    ProductEventRecordResponse.recorded(saved)를 반환하세요.
-        // 2) 동시 요청 경합으로 인해 DataIntegrityViolationException이 발생하면 500/409 에러로 전파하지 말고,
-        //    productEventRepository.findByEventId(trimmedEventId)로 선행 저장된 이벤트를 재조회하여
-        //    ProductEventRecordResponse.duplicateIgnored(event = concurrentSaved, fallbackEventId = trimmedEventId)를 반환하세요.
-        TODO("사용자 미션 1 & 2: ProductEvent 생성 및 eventId 중복 방지(멱등) 저장을 구현하세요.")
+        val occurredAt = request.resolveOccurredAtKst()
+        val receivedAt = DateTimeUtils.nowKst()
+
+        val newEvent = ProductEvent.create(
+            eventId = trimmedEventId,
+            eventName = request.eventName,
+            occurredAt = occurredAt,
+            authenticatedUserId = authenticatedUserId,
+            sessionId = request.sessionId,
+            schemaVersion = request.schemaVersion,
+            appVersion = request.appVersion,
+            properties = request.properties,
+            receivedAt = receivedAt
+        )
+
+        return try {
+            val saved = requiresNewTransactionTemplate.execute {
+                productEventRepository.saveAndFlush(newEvent)
+            }!!
+            ProductEventRecordResponse.recorded(saved)
+        } catch (ex: DataIntegrityViolationException) {
+            log.debug(
+                "Duplicate product event detected concurrently [eventId={}]: {}",
+                trimmedEventId,
+                ex.message
+            )
+            val concurrentSaved = productEventRepository.findByEventId(trimmedEventId)
+            ProductEventRecordResponse.duplicateIgnored(
+                event = concurrentSaved,
+                fallbackEventId = trimmedEventId
+            )
+        }
     }
 
     /**
@@ -70,10 +92,19 @@ class ProductEventService(
         authenticatedUserId: Long,
         request: ProductEventCreateRequest
     ): ProductEventRecordResponse {
-        // TODO [사용자 미션 3]: 비즈니스 트랜잭션 보호를 위한 예외 격리(Fault Isolation) 구현
-        // 1) try 블록에서 recordEvent(authenticatedUserId, request)를 호출해 결과를 반환하세요.
-        // 2) 분석 이벤트 검증 또는 저장 중 어떤 Exception이 발생하더라도 외부 비즈니스 트랜잭션으로 전파되지 않도록 catch하고,
-        //    log.warn(...)으로 경고를 남긴 뒤 ProductEventRecordResponse.isolatedFailure(request.eventId)를 반환하세요.
-        TODO("사용자 미션 3: 분석 이벤트 예외가 핵심 비즈니스 트랜잭션을 실패시키지 않도록 격리하세요.")
+        return try {
+            recordEvent(
+                authenticatedUserId = authenticatedUserId,
+                request = request
+            )
+        } catch (ex: Exception) {
+            log.warn(
+                "Isolated product event recording failure [eventId={}, eventName={}]: {}",
+                request.eventId,
+                request.eventName,
+                ex.message
+            )
+            ProductEventRecordResponse.isolatedFailure(request.eventId)
+        }
     }
 }
