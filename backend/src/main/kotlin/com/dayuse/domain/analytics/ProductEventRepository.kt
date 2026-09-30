@@ -98,4 +98,6 @@ interface ProductEventRepository : JpaRepository<ProductEvent, Long> {
         @Param("endExclusive") endExclusive: LocalDateTime,
         @Param("eventNames") eventNames: Collection<String>
     ): List<Array<Any>>
+
+    fun findAllByEventNameInOrderByOccurredAtAscIdAsc(eventNames: Collection<String>): List<ProductEvent>
 }

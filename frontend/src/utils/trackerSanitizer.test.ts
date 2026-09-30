@@ -64,4 +64,40 @@ describe('Tracker 민감정보 1차 방어 필터 (F02)', () => {
     sanitizeProperties(input);
     expect(input).toEqual({ userId: 1, challengeId: 2 });
   });
+
+  it('유효한 experiment 컨텍스트({ experimentKey, variant })는 허용하고 추가 필드나 잘못된 형식은 제거한다', () => {
+    const valid = sanitizeProperties({
+      challengeId: 10,
+      experiment: {
+        experimentKey: 'challenge-invite-copy-v1',
+        variant: 'B',
+        extraSecret: 'leaked',
+      },
+    });
+    expect(valid).toEqual({
+      challengeId: 10,
+      experiment: {
+        experimentKey: 'challenge-invite-copy-v1',
+        variant: 'B',
+      },
+    });
+
+    const invalidVariant = sanitizeProperties({
+      challengeId: 10,
+      experiment: {
+        experimentKey: 'challenge-invite-copy-v1',
+        variant: 'C',
+      },
+    });
+    expect(invalidVariant).toEqual({ challengeId: 10 });
+
+    const invalidKey = sanitizeProperties({
+      challengeId: 10,
+      experiment: {
+        experimentKey: 'Invalid_Key',
+        variant: 'A',
+      },
+    });
+    expect(invalidKey).toEqual({ challengeId: 10 });
+  });
 });

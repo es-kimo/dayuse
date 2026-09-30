@@ -192,5 +192,48 @@ describe('Frontend Tracker (F02)', () => {
       expect(bodyOf(0).properties).toEqual({ channel: 'kakao' });
       expect(bodyOf(0)).not.toHaveProperty('userId');
     });
+
+    it('실험 참여 확정 상태(participating=true, isFallback=false)일 때만 Experiment Context를 이벤트에 연결한다', () => {
+      fetchMock.mockResolvedValue(res(201));
+
+      track(
+        'challenge_joined',
+        { challengeId: 10 },
+        {
+          experimentKey: 'challenge-invite-copy-v1',
+          variant: 'B',
+          participating: true,
+          isReady: true,
+          isFallback: false,
+          fallbackReason: 'NONE',
+        }
+      );
+
+      expect(bodyOf(0).properties).toEqual({
+        challengeId: 10,
+        experiment: {
+          experimentKey: 'challenge-invite-copy-v1',
+          variant: 'B',
+        },
+      });
+
+      // 미참여 또는 Fallback 상태에서는 experiment 컨텍스트를 붙이지 않는다
+      track(
+        'challenge_joined',
+        { challengeId: 10 },
+        {
+          experimentKey: 'challenge-invite-copy-v1',
+          variant: 'A',
+          participating: false,
+          isReady: true,
+          isFallback: true,
+          fallbackReason: 'INACTIVE_STOPPED',
+        }
+      );
+
+      expect(bodyOf(1).properties).toEqual({
+        challengeId: 10,
+      });
+    });
   });
 });

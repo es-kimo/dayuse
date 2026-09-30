@@ -3,6 +3,7 @@ package com.dayuse.domain.experiment.controller
 import com.dayuse.domain.analytics.service.AnalyticsAccessGuard
 import com.dayuse.domain.experiment.ExperimentStatus
 import com.dayuse.domain.experiment.dto.ExperimentAssignmentResponse
+import com.dayuse.domain.experiment.dto.ExperimentConversionReportResponse
 import com.dayuse.domain.experiment.dto.ExperimentCreateRequest
 import com.dayuse.domain.experiment.dto.ExperimentResolutionResponse
 import com.dayuse.domain.experiment.dto.ExperimentResponse
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * Experiment 정의·상태 전이, 사용자 Variant 배정 및 Fallback 조회 API. (F01, F02, F03, F08)
+ * Experiment 정의·상태 전이, 사용자 Variant 배정, Fallback 및 성과 비교 조회 API. (F01 ~ F03, F06 ~ F08)
  */
 @RestController
 @RequestMapping("/api/v1/experiments", "/api/experiments")
@@ -91,6 +92,29 @@ class ExperimentController(
             userId = userId
         )
         return ResponseEntity.ok(ExperimentAssignmentResponse.from(assignment))
+    }
+
+    /**
+     * 특정 `experimentKey`와 목표 `conversionEventName`(기본값: `challenge_joined`)을 기준으로
+     * Variant A / B 각각의 노출 고유 사용자 수, 전환 고유 사용자 수, Raw 이벤트 수, CVR(%)을 비교 조회한다. (F07-1)
+     */
+    @GetMapping(
+        "/{experimentKey}/results",
+        "/{experimentKey}/report",
+        "/{experimentKey}/analytics"
+    )
+    fun getExperimentResults(
+        @CurrentUserId userId: Long,
+        @PathVariable experimentKey: String,
+        @RequestParam(required = false) conversionEventName: String?,
+        @RequestParam(required = false) conversionEvent: String?
+    ): ResponseEntity<ExperimentConversionReportResponse> {
+        analyticsAccessGuard.verifyCanReadAnalytics(userId)
+        val report = experimentService.getConversionReport(
+            experimentKey = experimentKey,
+            conversionEventName = conversionEventName ?: conversionEvent
+        )
+        return ResponseEntity.ok(report)
     }
 
     /**

@@ -134,6 +134,12 @@ class ProductEvent(
             val validatedEventName = ProductEventName.validate(eventName)
             val validatedProperties = ProductEventPropertiesValidator.validateAndSanitize(properties)
 
+            if (validatedEventName == ProductEventName.EXPERIMENT_EXPOSED.value &&
+                ExperimentEventContext.extractFrom(validatedProperties) == null
+            ) {
+                throw BadRequestException("experiment_exposed 이벤트에는 유효한 experimentKey와 variant(A 또는 B)가 필요합니다.")
+            }
+
             return ProductEvent(
                 eventId = trimmedEventId,
                 eventName = validatedEventName,
