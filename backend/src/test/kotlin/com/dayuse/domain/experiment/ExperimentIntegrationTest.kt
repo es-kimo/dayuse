@@ -236,4 +236,88 @@ class ExperimentIntegrationTest {
             content = objectMapper.writeValueAsString(mapOf("rolloutPercentage" to 100))
         }.andExpect { status { isBadRequest() } }
     }
+
+    @Test
+    @DisplayName("사용자 Variant 배정 API는 반복 호출 시 항상 동일한 결과를 반환하며 비활성/미존재 시 안전하게 Control(A)을 반환한다")
+    fun deterministicAssignmentApiAndActiveAssignmentsList() {
+        val experimentKey = "challenge-invite-copy-v1"
+
+        // 1. 미존재 상태에서 assignment 조회 -> participating=false, variant=A, fallbackReason=NOT_FOUND
+        mockMvc.get("/api/v1/experiments/$experimentKey/assignment") {
+            header("Authorization", "Bearer $accessToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.experimentKey") { value(experimentKey) }
+            jsonPath("$.userId") { value(user.id) }
+            jsonPath("$.participating") { value(false) }
+            jsonPath("$.variant") { value("A") }
+            jsonPath("$.isFallback") { value(true) }
+            jsonPath("$.fallbackReason") { value("NOT_FOUND") }
+        }
+
+        // 2. 실험 생성 (DRAFT) 및 활성화 (ACTIVE, rollout 100%)
+        mockMvc.post("/api/v1/experiments") {
+            header("Authorization", "Bearer $accessToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(
+                mapOf(
+                    "experimentKey" to experimentKey,
+                    "name" to "배정 일관성 검증 실험",
+                    "rolloutPercentage" to 100,
+                    "variantARatio" to 50,
+                    "variantBRatio" to 50
+                )
+            )
+        }.andExpect { status { isCreated() } }
+
+        mockMvc.post("/api/v1/experiments/$experimentKey/activate") {
+            header("Authorization", "Bearer $accessToken")
+        }.andExpect { status { isOk() } }
+
+        // 3. ACTIVE 상태에서 반복 조회 시 항상 동일한 결과 반환
+        val firstResponse = mockMvc.get("/api/v1/experiments/$experimentKey/assignment") {
+            header("Authorization", "Bearer $accessToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.experimentKey") { value(experimentKey) }
+            jsonPath("$.status") { value("ACTIVE") }
+            jsonPath("$.participating") { value(true) }
+            jsonPath("$.isFallback") { value(false) }
+            jsonPath("$.fallbackReason") { value("NONE") }
+        }.andReturn().response.contentAsString
+
+        val secondResponse = mockMvc.get("/api/v1/experiments/$experimentKey/assignment") {
+            header("Authorization", "Bearer $accessToken")
+        }.andExpect {
+            status { isOk() }
+        }.andReturn().response.contentAsString
+
+        assertEquals(firstResponse, secondResponse)
+
+        // 4. 활성 실험 전체 배정 목록 조회
+        mockMvc.get("/api/v1/experiments/assignments") {
+            header("Authorization", "Bearer $accessToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.length()") { value(1) }
+            jsonPath("$[0].experimentKey") { value(experimentKey) }
+            jsonPath("$[0].participating") { value(true) }
+        }
+
+        // 5. 실험 중단(STOPPED) 후 배정 조회 -> 즉시 participating=false, variant=A로 전환
+        mockMvc.post("/api/v1/experiments/$experimentKey/stop") {
+            header("Authorization", "Bearer $accessToken")
+        }.andExpect { status { isOk() } }
+
+        mockMvc.get("/api/v1/experiments/$experimentKey/assignment") {
+            header("Authorization", "Bearer $accessToken")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.status") { value("STOPPED") }
+            jsonPath("$.participating") { value(false) }
+            jsonPath("$.variant") { value("A") }
+            jsonPath("$.isFallback") { value(true) }
+            jsonPath("$.fallbackReason") { value("INACTIVE_STOPPED") }
+        }
+    }
 }

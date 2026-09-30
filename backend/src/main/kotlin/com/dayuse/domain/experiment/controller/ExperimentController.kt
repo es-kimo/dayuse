@@ -2,6 +2,7 @@ package com.dayuse.domain.experiment.controller
 
 import com.dayuse.domain.analytics.service.AnalyticsAccessGuard
 import com.dayuse.domain.experiment.ExperimentStatus
+import com.dayuse.domain.experiment.dto.ExperimentAssignmentResponse
 import com.dayuse.domain.experiment.dto.ExperimentCreateRequest
 import com.dayuse.domain.experiment.dto.ExperimentResolutionResponse
 import com.dayuse.domain.experiment.dto.ExperimentResponse
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * Experiment 정의·상태 전이 및 Fallback 조회 API. (F01, F08)
+ * Experiment 정의·상태 전이, 사용자 Variant 배정 및 Fallback 조회 API. (F01, F02, F03, F08)
  */
 @RestController
 @RequestMapping("/api/v1/experiments", "/api/experiments")
@@ -49,6 +50,22 @@ class ExperimentController(
         return ResponseEntity.ok(experimentService.listExperiments(status))
     }
 
+    /**
+     * 현재 로그인한 사용자의 활성 실험(또는 `keys`로 지정된 실험 목록)에 대한
+     * 결정론적 배정 결과 목록을 조회한다. (F02-2)
+     */
+    @GetMapping("/assignments")
+    fun getAssignments(
+        @CurrentUserId userId: Long,
+        @RequestParam(required = false) keys: List<String>?
+    ): ResponseEntity<List<ExperimentAssignmentResponse>> {
+        val assignments = experimentService.assignVariants(
+            userId = userId,
+            experimentKeys = keys
+        ).map { ExperimentAssignmentResponse.from(it) }
+        return ResponseEntity.ok(assignments)
+    }
+
     @GetMapping("/{experimentKey}")
     fun getExperiment(
         @CurrentUserId userId: Long,
@@ -56,6 +73,24 @@ class ExperimentController(
     ): ResponseEntity<ExperimentResponse> {
         analyticsAccessGuard.verifyCanReadAnalytics(userId)
         return ResponseEntity.ok(experimentService.getExperiment(experimentKey))
+    }
+
+    /**
+     * 현재 로그인한 사용자의 특정 `experimentKey`에 대한 결정론적 Variant 배정 결과를 조회한다. (F02-2)
+     *
+     * 실험이 `ACTIVE` 상태가 아니거나 미존재·오류 시에도 예외 없이
+     * `participating = false`, `variant = A`(Control/Default)를 반환한다.
+     */
+    @GetMapping("/{experimentKey}/assignment")
+    fun getAssignment(
+        @CurrentUserId userId: Long,
+        @PathVariable experimentKey: String
+    ): ResponseEntity<ExperimentAssignmentResponse> {
+        val assignment = experimentService.assignVariant(
+            experimentKey = experimentKey,
+            userId = userId
+        )
+        return ResponseEntity.ok(ExperimentAssignmentResponse.from(assignment))
     }
 
     /**

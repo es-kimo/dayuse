@@ -1,6 +1,7 @@
 package com.dayuse.domain.experiment.dto
 
 import com.dayuse.domain.experiment.Experiment
+import com.dayuse.domain.experiment.ExperimentAssignment
 import com.dayuse.domain.experiment.ExperimentFallbackReason
 import com.dayuse.domain.experiment.ExperimentResolution
 import com.dayuse.domain.experiment.ExperimentStatus
@@ -92,6 +93,36 @@ data class ExperimentResolutionResponse(
                 variantRatio = ExperimentVariantRatioResponse.from(resolution.variantRatio),
                 isFallback = resolution.isFallback,
                 fallbackReason = resolution.fallbackReason
+            )
+        }
+    }
+}
+
+data class ExperimentAssignmentResponse(
+    val experimentKey: String,
+    val userId: Long,
+    val status: ExperimentStatus?,
+    val participating: Boolean,
+    val variant: ExperimentVariant,
+    val rolloutPercentage: Int,
+    val rolloutBucket: Int?,
+    val variantBucket: Int?,
+    val isFallback: Boolean,
+    val fallbackReason: ExperimentFallbackReason
+) {
+    companion object {
+        fun from(assignment: ExperimentAssignment): ExperimentAssignmentResponse {
+            return ExperimentAssignmentResponse(
+                experimentKey = assignment.experimentKey,
+                userId = assignment.userId,
+                status = assignment.status,
+                participating = assignment.participating,
+                variant = assignment.variant,
+                rolloutPercentage = assignment.rolloutPercentage,
+                rolloutBucket = assignment.rolloutBucket,
+                variantBucket = assignment.variantBucket,
+                isFallback = assignment.isFallback,
+                fallbackReason = assignment.fallbackReason
             )
         }
     }
