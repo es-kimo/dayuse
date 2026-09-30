@@ -33,22 +33,11 @@ object ProductEventPropertiesValidator {
             return emptyMap()
         }
 
-        val sanitized = LinkedHashMap<String, Any?>()
-        for ((rawKey, value) in properties) {
-            val key = rawKey.trim()
-            if (key.isEmpty()) {
-                throw BadRequestException("properties 키는 비어 있을 수 없습니다.")
-            }
-
-            val normalizedKey = normalizeKey(key)
-            if (normalizedKey in FORBIDDEN_NORMALIZED_KEYS) {
-                throw BadRequestException("properties에 허용되지 않는 민감정보 또는 콘텐츠 키가 포함되어 있습니다: $key")
-            }
-
-            validateValue(key, value)
-            sanitized[key] = value
-        }
-        return sanitized.toMap()
+        // TODO [사용자 미션 3]:
+        // 1) properties의 각 키를 순회하며 공백 여부를 확인하고, normalizeKey(key)가 FORBIDDEN_NORMALIZED_KEYS(사진·댓글·이름·계좌·토큰·클라이언트 userId 등)에 해당하면 BadRequestException으로 차단하세요.
+        // 2) validateValue(key, value)를 통해 문자열 값에 외부/미디어 URL(FORBIDDEN_VALUE_PREFIXES)이 포함되거나 길이(MAX_STRING_PROPERTY_LENGTH)를 초과하는 경우 BadRequestException으로 차단하세요.
+        // 3) 검증을 통과한 안전한 properties 맵을 반환하세요.
+        return properties
     }
 
     private fun normalizeKey(key: String): String {

@@ -20,17 +20,11 @@ enum class ProductEventName(val value: String) {
         }
 
         fun validate(eventName: String): String {
-            val trimmed = eventName.trim()
-            if (trimmed.isEmpty()) {
-                throw BadRequestException("eventName은 비어 있을 수 없습니다.")
-            }
-            if (!SNAKE_CASE_REGEX.matches(trimmed)) {
-                throw BadRequestException("유효하지 않은 eventName 형식입니다: $eventName")
-            }
-            if (!isAllowed(trimmed)) {
-                throw BadRequestException("지원하지 않는 Product Event 이름입니다: $eventName")
-            }
-            return trimmed
+            // TODO [사용자 미션 2]:
+            // 1) 입력된 eventName의 앞뒤 공백을 제거하고, 비어있는지 검사하세요.
+            // 2) SNAKE_CASE_REGEX 형식과 초기 표준 이벤트 7종(isAllowed)에 속하는지 검증하세요.
+            // 3) 위반 시 BadRequestException을 던지고, 통과 시 정제된 이벤트 이름을 반환하세요.
+            return eventName
         }
     }
 }
