@@ -854,6 +854,7 @@ export const ChallengeDetailPage: React.FC = () => {
       {/* 중도/신규 참여 바텀시트 */}
       <MidJoinBottomSheet
         challengeId={challenge.id}
+        groupId={challenge.groupId}
         isOpen={showJoinModal}
         onClose={() => setShowJoinModal(false)}
         onSuccess={() => {
@@ -1058,6 +1059,7 @@ export const ChallengeDetailPage: React.FC = () => {
             challengeId: challenge.id,
             challengeTitle: challenge.title,
             verificationCriteria: challenge.verificationCriteria,
+            groupId: challenge.groupId,
           }}
           recordId={verificationTarget.recordId}
           targetDate={verificationTarget.targetDate}
@@ -1071,6 +1073,8 @@ export const ChallengeDetailPage: React.FC = () => {
         <ShareCardModal
           cardType="STREAK"
           targetId={challenge.id}
+          challengeId={challenge.id}
+          groupId={challenge.groupId}
           title={challenge.title}
           userNickname={user?.nickname || '참여자'}
           executionType={challenge.executionType}

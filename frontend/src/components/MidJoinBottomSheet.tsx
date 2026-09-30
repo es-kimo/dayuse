@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { challengesApi } from '../api/challenges';
+import { track } from '../utils/tracker';
 import { BottomSheet, BottomSheetTitle, BottomSheetDescription, BottomSheetClose } from './ui/BottomSheet';
 import type { JoinPreviewResponse, StartDateType } from '../types';
 import {
@@ -15,6 +16,8 @@ import {
 
 interface MidJoinBottomSheetProps {
   challengeId: number;
+  /** 참여 이벤트 문맥용. 상세 화면이 알고 있는 모임 식별자를 그대로 내려받는다. */
+  groupId?: number;
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
@@ -22,6 +25,7 @@ interface MidJoinBottomSheetProps {
 
 export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
   challengeId,
+  groupId,
   isOpen,
   onClose,
   onSuccess,
@@ -79,6 +83,12 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
     try {
       await challengesApi.joinChallenge(challengeId, {
         penaltyAmount: isTogether ? 0 : penaltyAmount,
+        startDateType: selectedType,
+      });
+      // 참여 API가 성공해 실제로 합류한 뒤에만 기록한다.
+      track('challenge_joined', {
+        challengeId,
+        groupId: groupId ?? null,
         startDateType: selectedType,
       });
       onSuccess();

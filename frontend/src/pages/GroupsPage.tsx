@@ -7,6 +7,7 @@ import type { GroupSummary } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import { GroupsScreen } from '../components/screens/GroupsScreen';
 import { EmptyState } from '../components/EmptyState';
+import { useTrackOnce } from '../hooks/useTrackOnce';
 
 import { Button, Input, Tabs, TabsList, TabsTab, TabsPanel } from '../components/ui';
 import { Plus, ChevronRight, Crown, Link as LinkIcon, Loader2 } from 'lucide-react';
@@ -20,6 +21,9 @@ export const GroupsPage: React.FC = () => {
   const [loadError, setLoadError] = useState('');
   const [reload, setReload] = useState(0);
   const [inviteInput, setInviteInput] = useState<string>('');
+
+  // 홈 조회는 로그인 사용자가 실제로 홈에 들어왔을 때 진입당 1회만 기록한다.
+  useTrackOnce('home_viewed', undefined, !authLoading && isAuthenticated);
 
 
   useEffect(() => {

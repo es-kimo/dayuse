@@ -8,6 +8,7 @@ import { HeaderIconButton } from '../components/layout/AppHeader';
 import { X, Copy, Check, MessageCircle, Trophy, ChevronRight, Loader2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { shareToKakao, isKakaoReady } from '../utils/kakao';
+import { track } from '../utils/tracker';
 import { BRAND_INVITE_OG } from '../utils/meta';
 
 export const InviteCreatedPage: React.FC = () => {
@@ -51,8 +52,16 @@ export const InviteCreatedPage: React.FC = () => {
     ? `${window.location.origin}/invite/${inviteCode}`
     : '';
 
-  const handleCopyLink = async () => {
-    if (!inviteUrl) return;
+  /** 초대 링크 공유 실행 기록. 모임 식별자만 남기고 초대 코드·링크는 싣지 않는다. */
+  const trackInviteShare = (channel: 'kakao' | 'copy_link') => {
+    track('share_clicked', {
+      channel,
+      surface: 'group_invite',
+      groupId: Number.isFinite(actualGroupId) ? actualGroupId : null,
+    });
+  };
+
+  const copyInviteUrl = async () => {
     try {
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
@@ -63,8 +72,15 @@ export const InviteCreatedPage: React.FC = () => {
     }
   };
 
+  const handleCopyLink = async () => {
+    if (!inviteUrl) return;
+    trackInviteShare('copy_link');
+    await copyInviteUrl();
+  };
+
   const handleKakaoShare = () => {
     if (!group || !inviteUrl) return;
+    trackInviteShare('kakao');
 
     if (isKakaoReady()) {
       const shared = shareToKakao({
@@ -77,8 +93,8 @@ export const InviteCreatedPage: React.FC = () => {
       if (shared) return;
     }
 
-    // fallback: 클립보드 복사
-    handleCopyLink();
+    // fallback: 클립보드 복사. 공유 실행은 이미 kakao로 한 번 기록했으므로 다시 세지 않는다.
+    void copyInviteUrl();
   };
 
   if (loading) {

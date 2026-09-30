@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { track } from '../utils/tracker';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { groupsApi } from '../api/groups';
@@ -421,6 +422,13 @@ export const NewChallengePage: React.FC = () => {
       } else {
         createdChallenge = await challengesApi.createChallenge(Number(groupId), payload);
       }
+
+      // 생성 API가 실제로 성공해 챌린지가 만들어진 뒤에만 기록한다.
+      track('challenge_created', {
+        challengeId: createdChallenge.id,
+        groupId: createdChallenge.groupId,
+        isRestart: !!activeRestartId,
+      });
 
       navigate(`/challenges/${createdChallenge.id}`);
     } catch (err: any) {
