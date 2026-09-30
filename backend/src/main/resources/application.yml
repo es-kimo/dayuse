@@ -58,6 +58,10 @@ features:
     enabled: true
     rollout-percentage: 100
 
+analytics:
+  # 집계·퍼널 조회를 허용할 userId 목록(쉼표 구분). 비워 두면 로그인 사용자 누구나 조회할 수 있다.
+  admin-user-ids: ${ANALYTICS_ADMIN_USER_IDS:}
+
 ---
 spring:
   config:
@@ -97,6 +101,10 @@ features:
   ui-refresh-01:
     enabled: true
     rollout-percentage: 100
+
+analytics:
+  # 집계·퍼널 조회를 허용할 userId 목록(쉼표 구분). 비워 두면 로그인 사용자 누구나 조회할 수 있다.
+  admin-user-ids: ${ANALYTICS_ADMIN_USER_IDS:}
 
 ---
 spring:
@@ -151,3 +159,7 @@ features:
   ui-refresh-01:
     enabled: ${FEATURE_UI_REFRESH_01_ENABLED:true}
     rollout-percentage: ${FEATURE_UI_REFRESH_01_ROLLOUT_PERCENTAGE:100}
+
+analytics:
+  # 집계·퍼널 조회를 허용할 userId 목록(쉼표 구분). 운영에서는 반드시 지정한다.
+  admin-user-ids: ${ANALYTICS_ADMIN_USER_IDS:}
