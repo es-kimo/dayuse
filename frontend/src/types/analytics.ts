@@ -1,6 +1,8 @@
+import type { ExperimentVariant } from './experiment';
+
 /**
- * Frontend Tracker 이벤트 타입 (F02)
- * 이벤트 이름은 백엔드 ProductEventName 표준 7종과 1:1로 맞춘다.
+ * Frontend Tracker 이벤트 타입 (F02, v0.10 F06)
+ * 이벤트 이름은 백엔드 ProductEventName 표준 목록과 1:1로 맞춘다.
  */
 export type EventName =
   | 'home_viewed'
@@ -12,8 +14,21 @@ export type EventName =
   | 'share_clicked'
   | 'experiment_exposed';
 
-/** 백엔드 검증 기준: 값은 원시 타입(String, Number, Boolean)과 null만 허용 */
-export type EventPropertyValue = string | number | boolean | null;
+/**
+ * 전환 및 행동 이벤트 `properties`에 연결되는 Experiment Context 구조 (v0.10 F06)
+ */
+export interface ExperimentContextPayload {
+  experimentKey: string;
+  variant: ExperimentVariant;
+}
+
+/** 백엔드 검증 기준: 값은 원시 타입(String, Number, Boolean), null 및 표준 ExperimentContextPayload만 허용 */
+export type EventPropertyValue =
+  | string
+  | number
+  | boolean
+  | null
+  | ExperimentContextPayload;
 
 export type EventProperties = Record<string, EventPropertyValue>;
 

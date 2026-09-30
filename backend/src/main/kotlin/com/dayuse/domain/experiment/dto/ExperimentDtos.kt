@@ -2,11 +2,13 @@ package com.dayuse.domain.experiment.dto
 
 import com.dayuse.domain.experiment.Experiment
 import com.dayuse.domain.experiment.ExperimentAssignment
+import com.dayuse.domain.experiment.ExperimentConversionSummary
 import com.dayuse.domain.experiment.ExperimentFallbackReason
 import com.dayuse.domain.experiment.ExperimentResolution
 import com.dayuse.domain.experiment.ExperimentStatus
 import com.dayuse.domain.experiment.ExperimentVariant
 import com.dayuse.domain.experiment.ExperimentVariantRatio
+import com.dayuse.domain.experiment.VariantConversionMetrics
 import java.time.LocalDateTime
 
 data class ExperimentCreateRequest(
@@ -123,6 +125,65 @@ data class ExperimentAssignmentResponse(
                 variantBucket = assignment.variantBucket,
                 isFallback = assignment.isFallback,
                 fallbackReason = assignment.fallbackReason
+            )
+        }
+    }
+}
+
+data class VariantConversionMetricResponse(
+    val variant: ExperimentVariant,
+    val exposedUsers: Long,
+    val exposureEvents: Long,
+    val convertedUsers: Long,
+    val conversionEvents: Long,
+    val cvr: Double
+) {
+    companion object {
+        fun from(metrics: VariantConversionMetrics): VariantConversionMetricResponse {
+            return VariantConversionMetricResponse(
+                variant = metrics.variant,
+                exposedUsers = metrics.exposedUsers,
+                exposureEvents = metrics.exposureEvents,
+                convertedUsers = metrics.convertedUsers,
+                conversionEvents = metrics.conversionEvents,
+                cvr = metrics.cvr
+            )
+        }
+    }
+}
+
+data class ExperimentConversionReportResponse(
+    val experimentKey: String,
+    val name: String,
+    val status: ExperimentStatus,
+    val rolloutPercentage: Int,
+    val variantRatio: ExperimentVariantRatioResponse,
+    val conversionEventName: String,
+    val startedAt: LocalDateTime?,
+    val endedAt: LocalDateTime?,
+    val totalExposedUsers: Long,
+    val totalConvertedUsers: Long,
+    val overallCvr: Double,
+    val variants: List<VariantConversionMetricResponse>
+) {
+    companion object {
+        fun from(
+            experiment: Experiment,
+            summary: ExperimentConversionSummary
+        ): ExperimentConversionReportResponse {
+            return ExperimentConversionReportResponse(
+                experimentKey = experiment.experimentKey,
+                name = experiment.name,
+                status = experiment.status,
+                rolloutPercentage = experiment.rolloutPercentage,
+                variantRatio = ExperimentVariantRatioResponse.from(experiment.variantRatio),
+                conversionEventName = summary.conversionEventName,
+                startedAt = experiment.startedAt,
+                endedAt = experiment.endedAt,
+                totalExposedUsers = summary.totalExposedUsers,
+                totalConvertedUsers = summary.totalConvertedUsers,
+                overallCvr = summary.overallCvr,
+                variants = summary.variants.map { VariantConversionMetricResponse.from(it) }
             )
         }
     }

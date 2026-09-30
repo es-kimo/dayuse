@@ -1,29 +1,35 @@
 package com.dayuse.domain.experiment.service
 
+import com.dayuse.domain.analytics.ProductEventName
+import com.dayuse.domain.analytics.ProductEventRepository
 import com.dayuse.domain.experiment.Experiment
 import com.dayuse.domain.experiment.ExperimentAssigner
 import com.dayuse.domain.experiment.ExperimentAssignment
+import com.dayuse.domain.experiment.ExperimentConversionCalculator
 import com.dayuse.domain.experiment.ExperimentFallbackPolicy
 import com.dayuse.domain.experiment.ExperimentRepository
 import com.dayuse.domain.experiment.ExperimentResolution
 import com.dayuse.domain.experiment.ExperimentStatus
+import com.dayuse.domain.experiment.dto.ExperimentConversionReportResponse
 import com.dayuse.domain.experiment.dto.ExperimentCreateRequest
 import com.dayuse.domain.experiment.dto.ExperimentResponse
 import com.dayuse.global.exception.DuplicateResourceException
 import com.dayuse.global.exception.ResourceNotFoundException
 import com.dayuse.global.util.DateTimeUtils
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 /**
- * Experiment 정의·상태 전이, 결정론적 Variant 배정 및 Fallback 판정 서비스. (F01, F02, F03, F08)
+ * Experiment 정의·상태 전이, 결정론적 Variant 배정, Fallback 판정 및 성과 비교 조회 서비스. (F01 ~ F03, F06 ~ F08)
  */
 @Service
-class ExperimentService(
-    private val experimentRepository: ExperimentRepository
+class ExperimentService @Autowired constructor(
+    private val experimentRepository: ExperimentRepository,
+    private val productEventRepository: ProductEventRepository? = null
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -225,6 +231,39 @@ class ExperimentService(
             )
             emptyList()
         }
+    }
+
+    /**
+     * 특정 `experimentKey`와 목표 `conversionEventName`을 기준으로
+     * Variant A / B 각각의 노출 고유 사용자 수, 전환 고유 사용자 수, Raw 전환 이벤트 수, CVR(%)을 비교 조회한다. (F07-1)
+     */
+    @Transactional(readOnly = true)
+    fun getConversionReport(
+        experimentKey: String,
+        conversionEventName: String? = null
+    ): ExperimentConversionReportResponse {
+        val experiment = findExperimentOrThrow(experimentKey)
+        val validatedConversionEvent = ExperimentConversionCalculator.validateConversionEventName(conversionEventName)
+
+        val events = productEventRepository
+            ?.findAllByEventNameInOrderByOccurredAtAscIdAsc(
+                listOf(
+                    ProductEventName.EXPERIMENT_EXPOSED.value,
+                    validatedConversionEvent
+                )
+            )
+            .orEmpty()
+
+        val summary = ExperimentConversionCalculator.calculate(
+            experimentKey = experiment.experimentKey,
+            conversionEventName = validatedConversionEvent,
+            events = events
+        )
+
+        return ExperimentConversionReportResponse.from(
+            experiment = experiment,
+            summary = summary
+        )
     }
 
     private fun findExperimentOrThrow(experimentKey: String): Experiment {

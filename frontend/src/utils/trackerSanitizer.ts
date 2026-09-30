@@ -1,4 +1,5 @@
-import type { EventProperties } from '../types/analytics';
+import type { EventProperties, ExperimentContextPayload } from '../types/analytics';
+import { isValidVariant } from './experiment';
 
 /**
  * 클라이언트 측 1차 방어 필터.
@@ -21,6 +22,7 @@ const FORBIDDEN_NORMALIZED_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 const FORBIDDEN_VALUE_PREFIXES = ['http://', 'https://', 's3://', 'data:image/'];
+const EXPERIMENT_KEY_REGEX = /^[a-z][a-z0-9-]{1,62}[a-z0-9]$/;
 
 export const MAX_STRING_PROPERTY_LENGTH = 100;
 
@@ -40,6 +42,22 @@ function isSafeValue(value: unknown): boolean {
   return false;
 }
 
+function sanitizeExperimentContext(raw: unknown): ExperimentContextPayload | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const candidate = raw as Record<string, unknown>;
+  const rawKey = typeof candidate.experimentKey === 'string' ? candidate.experimentKey.trim() : '';
+  const rawVariant = typeof candidate.variant === 'string' ? candidate.variant.trim().toUpperCase() : '';
+
+  if (!EXPERIMENT_KEY_REGEX.test(rawKey) || !isValidVariant(rawVariant)) {
+    return null;
+  }
+
+  return {
+    experimentKey: rawKey,
+    variant: rawVariant,
+  };
+}
+
 /** 금지 키, URL/이미지 경로 값, 긴 자유 입력, 원시 타입이 아닌 값을 제거한 새 객체를 돌려준다. */
 export function sanitizeProperties(properties: Record<string, unknown> = {}): EventProperties {
   const sanitized: EventProperties = {};
@@ -47,6 +65,15 @@ export function sanitizeProperties(properties: Record<string, unknown> = {}): Ev
     const key = rawKey.trim();
     if (key === '') continue;
     if (FORBIDDEN_NORMALIZED_KEYS.has(normalizeKey(key))) continue;
+
+    if (key === 'experiment') {
+      const sanitizedContext = sanitizeExperimentContext(value);
+      if (sanitizedContext) {
+        sanitized.experiment = sanitizedContext;
+      }
+      continue;
+    }
+
     if (!isSafeValue(value)) continue;
     sanitized[key] = value as EventProperties[string];
   }

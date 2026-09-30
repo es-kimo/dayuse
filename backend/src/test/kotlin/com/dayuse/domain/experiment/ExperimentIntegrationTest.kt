@@ -320,4 +320,144 @@ class ExperimentIntegrationTest {
             jsonPath("$.fallbackReason") { value("INACTIVE_STOPPED") }
         }
     }
+
+    @Test
+    @DisplayName("Variant별 Exposure · Conversion · CVR 결과 조회 API가 반복 노출/전환 및 비노출 사용자를 정확히 구분해 집계한다")
+    fun comparesVariantExposureConversionAndCvrViaApi() {
+        val experimentKey = "challenge-invite-copy-v1"
+        val userA1 = user
+        val userA2 = userRepository.save(User(kakaoId = "kakao-exp-a2", nickname = "실험유저A2", profileImageUrl = null))
+        val userB1 = userRepository.save(User(kakaoId = "kakao-exp-b1", nickname = "실험유저B1", profileImageUrl = null))
+        val userB2 = userRepository.save(User(kakaoId = "kakao-exp-b2", nickname = "실험유저B2", profileImageUrl = null))
+        val unexposedUser = userRepository.save(User(kakaoId = "kakao-exp-unexp", nickname = "비노출유저", profileImageUrl = null))
+
+        // 실험 생성 및 활성화
+        mockMvc.post("/api/v1/experiments") {
+            header("Authorization", "Bearer $accessToken")
+            contentType = MediaType.APPLICATION_JSON
+            content = objectMapper.writeValueAsString(
+                mapOf(
+                    "experimentKey" to experimentKey,
+                    "name" to "초대 문구 실험 결과 비교",
+                    "rolloutPercentage" to 100,
+                    "variantARatio" to 50,
+                    "variantBRatio" to 50
+                )
+            )
+        }.andExpect { status { isCreated() } }
+
+        mockMvc.post("/api/v1/experiments/$experimentKey/activate") {
+            header("Authorization", "Bearer $accessToken")
+        }.andExpect { status { isOk() } }
+
+        val t0 = DateTimeUtils.nowKst().minusMinutes(30)
+
+        fun recordEvent(
+            actor: User,
+            eventId: String,
+            eventName: String,
+            occurredAtOffsetMinutes: Long,
+            properties: Map<String, Any?>
+        ) {
+            val token = jwtTokenProvider.generateAccessToken(actor.id)
+            mockMvc.post("/api/v1/events") {
+                header("Authorization", "Bearer $token")
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(
+                    mapOf(
+                        "eventId" to eventId,
+                        "eventName" to eventName,
+                        "occurredAt" to t0.plusMinutes(occurredAtOffsetMinutes).toString(),
+                        "sessionId" to "sess-${actor.id}",
+                        "schemaVersion" to 1,
+                        "appVersion" to "0.10.0",
+                        "properties" to properties
+                    )
+                )
+            }.andExpect { status { isCreated() } }
+        }
+
+        // Variant A: userA1 (노출 2회 + 전환 1회), userA2 (노출 1회, 전환 없음) => exposedUsers=2, convertedUsers=1, CVR=50.0%
+        recordEvent(userA1, "exp-a1-1", "experiment_exposed", 1, mapOf("experimentKey" to experimentKey, "variant" to "A"))
+        recordEvent(userA1, "exp-a1-2", "experiment_exposed", 2, mapOf("experimentKey" to experimentKey, "variant" to "A"))
+        recordEvent(
+            userA1,
+            "conv-a1-1",
+            "challenge_joined",
+            5,
+            mapOf(
+                "challengeId" to 10,
+                "experiment" to mapOf("experimentKey" to experimentKey, "variant" to "A")
+            )
+        )
+        recordEvent(userA2, "exp-a2-1", "experiment_exposed", 3, mapOf("experimentKey" to experimentKey, "variant" to "A"))
+
+        // Variant B: userB1 (노출 3회 + 전환 2회), userB2 (노출 1회 + 전환 1회) => exposedUsers=2, convertedUsers=2, CVR=100.0%
+        recordEvent(userB1, "exp-b1-1", "experiment_exposed", 1, mapOf("experimentKey" to experimentKey, "variant" to "B"))
+        recordEvent(userB1, "exp-b1-2", "experiment_exposed", 2, mapOf("experimentKey" to experimentKey, "variant" to "B"))
+        recordEvent(userB1, "exp-b1-3", "experiment_exposed", 3, mapOf("experimentKey" to experimentKey, "variant" to "B"))
+        recordEvent(
+            userB1,
+            "conv-b1-1",
+            "challenge_joined",
+            6,
+            mapOf(
+                "challengeId" to 10,
+                "experiment" to mapOf("experimentKey" to experimentKey, "variant" to "B")
+            )
+        )
+        recordEvent(
+            userB1,
+            "conv-b1-2",
+            "challenge_joined",
+            7,
+            mapOf(
+                "challengeId" to 11,
+                "experiment" to mapOf("experimentKey" to experimentKey, "variant" to "B")
+            )
+        )
+        recordEvent(userB2, "exp-b2-1", "experiment_exposed", 4, mapOf("experimentKey" to experimentKey, "variant" to "B"))
+        recordEvent(
+            userB2,
+            "conv-b2-1",
+            "challenge_joined",
+            8,
+            mapOf(
+                "challengeId" to 10,
+                "experiment" to mapOf("experimentKey" to experimentKey, "variant" to "B")
+            )
+        )
+
+        // 비노출 사용자: 노출 없이 전환만 발생 -> 집계에서 제외되어야 함
+        recordEvent(unexposedUser, "conv-unexp-1", "challenge_joined", 9, mapOf("challengeId" to 10))
+
+        mockMvc.get("/api/v1/experiments/$experimentKey/results") {
+            header("Authorization", "Bearer $accessToken")
+            param("conversionEventName", "challenge_joined")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.experimentKey") { value(experimentKey) }
+            jsonPath("$.status") { value("ACTIVE") }
+            jsonPath("$.conversionEventName") { value("challenge_joined") }
+            jsonPath("$.totalExposedUsers") { value(4) }
+            jsonPath("$.totalConvertedUsers") { value(3) }
+            jsonPath("$.overallCvr") { value(75.0) }
+
+            // Variant A: exposedUsers=2, exposureEvents=3, convertedUsers=1, conversionEvents=1, cvr=50.0
+            jsonPath("$.variants[0].variant") { value("A") }
+            jsonPath("$.variants[0].exposedUsers") { value(2) }
+            jsonPath("$.variants[0].exposureEvents") { value(3) }
+            jsonPath("$.variants[0].convertedUsers") { value(1) }
+            jsonPath("$.variants[0].conversionEvents") { value(1) }
+            jsonPath("$.variants[0].cvr") { value(50.0) }
+
+            // Variant B: exposedUsers=2, exposureEvents=4, convertedUsers=2, conversionEvents=3, cvr=100.0
+            jsonPath("$.variants[1].variant") { value("B") }
+            jsonPath("$.variants[1].exposedUsers") { value(2) }
+            jsonPath("$.variants[1].exposureEvents") { value(4) }
+            jsonPath("$.variants[1].convertedUsers") { value(2) }
+            jsonPath("$.variants[1].conversionEvents") { value(3) }
+            jsonPath("$.variants[1].cvr") { value(100.0) }
+        }
+    }
 }
