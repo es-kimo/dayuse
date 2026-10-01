@@ -31,3 +31,6 @@ export function resolveChallengeInviteCopy(state: ExperimentState): string {
   }
   return CHALLENGE_INVITE_COPY[state.variant] ?? CHALLENGE_INVITE_COPY.A;
 }
+
+/** ViewB 신규 생성에서 기존 카드와 허용 추천 안내를 비교한다. 두 안 모두 기본 허용. */
+export const CHALLENGE_REDAY_UI_EXPERIMENT = 'challenge-reday-ui-v1';

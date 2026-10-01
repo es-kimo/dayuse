@@ -8,6 +8,7 @@ enum class ProductEventName(val value: String) {
     CERTIFICATION_COMPLETED("certification_completed"),
     CERTIFICATION_FAILED("certification_failed"),
     CHALLENGE_CREATED("challenge_created"),
+    CHALLENGE_CREATED_REDAY_ALLOWED("challenge_created_reday_allowed"),
     CHALLENGE_JOINED("challenge_joined"),
     SHARE_CLICKED("share_clicked"),
 

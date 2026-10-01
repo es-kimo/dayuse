@@ -24,6 +24,9 @@ object DayuseExperimentDefinitions {
      */
     const val CHALLENGE_INVITE_COPY_V1 = "challenge-invite-copy-v1"
 
+    /** ViewB 신규 생성: 기본 허용인 기존 카드와 추천 안내 UI를 비교한다. */
+    const val CHALLENGE_REDAY_UI_V1 = "challenge-reday-ui-v1"
+
     /**
      * 기동 시 멱등하게 보장할 정의 목록.
      *
@@ -31,6 +34,13 @@ object DayuseExperimentDefinitions {
      * 이미 존재하는 실험은 상태·rollout을 포함해 아무것도 덮어쓰지 않는다.
      */
     val SEEDS: List<ExperimentCreateRequest> = listOf(
+        ExperimentCreateRequest(
+            experimentKey = CHALLENGE_REDAY_UI_V1,
+            name = "챌린지 생성 리데이 허용 UI 실험",
+            rolloutPercentage = 100,
+            variantARatio = 50,
+            variantBRatio = 50
+        ),
         ExperimentCreateRequest(
             experimentKey = CHALLENGE_INVITE_COPY_V1,
             name = "챌린지 참여 화면 초대 문구 실험",

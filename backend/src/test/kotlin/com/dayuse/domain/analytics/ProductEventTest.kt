@@ -27,12 +27,13 @@ class ProductEventTest @Autowired constructor(
             "certification_completed",
             "certification_failed",
             "challenge_created",
+            "challenge_created_reday_allowed",
             "challenge_joined",
             "share_clicked"
         ]
     )
-    @DisplayName("초기 표준 이벤트 7종은 모두 유효한 이벤트 이름으로 생성 및 저장된다")
-    fun allowsAllSevenStandardEventNames(standardEventName: String) {
+    @DisplayName("표준 이벤트는 모두 유효한 이벤트 이름으로 생성 및 저장된다")
+    fun allowsStandardEventNames(standardEventName: String) {
         val occurredAt = LocalDateTime.of(2026, 9, 30, 12, 0, 0)
         val receivedAt = LocalDateTime.of(2026, 9, 30, 12, 0, 5)
 

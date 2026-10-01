@@ -35,6 +35,29 @@ class ExperimentConversionCalculatorTest {
     }
 
     @Test
+    fun `리데이 허용 생성과 전체 생성의 전환을 별도로 집계한다`() {
+        val key = DayuseExperimentDefinitions.CHALLENGE_REDAY_UI_V1
+        val context = mapOf("experiment" to mapOf("experimentKey" to key, "variant" to "B"))
+        val events = listOf(
+            event("exposed-1", 1L, "experiment_exposed", t0, mapOf("experimentKey" to key, "variant" to "B")),
+            event("exposed-2", 2L, "experiment_exposed", t0, mapOf("experimentKey" to key, "variant" to "B")),
+            event("created-1", 1L, "challenge_created", t0.plusMinutes(1), context),
+            event("created-2", 2L, "challenge_created", t0.plusMinutes(1), context),
+            event("allowed-1", 1L, "challenge_created_reday_allowed", t0.plusMinutes(1), context),
+            // 노출되지 않은 사용자의 이벤트는 실험 성과로 세지 않는다.
+            event("unexposed", 3L, "challenge_created_reday_allowed", t0.plusMinutes(1), context)
+        )
+        val created = ExperimentConversionCalculator.calculate(key, "challenge_created", events)
+            .variants.first { it.variant == ExperimentVariant.B }
+        val allowed = ExperimentConversionCalculator.calculate(key, "challenge_created_reday_allowed", events)
+            .variants.first { it.variant == ExperimentVariant.B }
+        assertEquals(2L, created.conversionEvents)
+        assertEquals(1L, allowed.conversionEvents)
+        assertEquals(100.0, created.cvr)
+        assertEquals(50.0, allowed.cvr)
+    }
+
+    @Test
     @DisplayName("한 사용자가 10번 노출되고 3번 전환해도 고유 사용자 수(1명/1명) 기준으로 CVR 100.0%를 산출한다")
     fun calculatesCvrByUniqueUsersDespiteRepeatedExposuresAndConversions() {
         val exposures = (1..10).map { i ->

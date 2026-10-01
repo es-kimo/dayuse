@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import type { ExperimentState } from '../types/experiment';
+import { RedayExperiment } from './RedayExperiment';
 import type { GroupMember, ExecutionType, PeriodType } from '../types';
 import { DayuAvatar } from './brand/DayuAvatar';
 import { SubPageHeader } from './layout/SubPageHeader';
@@ -36,6 +38,8 @@ interface NewChallengeViewBProps {
   setExecutionType: (val: ExecutionType) => void;
   penaltyAmount: number;
   setPenaltyAmount: (val: number) => void;
+  redayExperiment?: ExperimentState;
+  onRedayExposure: (state: ExperimentState) => void;
   redayAllowed: boolean;
   setRedayAllowed: (val: boolean) => void;
   groupMembers: GroupMember[];
@@ -86,6 +90,8 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
   setExecutionType,
   penaltyAmount,
   setPenaltyAmount,
+  redayExperiment,
+  onRedayExposure,
   redayAllowed,
   setRedayAllowed,
   groupMembers,
@@ -316,20 +322,22 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
               }
             >
               {canEnableReday ? (
-                <div className="flex gap-2">
-                  <ChoiceCard
-                    active={!effectiveRedayAllowed}
-                    onClick={() => setRedayAllowed(false)}
-                    title="미허용"
-                    desc="지각 인증을 해도 약정 벌금이 그대로 부과돼요"
-                  />
-                  <ChoiceCard
-                    active={effectiveRedayAllowed}
-                    onClick={() => setRedayAllowed(true)}
-                    title="허용"
-                    desc="지각 인증 후 리데이 티켓을 쓰면 벌금을 면제받아요"
-                  />
-                </div>
+                <RedayExperiment state={redayExperiment} allowed={effectiveRedayAllowed} onChange={setRedayAllowed} onExposure={onRedayExposure}>
+                  <div className="flex gap-2">
+                    <ChoiceCard
+                      active={!effectiveRedayAllowed}
+                      onClick={() => setRedayAllowed(false)}
+                      title="미허용"
+                      desc="지각 인증을 해도 약정 벌금이 그대로 부과돼요"
+                    />
+                    <ChoiceCard
+                      active={effectiveRedayAllowed}
+                      onClick={() => setRedayAllowed(true)}
+                      title="허용"
+                      desc="지각 인증 후 리데이 티켓을 쓰면 벌금을 면제받아요"
+                    />
+                  </div>
+                </RedayExperiment>
               ) : (
                 <div className="rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-[13px] text-slate-500">
                   주 N회 · 함께하기 · 무벌금 챌린지에서는 리데이가 적용되지 않아요.

@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useExperiment } from '../hooks/useExperiment';
+import { CHALLENGE_REDAY_UI_EXPERIMENT } from '../constants/experiments';
+import type { ExperimentState } from '../types/experiment';
 import { track } from '../utils/tracker';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
@@ -56,7 +59,7 @@ export const NewChallengePage: React.FC = () => {
   const [executionType, setExecutionType] = useState<ExecutionType>('INDIVIDUAL');
   const [targetFrequency, setTargetFrequency] = useState<number>(3);
   const [penaltyAmount, setPenaltyAmount] = useState<number>(5000);
-  const [redayAllowed, setRedayAllowed] = useState<boolean>(false);
+  const [redayAllowed, setRedayAllowed] = useState<boolean>(true);
 
   const canEnableReday = periodType === 'DAILY' && executionType === 'INDIVIDUAL' && penaltyAmount > 0;
   const effectiveRedayAllowed = canEnableReday && redayAllowed;
@@ -71,6 +74,11 @@ export const NewChallengePage: React.FC = () => {
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
   const [isTemplateLoaded, setIsTemplateLoaded] = useState(false);
   const [activeRestartId, setActiveRestartId] = useState<string | null>(restartFromId);
+
+  const { uiVersion } = useUiVersion();
+  const redayExperimentEligible = uiVersion === 'B' && !activeRestartId && !isTemplateLoaded && !isLoadingTemplate;
+  const redayExperiment = useExperiment(CHALLENGE_REDAY_UI_EXPERIMENT, redayExperimentEligible);
+  const redayExposure = React.useRef<ExperimentState | null>(null);
 
   // 이전 챌린지 불러오기 모달 상태
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -432,11 +440,21 @@ export const NewChallengePage: React.FC = () => {
       }
 
       // 생성 API가 실제로 성공해 챌린지가 만들어진 뒤에만 기록한다.
-      track('challenge_created', {
+      // 노출 뒤 조건/템플릿을 바꿔도 완료율 분모에서 빠지지 않게 최초 노출에 귀속한다.
+      const experimentContext = redayExposure.current ?? undefined;
+      const creationProperties = {
         challengeId: createdChallenge.id,
         groupId: createdChallenge.groupId,
         isRestart: !!activeRestartId,
-      });
+        redayAllowed: effectiveRedayAllowed,
+        redayEligible: canEnableReday,
+        isTemplate: isTemplateLoaded,
+        uiVersion,
+      };
+      track('challenge_created', creationProperties, experimentContext);
+      if (effectiveRedayAllowed && experimentContext) {
+        track('challenge_created_reday_allowed', creationProperties, experimentContext);
+      }
 
       navigate(`/challenges/${createdChallenge.id}`);
     } catch (err: any) {
@@ -447,8 +465,6 @@ export const NewChallengePage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-
-  const { uiVersion } = useUiVersion();
 
   if (uiVersion === 'B') {
     return (
@@ -473,6 +489,8 @@ export const NewChallengePage: React.FC = () => {
         setExecutionType={setExecutionType}
         penaltyAmount={penaltyAmount}
         setPenaltyAmount={setPenaltyAmount}
+        redayExperiment={redayExperimentEligible ? redayExperiment : undefined}
+        onRedayExposure={(state) => { redayExposure.current = state; }}
         redayAllowed={redayAllowed}
         setRedayAllowed={setRedayAllowed}
         groupMembers={groupMembers}

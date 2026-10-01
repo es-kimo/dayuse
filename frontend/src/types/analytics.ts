@@ -10,6 +10,7 @@ export type EventName =
   | 'certification_completed'
   | 'certification_failed'
   | 'challenge_created'
+  | 'challenge_created_reday_allowed'
   | 'challenge_joined'
   | 'share_clicked'
   | 'experiment_exposed';
