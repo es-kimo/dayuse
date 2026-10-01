@@ -1,3 +1,4 @@
+import { calculateStreak } from '../utils/streak';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
@@ -141,35 +142,11 @@ export const ChallengeDetailPage: React.FC = () => {
 
   const isTodayCompleted = useMemo(() => {
     const todayRec = myRecords.find((r) => r.date === todayStr);
-    return todayRec?.status === 'COMPLETED';
+    return todayRec?.status === 'COMPLETED' && !todayRec.isLate;
   }, [myRecords, todayStr]);
 
-  // 연속 달성일 (streak)
-  const streakCount = useMemo(() => {
-    if (!myRecords || myRecords.length === 0) return 0;
-    const sorted = [...myRecords].sort((a, b) => b.date.localeCompare(a.date));
-    const todayRec = sorted.find((r) => r.date === todayStr);
-    let startDateIndex = 0;
-    if (todayRec && todayRec.status === 'COMPLETED') {
-      startDateIndex = sorted.indexOf(todayRec);
-    } else {
-      const yestIndex = sorted.findIndex((r) => r.date < todayStr);
-      if (yestIndex >= 0 && sorted[yestIndex].status === 'COMPLETED') {
-        startDateIndex = yestIndex;
-      } else {
-        return 0;
-      }
-    }
-    let count = 0;
-    for (let i = startDateIndex; i < sorted.length; i++) {
-      if (sorted[i].status === 'COMPLETED') {
-        count++;
-      } else if (sorted[i].status !== 'NOT_PARTICIPATED') {
-        break;
-      }
-    }
-    return count;
-  }, [myRecords, todayStr]);
+  // 지각 인증·리데이 면제는 정상 연속 인증에 포함하지 않는다.
+  const streakCount = calculateStreak(myRecords, todayStr);
 
   // Calendar dates for the active month (UI B grid)
   const calendarMonthDays = useMemo(() => {

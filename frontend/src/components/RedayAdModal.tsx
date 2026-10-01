@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Loader2, Megaphone, PauseCircle, RotateCcw, Ticket } from 'lucide-react';
+import { Loader2, PauseCircle, RotateCcw, Ticket } from 'lucide-react';
 import { Modal, ModalClose, ModalDescription, ModalTitle } from './ui/Modal';
-import { Button, Help, Notice, ProgressBar } from './dayu/ui';
+import { Button, Help, ProgressBar } from './dayu/ui';
+import { DayuExpression } from './brand/DayuExpression';
 import { X as ScreenX } from './screens/ScreenIcons';
 import { redayApi, reportAdAbandonQuietly } from '../api/reday';
 import { useAdWatchTimer } from '../hooks/useAdWatchTimer';
@@ -41,7 +42,6 @@ export const RedayAdModal: React.FC<RedayAdModalProps> = ({
   const [phase, setPhase] = useState<Phase>('loading');
   const [session, setSession] = useState<AdSessionDetail | null>(null);
   const [failure, setFailure] = useState<RedayAdFailureReason>('UNKNOWN');
-  const [grantMessage, setGrantMessage] = useState<string>('');
 
   const requiredSeconds = session?.requiredWatchSeconds ?? 0;
   const timer = useAdWatchTimer(requiredSeconds);
@@ -96,7 +96,6 @@ export const RedayAdModal: React.FC<RedayAdModalProps> = ({
       try {
         const result = await redayApi.completeAdSession(token, watchedSeconds);
         settledRef.current = true;
-        setGrantMessage(result.message);
         setPhase('granted');
         onGranted(result);
       } catch (error) {
@@ -152,132 +151,66 @@ export const RedayAdModal: React.FC<RedayAdModalProps> = ({
       backdropClassName="bg-slate-900/45"
       className="flex max-h-[92dvh] w-full max-w-app flex-col gap-4 overflow-y-auto overscroll-contain rounded-t-[26px] bg-white px-5 pt-5 pb-[calc(20px+env(safe-area-inset-bottom,0px))] sm:rounded-[26px]"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <ModalTitle className="text-[19px] font-extrabold tracking-[-0.01em] text-slate-800">
-            리데이 티켓 받기
-          </ModalTitle>
-          <ModalDescription className="mt-1 text-[13px] leading-[1.5] text-slate-500">
-            {session?.creative.badgeText ?? 'dayuse 자체 안내 · 시청 완료 시 리데이 티켓 1장'}
-          </ModalDescription>
+      <div className="flex items-center justify-between gap-3">
+        <ModalTitle className="text-[19px] font-extrabold tracking-[-0.02em] text-slate-800">리데이 티켓 받기</ModalTitle>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex h-9 items-center gap-1.5 rounded-full bg-blue-50 px-3 text-[13px] font-extrabold text-blue-600"><Ticket className="size-4 -rotate-12" />보상 +1장</span>
+          <ModalClose aria-label="닫기" className="grid size-9 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"><ScreenX className="size-5" /></ModalClose>
         </div>
-        <ModalClose
-          aria-label="닫기"
-          className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100"
-        >
-          <ScreenX className="size-[22px]" />
-        </ModalClose>
       </div>
+      <ModalDescription className="sr-only">안내 광고를 끝까지 보면 티켓 1장을 받아요. 벌금 면제는 티켓 사용 후 적용돼요.</ModalDescription>
 
-      {/* 광고 영역 */}
-      <div className="flex flex-col gap-3 rounded-[18px] border border-slate-200 bg-slate-50 p-4">
-        {phase === 'loading' ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-10 text-slate-500">
-            <Loader2 className="size-6 animate-spin text-blue-600" />
-            <span className="text-[13px]">안내를 불러오는 중...</span>
-          </div>
-        ) : phase === 'failed' ? (
-          <div className="flex flex-col items-center gap-2 py-8 text-center">
-            <Megaphone className="size-7 text-slate-400" />
-            <p className="text-[14px] font-bold text-slate-800">{adFailureMessage(failure)}</p>
-          </div>
-        ) : (
-          <>
-            <div className="flex items-start gap-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-blue-50 text-blue-600">
-                <Megaphone className="size-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-[15.5px] font-bold tracking-[-0.01em] text-slate-800">
-                  {session?.creative.title}
-                </div>
-                <p className="mt-1 text-[13px] leading-[1.5] text-slate-600">
-                  {session?.creative.description}
-                </p>
-              </div>
+      {phase === 'loading' ? (
+        <div role="status" className="flex flex-col items-center gap-3 py-8 text-[13px] text-slate-500"><Loader2 className="size-6 animate-spin text-blue-600" />안내를 불러오고 있어요</div>
+      ) : phase === 'failed' ? (
+        <div className="flex flex-col items-center gap-4 py-5 text-center">
+          <DayuExpression expression="rest" className="size-16" alt="" />
+          <p role="alert" className="max-w-64 text-[14px] font-medium leading-relaxed text-slate-600">{adFailureMessage(failure)}</p>
+        </div>
+      ) : phase === 'granted' ? (
+        <div role="status" className="flex flex-col items-center gap-3 py-5 text-center">
+          <DayuExpression expression="done" className="size-16" alt="" />
+          <p className="text-[21px] font-extrabold tracking-[-0.02em] text-slate-800">티켓 1장 받았어요!</p>
+          <p className="text-[13px] text-slate-500">이제 티켓을 사용하면 벌금이 면제돼요.</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4 py-2">
+          <div className="flex items-start gap-3">
+            <DayuExpression expression="cheer" className="size-12 shrink-0" alt="" />
+            <div className="min-w-0">
+              <p className="mb-1 text-[11px] font-bold text-slate-400">{session?.creative.badgeText ?? '데이유 안내 광고'}</p>
+              <h3 className="text-[16px] font-bold text-slate-800">{session?.creative.title}</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-slate-500">{session?.creative.description}</p>
             </div>
-
-            {session?.creative.imageUrl && (
-              <img
-                src={session.creative.imageUrl}
-                alt=""
-                className="max-h-40 w-full rounded-xl object-cover"
-              />
-            )}
-
-            <div className="flex flex-col gap-2">
-              <ProgressBar value={progress} tone={timer.isPaused ? 'warn' : 'blue'} track="white" />
-              <div
-                role="status"
-                aria-live="polite"
-                className="flex items-center justify-between gap-2 text-[12.5px] font-semibold"
-              >
-                <span className={timer.isPaused ? 'text-amber-700' : 'text-slate-600'}>
-                  {timer.isPaused && <PauseCircle className="mr-1 inline size-3.5" aria-hidden="true" />}
-                  {stage.label}
-                </span>
-                <span className="tabular-nums text-slate-500">
-                  {timer.watchedSeconds} / {requiredSeconds}초
-                </span>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* 단계 안내: 광고 완료 → 리데이 티켓 지급 완료 → 리데이 완료 */}
-      <ol className="flex flex-col gap-1.5">
-        {['광고 완료', '리데이 티켓 지급 완료', '리데이 완료'].map((label, index) => {
-          const done = stage.completedSteps > index;
-          return (
-            <li
-              key={label}
-              className={`flex items-center gap-2 text-[13px] ${done ? 'font-bold text-slate-800' : 'text-slate-400'}`}
-            >
-              <span
-                aria-hidden="true"
-                className={`grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-extrabold ${
-                  done ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'
-                }`}
-              >
-                {index + 1}
+          </div>
+          {session?.creative.imageUrl && <img src={session.creative.imageUrl} alt="" className="max-h-40 w-full rounded-[14px] object-cover" />}
+          <div className="space-y-2">
+            <ProgressBar value={progress} tone={timer.isPaused ? 'warn' : 'blue'} />
+            <div role="status" className="flex items-center justify-between gap-2 text-[12.5px] font-bold">
+              <span className={timer.isPaused ? 'text-amber-700' : 'text-blue-600'}>
+                {timer.isPaused && <PauseCircle className="mr-1 inline size-3.5" />}
+                {phase === 'granting' ? '티켓 받는 중…' : stage.label}
               </span>
-              {label}
-              {done && <span className="sr-only">완료</span>}
-            </li>
-          );
-        })}
-      </ol>
-
-      <Notice icon={<Ticket className="size-4" />}>
-        {phase === 'granted'
-          ? grantMessage || stage.description
-          : stage.description}
-      </Notice>
+              <span className="tabular-nums text-slate-500">{Math.max(0, requiredSeconds - timer.watchedSeconds)}초 남음</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
         {phase === 'granted' ? (
-          <Button size="lg" className="w-full" onClick={requestClose}>
-            리데이 티켓 사용하러 가기
-          </Button>
+          <Button size="lg" className="w-full" onClick={requestClose}>티켓 사용하러 가기</Button>
         ) : phase === 'failed' ? (
           <>
-            <Button size="lg" className="w-full" onClick={handleRetry}>
-              <RotateCcw className="size-4" />
-              다시 시도하기
-            </Button>
-            <Button variant="line" className="w-full" onClick={requestClose}>
-              돌아가기
-            </Button>
+            {failure !== 'DAILY_LIMIT_REACHED' && <Button size="lg" className="w-full" onClick={handleRetry}><RotateCcw className="size-4" />다시 시도하기</Button>}
+            <Button variant={failure === 'DAILY_LIMIT_REACHED' ? 'primary' : 'ghost'} size="lg" className="w-full" onClick={requestClose}>돌아가기</Button>
           </>
         ) : (
-          <Button variant="line" className="w-full" onClick={requestClose}>
-            시청 중단하고 닫기
-          </Button>
+          <>
+            <Button variant="ghost" className="w-full" onClick={requestClose}>{phase === 'loading' ? '닫기' : '중단하고 닫기'}</Button>
+            <Help className="text-center">시청 완료 → 티켓 1장 · 벌금 면제는 티켓 사용 후</Help>
+          </>
         )}
-        <Help className="text-center">
-          광고를 끝까지 봐도 벌금은 자동으로 면제되지 않아요. 받은 리데이 티켓을 사용해야 면제돼요.
-        </Help>
       </div>
     </Modal>
   );

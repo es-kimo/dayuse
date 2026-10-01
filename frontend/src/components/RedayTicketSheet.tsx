@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
-  CalendarDays,
-  CheckCircle2,
   Clock,
   Loader2,
   RotateCcw,
@@ -14,8 +12,9 @@ import {
   BottomSheetDescription,
   BottomSheetTitle,
 } from './ui/BottomSheet';
-import { Button, Card, Chip, Help, Notice, SheetGrab, StatTile } from './dayu/ui';
+import { Button, SheetGrab } from './dayu/ui';
 import { X as ScreenX } from './screens/ScreenIcons';
+import { DayuExpression } from './brand/DayuExpression';
 import { RedayAdModal } from './RedayAdModal';
 import { redayApi } from '../api/reday';
 import { useRedayRecord } from '../hooks/useRedayRecord';
@@ -29,8 +28,6 @@ import {
   classifyAdFailure,
   describePenalty,
   formatRedayRemaining,
-  REDAY_EARN_BUTTON_LABEL,
-  REDAY_USE_BUTTON_LABEL,
   adFailureMessage,
   type RedayAdFailureReason,
 } from '../utils/reday';
@@ -153,6 +150,7 @@ export const RedayTicketSheet: React.FC<RedayTicketSheetProps> = ({
     setGrantedTicketId(result.grantedTicketId);
   };
 
+  const recordDate = targetDate || eligibility?.targetDate;
   const showCountdown = !applied && action.kind !== 'applied' && remainingSeconds > 0;
 
   return (
@@ -163,34 +161,57 @@ export const RedayTicketSheet: React.FC<RedayTicketSheetProps> = ({
         disablePointerDismissal={applying}
       >
         <>
-          <div className="flex shrink-0 flex-col gap-3.5 px-5 pt-2.5">
+          <div className="flex shrink-0 flex-col gap-3 px-5 pt-2.5">
             <SheetGrab />
-            <div className="flex items-start gap-2">
-              <div className="min-w-0 flex-1">
-                <BottomSheetTitle className="text-[19px] font-extrabold tracking-[-0.01em] text-slate-800">
-                  {applied || action.kind === 'applied' ? '리데이 완료' : copy.headline}
-                </BottomSheetTitle>
-                <BottomSheetDescription className="mt-1 text-[13px] leading-[1.5] text-slate-500">
-                  {applied || action.kind === 'applied' ? action.message : copy.body}
-                </BottomSheetDescription>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[14px] font-extrabold tracking-[-0.01em] text-slate-800">리데이</span>
+              <div className="flex items-center gap-2">
+                <div
+                  role="status"
+                  aria-label={`보유 리데이 티켓 ${loadFailed ? '조회 실패' : loading || !eligibility ? '확인 중' : `${availableTicketCount}장`}`}
+                  className="flex h-10 items-center gap-2 rounded-full border border-blue-100 bg-blue-50 py-1 pl-1 pr-3.5 shadow-[0_2px_0_0_#DBEAFE]"
+                >
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-sm">
+                    <Ticket className="size-[18px] -rotate-12" />
+                  </span>
+                  <span className="text-[11px] font-bold text-blue-600">보유</span>
+                  <span className="text-[18px] font-extrabold tabular-nums leading-none text-slate-800">
+                    {loadFailed ? '—' : loading || !eligibility ? '…' : availableTicketCount}
+                    <span className="ml-0.5 text-[12px] font-bold text-slate-500">장</span>
+                  </span>
+                </div>
+                <BottomSheetClose
+                  aria-label="닫기"
+                  disabled={applying}
+                  className="focus-ring grid size-9 shrink-0 cursor-pointer place-items-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 disabled:opacity-40"
+                >
+                  <ScreenX className="size-5" />
+                </BottomSheetClose>
               </div>
-              <BottomSheetClose
-                aria-label="닫기"
-                className="focus-ring grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100"
-              >
-                <ScreenX className="size-[22px]" />
-              </BottomSheetClose>
             </div>
           </div>
 
-          <div className="flex-1 space-y-3.5 overflow-y-auto overscroll-contain px-5 pt-3.5 pb-5">
+          <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pt-5 pb-5">
+            <div className="flex items-start gap-3">
+              <div className="grid size-14 shrink-0 place-items-center rounded-[18px] bg-blue-50">
+                <DayuExpression expression={applied || action.kind === 'applied' ? 'done' : 'cheer'} className="size-11" alt="" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <BottomSheetTitle className="text-[21px] font-extrabold leading-[1.35] tracking-[-0.03em] text-slate-800">
+                  {applied || action.kind === 'applied' ? '벌금 면제 완료!' : copy.headline}
+                </BottomSheetTitle>
+                <BottomSheetDescription className="mt-2 text-[13px] leading-[1.6] text-slate-500">
+                  {applied || action.kind === 'applied' ? '지각 기록은 유지돼요.' : '티켓 1장으로 벌금 면제 · 지각 기록은 유지'}
+                </BottomSheetDescription>
+              </div>
+            </div>
             {loading && !eligibility ? (
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-slate-500">
                 <Loader2 className="size-6 animate-spin text-blue-600" />
                 <span className="text-[13px]">리데이 정보를 불러오는 중...</span>
               </div>
             ) : loadFailed && !eligibility ? (
-              <Card className="flex flex-col items-center gap-3 py-8 text-center">
+              <div className="flex flex-col items-center gap-3 py-8 text-center">
                 <AlertCircle className="size-7 text-slate-400" />
                 <p className="text-[14px] font-bold text-slate-800">
                   리데이 정보를 불러오지 못했어요.
@@ -199,94 +220,45 @@ export const RedayTicketSheet: React.FC<RedayTicketSheetProps> = ({
                   <RotateCcw className="size-4" />
                   다시 시도하기
                 </Button>
-              </Card>
+              </div>
             ) : (
               <>
-                {/* 대상 날짜 · 면제될 벌금 · 남은 기한 */}
-                <Card className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-1.5 text-[13px] font-bold text-slate-800">
-                      <CalendarDays className="size-3.5 text-slate-500" />
-                      {targetDate ? formatMonthDay(targetDate) : eligibility?.targetDate}
-                    </span>
-                    <Chip tone={penalty.tone === 'exempted' ? 'ok' : penalty.tone === 'confirmed' ? 'bad' : 'warn'}>
-                      {penalty.label}
-                      {penalty.amount > 0 && ` · ${penalty.amount.toLocaleString()}원`}
-                    </Chip>
+                <div className="space-y-2 py-2">
+                  <p className="text-[13px] text-slate-500">
+                    {recordDate ? formatMonthDay(recordDate) : '대상 기록'}
+                    {challengeTitle && <span className="ml-1.5 break-words">· {challengeTitle}</span>}
+                  </p>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="text-[14px] font-medium text-slate-600">{penalty.label}</span>
+                    <span className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] tabular-nums text-slate-800">{penalty.amount.toLocaleString()}<span className="ml-1 text-[15px] font-bold">원</span></span>
                   </div>
-
-                  {challengeTitle && (
-                    <div className="text-[16px] font-bold tracking-[-0.01em] text-slate-800">
-                      {challengeTitle}
-                    </div>
+                  {!applied && action.kind !== 'applied' && (
+                    <p className="flex items-center justify-end gap-1 text-[12.5px] tabular-nums text-slate-500">
+                      <Clock className="size-3.5" />
+                      {showCountdown ? formatRedayRemaining(remainingSeconds) : '기한 종료'}
+                    </p>
                   )}
-
-                  <div className="flex gap-2">
-                    <StatTile
-                      label="보유 리데이 티켓"
-                      value={`${availableTicketCount}장`}
-                    />
-                    <StatTile
-                      label="남은 기한"
-                      value={showCountdown ? formatRedayRemaining(remainingSeconds) : '기한 종료'}
-                    />
-                  </div>
-
-                  <Notice icon={<Clock className="size-4" />}>
-                    리데이를 사용해도 <b className="font-bold text-slate-800">지각 기록은 그대로 남아요</b>.
-                    면제되는 건 이번 벌금뿐이에요.
-                  </Notice>
-
-                  {penalty.tone === 'pending' && (
-                    <Help>
-                      보류 중인 벌금은 아직 입금할 확정 금액에 포함되지 않아요.
-                    </Help>
-                  )}
-                </Card>
+                </div>
 
                 {/* 리데이 완료 또는 불가 사유 안내 */}
-                {applied || action.kind === 'applied' ? (
-                  <Card tone="done" className="flex items-start gap-2.5">
-                    <CheckCircle2 className="mt-px size-5 shrink-0 text-emerald-700" />
-                    <div className="min-w-0">
-                      <div className="text-[14.5px] font-bold text-slate-800">벌금이 면제됐어요</div>
-                      <p className="mt-1 text-[13px] leading-[1.5] text-slate-600">{action.message}</p>
-                    </div>
-                  </Card>
-                ) : action.kind === 'blocked' ? (
-                  <Card className="flex items-start gap-2.5">
-                    <AlertCircle className="mt-px size-5 shrink-0 text-slate-400" />
-                    <div className="min-w-0">
-                      <div className="text-[14.5px] font-bold text-slate-800">
-                        지금은 리데이를 쓸 수 없어요
-                      </div>
-                      <p className="mt-1 text-[13px] leading-[1.5] text-slate-600">{action.message}</p>
-                    </div>
-                  </Card>
+                {applied || action.kind === 'applied' ? null : action.kind === 'blocked' ? (
+                  <p className="flex items-start gap-2 text-[13px] leading-relaxed text-slate-500">
+                    <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                    {action.message}
+                  </p>
                 ) : (
                   <>
                     {grantedTicketId !== null && (
-                      <Card tone="hero" className="flex items-start gap-2.5">
-                        <Ticket className="mt-px size-5 shrink-0 text-blue-600" />
-                        <div className="min-w-0">
-                          <div className="text-[14.5px] font-bold text-slate-800">
-                            리데이 티켓 지급 완료
-                          </div>
-                          <p className="mt-1 text-[13px] leading-[1.5] text-slate-600">
-                            아직 벌금은 면제되지 않았어요. 아래에서 사용해야 면제돼요.
-                          </p>
-                        </div>
-                      </Card>
-                    )}
-
-                    {action.kind === 'watch-ad' && grantedTicketId === null && (
-                      <Help>{copy.earnHint}</Help>
+                      <p role="status" className="flex items-center justify-center gap-1.5 text-[13px] font-bold text-blue-600">
+                        <Ticket className="size-4" />
+                        티켓 +1장 · 아래에서 사용하세요
+                      </p>
                     )}
 
                     {failure && (
-                      <Notice icon={<AlertCircle className="size-4" />}>
+                      <p role="alert" className="text-[13px] text-red-600">
                         {adFailureMessage(failure)}
-                      </Notice>
+                      </p>
                     )}
                   </>
                 )}
@@ -295,7 +267,7 @@ export const RedayTicketSheet: React.FC<RedayTicketSheetProps> = ({
           </div>
 
           {/* 하단 동작 */}
-          <div className="flex shrink-0 flex-col gap-2 border-t border-slate-200 bg-slate-50 px-5 pt-3 pb-[calc(16px+env(safe-area-inset-bottom,0px))]">
+          <div className="flex shrink-0 flex-col gap-2 border-t border-slate-100 bg-white px-5 pt-3 pb-[calc(16px+env(safe-area-inset-bottom,0px))]">
             {applied || action.kind === 'applied' ? (
               <Button size="lg" className="w-full" onClick={onClose}>
                 확인
@@ -307,11 +279,11 @@ export const RedayTicketSheet: React.FC<RedayTicketSheetProps> = ({
             ) : availableTicketCount > 0 || grantedTicketId !== null ? (
               <Button size="lg" className="w-full" onClick={handleUseTicket} disabled={applying}>
                 {applying ? <Loader2 className="size-4 animate-spin" /> : <Ticket className="size-4" />}
-                {REDAY_USE_BUTTON_LABEL}
+                티켓 1장 사용하기
               </Button>
             ) : (
               <Button size="lg" className="w-full" onClick={handleWatchAd} disabled={loading}>
-                {REDAY_EARN_BUTTON_LABEL}
+                광고 보고 티켓 1장 받기
               </Button>
             )}
           </div>
