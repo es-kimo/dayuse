@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Check } from 'lucide-react';
+import { Chip, Help } from './dayu/ui';
 import type { ExperimentState } from '../types/experiment';
 import { useExperimentExposure } from '../hooks/useExperimentExposure';
 import { fallbackState, shouldRecordExposure } from '../utils/experiment';
@@ -44,19 +46,40 @@ export function RedayExperiment({ state, allowed, onChange, onExposure, children
       {!resolved.isReady ? (
         <div role="status" className="min-h-28 rounded-xl bg-slate-100 p-4 text-sm text-slate-500">리데이 설정을 준비하고 있어요…</div>
       ) : treatment ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-          <div className="flex items-center gap-2 text-sm font-bold text-emerald-900">
-            <span>하루 늦어도, 다시 이어갈 기회</span>
-            <span className="rounded-full bg-emerald-700 px-2 py-0.5 text-xs text-white">추천</span>
-          </div>
-          <p className="mt-2 text-sm leading-relaxed text-slate-700">
-            기한 안에 지각 인증을 하고 리데이 티켓을 사용하면 해당 날짜의 벌금을 면제받을 수 있어요. 자동 면제는 아니에요.
-          </p>
-          <label className="mt-4 flex cursor-pointer items-center justify-between gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-slate-800">
-            <span>리데이 허용 <span className="font-normal text-slate-500">· {allowed ? '허용됨' : '미허용'}</span></span>
-            <input type="checkbox" checked={allowed} onChange={(event) => onChange(event.target.checked)} className="h-5 w-5 accent-emerald-700" />
+        <div className="flex flex-col gap-2">
+          <label className={`relative flex cursor-pointer items-center gap-2.5 rounded-[14px] border-[1.5px] px-[13.5px] py-[13.5px] transition-colors ${
+            allowed ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white hover:bg-slate-50'
+          }`}>
+            <input
+              type="checkbox"
+              aria-label="리데이 허용"
+              checked={allowed}
+              onChange={(event) => onChange(event.target.checked)}
+              className="peer sr-only"
+            />
+            <span className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className={`flex flex-wrap items-center gap-1.5 text-[14.5px] font-bold ${allowed ? 'text-blue-600' : 'text-slate-800'}`}>
+                리데이 허용
+                <Chip tone="blue">추천</Chip>
+              </span>
+              <span className="text-[12px] leading-[1.45] text-slate-500">
+                하루 늦어도 다시 이어갈 수 있도록, 지각 인증 후 티켓으로 벌금을 면제받아요.
+              </span>
+            </span>
+            <span
+              aria-hidden="true"
+              className={`grid size-[22px] shrink-0 place-items-center rounded-[7px] border-[1.5px] peer-focus-visible:ring-2 peer-focus-visible:ring-blue-600 peer-focus-visible:ring-offset-2 ${
+                allowed ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
+              }`}
+            >
+              {allowed && <Check className="size-3.5 stroke-3" />}
+            </span>
           </label>
-          <p className="mt-2 text-xs leading-relaxed text-slate-600">허용을 끄면 지각 인증을 해도 약정 벌금이 부과돼요.</p>
+          <Help>
+            {allowed
+              ? '자동 면제가 아니라, 기한 안에 인증하고 티켓을 사용해야 해요.'
+              : '미허용 상태예요. 지각 인증을 해도 약정 벌금이 부과돼요.'}
+          </Help>
         </div>
       ) : children}
     </div>
