@@ -88,7 +88,8 @@ class AdController(
         @CurrentUserId userId: Long,
         @PathVariable sessionToken: String
     ): ResponseEntity<AdImpressionResponse> {
-        val response = adService.recordImpression(userId, sessionToken)
+        val now = com.dayuse.global.util.DateTimeUtils.nowKst().truncatedTo(java.time.temporal.ChronoUnit.SECONDS)
+        val response = adService.recordImpression(userId, sessionToken, now)
         return ResponseEntity.ok(response)
     }
 

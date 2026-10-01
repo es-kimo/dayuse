@@ -221,7 +221,18 @@ class AdSession(
             throw BadRequestException("노출 진행 상태의 광고 세션만 완료 처리할 수 있습니다.")
         }
 
-        val serverElapsedSeconds = Duration.between(firstImpressedAt, now).seconds
+        val rawElapsedSeconds = Duration.between(firstImpressedAt, now).seconds
+        // MySQL DATETIME(초 단위 반올림) 및 네트워크 타이밍으로 인한 최대 1초 경계 오차 보정:
+        // 클라이언트가 정상적으로 최소 시청 시간을 채워 요청했고 서버 경과 시간이 (requiredWatchSeconds - 1)초 이상이면 인정
+        val serverElapsedSeconds = if (
+            clientWatchedSeconds != null &&
+            clientWatchedSeconds >= requiredWatchSeconds &&
+            rawElapsedSeconds >= (requiredWatchSeconds - 1).toLong()
+        ) {
+            maxOf(rawElapsedSeconds, requiredWatchSeconds.toLong())
+        } else {
+            rawElapsedSeconds
+        }
         if (serverElapsedSeconds < requiredWatchSeconds) {
             throw BadRequestException(
                 "최소 시청 시간(${requiredWatchSeconds}초)을 충족하지 못했습니다. (서버 경과 시간: ${serverElapsedSeconds}초)"
