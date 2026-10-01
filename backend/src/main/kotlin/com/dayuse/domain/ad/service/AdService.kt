@@ -5,14 +5,20 @@ import com.dayuse.domain.ad.AdCampaignRepository
 import com.dayuse.domain.ad.AdCampaignStatus
 import com.dayuse.domain.ad.AdCreative
 import com.dayuse.domain.ad.AdCreativeRepository
+import com.dayuse.domain.ad.AdRewardHistory
+import com.dayuse.domain.ad.AdRewardHistoryRepository
 import com.dayuse.domain.ad.AdSession
 import com.dayuse.domain.ad.AdSessionRepository
 import com.dayuse.domain.ad.AdSessionStatus
 import com.dayuse.domain.ad.AdSlotType
 import com.dayuse.domain.ad.AdUnavailableReason
+import com.dayuse.domain.ad.dto.AdAbandonResponse
 import com.dayuse.domain.ad.dto.AdCampaignResponse
 import com.dayuse.domain.ad.dto.AdCreativeResponse
+import com.dayuse.domain.ad.dto.AdImpressionResponse
 import com.dayuse.domain.ad.dto.AdSessionIssueResponse
+import com.dayuse.domain.ad.dto.CompleteAdSessionRequest
+import com.dayuse.domain.ad.dto.CompleteAdSessionResponse
 import com.dayuse.domain.ad.dto.CreateAdCampaignRequest
 import com.dayuse.domain.ad.dto.CreateAdCreativeInput
 import com.dayuse.domain.ad.dto.RequestAdSessionRequest
@@ -23,7 +29,9 @@ import com.dayuse.domain.dailyrecord.DailyRecord
 import com.dayuse.domain.dailyrecord.DailyRecordRepository
 import com.dayuse.domain.dailyrecord.DailyRecordStatus
 import com.dayuse.domain.dailyrecord.PenaltyStatus
+import com.dayuse.domain.redayticket.RedayTicket
 import com.dayuse.domain.redayticket.RedayTicketRepository
+import com.dayuse.domain.redayticket.RedayTicketSource
 import com.dayuse.domain.redayticket.RedayTicketStatus
 import com.dayuse.global.exception.BadRequestException
 import com.dayuse.global.exception.ForbiddenException
@@ -39,6 +47,7 @@ class AdService(
     private val adCampaignRepository: AdCampaignRepository,
     private val adCreativeRepository: AdCreativeRepository,
     private val adSessionRepository: AdSessionRepository,
+    private val adRewardHistoryRepository: AdRewardHistoryRepository,
     private val dailyRecordRepository: DailyRecordRepository,
     private val challengeRepository: ChallengeRepository,
     private val redayTicketRepository: RedayTicketRepository
@@ -329,5 +338,187 @@ class AdService(
         )
 
         return AdSessionIssueResponse.issued(session, selectedCreative)
+    }
+
+    // ── F09 & F10: 광고 노출·시청 중단·완료 검증 및 리데이 티켓 보상 지급 ──
+
+    /**
+     * [F09] 광고 세션 최초 노출(`impression`) 기록
+     * - 세션 소유자 본인만 호출 가능 (타인 요청 시 403 Forbidden)
+     * - 최초 1회만 `impressionAt`을 기록하며, 이미 노출된 세션에 대한 반복 호출은 최초 노출 시각을 유지(멱등)합니다.
+     * - 이미 중단(`ABANDONED`)되었거나 유효기간이 만료된 미노출 세션은 차단합니다.
+     */
+    fun recordImpression(
+        userId: Long,
+        sessionToken: String,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): AdImpressionResponse {
+        val session = adSessionRepository.findBySessionTokenWithLock(sessionToken)
+            ?: throw ResourceNotFoundException("광고 세션을 찾을 수 없습니다.")
+
+        if (session.userId != userId) {
+            throw ForbiddenException("본인의 광고 세션에만 노출을 기록할 수 있습니다.")
+        }
+
+        val firstImpression = session.recordImpression(now)
+        return AdImpressionResponse(
+            sessionId = session.id,
+            sessionToken = session.sessionToken,
+            status = session.status,
+            impressionAt = session.impressionAt ?: now,
+            firstImpression = firstImpression,
+            expiresAt = session.expiresAt,
+            requiredWatchSeconds = session.requiredWatchSeconds
+        )
+    }
+
+    /**
+     * [F09] 광고 시청 중단(`abandon`) 상태 처리
+     * - 세션 소유자 본인만 호출 가능 (타인 요청 시 403 Forbidden)
+     * - 이미 완료(`COMPLETED`)된 세션은 중단할 수 없으며, 이미 중단된 세션은 멱등하게 반환합니다.
+     */
+    fun abandonSession(
+        userId: Long,
+        sessionToken: String,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): AdAbandonResponse {
+        val session = adSessionRepository.findBySessionTokenWithLock(sessionToken)
+            ?: throw ResourceNotFoundException("광고 세션을 찾을 수 없습니다.")
+
+        if (session.userId != userId) {
+            throw ForbiddenException("본인의 광고 세션만 중단 처리할 수 있습니다.")
+        }
+
+        session.abandon(now)
+        return AdAbandonResponse(
+            sessionId = session.id,
+            sessionToken = session.sessionToken,
+            status = session.status,
+            abandonedAt = session.abandonedAt ?: now
+        )
+    }
+
+    /**
+     * [F09 & F10] 광고 시청 완료 판정 및 원자적·멱등적 리데이 티켓 1장 지급
+     *
+     * 1) 비관적 잠금(`findBySessionTokenWithLock`)으로 동시 완료 요청 경합을 직렬화합니다.
+     * 2) 세션 소유자 본인인지 검증합니다 (`403 Forbidden`).
+     * 3) [멱등성 최우선] 이미 보상이 지급된 세션(`COMPLETED`)에 대한 재요청은
+     *    세션 유효기간(`expiresAt`)이 지난 뒤 재시도하더라도 오류 없이 기존 지급 결과를 그대로 반환합니다.
+     * 4) 미완료 세션에 대해 실제 노출 존재, 유효기간 미경과, 최소 시청 시간(서버 경과 시간 및 시청 진행 시간) 충족,
+     *    중단/만료 상태가 아닌지 검증합니다 (`F09`).
+     * 5) 단일 트랜잭션 내에서 `RedayTicket` 1장 발급 + `AdRewardHistory` 1건 생성 + `AdSession.complete`를 원자적으로 처리합니다 (`F10`).
+     * 6) 광고 시청 도중 대상 인증 기록의 리데이 기한이 만료되었더라도 유효한 광고 세션의 보상(리데이 티켓 1장)은 정상 지급하여 계정에 남기고,
+     *    응답에 대상 기록의 리데이 기한 만료 여부를 함께 안내합니다. (티켓 자동 소비 및 벌금 자동 면제 금지)
+     */
+    fun completeSessionAndGrantReward(
+        userId: Long,
+        sessionToken: String,
+        request: CompleteAdSessionRequest = CompleteAdSessionRequest(),
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): CompleteAdSessionResponse {
+        val session = adSessionRepository.findBySessionTokenWithLock(sessionToken)
+            ?: throw ResourceNotFoundException("광고 세션을 찾을 수 없습니다.")
+
+        // IDOR 방어: 타인 세션 완료/보상 요청 차단
+        if (session.userId != userId) {
+            throw ForbiddenException("본인의 광고 세션만 완료 및 보상 요청할 수 있습니다.")
+        }
+
+        // 멱등성 체크: 이미 보상이 지급된 세션이면 유효기간 경과 여부와 무관하게 기존 결과 그대로 반환
+        val existingHistory = adRewardHistoryRepository.findBySessionId(session.id)
+        if (existingHistory != null || (session.status == AdSessionStatus.COMPLETED && session.grantedTicketId != null)) {
+            val ticketId = existingHistory?.ticketId ?: session.grantedTicketId!!
+            val rewardHistoryId = existingHistory?.id ?: 0L
+            return buildCompleteResponse(
+                session = session,
+                newlyGranted = false,
+                rewardHistoryId = rewardHistoryId,
+                grantedTicketId = ticketId,
+                now = now
+            )
+        }
+
+        // F09: 실제 노출 여부, 유효기간, 최소 시청 시간, 중단/만료 상태 검증
+        session.validateCompletableAt(now, request.watchedSeconds)
+
+        // F10: 원자적 보상 지급 (RedayTicket 1장 + AdRewardHistory 1건 + AdSession COMPLETED 전환)
+        val existingTicketByRef = redayTicketRepository.findBySourceAndSourceReference(
+            source = RedayTicketSource.REWARD_AD,
+            sourceReference = session.sessionToken
+        )
+        val grantedTicket = existingTicketByRef ?: redayTicketRepository.save(
+            RedayTicket(
+                userId = userId,
+                status = RedayTicketStatus.AVAILABLE,
+                source = RedayTicketSource.REWARD_AD,
+                sourceReference = session.sessionToken
+            )
+        )
+
+        val rewardHistory = adRewardHistoryRepository.save(
+            AdRewardHistory(
+                sessionId = session.id,
+                sessionToken = session.sessionToken,
+                userId = userId,
+                dailyRecordId = session.dailyRecordId,
+                ticketId = grantedTicket.id,
+                grantedAt = now
+            )
+        )
+
+        session.complete(now = now, ticketId = grantedTicket.id)
+
+        return buildCompleteResponse(
+            session = session,
+            newlyGranted = existingTicketByRef == null,
+            rewardHistoryId = rewardHistory.id,
+            grantedTicketId = grantedTicket.id,
+            now = now
+        )
+    }
+
+    private fun buildCompleteResponse(
+        session: AdSession,
+        newlyGranted: Boolean,
+        rewardHistoryId: Long,
+        grantedTicketId: Long,
+        now: LocalDateTime
+    ): CompleteAdSessionResponse {
+        val availableTicketCount = redayTicketRepository.countByUserIdAndStatus(
+            session.userId,
+            RedayTicketStatus.AVAILABLE
+        )
+
+        val targetRecord = dailyRecordRepository.findById(session.dailyRecordId).orElse(null)
+        val deadlineExpired = targetRecord != null && !now.isBefore(targetRecord.effectiveRedayDeadline())
+        val targetEligible = targetRecord != null &&
+            !deadlineExpired &&
+            !targetRecord.redayApplied &&
+            targetRecord.penaltyStatus == PenaltyStatus.PENDING &&
+            !targetRecord.isLocked() &&
+            targetRecord.status == DailyRecordStatus.COMPLETED &&
+            targetRecord.isLate
+
+        val message = when {
+            deadlineExpired -> "리데이 티켓 1장이 지급되었습니다. 단, 대상 인증 기록의 리데이 가능 기한이 지나 해당 기록에는 사용할 수 없으며 티켓은 계정에 보관됩니다."
+            targetEligible -> "리데이 티켓 1장이 지급되었습니다. '리데이 티켓 1장 사용하기'를 눌러 벌금을 면제받으세요."
+            else -> "리데이 티켓 1장이 지급되었습니다."
+        }
+
+        return CompleteAdSessionResponse(
+            sessionId = session.id,
+            sessionToken = session.sessionToken,
+            status = session.status,
+            newlyGranted = newlyGranted,
+            rewardHistoryId = rewardHistoryId,
+            grantedTicketId = grantedTicketId,
+            availableTicketCount = availableTicketCount,
+            completedAt = session.completedAt ?: now,
+            dailyRecordId = session.dailyRecordId,
+            targetRecordRedayEligible = targetEligible,
+            targetRecordDeadlineExpired = deadlineExpired,
+            message = message
+        )
     }
 }

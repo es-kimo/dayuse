@@ -1,8 +1,12 @@
 package com.dayuse.domain.ad.controller
 
+import com.dayuse.domain.ad.dto.AdAbandonResponse
 import com.dayuse.domain.ad.dto.AdCampaignResponse
 import com.dayuse.domain.ad.dto.AdCreativeResponse
+import com.dayuse.domain.ad.dto.AdImpressionResponse
 import com.dayuse.domain.ad.dto.AdSessionIssueResponse
+import com.dayuse.domain.ad.dto.CompleteAdSessionRequest
+import com.dayuse.domain.ad.dto.CompleteAdSessionResponse
 import com.dayuse.domain.ad.dto.CreateAdCampaignRequest
 import com.dayuse.domain.ad.dto.CreateAdCreativeInput
 import com.dayuse.domain.ad.dto.RequestAdSessionRequest
@@ -74,6 +78,40 @@ class AdController(
         @RequestBody request: RequestAdSessionRequest
     ): ResponseEntity<AdSessionIssueResponse> {
         val response = adService.requestAdSession(userId, request)
+        return ResponseEntity.ok(response)
+    }
+
+    // ── F09 & F10: 광고 노출·중단·완료 및 리데이 티켓 보상 지급 API ────
+
+    @PostMapping("/sessions/{sessionToken}/impression")
+    fun recordImpression(
+        @CurrentUserId userId: Long,
+        @PathVariable sessionToken: String
+    ): ResponseEntity<AdImpressionResponse> {
+        val response = adService.recordImpression(userId, sessionToken)
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/sessions/{sessionToken}/abandon")
+    fun abandonSession(
+        @CurrentUserId userId: Long,
+        @PathVariable sessionToken: String
+    ): ResponseEntity<AdAbandonResponse> {
+        val response = adService.abandonSession(userId, sessionToken)
+        return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/sessions/{sessionToken}/complete")
+    fun completeSession(
+        @CurrentUserId userId: Long,
+        @PathVariable sessionToken: String,
+        @RequestBody(required = false) request: CompleteAdSessionRequest?
+    ): ResponseEntity<CompleteAdSessionResponse> {
+        val response = adService.completeSessionAndGrantReward(
+            userId = userId,
+            sessionToken = sessionToken,
+            request = request ?: CompleteAdSessionRequest()
+        )
         return ResponseEntity.ok(response)
     }
 }
