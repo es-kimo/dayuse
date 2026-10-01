@@ -1,5 +1,6 @@
 package com.dayuse.domain.dailyrecord.service
 
+import com.dayuse.domain.analytics.service.RedayAnalyticsRecorder
 import com.dayuse.domain.challenge.Challenge
 import com.dayuse.domain.challenge.ChallengeParticipant
 import com.dayuse.domain.challenge.ChallengeParticipantRepository
@@ -21,6 +22,8 @@ import com.dayuse.domain.dailyrecord.dto.RedayEligibilityResponse
 import com.dayuse.domain.dailyrecord.dto.StatusSummaryResponse
 import com.dayuse.domain.dailyrecord.dto.UncheckedRecordResponse
 import com.dayuse.domain.group.GroupMemberRepository
+import com.dayuse.domain.redayticket.RedayTicketRepository
+import com.dayuse.domain.redayticket.RedayTicketStatus
 import com.dayuse.domain.user.UserRepository
 import com.dayuse.domain.verification.Verification
 import com.dayuse.domain.verification.VerificationRepository
@@ -46,6 +49,8 @@ class DailyRecordService(
     private val userRepository: UserRepository,
     private val verificationRepository: VerificationRepository,
     private val presignedUrlService: PresignedUrlService,
+    private val redayTicketRepository: RedayTicketRepository,
+    private val redayAnalyticsRecorder: RedayAnalyticsRecorder,
     private val challengePeriodSettlementRepository: com.dayuse.domain.challenge.period.ChallengePeriodSettlementRepository? = null
 ) {
 
@@ -467,6 +472,36 @@ class DailyRecordService(
             now = now
         )
 
+        /*
+         * F13: 지각 인증 완료와 리데이 제시를 분리해 기록한다.
+         * - `late_certification_completed`: 실제로 지각(리데이 구간 이후) 인증이 등록된 경우에만.
+         *   eventId를 verificationId로 고정해 같은 인증이 두 번 집계되지 않는다.
+         * - `recovery_offered`: 그 기록에 리데이 사용 경로를 실제로 제시할 수 있을 때만.
+         *   보유 티켓 수를 함께 실어 "보유 티켓 즉시 사용"과 "광고 시청 후 사용" 경로를 뒤에서 구분할 수 있게 한다.
+         */
+        if (isLate) {
+            redayAnalyticsRecorder.lateCertificationCompleted(
+                userId = userId,
+                verificationId = savedVerification.id,
+                dailyRecordId = record.id,
+                challengeId = record.challengeId,
+                penaltyAmount = record.penaltyAmount,
+                redayEligible = eligibility.eligible
+            )
+        }
+        if (eligibility.eligible) {
+            redayAnalyticsRecorder.recoveryOffered(
+                userId = userId,
+                dailyRecordId = record.id,
+                challengeId = record.challengeId,
+                penaltyAmount = eligibility.penaltyAmount,
+                availableTicketCount = redayTicketRepository.countByUserIdAndStatus(
+                    userId,
+                    RedayTicketStatus.AVAILABLE
+                )
+            )
+        }
+
         return VerificationDetailResponse(
             id = savedVerification.id,
             groupId = savedVerification.groupId,
@@ -604,6 +639,19 @@ class DailyRecordService(
         val effectivePenalty = when (evalPenaltyStatus) {
             PenaltyStatus.EXEMPTED, PenaltyStatus.NONE -> 0
             else -> if (record.penaltyAmount > 0) record.penaltyAmount else participant.penaltyAmount
+        }
+
+        /*
+         * F13: 기한 만료는 서버 판정 시점에만 기록한다.
+         * eventId를 dailyRecordId로 고정했으므로 화면이 몇 번 재조회하더라도 기록 1건당 1회만 적재된다.
+         */
+        if (reason == RedayIneligibleReason.EXPIRED && record.userId == requestUserId) {
+            redayAnalyticsRecorder.recoveryExpired(
+                userId = requestUserId,
+                dailyRecordId = record.id,
+                challengeId = challenge.id,
+                penaltyAmount = if (record.penaltyAmount > 0) record.penaltyAmount else participant.penaltyAmount
+            )
         }
 
         return RedayEligibilityResponse(

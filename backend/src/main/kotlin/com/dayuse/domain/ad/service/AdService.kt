@@ -24,6 +24,7 @@ import com.dayuse.domain.ad.dto.CreateAdCreativeInput
 import com.dayuse.domain.ad.dto.RequestAdSessionRequest
 import com.dayuse.domain.ad.dto.UpdateAdCampaignRequest
 import com.dayuse.domain.ad.dto.UpdateAdCreativeRequest
+import com.dayuse.domain.analytics.service.RedayAnalyticsRecorder
 import com.dayuse.domain.challenge.ChallengeRepository
 import com.dayuse.domain.dailyrecord.DailyRecord
 import com.dayuse.domain.dailyrecord.DailyRecordRepository
@@ -34,6 +35,7 @@ import com.dayuse.domain.redayticket.RedayTicketRepository
 import com.dayuse.domain.redayticket.RedayTicketSource
 import com.dayuse.domain.redayticket.RedayTicketStatus
 import com.dayuse.global.exception.BadRequestException
+import com.dayuse.global.exception.DayuseException
 import com.dayuse.global.exception.ForbiddenException
 import com.dayuse.global.exception.ResourceNotFoundException
 import com.dayuse.global.util.DateTimeUtils
@@ -50,7 +52,8 @@ class AdService(
     private val adRewardHistoryRepository: AdRewardHistoryRepository,
     private val dailyRecordRepository: DailyRecordRepository,
     private val challengeRepository: ChallengeRepository,
-    private val redayTicketRepository: RedayTicketRepository
+    private val redayTicketRepository: RedayTicketRepository,
+    private val redayAnalyticsRecorder: RedayAnalyticsRecorder
 ) {
 
     // ── F07: 자체 광고 캠페인 및 소재 등록·수정·조회 ──────────────────
@@ -182,16 +185,54 @@ class AdService(
         request: RequestAdSessionRequest,
         now: LocalDateTime = DateTimeUtils.nowKst()
     ): AdSessionIssueResponse {
+        // F13: 발급 시도 자체를 기록한다. 아래 검증에서 예외로 끊겨도 시도는 남는다.
+        redayAnalyticsRecorder.adRequested(
+            userId = userId,
+            dailyRecordId = request.dailyRecordId,
+            slotType = request.slotType.name
+        )
+
         // 1. 적격 사용자 및 대상 지각 기록, 보유 티켓 부족, 단일 진행 세션 제한 검증
-        val record = validateEligibilityAndSingleActiveSession(userId, request.dailyRecordId, now)
+        val record = try {
+            validateEligibilityAndSingleActiveSession(userId, request.dailyRecordId, now)
+        } catch (ex: DayuseException) {
+            redayAnalyticsRecorder.recoveryFailed(
+                userId = userId,
+                dailyRecordId = request.dailyRecordId,
+                step = "ad_session_request",
+                reason = ex.javaClass.simpleName
+            )
+            throw ex
+        }
 
         // 2. 캠페인/소재 선택 및 세션 발급 (또는 불가 사유 반환)
-        return selectCampaignAndIssueSession(
+        val response = selectCampaignAndIssueSession(
             userId = userId,
             dailyRecordId = record.id,
             slotType = request.slotType,
             now = now
         )
+
+        // F13: 발급 성공(ad_served)과 광고 없음(ad_unavailable)을 구분해 기록한다.
+        val session = response.session
+        if (session != null) {
+            redayAnalyticsRecorder.adServed(
+                userId = userId,
+                sessionId = session.sessionId,
+                dailyRecordId = session.dailyRecordId,
+                campaignId = session.campaignId,
+                creativeId = session.creativeId,
+                requiredWatchSeconds = session.requiredWatchSeconds
+            )
+        } else {
+            redayAnalyticsRecorder.adUnavailable(
+                userId = userId,
+                dailyRecordId = record.id,
+                reason = response.unavailableReason?.name ?: "UNKNOWN"
+            )
+        }
+
+        return response
     }
 
     /**
@@ -361,6 +402,18 @@ class AdService(
         }
 
         val firstImpression = session.recordImpression(now)
+
+        // F13: 세션당 최초 노출에서만 기록한다. 반복 호출은 최초 노출 시각을 유지하므로 집계도 늘지 않는다.
+        if (firstImpression) {
+            redayAnalyticsRecorder.adImpression(
+                userId = userId,
+                sessionId = session.id,
+                dailyRecordId = session.dailyRecordId,
+                campaignId = session.campaignId,
+                creativeId = session.creativeId
+            )
+        }
+
         return AdImpressionResponse(
             sessionId = session.id,
             sessionToken = session.sessionToken,
@@ -389,11 +442,25 @@ class AdService(
             throw ForbiddenException("본인의 광고 세션만 중단 처리할 수 있습니다.")
         }
 
+        val alreadyAbandoned = session.status == AdSessionStatus.ABANDONED
+        val impressed = session.impressionAt != null
         session.abandon(now)
+
+        // F13: 실제로 중단 상태로 전환된 최초 1회만 기록한다. (멱등 재요청은 집계 제외)
+        if (!alreadyAbandoned) {
+            redayAnalyticsRecorder.adAbandoned(
+                userId = userId,
+                sessionId = session.id,
+                dailyRecordId = session.dailyRecordId,
+                impressed = impressed
+            )
+        }
+
         return AdAbandonResponse(
             sessionId = session.id,
             sessionToken = session.sessionToken,
             status = session.status,
+            firstAbandon = !alreadyAbandoned,
             abandonedAt = session.abandonedAt ?: now
         )
     }
@@ -440,7 +507,17 @@ class AdService(
         }
 
         // F09: 실제 노출 여부, 유효기간, 최소 시청 시간, 중단/만료 상태 검증
-        session.validateCompletableAt(now, request.watchedSeconds)
+        try {
+            session.validateCompletableAt(now, request.watchedSeconds)
+        } catch (ex: DayuseException) {
+            redayAnalyticsRecorder.recoveryFailed(
+                userId = userId,
+                dailyRecordId = session.dailyRecordId,
+                step = "ad_complete",
+                reason = ex.javaClass.simpleName
+            )
+            throw ex
+        }
 
         // F10: 원자적 보상 지급 (RedayTicket 1장 + AdRewardHistory 1건 + AdSession COMPLETED 전환)
         val existingTicketByRef = redayTicketRepository.findBySourceAndSourceReference(
@@ -469,13 +546,29 @@ class AdService(
 
         session.complete(now = now, ticketId = grantedTicket.id)
 
-        return buildCompleteResponse(
+        val response = buildCompleteResponse(
             session = session,
             newlyGranted = existingTicketByRef == null,
             rewardHistoryId = rewardHistory.id,
             grantedTicketId = grantedTicket.id,
             now = now
         )
+
+        // F13: 서버가 실제로 최초 지급한 경우에만 기록한다.
+        // 재시도는 위 멱등 분기에서 newlyGranted=false로 빠져나가므로 여기까지 오지 않는다.
+        if (response.newlyGranted) {
+            redayAnalyticsRecorder.adCompletedWithReward(
+                userId = userId,
+                sessionId = session.id,
+                dailyRecordId = session.dailyRecordId,
+                campaignId = session.campaignId,
+                rewardHistoryId = rewardHistory.id,
+                ticketId = grantedTicket.id,
+                targetRecordDeadlineExpired = response.targetRecordDeadlineExpired
+            )
+        }
+
+        return response
     }
 
     private fun buildCompleteResponse(

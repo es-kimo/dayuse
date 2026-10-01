@@ -1,6 +1,6 @@
 import React from 'react';
 import type { StatusSummaryResponse } from '../types';
-import { AlertCircle, CheckCircle2, ChevronRight, HelpCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronRight, Clock, HelpCircle } from 'lucide-react';
 
 interface GroupStatusSummaryBannerProps {
   summary: StatusSummaryResponse | null;
@@ -29,6 +29,11 @@ export const GroupStatusSummaryBanner: React.FC<GroupStatusSummaryBannerProps> =
 
   const hasUnchecked = summary.uncheckedCount > 0;
   const hasUnpaid = summary.unpaidPenaltyAmount > 0;
+  /*
+   * 보류 중인 벌금은 리데이로 면제될 수 있어 아직 낼 돈이 아니다.
+   * 정산할 금액에 더해 한 줄로 보여주면 면제 가능한 금액까지 청구처럼 읽히므로 따로 표시한다.
+   */
+  const pendingPenaltyAmount = summary.pendingPenaltyAmount ?? 0;
 
   return (
     <div className="bg-card rounded-lg border border-line p-4 shadow-sm">
@@ -91,6 +96,19 @@ export const GroupStatusSummaryBanner: React.FC<GroupStatusSummaryBannerProps> =
           {summary.unpaidPenaltyAmount.toLocaleString()}원
         </span>
       </div>
+
+      {/* 보류 벌금은 확정 금액과 합산하지 않고 따로 안내한다 */}
+      {pendingPenaltyAmount > 0 && (
+        <div className="mt-2 flex items-center justify-between text-caption">
+          <span className="text-ink-muted font-medium flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-ink-muted" />
+            보류 중 (리데이 사용 가능)
+          </span>
+          <span className="font-semibold text-ink-secondary">
+            {pendingPenaltyAmount.toLocaleString()}원
+          </span>
+        </div>
+      )}
     </div>
   );
 };

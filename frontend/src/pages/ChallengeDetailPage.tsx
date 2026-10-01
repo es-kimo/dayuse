@@ -6,6 +6,8 @@ import type { ChallengeDetail, ChallengeCalendarResponse, CalendarDailyRecordIte
 import { MobileLayout } from '../components/MobileLayout';
 import { Screen } from '../components/screens/Screen';
 import { ChallengeCalendarSection } from '../components/ChallengeCalendarSection';
+import { RedayTicketSheet } from '../components/RedayTicketSheet';
+import { shouldShowRedayUi } from '../utils/reday';
 import { ChallengePeriodSection } from '../components/ChallengePeriodSection';
 import { PeriodSettlementModal } from '../components/PeriodSettlementModal';
 import { VerificationModal } from '../components/VerificationModal';
@@ -73,6 +75,7 @@ export const ChallengeDetailPage: React.FC = () => {
     isLate: boolean;
     targetDate?: string;
   } | null>(null);
+  const [redayTarget, setRedayTarget] = useState<{ recordId: number; targetDate: string } | null>(null);
 
   // 폼 입력 상태
   const [joinPenalty, setJoinPenalty] = useState<number>(5000);
@@ -352,6 +355,18 @@ export const ChallengeDetailPage: React.FC = () => {
     fetchCalendar();
     fetchChallenge();
   };
+
+  const handleStartReday = (record: CalendarDailyRecordItem) => {
+    setRedayTarget({ recordId: record.id, targetDate: record.date });
+  };
+
+  /*
+   * 주 N회 챌린지에는 리데이 설정·사용 버튼·일별 카운트다운을 표시하지 않는다.
+   * 챌린지의 리데이 허용 여부는 달력 응답(redayAllowed)이 서버 판정으로 알려준다.
+   */
+  const redayUiEnabled =
+    shouldShowRedayUi(challenge?.periodType, calendarData?.redayAllowed) &&
+    Boolean(calendarData?.redayAllowed);
 
   if (loading) {
     return (
@@ -697,6 +712,8 @@ export const ChallengeDetailPage: React.FC = () => {
         loading={calendarLoading}
         currentUserId={user?.id}
         onStartVerify={handleStartVerify}
+        redayUiEnabled={redayUiEnabled}
+        onStartReday={handleStartReday}
       />
 
       {/* 참여자 카드 목록 */}
@@ -1103,6 +1120,21 @@ export const ChallengeDetailPage: React.FC = () => {
           targetDate={verificationTarget.targetDate}
           onClose={() => setVerificationTarget(null)}
           onSuccess={handleVerificationSuccess}
+        />
+      )}
+
+      {/* 리데이 티켓 안내 및 사용 시트 (기록 상세) */}
+      {redayTarget && challenge && (
+        <RedayTicketSheet
+          open={true}
+          dailyRecordId={redayTarget.recordId}
+          targetDate={redayTarget.targetDate}
+          challengeTitle={challenge.title}
+          onClose={() => setRedayTarget(null)}
+          onApplied={() => {
+            fetchCalendar();
+            fetchChallenge();
+          }}
         />
       )}
 

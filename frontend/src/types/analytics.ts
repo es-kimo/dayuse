@@ -13,7 +13,26 @@ export type EventName =
   | 'challenge_created_reday_allowed'
   | 'challenge_joined'
   | 'share_clicked'
-  | 'experiment_exposed';
+  | 'experiment_exposed'
+  // v0.11 F13: 리데이·광고·티켓. 내부 식별자는 `recovery_*`를 유지한다.
+  // 지급·사용·완료(reward_granted, recovery_ticket_*, recovery_completed)는 서버가 실제 최초 처리
+  // 시점에 적재한다. 클라이언트가 멱등 응답마다 쏘면 지급 1건이 N건으로 집계되기 때문이다.
+  // 화면이 직접 보내는 것은 서버에 대응물이 없는 진입 행동(`recovery_started`)뿐이다.
+  | 'late_certification_completed'
+  | 'recovery_offered'
+  | 'recovery_started'
+  | 'recovery_completed'
+  | 'recovery_expired'
+  | 'recovery_failed'
+  | 'ad_requested'
+  | 'ad_served'
+  | 'ad_impression'
+  | 'ad_completed'
+  | 'ad_abandoned'
+  | 'ad_unavailable'
+  | 'reward_granted'
+  | 'recovery_ticket_granted'
+  | 'recovery_ticket_used';
 
 /**
  * 전환 및 행동 이벤트 `properties`에 연결되는 Experiment Context 구조 (v0.10 F06)

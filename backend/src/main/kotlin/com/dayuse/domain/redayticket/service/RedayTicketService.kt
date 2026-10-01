@@ -1,5 +1,6 @@
 package com.dayuse.domain.redayticket.service
 
+import com.dayuse.domain.analytics.service.RedayAnalyticsRecorder
 import com.dayuse.domain.challenge.ChallengeParticipantRepository
 import com.dayuse.domain.challenge.ChallengeRepository
 import com.dayuse.domain.dailyrecord.DailyRecord
@@ -18,6 +19,7 @@ import com.dayuse.domain.redayticket.dto.RedayTicketBalanceResponse
 import com.dayuse.domain.redayticket.dto.RedayTicketHistoryItem
 import com.dayuse.domain.redayticket.dto.RedayTicketHistoryResponse
 import com.dayuse.global.exception.BadRequestException
+import com.dayuse.global.exception.DayuseException
 import com.dayuse.global.exception.ForbiddenException
 import com.dayuse.global.exception.ResourceNotFoundException
 import com.dayuse.global.util.DateTimeUtils
@@ -31,7 +33,8 @@ class RedayTicketService(
     private val redayTicketRepository: RedayTicketRepository,
     private val dailyRecordRepository: DailyRecordRepository,
     private val challengeRepository: ChallengeRepository,
-    private val challengeParticipantRepository: ChallengeParticipantRepository
+    private val challengeParticipantRepository: ChallengeParticipantRepository,
+    private val redayAnalyticsRecorder: RedayAnalyticsRecorder
 ) {
 
     // ── F05: 티켓 발급 ───────────────────────────────────────────
@@ -50,6 +53,14 @@ class RedayTicketService(
             sourceReference = request.sourceReference
         )
         val saved = redayTicketRepository.save(ticket)
+
+        // F13: 티켓 1장 발급 1건당 1회. eventId가 ticketId로 고정되어 재시도에도 행이 늘지 않는다.
+        redayAnalyticsRecorder.recoveryTicketGranted(
+            userId = userId,
+            ticketId = saved.id,
+            source = saved.source.name
+        )
+
         val availableCount = redayTicketRepository.countByUserIdAndStatus(userId, RedayTicketStatus.AVAILABLE)
         return GrantRedayTicketResponse(
             ticketId = saved.id,
@@ -159,7 +170,18 @@ class RedayTicketService(
         }
 
         // ── 4. 대상 기록 리데이 적격 상태 검증
-        validateRecordForReday(record, now)
+        try {
+            validateRecordForReday(record, now)
+        } catch (ex: DayuseException) {
+            // F13: 실패 사유는 거친 분류값으로만 남긴다. 서버 메시지 원문은 싣지 않는다.
+            redayAnalyticsRecorder.recoveryFailed(
+                userId = userId,
+                dailyRecordId = dailyRecordId,
+                step = "apply_reday",
+                reason = ex.javaClass.simpleName
+            )
+            throw ex
+        }
 
         // ── 5. 티켓 선택 및 비관적 잠금
         val ticket = if (request.ticketId != null) {
@@ -199,6 +221,19 @@ class RedayTicketService(
 
         ticket.use(dailyRecordId, now)
         record.applyReday(now)
+
+        /*
+         * F13: 티켓 소비와 리데이 완료는 서버가 실제로 최초 처리한 이 지점에서만 기록한다.
+         * 위쪽 멱등 반환 경로(이미 적용된 기록·같은 티켓 재시도)는 여기까지 오지 않으므로
+         * 클라이언트가 같은 요청을 몇 번 재전송해도 집계는 1건이다.
+         */
+        redayAnalyticsRecorder.recoveryTicketUsedAndCompleted(
+            userId = userId,
+            ticketId = ticket.id,
+            dailyRecordId = dailyRecordId,
+            challengeId = record.challengeId,
+            exemptedPenaltyAmount = previousPenalty
+        )
 
         return ApplyRedayResponse(
             ticketId = ticket.id,

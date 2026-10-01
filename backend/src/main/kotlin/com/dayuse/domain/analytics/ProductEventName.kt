@@ -13,7 +13,58 @@ enum class ProductEventName(val value: String) {
     SHARE_CLICKED("share_clicked"),
 
     /** 실험 대상 UI가 실제로 사용자에게 노출된 시점의 Exposure 기록. (v0.10 F05) */
-    EXPERIMENT_EXPOSED("experiment_exposed");
+    EXPERIMENT_EXPOSED("experiment_exposed"),
+
+    // ── v0.11 F13: 리데이·광고·티켓 이벤트 ─────────────────────────────
+    // 내부 이벤트 식별자는 사용자 노출 명칭(리데이)과 분리해 `recovery_*`를 유지한다.
+
+    /** 지각 인증(리데이 가능 구간 이후 인증) 등록 완료. */
+    LATE_CERTIFICATION_COMPLETED("late_certification_completed"),
+
+    /** 지각 인증 직후 리데이 사용 경로를 실제로 제시할 수 있는 상태가 됨. */
+    RECOVERY_OFFERED("recovery_offered"),
+
+    /** 사용자가 리데이 안내에서 사용/획득 경로로 진입함. (클라이언트 행동) */
+    RECOVERY_STARTED("recovery_started"),
+
+    /** 티켓이 실제로 소비되어 벌금이 면제됨. 서버 최초 처리 1건당 1회. */
+    RECOVERY_COMPLETED("recovery_completed"),
+
+    /** 리데이 가능 기한이 지나 더 이상 사용할 수 없게 됨. */
+    RECOVERY_EXPIRED("recovery_expired"),
+
+    /** 리데이 처리 실패(불가 사유·통신 실패 등). */
+    RECOVERY_FAILED("recovery_failed"),
+
+    /** 보상형 광고 세션 발급 요청. */
+    AD_REQUESTED("ad_requested"),
+
+    /** 광고 세션 발급 성공(소재 선택 완료). */
+    AD_SERVED("ad_served"),
+
+    /** 광고가 실제로 화면에 노출됨. 세션당 최초 노출 1회. */
+    AD_IMPRESSION("ad_impression"),
+
+    /** 광고 시청 완료 판정. 세션당 1회. */
+    AD_COMPLETED("ad_completed"),
+
+    /** 광고 시청 중단. 세션당 1회. */
+    AD_ABANDONED("ad_abandoned"),
+
+    /** 노출 가능한 광고가 없음(광고 없음·일일 상한 도달). */
+    AD_UNAVAILABLE("ad_unavailable"),
+
+    /**
+     * 광고 보상 지급 확정. `recovery_ticket_granted`와 같은 지급 건을 가리키므로
+     * 두 이벤트를 더해 보상 수량으로 집계하면 2배가 된다.
+     */
+    REWARD_GRANTED("reward_granted"),
+
+    /** 리데이 티켓 발급. `rewardHistoryId`로 `reward_granted`와 동일 지급 건을 참조한다. */
+    RECOVERY_TICKET_GRANTED("recovery_ticket_granted"),
+
+    /** 리데이 티켓 소비. 티켓 1장당 1회. */
+    RECOVERY_TICKET_USED("recovery_ticket_used");
 
     companion object {
         private val SNAKE_CASE_REGEX = Regex("^[a-z][a-z0-9_]*$")
