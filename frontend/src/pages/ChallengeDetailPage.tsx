@@ -1015,6 +1015,25 @@ export const ChallengeDetailPage: React.FC = () => {
                   />
                 </FormField>
               </div>
+              {(!challenge.periodType || challenge.periodType === 'DAILY') &&
+                challenge.executionType !== 'TOGETHER' && (
+                  <label className="flex items-center justify-between gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-800 block">
+                        🎟️ 리데이(벌금 면제권) 허용
+                      </span>
+                      <span className="text-[11px] text-slate-500 block mt-0.5">
+                        지각 인증 후 리데이 티켓을 사용하면 벌금을 면제합니다.
+                      </span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={editRedayAllowed}
+                      onChange={(e) => setEditRedayAllowed(e.target.checked)}
+                      className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                    />
+                  </label>
+                )}
             </>
           ) : (
             <div className="p-2.5 rounded-md bg-sunken border border-line text-caption text-ink-muted">

@@ -147,6 +147,7 @@ export const NewChallengePage: React.FC = () => {
         setEndDate(template.suggestedEndDate);
         if (template.periodType) setPeriodType(template.periodType);
         if (template.targetFrequency) setTargetFrequency(template.targetFrequency);
+        setRedayAllowed(Boolean(template.redayAllowed));
         if (template.executionType) {
           setExecutionType(template.executionType);
           if (template.executionType === 'TOGETHER') {
@@ -291,6 +292,7 @@ export const NewChallengePage: React.FC = () => {
         setSelectedPreset(matched ? matched.days : 'custom');
         if (template.periodType) setPeriodType(template.periodType);
         if (template.targetFrequency) setTargetFrequency(template.targetFrequency);
+        setRedayAllowed(Boolean(template.redayAllowed));
         if (template.executionType) {
           setExecutionType(template.executionType);
           if (template.executionType === 'TOGETHER') {
@@ -316,6 +318,7 @@ export const NewChallengePage: React.FC = () => {
         setSelectedPreset(matched ? matched.days : 'custom');
         if (selected.periodType) setPeriodType(selected.periodType);
         if (selected.targetFrequency) setTargetFrequency(selected.targetFrequency);
+        setRedayAllowed(Boolean(selected.redayAllowed));
         if (selected.executionType) {
           setExecutionType(selected.executionType);
           if (selected.executionType === 'TOGETHER') {
@@ -470,6 +473,8 @@ export const NewChallengePage: React.FC = () => {
         setExecutionType={setExecutionType}
         penaltyAmount={penaltyAmount}
         setPenaltyAmount={setPenaltyAmount}
+        redayAllowed={redayAllowed}
+        setRedayAllowed={setRedayAllowed}
         groupMembers={groupMembers}
         selectedMemberIds={selectedMemberIds}
         onToggleMember={handleToggleMember}

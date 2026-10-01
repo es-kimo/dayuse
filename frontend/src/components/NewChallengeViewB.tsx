@@ -36,6 +36,8 @@ interface NewChallengeViewBProps {
   setExecutionType: (val: ExecutionType) => void;
   penaltyAmount: number;
   setPenaltyAmount: (val: number) => void;
+  redayAllowed: boolean;
+  setRedayAllowed: (val: boolean) => void;
   groupMembers: GroupMember[];
   selectedMemberIds: Set<number>;
   onToggleMember: (userId: number) => void;
@@ -84,6 +86,8 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
   setExecutionType,
   penaltyAmount,
   setPenaltyAmount,
+  redayAllowed,
+  setRedayAllowed,
   groupMembers,
   selectedMemberIds,
   onToggleMember,
@@ -97,6 +101,9 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
   currentUserId,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  const canEnableReday = periodType === 'DAILY' && executionType === 'INDIVIDUAL' && penaltyAmount > 0;
+  const effectiveRedayAllowed = canEnableReday && redayAllowed;
 
   const canProceedStep1 = title.trim().length > 0 && verificationCriteria.trim().length > 0;
   const canProceedStep2 = durationDays > 0;
@@ -301,6 +308,36 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
             )}
 
             <Field
+              label="리데이 (벌금 면제권)"
+              help={
+                canEnableReday
+                  ? '익일 오전 9시~이틀 뒤 오전 9시 전 지각 인증 후 리데이 티켓을 쓰면 해당 날 벌금이 면제돼요'
+                  : '매일 · 각자하기 · 벌금이 있는 챌린지에서만 리데이를 사용할 수 있어요'
+              }
+            >
+              {canEnableReday ? (
+                <div className="flex gap-2">
+                  <ChoiceCard
+                    active={!effectiveRedayAllowed}
+                    onClick={() => setRedayAllowed(false)}
+                    title="미허용"
+                    desc="지각 인증을 해도 약정 벌금이 그대로 부과돼요"
+                  />
+                  <ChoiceCard
+                    active={effectiveRedayAllowed}
+                    onClick={() => setRedayAllowed(true)}
+                    title="허용"
+                    desc="지각 인증 후 리데이 티켓을 쓰면 벌금을 면제받아요"
+                  />
+                </div>
+              ) : (
+                <div className="rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-[13px] text-slate-500">
+                  주 N회 · 함께하기 · 무벌금 챌린지에서는 리데이가 적용되지 않아요.
+                </div>
+              )}
+            </Field>
+
+            <Field
               label={
                 <>
                   함께할 모임원 <span className="font-normal text-slate-500">· 나 포함 {selectedMemberIds.size + 1}명</span>
@@ -350,7 +387,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
               <div className="flex justify-between gap-3">
                 <span className="text-slate-500">기간</span>
                 <b className="text-right font-bold text-slate-800">
-                  {startDate} ~ · {durationDays}일
+                  {startDate} ~ {endDate} · {durationDays}일
                 </b>
               </div>
               <div className="flex justify-between gap-3">
@@ -364,6 +401,12 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
                 <span className="text-slate-500">약정</span>
                 <b className="text-right font-bold text-slate-800">
                   {executionType === 'INDIVIDUAL' ? `하루 ${penaltyAmount.toLocaleString()}원` : '없음'}
+                </b>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">리데이</span>
+                <b className="text-right font-bold text-slate-800">
+                  {effectiveRedayAllowed ? '허용 (벌금 면제권 사용 가능)' : '미허용'}
                 </b>
               </div>
             </div>
