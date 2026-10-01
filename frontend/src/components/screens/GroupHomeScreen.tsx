@@ -14,6 +14,7 @@ export function GroupHomeScreen({
   verifiedUserIds,
   copied,
   uncheckedSlot,
+  redaySlot,
   onBack,
   onInvite,
   onTab,
@@ -30,6 +31,11 @@ export function GroupHomeScreen({
   copied: boolean;
   /** 오늘 할 일과 "오늘 누가 했을까" 사이에 들어가는 자리(미확인 지난 기록 안내) */
   uncheckedSlot?: ReactNode;
+  /**
+   * 리데이 사용 안내가 들어가는 자리. 기한이 걸린 동작이라 오늘 할 일보다 위에 둔다.
+   * 쓸 수 있는 기록이 없으면 호출부가 넘긴 카드가 스스로 아무것도 렌더하지 않는다.
+   */
+  redaySlot?: ReactNode;
   onBack: () => void;
   onInvite: () => void;
   onTab: (tab: "home" | "challenges" | "members") => void;
@@ -62,6 +68,7 @@ export function GroupHomeScreen({
       <main className="flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto px-4 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom,0px))]">
         {tab === "home" && (
           <>
+            {redaySlot}
             <SectionHead
               icon={<CalendarCheck className="size-4 text-blue-600" />}
               title="내 오늘 할 일"

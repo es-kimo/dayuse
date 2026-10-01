@@ -31,7 +31,7 @@ interface ChallengeCalendarSectionProps {
    * 일절 표시하지 않으므로 호출부가 기간 유형까지 판단해 넘긴다.
    */
   redayUiEnabled?: boolean;
-  onStartReday?: (record: CalendarDailyRecordItem) => void;
+  onStartReday?: (recordId: number) => void;
 }
 
 interface CalendarRecordRowProps {
@@ -42,7 +42,7 @@ interface CalendarRecordRowProps {
   onStartVerify?: (record: CalendarDailyRecordItem, isLate: boolean) => void;
   onImageClick?: (src: string, alt?: string) => void;
   redayUiEnabled?: boolean;
-  onStartReday?: (record: CalendarDailyRecordItem) => void;
+  onStartReday?: (recordId: number) => void;
 }
 
 const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
@@ -149,7 +149,7 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
 
         {canUseReday && onStartReday && (
           <button
-            onClick={() => onStartReday(record)}
+            onClick={() => onStartReday(record.id)}
             className="px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition active:scale-[0.98] shadow-xs shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Ticket className="w-3 h-3" />

@@ -6,6 +6,7 @@ import type {
   ApplyRedayPayload,
   ApplyRedayResponse,
   CompleteAdSessionResponse,
+  RedayCandidate,
   RedayTicketBalance,
 } from '../types';
 
@@ -16,6 +17,15 @@ import type {
  * 클라이언트는 어떤 경로에도 userId를 싣지 않는다.
  */
 export const redayApi = {
+  /**
+   * 모임 홈용 "지금 리데이 가능한 내 기록" 목록.
+   * 적격 판정은 서버가 단건 조회와 같은 기준으로 끝내서 내려준다.
+   */
+  getGroupCandidates: async (groupId: number): Promise<RedayCandidate[]> => {
+    const res = await apiClient.get<RedayCandidate[]>(`/groups/${groupId}/reday-candidates`);
+    return res.data;
+  },
+
   getTicketBalance: async (): Promise<RedayTicketBalance> => {
     const res = await apiClient.get<RedayTicketBalance>('/reday-tickets/balance');
     return res.data;

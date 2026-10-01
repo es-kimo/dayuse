@@ -7,7 +7,8 @@ import { ChallengeHeroCard } from './ChallengeHeroCard';
 import { MyRecordCard } from './MyRecordCard';
 import { HowToCertifyCard } from './HowToCertifyCard';
 import { ParticipantsCard } from './ParticipantsCard';
-import { RedayActionCard } from './RedayActionCard';
+import { RedayActionCard, type RedayActionItem } from './RedayActionCard';
+import { pickRedayUsableRecords } from '../utils/reday';
 import { getTodayKstString } from '../utils/date';
 
 import { SubPageHeader } from './layout/SubPageHeader';
@@ -40,7 +41,7 @@ interface ChallengeDetailViewBProps {
   onRestartChallenge?: () => void;
   /** 주 N회·리데이 미허용 챌린지에서는 false. 리데이 안내 카드를 렌더하지 않는다. */
   redayUiEnabled?: boolean;
-  onStartReday?: (record: CalendarDailyRecordItem) => void;
+  onStartReday?: (recordId: number) => void;
 }
 
 export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
@@ -67,6 +68,14 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
 }) => {
   const myParticipant = calendarData?.participants.find((p) => p.userId === currentUserId);
   const myRecords: CalendarDailyRecordItem[] = myParticipant?.records || [];
+
+  // 이 챌린지 안에서 지금 리데이를 쓸 수 있는 내 기록. 챌린지명은 화면 상단에 이미 있어 넣지 않는다.
+  const redayItems: RedayActionItem[] = pickRedayUsableRecords(myRecords).map((record) => ({
+    recordId: record.id,
+    targetDate: record.date,
+    penaltyAmount: record.penaltyAmount,
+    redayDeadline: record.redayDeadline,
+  }));
 
   // 참여 불가 사유 혹은 하단 버튼 상태
   const renderBottomAction = () => {
@@ -260,12 +269,8 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
         />
 
         {/* 2-1. 리데이 사용 안내 (기한 안에 쓸 수 있는 지각 기록이 있을 때만) */}
-        {onStartReday && (
-          <RedayActionCard
-            myRecords={myRecords}
-            redayUiEnabled={redayUiEnabled}
-            onStartReday={onStartReday}
-          />
+        {onStartReday && redayUiEnabled && (
+          <RedayActionCard items={redayItems} onStartReday={(item) => onStartReday(item.recordId)} />
         )}
 
         {/* 3. How to Certify Card */}

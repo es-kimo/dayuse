@@ -18,6 +18,7 @@ import com.dayuse.domain.dailyrecord.dto.ChallengeCalendarResponse
 import com.dayuse.domain.dailyrecord.dto.DailyRecordDetailResponse
 import com.dayuse.domain.dailyrecord.dto.LateVerificationRequest
 import com.dayuse.domain.dailyrecord.dto.ParticipantCalendarItem
+import com.dayuse.domain.dailyrecord.dto.RedayCandidateResponse
 import com.dayuse.domain.dailyrecord.dto.RedayEligibilityResponse
 import com.dayuse.domain.dailyrecord.dto.StatusSummaryResponse
 import com.dayuse.domain.dailyrecord.dto.UncheckedRecordResponse
@@ -524,6 +525,79 @@ class DailyRecordService(
             penaltyStatus = record.penaltyStatus,
             penaltyAmount = record.penaltyAmount
         )
+    }
+
+    /**
+     * 모임 안에서 지금 리데이를 쓸 수 있는 **본인** 기록 목록 (v0.11 F11)
+     *
+     * 모임 홈은 기록별 리데이 상태를 들고 있지 않다. 화면이 챌린지마다 달력을 긁어 조합하면
+     * 판정 규칙이 화면 코드로 새어 나가므로, 서버가 [evaluateRedayEligibilityInternal]로
+     * 단건 판정과 똑같은 기준을 적용해 사용 가능한 것만 돌려준다.
+     *
+     * 기한이 지난 기록은 애초에 조회 대상에서 빼므로, 이 목록 조회가 `recovery_expired`를
+     * 대량으로 적재하지 않는다.
+     */
+    @Transactional(readOnly = true)
+    fun getRedayCandidates(
+        groupId: Long,
+        userId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): List<RedayCandidateResponse> {
+        val isMember = groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)
+        if (!isMember) {
+            throw ForbiddenException("해당 모임의 멤버만 리데이 대상 기록을 조회할 수 있습니다.")
+        }
+
+        val myRecords = dailyRecordRepository.findAllByGroupIdAndUserId(groupId, userId)
+        if (myRecords.isEmpty()) {
+            return emptyList()
+        }
+
+        // 1차 필터: 지각 인증 완료 + 벌금 보류 + 정산 미잠금 + 미적용 + 기한 내
+        val candidates = myRecords.filter { record ->
+            record.status == DailyRecordStatus.COMPLETED &&
+                record.isLate &&
+                !record.redayApplied &&
+                record.penaltyStatus == PenaltyStatus.PENDING &&
+                !record.isLocked() &&
+                now.isBefore(record.effectiveRedayDeadline())
+        }
+        if (candidates.isEmpty()) {
+            return emptyList()
+        }
+
+        val challenges = challengeRepository
+            .findAllById(candidates.map { it.challengeId }.distinct())
+            .associateBy { it.id }
+        val participants = challengeParticipantRepository
+            .findAllById(candidates.map { it.challengeParticipantId }.distinct())
+            .associateBy { it.id }
+
+        // 2차 필터: 단건 조회와 같은 판정기를 통과한 것만 노출한다
+        return candidates.mapNotNull { record ->
+            val challenge = challenges[record.challengeId] ?: return@mapNotNull null
+            val participant = participants[record.challengeParticipantId] ?: return@mapNotNull null
+
+            val eligibility = evaluateRedayEligibilityInternal(
+                record = record,
+                challenge = challenge,
+                participant = participant,
+                requestUserId = userId,
+                now = now
+            )
+            if (!eligibility.eligible) return@mapNotNull null
+
+            RedayCandidateResponse(
+                recordId = record.id,
+                challengeId = challenge.id,
+                challengeTitle = challenge.title,
+                targetDate = record.date,
+                penaltyAmount = eligibility.penaltyAmount,
+                penaltyStatus = eligibility.penaltyStatus,
+                redayDeadline = eligibility.redayDeadline,
+                remainingSeconds = eligibility.remainingSeconds
+            )
+        }.sortedBy { it.redayDeadline }
     }
 
     /**

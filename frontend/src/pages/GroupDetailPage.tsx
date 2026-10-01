@@ -1,5 +1,8 @@
 import { GroupHomeScreen } from '../components/screens/GroupHomeScreen';
 import { UncheckedRecordsCard } from '../components/screens/UncheckedRecordsCard';
+import { RedayActionCard, type RedayActionItem } from '../components/RedayActionCard';
+import { RedayTicketSheet } from '../components/RedayTicketSheet';
+import { redayApi } from '../api/reday';
 import { GroupChallengesViewB } from '../components/GroupChallengesViewB';
 import { GroupMembersViewB } from '../components/GroupMembersViewB';
 import { Lightbox } from '../components/ui/Lightbox';
@@ -20,6 +23,7 @@ import type {
   StatusSummaryResponse,
   UncheckedRecordItem,
   SettlementSummary,
+  RedayCandidate,
 } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import { TodayActionSection } from '../components/TodayActionSection';
@@ -102,6 +106,9 @@ export const GroupDetailPage: React.FC = () => {
   const [uncheckedRecords, setUncheckedRecords] = useState<UncheckedRecordItem[]>([]);
   const [uncheckedLoading, setUncheckedLoading] = useState<boolean>(false);
   const [showUncheckedSheet, setShowUncheckedSheet] = useState<boolean>(false);
+  /** 모임 안에서 지금 리데이를 쓸 수 있는 내 기록. 적격 판정은 서버가 끝내서 내려준다. */
+  const [redayCandidates, setRedayCandidates] = useState<RedayCandidate[]>([]);
+  const [redayTarget, setRedayTarget] = useState<{ recordId: number; targetDate: string; challengeTitle: string } | null>(null);
   const [lateVerificationTarget, setLateVerificationTarget] = useState<{
     recordId: number;
     action: { challengeId: number; challengeTitle: string; verificationCriteria?: string };
@@ -239,6 +246,18 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
+  const fetchRedayCandidates = async () => {
+    if (!groupId) return;
+    try {
+      const data = await redayApi.getGroupCandidates(Number(groupId));
+      setRedayCandidates(data);
+    } catch (err) {
+      // 리데이 안내를 못 불러와도 모임 홈의 다른 영역은 그대로 보여야 한다.
+      console.error('Failed to fetch reday candidates:', err);
+      setRedayCandidates([]);
+    }
+  };
+
   const handleOpenUncheckedSheet = () => {
     setShowUncheckedSheet(true);
     fetchUncheckedRecords();
@@ -256,6 +275,29 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
+  const redayItems: RedayActionItem[] = redayCandidates.map((candidate) => ({
+    recordId: candidate.recordId,
+    targetDate: candidate.targetDate,
+    penaltyAmount: candidate.penaltyAmount,
+    redayDeadline: candidate.redayDeadline,
+    // 모임 홈은 여러 챌린지가 섞이므로 어느 챌린지의 벌금인지 함께 보여준다.
+    challengeTitle: candidate.challengeTitle,
+  }));
+
+  const handleStartReday = (item: RedayActionItem) => {
+    setRedayTarget({
+      recordId: item.recordId,
+      targetDate: item.targetDate,
+      challengeTitle: item.challengeTitle ?? '',
+    });
+  };
+
+  const handleRedayApplied = () => {
+    fetchRedayCandidates();
+    fetchStatusSummary();
+    fetchSettlementSummary();
+  };
+
   const handleStartVerifyLate = (record: UncheckedRecordItem) => {
     setLateVerificationTarget({
       recordId: record.id,
@@ -271,6 +313,7 @@ export const GroupDetailPage: React.FC = () => {
   const handleLateVerificationSuccess = () => {
     setLateVerificationTarget(null);
     fetchStatusSummary();
+    fetchRedayCandidates();
     fetchSettlementSummary();
     fetchUncheckedRecords();
     fetchTodayActions();
@@ -318,6 +361,7 @@ export const GroupDetailPage: React.FC = () => {
     if (groupId) {
       if (activeTab === 'home') {
         fetchStatusSummary();
+        fetchRedayCandidates();
         fetchSettlementSummary();
         fetchTodayActions();
         fetchFeed(0);
@@ -446,6 +490,18 @@ export const GroupDetailPage: React.FC = () => {
         />
       )}
 
+      {/* 리데이 티켓 안내 및 사용 시트 */}
+      {redayTarget && (
+        <RedayTicketSheet
+          open={true}
+          dailyRecordId={redayTarget.recordId}
+          targetDate={redayTarget.targetDate}
+          challengeTitle={redayTarget.challengeTitle}
+          onClose={() => setRedayTarget(null)}
+          onApplied={handleRedayApplied}
+        />
+      )}
+
       {/* 미확인 기록 정리 바텀시트 */}
       <UncheckedRecordsBottomSheet
         isOpen={showUncheckedSheet}
@@ -505,6 +561,7 @@ export const GroupDetailPage: React.FC = () => {
           onTab={handleTabChange}
           onVerify={setActiveVerificationAction}
           onImage={setHomeImage}
+          redaySlot={<RedayActionCard items={redayItems} onStartReday={handleStartReday} />}
           uncheckedSlot={
             <UncheckedRecordsCard
               count={statusSummary?.uncheckedCount ?? 0}
@@ -631,6 +688,9 @@ export const GroupDetailPage: React.FC = () => {
             loading={summaryLoading}
             onOpenUncheckedSheet={handleOpenUncheckedSheet}
           />
+
+          {/* 리데이 사용 안내 (기한 안에 쓸 수 있는 지각 기록이 있을 때만) */}
+          <RedayActionCard items={redayItems} onStartReday={handleStartReday} />
 
           {/* UI(A): 기존 오늘 할 일 */}
           <TodayActionSection

@@ -356,8 +356,11 @@ export const ChallengeDetailPage: React.FC = () => {
     fetchChallenge();
   };
 
-  const handleStartReday = (record: CalendarDailyRecordItem) => {
-    setRedayTarget({ recordId: record.id, targetDate: record.date });
+  const handleStartReday = (recordId: number) => {
+    const target = calendarData?.participants
+      .find((p) => p.userId === user?.id)
+      ?.records.find((r) => r.id === recordId);
+    setRedayTarget({ recordId, targetDate: target?.date ?? '' });
   };
 
   /*

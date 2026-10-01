@@ -347,6 +347,18 @@ export interface ApplyRedayResponse {
   appliedAt: string;
 }
 
+/** GET /groups/{groupId}/reday-candidates 응답 한 건. 본인 기록만 내려온다. */
+export interface RedayCandidate {
+  recordId: number;
+  challengeId: number;
+  challengeTitle: string;
+  targetDate: string;
+  penaltyAmount: number;
+  penaltyStatus: PenaltyStatus;
+  redayDeadline: string;
+  remainingSeconds: number;
+}
+
 export type AdSessionStatus = 'ISSUED' | 'IMPRESSED' | 'COMPLETED' | 'ABANDONED' | 'EXPIRED';
 export type AdUnavailableReason = 'NO_AVAILABLE_AD' | 'DAILY_LIMIT_REACHED';
 

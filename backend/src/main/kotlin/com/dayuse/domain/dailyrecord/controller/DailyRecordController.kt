@@ -3,6 +3,7 @@ package com.dayuse.domain.dailyrecord.controller
 import com.dayuse.domain.dailyrecord.dto.ChallengeCalendarResponse
 import com.dayuse.domain.dailyrecord.dto.DailyRecordDetailResponse
 import com.dayuse.domain.dailyrecord.dto.LateVerificationRequest
+import com.dayuse.domain.dailyrecord.dto.RedayCandidateResponse
 import com.dayuse.domain.dailyrecord.dto.RedayEligibilityResponse
 import com.dayuse.domain.dailyrecord.dto.StatusSummaryResponse
 import com.dayuse.domain.dailyrecord.dto.UncheckedRecordResponse
@@ -37,6 +38,18 @@ class DailyRecordController(
         @CurrentUserId userId: Long
     ): ResponseEntity<List<UncheckedRecordResponse>> {
         val response = dailyRecordService.getUncheckedRecords(groupId, userId)
+        return ResponseEntity.ok(response)
+    }
+
+    /**
+     * 모임 홈에서 쓸 "지금 리데이 가능한 내 기록" 목록. 본인 기록만 돌려준다.
+     */
+    @GetMapping("/api/v1/groups/{groupId}/reday-candidates")
+    fun getRedayCandidates(
+        @PathVariable groupId: Long,
+        @CurrentUserId userId: Long
+    ): ResponseEntity<List<RedayCandidateResponse>> {
+        val response = dailyRecordService.getRedayCandidates(groupId, userId)
         return ResponseEntity.ok(response)
     }
 
