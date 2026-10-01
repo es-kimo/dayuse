@@ -179,5 +179,7 @@ experiment:
     enabled: ${EXPERIMENT_SEED_ENABLED:true}
 
 analytics:
-  # 집계·퍼널 조회를 허용할 userId 목록(쉼표 구분). 운영에서는 반드시 지정한다.
+  # 집계·퍼널 조회 및 실험 관리를 허용할 관리자 userId 목록(쉼표 구분).
+  # prod에서는 allow-all-when-empty=false(Fail-Closed)이므로 미지정 시 전원 403으로 차단된다.
   admin-user-ids: ${ANALYTICS_ADMIN_USER_IDS:}
+  allow-all-when-empty: ${ANALYTICS_ALLOW_ALL_WHEN_EMPTY:false}
