@@ -8,10 +8,10 @@ import {
   resolveChallengeInviteCopy,
 } from '../constants/experiments';
 import { BottomSheet, BottomSheetTitle, BottomSheetDescription, BottomSheetClose } from './ui/BottomSheet';
+import { Button, SheetGrab, TextField } from './dayu/ui';
 import type { JoinPreviewResponse, StartDateType } from '../types';
 import {
   Calendar,
-  Coins,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -73,7 +73,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
           setPenaltyAmount(data.defaultPenaltyAmount || 5000);
         }
       } catch (err: any) {
-        setError(err.response?.data?.message || '참여 정보를 불러오는데 실패했습니다.');
+        setError(err.response?.data?.message || '참여 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
       } finally {
         setLoading(false);
       }
@@ -121,7 +121,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || '참여 신청에 실패했습니다.');
+      setError(err.response?.data?.message || '참여하지 못했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       setSubmitting(false);
     }
@@ -134,46 +134,44 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
       disablePointerDismissal={submitting}
     >
       <>
-        {/* 헤더 */}
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Coins className="w-4 h-4" aria-hidden="true" />
-            </div>
-            <div>
-              <BottomSheetTitle className="text-sm font-bold text-slate-800">
-                {preview?.isStarted ? '챌린지 중도 참여 신청' : '챌린지 참여 신청'}
+        {/* 손잡이 · 헤더 */}
+        <div className="flex shrink-0 flex-col gap-3.5 px-5 pt-2.5">
+          <SheetGrab />
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <BottomSheetTitle className="text-[19px] font-extrabold text-slate-800">
+                {preview?.isStarted ? '지금부터 함께해요' : '챌린지에 함께해요'}
               </BottomSheetTitle>
-              <BottomSheetDescription className="text-[11px] text-slate-400">
+              <BottomSheetDescription className="mt-1 text-[13px] text-slate-500 break-words">
                 {preview?.challengeTitle || '챌린지'}
               </BottomSheetDescription>
             </div>
+            <BottomSheetClose
+              disabled={submitting}
+              aria-label="닫기"
+              className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100 focus-ring disabled:opacity-50"
+            >
+              <X className="size-[22px]" aria-hidden="true" />
+            </BottomSheetClose>
           </div>
-          <BottomSheetClose
-            disabled={submitting}
-            aria-label="닫기"
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg focus-ring disabled:opacity-50"
-          >
-            <X className="w-5 h-5" aria-hidden="true" />
-          </BottomSheetClose>
         </div>
 
         {/* 본문 */}
-        <div className="p-5 overflow-y-auto overscroll-contain space-y-5 flex-1">
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-3.5">
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
               <Loader2 className="w-7 h-7 animate-spin text-blue-600" />
-              <span className="text-xs">참여 옵션을 계산하고 있습니다...</span>
+              <span className="text-[14px]">참여 정보를 불러오고 있어요...</span>
             </div>
           ) : error && !preview ? (
-            <div className="p-4 rounded-xl bg-red-50 text-red-600 text-xs flex items-start gap-2">
+            <div className="p-4 rounded-xl bg-red-50 text-red-600 text-[14px] flex items-start gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           ) : preview ? (
             <>
               {error && (
-                <div className="p-3 rounded-xl bg-red-50 text-red-600 text-xs flex items-center gap-2">
+                <div className="p-3 rounded-xl bg-red-50 text-red-600 text-[14px] flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -184,7 +182,7 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                 Variant 확정 전에는 자리(높이)만 잡고 문구를 렌더하지 않는다. A를 먼저 보여준 뒤 B로 바꾸면
                 B 그룹 사용자가 두 문구를 모두 본 셈이 되어 실험 결과가 오염된다.
               */}
-              <div className="min-h-10 flex items-start gap-2 p-3 rounded-xl bg-slate-50 text-[11px] leading-relaxed text-slate-600">
+              <div className="min-h-10 flex items-start gap-2 p-3 rounded-xl bg-slate-50 text-[13px] leading-relaxed text-slate-600">
                 {inviteCopyExperiment.isReady && (
                   <>
                     <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-400" aria-hidden="true" />
@@ -196,9 +194,9 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
               {/* 시작일 선택 섹션 */}
               {preview.isStarted ? (
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-2">
-                    수행 시작일 선택
-                  </label>
+                  <h3 className="text-[14px] font-bold text-slate-800 block mb-2">
+                    언제부터 시작할까요?
+                  </h3>
                   <div className="space-y-2">
                     {preview.options.map((option) => {
                       const isSelected = selectedType === option.type;
@@ -207,15 +205,17 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                           key={option.type}
                           type="button"
                           onClick={() => setSelectedType(option.type)}
-                          className={`w-full text-left p-3.5 rounded-2xl border transition-[color,background-color,border-color,box-shadow] flex items-center justify-between ${
+                          aria-pressed={isSelected}
+                          disabled={submitting}
+                          className={`w-full cursor-pointer text-left p-3.5 rounded-[14px] border-[1.5px] transition-colors flex items-center justify-between gap-2 focus-ring disabled:opacity-50 ${
                             isSelected
                               ? 'border-blue-600 bg-blue-50/50 shadow-xs'
                               : 'border-slate-200 bg-white hover:border-slate-300'
                           }`}
                         >
-                          <div className="flex items-center gap-3">
+                          <div className="flex min-w-0 items-center gap-3">
                             <div
-                              className={`w-5 h-5 rounded-full border flex items-center justify-center transition ${
+                              className={`w-5 h-5 shrink-0 rounded-full border flex items-center justify-center transition ${
                                 isSelected
                                   ? 'border-blue-600 bg-blue-600 text-white'
                                   : 'border-slate-300 bg-white'
@@ -224,22 +224,22 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                               {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
                             </div>
                             <div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-xs font-bold text-slate-800">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="text-[14px] font-bold text-slate-800">
                                   {option.type === 'TOMORROW' ? '내일부터 참여' : '오늘부터 참여'}
                                 </span>
                                 {option.isRecommended && (
-                                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 flex items-center gap-0.5">
+                                  <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 flex items-center gap-0.5">
                                     <Sparkles className="w-2.5 h-2.5" /> 추천
                                   </span>
                                 )}
                               </div>
-                              <span className="text-[11px] text-slate-500 block mt-0.5">
-                                {option.startDate}부터 시작 (종료일까지 {option.remainingDays}일간)
+                              <span className="text-[13px] text-slate-500 block mt-0.5">
+                                {option.startDate}부터 함께해요
                               </span>
                             </div>
                           </div>
-                          <span className="text-xs font-bold text-blue-600 shrink-0">
+                          <span className="text-[14px] font-bold text-blue-600 shrink-0">
                             {option.remainingDays}일
                           </span>
                         </button>
@@ -253,8 +253,8 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block">수행 기간 (시작 전)</span>
-                    <span className="text-xs font-bold text-slate-700">
+                    <span className="text-[11px] text-slate-400 block">함께할 기간</span>
+                    <span className="text-[14px] font-bold text-slate-700">
                       {preview.challengeStartDate} ~ {preview.challengeEndDate} ({totalDays}일)
                     </span>
                   </div>
@@ -266,19 +266,19 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                 <div className="bg-indigo-50/60 rounded-xl p-3.5 border border-indigo-100 flex items-start gap-2.5">
                   <Sparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="text-xs font-bold text-indigo-900 block">함께하기 챌린지 (벌금 없음)</span>
-                    <span className="text-[11px] text-indigo-700 leading-relaxed block mt-0.5">
-                      이 챌린지는 약정 벌금이 부과되지 않아요. 하루 1명만 인증해도 전원이 함께 달성할 수 있습니다!
+                    <span className="text-[14px] font-bold text-indigo-900 block">벌금 없이 함께해요</span>
+                    <span className="text-[13px] text-indigo-700 leading-relaxed block mt-0.5">
+                      하루에 한 명만 인증해도 모두 함께 달성해요. 벌금은 없어요.
                     </span>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                    1일 미수행 약정 벌금
+                  <label htmlFor="join-penalty-amount" className="text-[14px] font-bold text-slate-800 block mb-1.5">
+                    하루 벌금
                   </label>
-                  <p className="text-[11px] text-slate-400 mb-2.5">
-                    인증에 실패하거나 미제출 시 모임에 적립될 하루 벌금입니다.
+                  <p className="text-[13px] text-slate-500 mb-2.5">
+                    인증에 실패하거나 인증을 하지 않은 날, 모임에 낼 금액이에요.
                   </p>
 
                   <div className="flex gap-2 mb-2">
@@ -287,7 +287,9 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                         key={amt}
                         type="button"
                         onClick={() => setPenaltyAmount(amt)}
-                        className={`flex-1 py-2 text-xs rounded-md border font-semibold transition ${
+                        aria-pressed={penaltyAmount === amt}
+                        disabled={submitting}
+                        className={`flex-1 min-h-11 cursor-pointer text-[14px] rounded-xl border font-bold transition-colors focus-ring disabled:opacity-50 ${
                           penaltyAmount === amt
                             ? 'border-blue-600 bg-blue-50 text-blue-700'
                             : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
@@ -299,46 +301,54 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                   </div>
 
                   <div className="relative">
-                    <input
+                    <TextField
+                      id="join-penalty-amount"
+                      disabled={submitting}
                       type="number"
                       min={0}
                       step={1000}
                       value={penaltyAmount}
                       onChange={(e) => setPenaltyAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full text-sm font-semibold px-3 py-2.5 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 pr-8"
+                      className="pr-10 font-bold tabular-nums"
                     />
-                    <span className="absolute right-3 top-2.5 text-xs text-slate-400">원</span>
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[14px] text-slate-400">원</span>
                   </div>
                 </div>
               )}
 
               {/* 요약 안내 카드 */}
-              <div className="bg-slate-50 rounded-lg p-4 border border-slate-100 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">본인 수행 일수</span>
+              <div className="bg-slate-50 rounded-[14px] p-4 border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between gap-3 text-[13px]">
+                  <span className="text-slate-500">참여할 일수</span>
                   <span className="font-bold text-slate-800">{totalDays}일</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">참여 이전 날짜</span>
-                  <span className="font-medium text-slate-600">미수행·벌금 원천 제외</span>
+                <div className="flex items-center justify-between gap-3 text-[13px]">
+                  <span className="text-slate-500">참여 전 기록</span>
+                  <span className="font-medium text-slate-600">실패로 세지 않아요</span>
                 </div>
-                <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-200/60">
+                <div className="flex items-center justify-between gap-3 text-[13px] pt-2 border-t border-slate-200/60">
                   <span className="text-slate-700 font-semibold">
-                    {isTogether ? '약정 벌금' : '최대 예상 약정 총액'}
+                    {isTogether ? '벌금' : '벌금 최대 금액'}
                   </span>
-                  <span className={`font-extrabold ${isTogether ? 'text-emerald-600' : 'text-blue-600'}`}>
-                    {isTogether ? '없음 (0원)' : `${maxPossiblePenalty.toLocaleString()}원`}
+                  <span className={`text-[17px] tabular-nums font-extrabold ${isTogether ? 'text-emerald-600' : 'text-blue-600'}`}>
+                    {isTogether ? '없어요' : `${maxPossiblePenalty.toLocaleString()}원`}
                   </span>
                 </div>
               </div>
 
+              {!isTogether && (
+                <p className="text-[13px] leading-relaxed text-slate-500">
+                  참여하기 전 날짜에는 벌금이 없어요. 최대 금액은 참여하는 모든 날에 인증하지 않았을 때의 금액이에요.
+                </p>
+              )}
+
               {/* 정책 안내 */}
-              <div className="flex items-start gap-1.5 text-[11px] text-slate-400">
+              <div className="flex items-start gap-1.5 text-[13px] leading-relaxed text-slate-500">
                 <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-400" />
                 <span>
                   {isTogether
-                    ? '본인 수행 시작일(00:00 KST) 전까지만 참여 취소가 가능하며, 시작 이후에는 고정됩니다.'
-                    : '본인 수행 시작일(00:00 KST) 전까지만 참여 취소와 금액 변경이 가능하며, 시작 이후에는 고정됩니다.'}
+                    ? '선택한 시작일의 0시(한국 시간) 전까지 참여를 취소할 수 있어요. 시작한 뒤에는 취소할 수 없어요.'
+                    : '선택한 시작일의 0시(한국 시간) 전까지 참여 취소와 벌금 변경이 가능해요. 시작한 뒤에는 바꿀 수 없어요.'}
                 </span>
               </div>
             </>
@@ -346,30 +356,19 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
         </div>
 
         {/* 푸터 액션 */}
-        <div className="p-4 border-t border-slate-100 bg-white flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition"
-          >
+        <div className="flex shrink-0 gap-2 border-t border-slate-200 bg-white px-5 pt-3 pb-[calc(20px+env(safe-area-inset-bottom,0px))]">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={submitting} className="flex-1">
             취소
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={handleJoin}
             disabled={submitting || loading || !preview}
-            className="flex-2 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-md transition flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
+            className="flex-2"
           >
-            {submitting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                <Coins className="w-4 h-4" />
-                <span>참여 확정하기</span>
-              </>
-            )}
-          </button>
+            {submitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+            {submitting ? '참여하고 있어요...' : '함께 시작하기'}
+          </Button>
         </div>
       </>
     </BottomSheet>
