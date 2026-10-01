@@ -1,9 +1,9 @@
 import React from 'react';
-import { Ticket } from 'lucide-react';
-import { Button, Card, Chip, Help } from './dayu/ui';
+import { ChevronRight, Ticket } from 'lucide-react';
+import { Card } from './dayu/ui';
 import { useRedayDeadlineTimer } from '../hooks/useRedayDeadlineTimer';
 import { formatMonthDay } from '../utils/date';
-import { formatRedayRemaining } from '../utils/reday';
+import { calculateRemainingSeconds, formatRedayRemaining } from '../utils/reday';
 
 /**
  * 리데이 사용 안내 카드 (v0.11 F11)
@@ -35,61 +35,55 @@ const RedayActionRow: React.FC<{
   item: RedayActionItem;
   onStartReday: (item: RedayActionItem) => void;
 }> = ({ item, onStartReday }) => {
-  const remainingSeconds = useRedayDeadlineTimer(item.redayDeadline);
+  const remainingSeconds = calculateRemainingSeconds(item.redayDeadline);
 
   // 열어둔 화면에서 기한이 끝나면 그 줄은 사라진다.
   if (remainingSeconds <= 0) return null;
 
   return (
-    <div className="flex items-center justify-between gap-2.5 rounded-xl bg-white px-3 py-2.5">
+    <button
+      type="button"
+      aria-label={`${item.challengeTitle || '챌린지'} ${formatMonthDay(item.targetDate)}, 보류 벌금 ${item.penaltyAmount.toLocaleString()}원 리데이로 면제받기`}
+      className="flex w-full items-center gap-2.5 rounded-[10px] py-3 text-left transition-colors first:pt-0 last:pb-0 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-600"
+      onClick={() => {
+        if (calculateRemainingSeconds(item.redayDeadline) > 0) onStartReday(item);
+      }}
+    >
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[14.5px] font-bold tracking-[-0.01em] text-slate-800">
-            {formatMonthDay(item.targetDate)}
-          </span>
-          <Chip tone="warn">벌금 보류 · {item.penaltyAmount.toLocaleString()}원</Chip>
-        </div>
-        {item.challengeTitle && (
-          <div className="mt-0.5 truncate text-[13px] text-slate-600">{item.challengeTitle}</div>
-        )}
-        <div className="mt-0.5 text-[12.5px] tabular-nums text-slate-500">
-          {formatRedayRemaining(remainingSeconds)}
-        </div>
+        <p className="truncate text-[14.5px] font-bold text-slate-800">{item.challengeTitle || '챌린지'}</p>
+        <p className="mt-1 text-[12px] tabular-nums text-slate-500">
+          {formatMonthDay(item.targetDate)} · {formatRedayRemaining(remainingSeconds)}
+        </p>
       </div>
-      <Button size="sm" className="shrink-0" onClick={() => onStartReday(item)}>
-        <Ticket className="size-3.5" />
-        리데이
-      </Button>
-    </div>
+      <div className="shrink-0 text-right text-blue-600">
+        <p className="text-[14.5px] font-bold tabular-nums">{item.penaltyAmount.toLocaleString()}원</p>
+        <p className="mt-1 text-[12px] font-medium">면제받기</p>
+      </div>
+      <ChevronRight aria-hidden="true" className="size-4 shrink-0 text-slate-400" />
+    </button>
   );
 };
 
 export const RedayActionCard: React.FC<RedayActionCardProps> = ({ items, onStartReday }) => {
-  if (items.length === 0) return null;
+  // 마지막 기한까지 부모도 갱신해 빈 카드와 만료된 건수가 남지 않게 한다.
+  const lastDeadline = items.map((item) => item.redayDeadline)
+    .filter((value): value is string => !!value).sort().at(-1);
+  useRedayDeadlineTimer(lastDeadline);
+  const availableItems = items.filter((item) => calculateRemainingSeconds(item.redayDeadline) > 0)
+    .sort((a, b) => calculateRemainingSeconds(a.redayDeadline) - calculateRemainingSeconds(b.redayDeadline));
+  if (availableItems.length === 0) return null;
 
   return (
-    <Card tone="hero" className="flex flex-col gap-3">
-      <div className="flex items-start gap-2.5">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white text-blue-600">
-          <Ticket className="size-5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="text-[15px] font-extrabold tracking-[-0.01em] text-slate-800">
-            리데이 티켓으로 벌금 면제하기
-          </div>
-          <p className="mt-0.5 text-[13px] leading-[1.5] text-slate-600">
-            기한 안에 리데이 티켓 1장을 사용하면 이번 벌금이 면제돼요. 지각 기록은 그대로 남아요.
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {items.map((item) => (
+    <Card className="flex flex-col gap-3.5">
+      <h3 className="flex items-center gap-1.5 text-[14px] font-bold text-slate-800">
+        <Ticket aria-hidden="true" className="size-4 text-blue-600" />
+        리데이 <span className="text-blue-600">{availableItems.length}</span>
+      </h3>
+      <div className="flex flex-col divide-y divide-slate-100">
+        {availableItems.map((item) => (
           <RedayActionRow key={item.recordId} item={item} onStartReday={onStartReday} />
         ))}
       </div>
-
-      <Help>보유한 티켓이 없으면 짧은 안내를 보고 1장을 받을 수 있어요.</Help>
     </Card>
   );
 };
