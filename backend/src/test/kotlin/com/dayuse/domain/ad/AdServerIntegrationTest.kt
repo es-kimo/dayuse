@@ -501,22 +501,27 @@ class AdServerIntegrationTest {
         )
         assertTrue(fourth.available)
 
-        // 2) 이제 당일 실제 노출(impressionAt != null)이 3회 발생한 상황을 기록
-        val firstThreeSessions = adSessionRepository.findAll().take(3)
-        firstThreeSessions.forEachIndexed { idx, session ->
-            session.recordImpression(validNow.plusMinutes(idx.toLong() + 1))
-            session.status = AdSessionStatus.ABANDONED // 진행 중이 아니도록 종료 처리
+        // 2) 이제 당일 실제 노출(impressionAt != null)이 3회 발생한 상황을 기록 (유효기간 내 노출 기록 후 중단)
+        adService.recordImpression(ownerUser.id, fourth.session!!.sessionToken, fourthTime.plusSeconds(1))
+        adService.abandonSession(ownerUser.id, fourth.session!!.sessionToken, fourthTime.plusSeconds(3))
+
+        for (j in 1..2) {
+            val t = fourthTime.plusMinutes(j.toLong())
+            val issued = adService.requestAdSession(
+                userId = ownerUser.id,
+                request = RequestAdSessionRequest(dailyRecordId = lateRecord.id),
+                now = t
+            )
+            assertTrue(issued.available)
+            adService.recordImpression(ownerUser.id, issued.session!!.sessionToken, t.plusSeconds(1))
+            adService.abandonSession(ownerUser.id, issued.session!!.sessionToken, t.plusSeconds(3))
         }
-        // 4번째 세션도 중단 처리하여 활성 세션 제한 해제
-        val fourthEntity = adSessionRepository.findById(fourth.session!!.sessionId).orElseThrow()
-        fourthEntity.status = AdSessionStatus.ABANDONED
-        adSessionRepository.flush()
 
         // 이제 당일 실제 노출이 3회(상한 도달)이므로 새 요청 시 DAILY_LIMIT_REACHED 반환
         val limitReachedResponse = adService.requestAdSession(
             userId = ownerUser.id,
             request = RequestAdSessionRequest(dailyRecordId = lateRecord.id),
-            now = fourthTime.plusMinutes(1)
+            now = fourthTime.plusMinutes(5)
         )
         assertFalse(limitReachedResponse.available)
         assertEquals(AdUnavailableReason.DAILY_LIMIT_REACHED, limitReachedResponse.unavailableReason)

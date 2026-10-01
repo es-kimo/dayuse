@@ -1,6 +1,7 @@
 package com.dayuse.domain.ad
 
 import com.dayuse.global.entity.BaseTimeEntity
+import com.dayuse.global.exception.BadRequestException
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -11,6 +12,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -156,15 +158,89 @@ class AdSession(
     }
 
     /**
-     * 실제 화면 노출(impression)을 기록합니다. (최초 1회만 시각 기록)
+     * 실제 화면 노출(impression)을 기록합니다. (v0.11 F09)
+     * - 최초 1회만 노출 시각(`impressionAt`)을 기록하며, 반복 호출 시 최초 노출 시각을 유지합니다.
+     * - 이미 중단(`ABANDONED`)되었거나 유효기간이 만료(`EXPIRED` 또는 `now >= expiresAt`)된 미노출 세션은 차단합니다.
+     *
+     * @return 최초 노출로 기록되었으면 true, 이미 노출 기록이 있었던 반복 호출이면 false
      */
-    fun recordImpression(now: LocalDateTime) {
-        if (impressionAt == null) {
-            this.impressionAt = now
+    fun recordImpression(now: LocalDateTime): Boolean {
+        if (status == AdSessionStatus.ABANDONED) {
+            throw BadRequestException("시청이 중단된 광고 세션에는 노출을 기록할 수 없습니다.")
         }
+        if (impressionAt != null) {
+            // 이미 최초 노출이 기록된 경우(IMPRESSED 또는 COMPLETED) 최초 노출 시각을 그대로 유지 (중복 집계 방지)
+            return false
+        }
+        if (status == AdSessionStatus.EXPIRED || !now.isBefore(expiresAt)) {
+            this.status = AdSessionStatus.EXPIRED
+            throw BadRequestException("유효기간이 만료된 광고 세션입니다.")
+        }
+        this.impressionAt = now
         if (status == AdSessionStatus.ISSUED) {
             this.status = AdSessionStatus.IMPRESSED
         }
+        return true
+    }
+
+    /**
+     * 광고 시청 중단(`ABANDONED`) 상태를 기록합니다. (v0.11 F09)
+     * - 이미 완료(`COMPLETED`)된 세션은 중단할 수 없습니다.
+     * - 이미 중단된 세션에 대한 재요청은 멱등하게 처리합니다.
+     */
+    fun abandon(now: LocalDateTime) {
+        if (status == AdSessionStatus.COMPLETED) {
+            throw BadRequestException("이미 시청 완료된 광고 세션은 중단할 수 없습니다.")
+        }
+        if (status == AdSessionStatus.ABANDONED) {
+            return
+        }
+        this.status = AdSessionStatus.ABANDONED
+        this.abandonedAt = now
+    }
+
+    /**
+     * 신규 시청 완료 처리 가능 여부를 검증합니다. (v0.11 F09)
+     * 1) 시청 중단(`ABANDONED`) 상태 차단
+     * 2) 유효기간(`expiresAt`) 만료 상태 차단
+     * 3) 실제 노출 기록(`impressionAt != null` 및 `status == IMPRESSED`) 존재 검증
+     * 4) 최초 노출 시각(`impressionAt`)으로부터 서버 경과 시간이 `requiredWatchSeconds` 이상인지 검증
+     * 5) 클라이언트가 전달한 시청 진행 시간(`clientWatchedSeconds`)이 있을 경우 `requiredWatchSeconds` 이상인지 검증
+     */
+    fun validateCompletableAt(now: LocalDateTime, clientWatchedSeconds: Int? = null) {
+        if (status == AdSessionStatus.ABANDONED) {
+            throw BadRequestException("시청이 중단된 광고 세션은 완료 처리할 수 없습니다.")
+        }
+        if (status == AdSessionStatus.EXPIRED || !now.isBefore(expiresAt)) {
+            this.status = AdSessionStatus.EXPIRED
+            throw BadRequestException("유효기간이 만료된 광고 세션입니다.")
+        }
+        val firstImpressedAt = this.impressionAt
+            ?: throw BadRequestException("실제 화면에 노출되지 않은 광고 세션은 완료 처리할 수 없습니다.")
+        if (status != AdSessionStatus.IMPRESSED) {
+            throw BadRequestException("노출 진행 상태의 광고 세션만 완료 처리할 수 있습니다.")
+        }
+
+        val serverElapsedSeconds = Duration.between(firstImpressedAt, now).seconds
+        if (serverElapsedSeconds < requiredWatchSeconds) {
+            throw BadRequestException(
+                "최소 시청 시간(${requiredWatchSeconds}초)을 충족하지 못했습니다. (서버 경과 시간: ${serverElapsedSeconds}초)"
+            )
+        }
+        if (clientWatchedSeconds != null && clientWatchedSeconds < requiredWatchSeconds) {
+            throw BadRequestException(
+                "최소 시청 시간(${requiredWatchSeconds}초)을 충족하지 못했습니다. (시청 진행 시간: ${clientWatchedSeconds}초)"
+            )
+        }
+    }
+
+    /**
+     * 광고 세션을 시청 완료 상태로 전환하고 지급된 리데이 티켓 ID를 기록합니다. (v0.11 F10)
+     */
+    fun complete(now: LocalDateTime, ticketId: Long) {
+        this.status = AdSessionStatus.COMPLETED
+        this.completedAt = now
+        this.grantedTicketId = ticketId
     }
 
     companion object {

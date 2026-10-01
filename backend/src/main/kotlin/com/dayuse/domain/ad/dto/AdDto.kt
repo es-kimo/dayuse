@@ -170,3 +170,49 @@ data class AdSessionIssueResponse(
         )
     }
 }
+
+// ── F09 & F10: 광고 노출·완료·중단 및 보상 지급 DTO ───────────────────
+
+data class AdImpressionResponse(
+    val sessionId: Long,
+    val sessionToken: String,
+    val status: AdSessionStatus,
+    val impressionAt: LocalDateTime,
+    val firstImpression: Boolean,
+    val expiresAt: LocalDateTime,
+    val requiredWatchSeconds: Int
+)
+
+data class AdAbandonResponse(
+    val sessionId: Long,
+    val sessionToken: String,
+    val status: AdSessionStatus,
+    val abandonedAt: LocalDateTime
+)
+
+data class CompleteAdSessionRequest(
+    val watchedSeconds: Int? = null
+)
+
+/**
+ * 광고 시청 완료 및 리데이 티켓 보상 지급 응답 (v0.11 F09~F10)
+ * - `newlyGranted`: 이번 요청에서 최초로 지급되었으면 true, 이미 지급된 세션의 재시도(멱등 응답)이면 false
+ * - `targetRecordRedayEligible` / `targetRecordDeadlineExpired`:
+ *   광고 시청 도중 대상 지각 기록의 리데이 기한이 만료되었더라도 리데이 티켓 1장은 정상 지급하여 계정에 남기고,
+ *   해당 기록의 기한 만료 여부를 함께 안내합니다. (자동 소비 금지)
+ */
+data class CompleteAdSessionResponse(
+    val sessionId: Long,
+    val sessionToken: String,
+    val status: AdSessionStatus,
+    val newlyGranted: Boolean,
+    val rewardHistoryId: Long,
+    val grantedTicketId: Long,
+    val availableTicketCount: Long,
+    val completedAt: LocalDateTime,
+    val dailyRecordId: Long,
+    val targetRecordRedayEligible: Boolean,
+    val targetRecordDeadlineExpired: Boolean,
+    val message: String
+)
+
