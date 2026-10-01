@@ -56,6 +56,10 @@ export const NewChallengePage: React.FC = () => {
   const [executionType, setExecutionType] = useState<ExecutionType>('INDIVIDUAL');
   const [targetFrequency, setTargetFrequency] = useState<number>(3);
   const [penaltyAmount, setPenaltyAmount] = useState<number>(5000);
+  const [redayAllowed, setRedayAllowed] = useState<boolean>(false);
+
+  const canEnableReday = periodType === 'DAILY' && executionType === 'INDIVIDUAL' && penaltyAmount > 0;
+  const effectiveRedayAllowed = canEnableReday && redayAllowed;
 
   // 모임원 다중 선택 및 참가자별 벌금 상태
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
@@ -410,6 +414,7 @@ export const NewChallengePage: React.FC = () => {
         periodType,
         targetFrequency: periodType === 'WEEKLY_N' ? targetFrequency : null,
         executionType,
+        redayAllowed: effectiveRedayAllowed,
         myPenaltyAmount: executionType === 'TOGETHER' ? 0 : penaltyAmount,
         participants: participantsList.map((p) => ({
           userId: p.userId,
@@ -911,6 +916,38 @@ export const NewChallengePage: React.FC = () => {
             </p>
           </div>
         )}
+
+        {/* 리데이(벌금 면제권) 허용 여부 설정 (F01) */}
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                <span>🎟️ 리데이(벌금 면제권) 허용</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                    effectiveRedayAllowed
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  {effectiveRedayAllowed ? '허용됨' : '미허용'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                {canEnableReday
+                  ? '지각 인증(익일 09시~이틀 뒤 09시 전) 등록 후 리데이 티켓을 사용하면 해당 날짜 벌금이 면제돼요.'
+                  : '매일(DAILY) · 각자하기 · 벌금이 있는 챌린지에서만 리데이를 허용할 수 있어요.'}
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              checked={effectiveRedayAllowed}
+              disabled={!canEnableReday}
+              onChange={(e) => setRedayAllowed(e.target.checked)}
+              className="w-4 h-4 accent-blue-600 rounded cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            />
+          </div>
+        </div>
 
         {/* 함께할 모임원 선택 리스트 & 참가자별 약정금 설정 */}
         <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">

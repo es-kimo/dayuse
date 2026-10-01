@@ -326,6 +326,14 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                   <span className="text-slate-500">참여 전 기록</span>
                   <span className="font-medium text-slate-600">실패로 세지 않아요</span>
                 </div>
+                {preview.redayRuleDescription && (
+                  <div className="flex items-center justify-between gap-3 text-[13px]">
+                    <span className="text-slate-500">리데이(벌금 면제권)</span>
+                    <span className={`font-bold ${preview.redayAllowed ? 'text-emerald-600' : 'text-slate-500'}`}>
+                      {preview.redayAllowed ? '사용 가능' : '사용 불가'}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between gap-3 text-[13px] pt-2 border-t border-slate-200/60">
                   <span className="text-slate-700 font-semibold">
                     {isTogether ? '벌금' : '벌금 최대 금액'}
@@ -335,6 +343,12 @@ export const MidJoinBottomSheet: React.FC<MidJoinBottomSheetProps> = ({
                   </span>
                 </div>
               </div>
+
+              {preview.redayRuleDescription && (
+                <p className="text-[12px] leading-relaxed text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200/70">
+                  🎟️ {preview.redayRuleDescription}
+                </p>
+              )}
 
               {!isTogether && (
                 <p className="text-[13px] leading-relaxed text-slate-500">

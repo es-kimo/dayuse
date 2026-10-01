@@ -50,5 +50,11 @@ data class VerificationDetailResponse(
     val comment: String?,
     val isLate: Boolean,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val updatedAt: LocalDateTime,
+    val dailyRecordId: Long? = null,
+    val redayAllowed: Boolean = false,
+    val redayEligible: Boolean = false,
+    val redayDeadline: LocalDateTime? = null,
+    val penaltyStatus: com.dayuse.domain.dailyrecord.PenaltyStatus = com.dayuse.domain.dailyrecord.PenaltyStatus.NONE,
+    val penaltyAmount: Int = 0
 )

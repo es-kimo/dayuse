@@ -54,8 +54,13 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
         FROM DailyRecord r
         WHERE r.userId = :userId
           AND r.groupId = :groupId
-          AND r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.FAILED
           AND r.depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID
+          AND r.penaltyAmount > 0
+          AND (
+              r.penaltyStatus = com.dayuse.domain.dailyrecord.PenaltyStatus.CONFIRMED
+              OR (r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.FAILED
+                  AND r.penaltyStatus = com.dayuse.domain.dailyrecord.PenaltyStatus.NONE)
+          )
     """
     )
     fun calculateUnpaidPenaltyAmount(
@@ -68,8 +73,13 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
         SELECT COALESCE(SUM(r.penaltyAmount), 0)
         FROM DailyRecord r
         WHERE r.groupId = :groupId
-          AND r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.FAILED
           AND r.depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID
+          AND r.penaltyAmount > 0
+          AND (
+              r.penaltyStatus = com.dayuse.domain.dailyrecord.PenaltyStatus.CONFIRMED
+              OR (r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.FAILED
+                  AND r.penaltyStatus = com.dayuse.domain.dailyrecord.PenaltyStatus.NONE)
+          )
     """
     )
     fun calculateGroupUnpaidPenaltyAmount(
@@ -78,18 +88,69 @@ interface DailyRecordRepository : JpaRepository<DailyRecord, Long> {
 
     @Query(
         """
+        SELECT COALESCE(SUM(r.penaltyAmount), 0)
+        FROM DailyRecord r
+        WHERE r.userId = :userId
+          AND r.groupId = :groupId
+          AND r.depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID
+          AND r.penaltyStatus = com.dayuse.domain.dailyrecord.PenaltyStatus.PENDING
+          AND r.penaltyAmount > 0
+          AND (r.redayDeadline IS NULL OR r.redayDeadline > :now)
+    """
+    )
+    fun calculatePendingPenaltyAmount(
+        @Param("userId") userId: Long,
+        @Param("groupId") groupId: Long,
+        @Param("now") now: java.time.LocalDateTime
+    ): Int
+
+    @Query(
+        """
+        SELECT COALESCE(SUM(r.penaltyAmount), 0)
+        FROM DailyRecord r
+        WHERE r.groupId = :groupId
+          AND r.depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID
+          AND r.penaltyStatus = com.dayuse.domain.dailyrecord.PenaltyStatus.PENDING
+          AND r.penaltyAmount > 0
+          AND (r.redayDeadline IS NULL OR r.redayDeadline > :now)
+    """
+    )
+    fun calculateGroupPendingPenaltyAmount(
+        @Param("groupId") groupId: Long,
+        @Param("now") now: java.time.LocalDateTime
+    ): Int
+
+    @Query(
+        """
         SELECT r
         FROM DailyRecord r
         WHERE r.userId = :userId
           AND r.groupId = :groupId
-          AND r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.FAILED
           AND r.depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID
           AND r.penaltyAmount > 0
+          AND (
+              r.penaltyStatus = com.dayuse.domain.dailyrecord.PenaltyStatus.CONFIRMED
+              OR (r.status = com.dayuse.domain.dailyrecord.DailyRecordStatus.FAILED
+                  AND r.penaltyStatus = com.dayuse.domain.dailyrecord.PenaltyStatus.NONE)
+          )
         ORDER BY r.date ASC
     """
     )
     fun findUnpaidRecordsForDeposit(
         @Param("userId") userId: Long,
+        @Param("groupId") groupId: Long
+    ): List<DailyRecord>
+
+    @Query(
+        """
+        SELECT r
+        FROM DailyRecord r
+        WHERE r.groupId = :groupId
+          AND r.depositStatus = com.dayuse.domain.dailyrecord.DepositStatus.UNPAID
+          AND r.penaltyStatus = com.dayuse.domain.dailyrecord.PenaltyStatus.PENDING
+    """
+    )
+    fun findPendingRecordsByGroupId(
         @Param("groupId") groupId: Long
     ): List<DailyRecord>
 

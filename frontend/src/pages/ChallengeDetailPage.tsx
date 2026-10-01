@@ -81,6 +81,7 @@ export const ChallengeDetailPage: React.FC = () => {
   const [editCriteria, setEditCriteria] = useState('');
   const [editStartDate, setEditStartDate] = useState('');
   const [editEndDate, setEditEndDate] = useState('');
+  const [editRedayAllowed, setEditRedayAllowed] = useState(false);
 
   // 캘린더 히스토리 상태
   const [calendarData, setCalendarData] = useState<ChallengeCalendarResponse | null>(null);
@@ -246,6 +247,7 @@ export const ChallengeDetailPage: React.FC = () => {
       setEditCriteria(data.verificationCriteria);
       setEditStartDate(data.startDate);
       setEditEndDate(data.endDate);
+      setEditRedayAllowed(Boolean(data.redayAllowed));
     } catch (err: any) {
       console.error('Failed to fetch challenge detail:', err);
       if (err.response?.status === 403) {
@@ -308,6 +310,7 @@ export const ChallengeDetailPage: React.FC = () => {
         verificationCriteria: challenge.status === 'NOT_STARTED' ? editCriteria.trim() : undefined,
         startDate: challenge.status === 'NOT_STARTED' ? editStartDate : undefined,
         endDate: challenge.status === 'NOT_STARTED' ? editEndDate : undefined,
+        redayAllowed: challenge.status === 'NOT_STARTED' ? editRedayAllowed : undefined,
       });
       setShowEditModal(false);
       await fetchChallenge();
@@ -630,6 +633,22 @@ export const ChallengeDetailPage: React.FC = () => {
           <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-md whitespace-pre-wrap border border-slate-100">
             {challenge.verificationCriteria}
           </p>
+          {challenge.redayRuleDescription && (
+            <div className="mt-2.5 pt-2.5 border-t border-slate-100 flex items-start justify-between gap-2 text-[11px]">
+              <span className="text-slate-600 leading-relaxed">
+                🎟️ {challenge.redayRuleDescription}
+              </span>
+              <span
+                className={`shrink-0 px-2 py-0.5 rounded-full font-semibold ${
+                  challenge.redayAllowed
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-slate-100 text-slate-500'
+                }`}
+              >
+                {challenge.redayAllowed ? '리데이 허용' : '리데이 불가'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* 중단 안내 배너 */}

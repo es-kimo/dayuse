@@ -130,5 +130,7 @@ data class SettlementSummaryResponse(
     val confirmedAmount: Int,
     val myUnpaidAmount: Int,
     val accountRegistered: Boolean,
-    val account: GroupAccountResponse?
+    val account: GroupAccountResponse?,
+    val pendingAmount: Int = 0,
+    val myPendingAmount: Int = 0
 )

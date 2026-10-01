@@ -36,11 +36,11 @@ class StreakCalculator(
             if (participantStartDate > challengeStartDate) participantStartDate else challengeStartDate
 
         val todayRecord = recordsByDate[today]
-        val isTodayCompleted = todayRecord?.status == DailyRecordStatus.COMPLETED
+        val isTodayCompleted = todayRecord?.status == DailyRecordStatus.COMPLETED && !todayRecord.isLate
 
         val yesterday = today.minusDays(1)
         val yesterdayRecord = recordsByDate[yesterday]
-        val isYesterdayCompleted = yesterdayRecord?.status == DailyRecordStatus.COMPLETED
+        val isYesterdayCompleted = yesterdayRecord?.status == DailyRecordStatus.COMPLETED && !yesterdayRecord.isLate
         val isYesterdayFailed = yesterdayRecord?.status == DailyRecordStatus.FAILED
 
         // 익일 오전 09:00 이전 심야 유예 기간 여부 (어제 기록이 아직 실패 확정되지 않은 경우에만 유예 적용)
@@ -54,11 +54,11 @@ class StreakCalculator(
         }
 
         var streakDays = 0
-        if (baseDate >= effectiveStartDate && recordsByDate[baseDate]?.status == DailyRecordStatus.COMPLETED) {
+        if (baseDate >= effectiveStartDate && recordsByDate[baseDate]?.status == DailyRecordStatus.COMPLETED && recordsByDate[baseDate]?.isLate == false) {
             var checkDate = baseDate
             while (checkDate >= effectiveStartDate) {
                 val record = recordsByDate[checkDate]
-                if (record?.status == DailyRecordStatus.COMPLETED) {
+                if (record?.status == DailyRecordStatus.COMPLETED && !record.isLate) {
                     streakDays++;
                     checkDate = checkDate.minusDays(1)
                 } else {
@@ -72,7 +72,7 @@ class StreakCalculator(
             val d = today.minusDays((historyDays - 1 - offset).toLong())
             val inPeriod = d >= effectiveStartDate && d <= challengeEndDate
             val record = recordsByDate[d]
-            val completed = record?.status == DailyRecordStatus.COMPLETED
+            val completed = record?.status == DailyRecordStatus.COMPLETED && !record.isLate
             StreakHistoryItem(
                 date = d.toString(),
                 completed = completed,

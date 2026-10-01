@@ -3,6 +3,7 @@ package com.dayuse.domain.dailyrecord.controller
 import com.dayuse.domain.dailyrecord.dto.ChallengeCalendarResponse
 import com.dayuse.domain.dailyrecord.dto.DailyRecordDetailResponse
 import com.dayuse.domain.dailyrecord.dto.LateVerificationRequest
+import com.dayuse.domain.dailyrecord.dto.RedayEligibilityResponse
 import com.dayuse.domain.dailyrecord.dto.StatusSummaryResponse
 import com.dayuse.domain.dailyrecord.dto.UncheckedRecordResponse
 import com.dayuse.domain.dailyrecord.service.DailyRecordService
@@ -64,6 +65,24 @@ class DailyRecordController(
         @Valid @RequestBody request: LateVerificationRequest
     ): ResponseEntity<VerificationDetailResponse> {
         val response = dailyRecordService.verifyLate(recordId, userId, request)
+        return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/api/v1/daily-records/{recordId}/reday-eligibility")
+    fun checkRedayEligibility(
+        @PathVariable recordId: Long,
+        @CurrentUserId userId: Long
+    ): ResponseEntity<RedayEligibilityResponse> {
+        val response = dailyRecordService.checkRedayEligibility(recordId, userId)
+        return ResponseEntity.ok(response)
+    }
+
+    @GetMapping("/api/v1/verifications/{verificationId}/reday-eligibility")
+    fun checkVerificationRedayEligibility(
+        @PathVariable verificationId: Long,
+        @CurrentUserId userId: Long
+    ): ResponseEntity<RedayEligibilityResponse> {
+        val response = dailyRecordService.checkRedayEligibilityByVerificationId(verificationId, userId)
         return ResponseEntity.ok(response)
     }
 }
