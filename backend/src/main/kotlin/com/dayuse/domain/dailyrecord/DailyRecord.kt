@@ -370,6 +370,9 @@ class DailyRecord(
         if (this.redayApplied || this.penaltyStatus == PenaltyStatus.EXEMPTED) {
             throw BadRequestException("리데이가 적용된 인증 기록은 삭제할 수 없습니다.")
         }
+        if (this.penaltyStatus == PenaltyStatus.CONFIRMED && this.penaltyAmount > 0) {
+            throw BadRequestException("이미 벌금이 확정된 기록의 인증은 삭제할 수 없습니다.")
+        }
         this.verificationId = null
         this.isLate = false
         this.penaltyAmount = 0
