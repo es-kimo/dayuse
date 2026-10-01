@@ -10,6 +10,7 @@ import { track } from '../utils/tracker';
 import { useTrackOnce } from '../hooks/useTrackOnce';
 import { toFailureReason, toStatusCode } from '../utils/trackErrorReason';
 import { ShareCardModal } from './ShareCardModal';
+import { RedayTicketSheet } from './RedayTicketSheet';
 import { useClipboardImagePaste, validateImageFile } from '../hooks/useClipboardImagePaste';
 import { Modal, ModalTitle, ModalDescription, ModalClose } from './ui/Modal';
 import {
@@ -24,6 +25,7 @@ import {
   Trash2,
   Smartphone,
   ChevronRight,
+  Ticket,
 } from 'lucide-react';
 import { Dayu } from './dayu/DayuAvatar';
 import { Button } from './dayu/ui';
@@ -87,9 +89,10 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const [open, setOpen] = useState<boolean>(true);
   const requestClose = () => setOpen(false);
   const [createdVerification, setCreatedVerification] = useState<VerificationDetail | null>(null);
-  const [postSuccessAction, setPostSuccessAction] = useState<'success' | 'share' | 'install_guide'>('success');
+  const [postSuccessAction, setPostSuccessAction] = useState<'success' | 'share' | 'install_guide' | 'reday'>('success');
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
   const [showInstallGuideModal, setShowInstallGuideModal] = useState<boolean>(false);
+  const [showRedaySheet, setShowRedaySheet] = useState<boolean>(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -270,6 +273,26 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   };
 
   if (createdVerification) {
+    /*
+     * 지각 인증 직후 리데이 안내.
+     * 서버가 이 기록에 대해 '리데이 사용 가능'이라고 판정한 경우에만 띄운다.
+     * 적격 판정은 챌린지 정책(주 N회·함께하기·리데이 미허용)과 기한·벌금 상태까지 모두 본 결과다.
+     */
+    const redayRecordId = createdVerification.dailyRecordId;
+    const redayAvailable = Boolean(createdVerification.redayEligible && redayRecordId);
+
+    if (showRedaySheet && redayRecordId) {
+      return (
+        <RedayTicketSheet
+          open={true}
+          dailyRecordId={redayRecordId}
+          targetDate={createdVerification.targetDate}
+          challengeTitle={action.challengeTitle}
+          onClose={onSuccess}
+        />
+      );
+    }
+
     if (showShareModal) {
       return (
         <ShareCardModal
@@ -308,6 +331,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               setShowShareModal(true);
             } else if (postSuccessAction === 'install_guide') {
               setShowInstallGuideModal(true);
+            } else if (postSuccessAction === 'reday') {
+              setShowRedaySheet(true);
             } else {
               onSuccess();
             }
@@ -328,16 +353,34 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         <div className="flex flex-col items-center gap-3 text-center">
           <Dayu face="cheer" size={72} />
           <div>
-            <ModalTitle className="text-[21px] font-extrabold tracking-[-0.02em] text-slate-800">인증을 완료했어요!</ModalTitle>
+            <ModalTitle className="text-[21px] font-extrabold tracking-[-0.02em] text-slate-800">
+              {redayAvailable ? '늦었지만 해냈네요!' : '인증을 완료했어요!'}
+            </ModalTitle>
             <ModalDescription className="mt-2 text-[14px] leading-relaxed text-slate-500">
-              오늘의 도전이 기록됐어요. 수고했어요!
+              {redayAvailable
+                ? '리데이 티켓을 사용하면 이번 벌금이 면제돼요. 지각 기록은 그대로 남아요.'
+                : '오늘의 도전이 기록됐어요. 수고했어요!'}
             </ModalDescription>
           </div>
           <p className="max-w-full break-words text-[14px] font-semibold text-slate-700">{action.challengeTitle}</p>
         </div>
 
         <div className="flex flex-col gap-2">
+          {redayAvailable && (
+            <Button
+              size="lg"
+              className="w-full shrink-0"
+              onClick={() => {
+                setPostSuccessAction('reday');
+                setOpen(false);
+              }}
+            >
+              <Ticket className="size-4 shrink-0" />
+              리데이 티켓으로 벌금 면제하기
+            </Button>
+          )}
           <Button
+            variant={redayAvailable ? 'line' : 'primary'}
             size="lg"
             className="w-full shrink-0"
             onClick={() => {

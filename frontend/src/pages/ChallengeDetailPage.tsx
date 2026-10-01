@@ -1,3 +1,4 @@
+import { calculateStreak } from '../utils/streak';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
@@ -6,6 +7,8 @@ import type { ChallengeDetail, ChallengeCalendarResponse, CalendarDailyRecordIte
 import { MobileLayout } from '../components/MobileLayout';
 import { Screen } from '../components/screens/Screen';
 import { ChallengeCalendarSection } from '../components/ChallengeCalendarSection';
+import { RedayTicketSheet } from '../components/RedayTicketSheet';
+import { shouldShowRedayUi } from '../utils/reday';
 import { ChallengePeriodSection } from '../components/ChallengePeriodSection';
 import { PeriodSettlementModal } from '../components/PeriodSettlementModal';
 import { VerificationModal } from '../components/VerificationModal';
@@ -73,6 +76,7 @@ export const ChallengeDetailPage: React.FC = () => {
     isLate: boolean;
     targetDate?: string;
   } | null>(null);
+  const [redayTarget, setRedayTarget] = useState<{ recordId: number; targetDate: string } | null>(null);
 
   // 폼 입력 상태
   const [joinPenalty, setJoinPenalty] = useState<number>(5000);
@@ -138,35 +142,11 @@ export const ChallengeDetailPage: React.FC = () => {
 
   const isTodayCompleted = useMemo(() => {
     const todayRec = myRecords.find((r) => r.date === todayStr);
-    return todayRec?.status === 'COMPLETED';
+    return todayRec?.status === 'COMPLETED' && !todayRec.isLate;
   }, [myRecords, todayStr]);
 
-  // 연속 달성일 (streak)
-  const streakCount = useMemo(() => {
-    if (!myRecords || myRecords.length === 0) return 0;
-    const sorted = [...myRecords].sort((a, b) => b.date.localeCompare(a.date));
-    const todayRec = sorted.find((r) => r.date === todayStr);
-    let startDateIndex = 0;
-    if (todayRec && todayRec.status === 'COMPLETED') {
-      startDateIndex = sorted.indexOf(todayRec);
-    } else {
-      const yestIndex = sorted.findIndex((r) => r.date < todayStr);
-      if (yestIndex >= 0 && sorted[yestIndex].status === 'COMPLETED') {
-        startDateIndex = yestIndex;
-      } else {
-        return 0;
-      }
-    }
-    let count = 0;
-    for (let i = startDateIndex; i < sorted.length; i++) {
-      if (sorted[i].status === 'COMPLETED') {
-        count++;
-      } else if (sorted[i].status !== 'NOT_PARTICIPATED') {
-        break;
-      }
-    }
-    return count;
-  }, [myRecords, todayStr]);
+  // 지각 인증·리데이 면제는 정상 연속 인증에 포함하지 않는다.
+  const streakCount = calculateStreak(myRecords, todayStr);
 
   // Calendar dates for the active month (UI B grid)
   const calendarMonthDays = useMemo(() => {
@@ -353,6 +333,21 @@ export const ChallengeDetailPage: React.FC = () => {
     fetchChallenge();
   };
 
+  const handleStartReday = (recordId: number) => {
+    const target = calendarData?.participants
+      .find((p) => p.userId === user?.id)
+      ?.records.find((r) => r.id === recordId);
+    setRedayTarget({ recordId, targetDate: target?.date ?? '' });
+  };
+
+  /*
+   * 주 N회 챌린지에는 리데이 설정·사용 버튼·일별 카운트다운을 표시하지 않는다.
+   * 챌린지의 리데이 허용 여부는 달력 응답(redayAllowed)이 서버 판정으로 알려준다.
+   */
+  const redayUiEnabled =
+    shouldShowRedayUi(challenge?.periodType, calendarData?.redayAllowed) &&
+    Boolean(calendarData?.redayAllowed);
+
   if (loading) {
     return (
       <MobileLayout>
@@ -460,6 +455,8 @@ export const ChallengeDetailPage: React.FC = () => {
           onEditChallenge={challenge.isCreator ? () => { setShowEditModal(true); setActionError(null); } : undefined}
           onOpenMidJoin={() => setShowJoinModal(true)}
           onRestartChallenge={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
+          redayUiEnabled={redayUiEnabled}
+          onStartReday={handleStartReday}
         />
       ) : (
         <>
@@ -697,6 +694,8 @@ export const ChallengeDetailPage: React.FC = () => {
         loading={calendarLoading}
         currentUserId={user?.id}
         onStartVerify={handleStartVerify}
+        redayUiEnabled={redayUiEnabled}
+        onStartReday={handleStartReday}
       />
 
       {/* 참여자 카드 목록 */}
@@ -1103,6 +1102,21 @@ export const ChallengeDetailPage: React.FC = () => {
           targetDate={verificationTarget.targetDate}
           onClose={() => setVerificationTarget(null)}
           onSuccess={handleVerificationSuccess}
+        />
+      )}
+
+      {/* 리데이 티켓 안내 및 사용 시트 (기록 상세) */}
+      {redayTarget && challenge && (
+        <RedayTicketSheet
+          open={true}
+          dailyRecordId={redayTarget.recordId}
+          targetDate={redayTarget.targetDate}
+          challengeTitle={challenge.title}
+          onClose={() => setRedayTarget(null)}
+          onApplied={() => {
+            fetchCalendar();
+            fetchChallenge();
+          }}
         />
       )}
 

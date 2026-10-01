@@ -28,12 +28,31 @@ object DayuseExperimentDefinitions {
     const val CHALLENGE_REDAY_UI_V1 = "challenge-reday-ui-v1"
 
     /**
+     * 지각 인증 후 리데이 안내 화면의 **설명 문구와 안내 구성**만 비교한다. (v0.11 F13)
+     *
+     * 실험 변인은 문구·구성으로 한정한다. 리데이 허용 여부·기한·벌금 금액·보상 티켓 수량은
+     * 돈과 벌칙이 걸린 운영 정책이므로 Variant로 갈라지면 같은 조건에서 사용자별로 다른 금전적 결과가 나오고,
+     * 배정 실패 시 어떤 값으로 Fallback해도 사용자에게 손해나 이득이 생긴다. 그래서 정책 값은 실험에서 제외한다.
+     *
+     * 전환 이벤트는 `recovery_started`(리데이 사용/획득 경로 진입)다.
+     * 완료 이벤트(`recovery_completed`)는 서버가 적재하므로 Experiment Context가 실리지 않는다.
+     */
+    const val REDAY_GUIDE_COPY_V1 = "reday-guide-copy-v1"
+
+    /**
      * 기동 시 멱등하게 보장할 정의 목록.
      *
      * 상태는 항상 `DRAFT`로 만들어진다. 노출 시작은 운영자가 activate API로 명시적으로 결정한다.
      * 이미 존재하는 실험은 상태·rollout을 포함해 아무것도 덮어쓰지 않는다.
      */
     val SEEDS: List<ExperimentCreateRequest> = listOf(
+        ExperimentCreateRequest(
+            experimentKey = REDAY_GUIDE_COPY_V1,
+            name = "리데이 안내 문구·구성 실험",
+            rolloutPercentage = 100,
+            variantARatio = 50,
+            variantBRatio = 50
+        ),
         ExperimentCreateRequest(
             experimentKey = CHALLENGE_REDAY_UI_V1,
             name = "챌린지 생성 리데이 허용 UI 실험",

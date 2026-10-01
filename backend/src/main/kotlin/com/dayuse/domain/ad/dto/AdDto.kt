@@ -183,10 +183,15 @@ data class AdImpressionResponse(
     val requiredWatchSeconds: Int
 )
 
+/**
+ * 광고 시청 중단 응답 (v0.11 F09)
+ * - `firstAbandon`: 이번 요청에서 실제로 중단 상태로 전환되었으면 true, 이미 중단된 세션의 멱등 재요청이면 false
+ */
 data class AdAbandonResponse(
     val sessionId: Long,
     val sessionToken: String,
     val status: AdSessionStatus,
+    val firstAbandon: Boolean,
     val abandonedAt: LocalDateTime
 )
 

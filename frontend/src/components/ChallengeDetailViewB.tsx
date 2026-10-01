@@ -37,6 +37,9 @@ interface ChallengeDetailViewBProps {
   onEditChallenge?: () => void;
   onOpenMidJoin?: () => void;
   onRestartChallenge?: () => void;
+  /** 주 N회·리데이 미허용 챌린지에서는 false. 달력의 리데이 사용 경로를 표시하지 않는다. */
+  redayUiEnabled?: boolean;
+  onStartReday?: (recordId: number) => void;
 }
 
 export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
@@ -58,6 +61,8 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
   onEditChallenge,
   onOpenMidJoin,
   onRestartChallenge,
+  redayUiEnabled = false,
+  onStartReday,
 }) => {
   const myParticipant = calendarData?.participants.find((p) => p.userId === currentUserId);
   const myRecords: CalendarDailyRecordItem[] = myParticipant?.records || [];
@@ -246,6 +251,9 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
 
         {/* 2. My Record Card (StreakCalendar) */}
         <MyRecordCard
+          key={challenge.id}
+          redayUiEnabled={redayUiEnabled}
+          onStartReday={onStartReday}
           challenge={challenge}
           myRecords={myRecords}
           streakCount={streakCount}

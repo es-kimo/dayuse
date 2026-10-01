@@ -13,16 +13,25 @@ import {
   Loader2,
   User as UserIcon,
   Camera,
+  Ticket,
 } from 'lucide-react';
 import { getTodayKstString } from '../utils/date';
 import { useGracePeriodTimer } from '../hooks/useGracePeriodTimer';
 import { Lightbox } from './ui/Lightbox';
+import { formatRedayRemaining } from '../utils/reday';
+import { useRedayDeadlineTimer } from '../hooks/useRedayDeadlineTimer';
 
 interface ChallengeCalendarSectionProps {
   calendarData: ChallengeCalendarResponse | null;
   loading: boolean;
   currentUserId?: number;
   onStartVerify?: (record: CalendarDailyRecordItem, isLate: boolean) => void;
+  /**
+   * 리데이 UI를 이 챌린지에서 보여도 되는지. 주 N회 챌린지에는 설정·사용 버튼·카운트다운을
+   * 일절 표시하지 않으므로 호출부가 기간 유형까지 판단해 넘긴다.
+   */
+  redayUiEnabled?: boolean;
+  onStartReday?: (recordId: number) => void;
 }
 
 interface CalendarRecordRowProps {
@@ -32,6 +41,8 @@ interface CalendarRecordRowProps {
   renderStatusBadge: (record: CalendarDailyRecordItem) => React.ReactNode;
   onStartVerify?: (record: CalendarDailyRecordItem, isLate: boolean) => void;
   onImageClick?: (src: string, alt?: string) => void;
+  redayUiEnabled?: boolean;
+  onStartReday?: (recordId: number) => void;
 }
 
 const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
@@ -41,6 +52,8 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
   renderStatusBadge,
   onStartVerify,
   onImageClick,
+  redayUiEnabled = false,
+  onStartReday,
 }) => {
   const isPast = record.date < todayStr;
   const isLocked = record.depositStatus !== 'UNPAID';
@@ -62,6 +75,22 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
     record.status === 'UNCHECKED';
   const canVerify = canVerifyToday || canVerifyLate;
   const isLate = canVerifyLate;
+
+  const redayRemainingSeconds = useRedayDeadlineTimer(record.redayDeadline);
+
+  /*
+   * 리데이 경로 노출 조건. 최종 사용 가능 여부는 서버가 다시 판정하므로 여기서는
+   * 버튼을 띄울지만 정한다(지각 인증 완료 + 벌금 보류 + 정산 미잠금 + 미적용 + 기한 내).
+   */
+  const canUseReday =
+    redayUiEnabled &&
+    isMyRecord &&
+    !isLocked &&
+    record.status === 'COMPLETED' &&
+    record.isLate &&
+    !record.redayApplied &&
+    record.penaltyStatus === 'PENDING' &&
+    redayRemainingSeconds > 0;
 
   // 늦은 인증 버튼 텍스트
   const buttonLabel = isLate
@@ -111,6 +140,26 @@ const CalendarRecordRow: React.FC<CalendarRecordRowProps> = ({
           renderStatusBadge(record)
         )}
 
+        {redayUiEnabled && record.redayApplied && (
+          <span className="inline-flex items-center gap-0.5 shrink-0 rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+            <Ticket className="w-2.5 h-2.5" aria-hidden="true" />
+            <span>리데이 · 벌금 면제</span>
+          </span>
+        )}
+
+        {canUseReday && onStartReday && (
+          <button
+            onClick={() => onStartReday(record.id)}
+            className="px-2 py-1 rounded-md text-[11px] font-semibold flex items-center gap-1 transition active:scale-[0.98] shadow-xs shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Ticket className="w-3 h-3" />
+            <span>
+              리데이
+              {redayRemainingSeconds > 0 && ` · ${formatRedayRemaining(redayRemainingSeconds)}`}
+            </span>
+          </button>
+        )}
+
         {canVerify && onStartVerify && (
           <button
             onClick={() => onStartVerify(record, isLate)}
@@ -136,6 +185,8 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
   loading,
   currentUserId,
   onStartVerify,
+  redayUiEnabled = false,
+  onStartReday,
 }) => {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
@@ -299,6 +350,8 @@ export const ChallengeCalendarSection: React.FC<ChallengeCalendarSectionProps> =
               renderStatusBadge={renderStatusBadge}
               onStartVerify={onStartVerify}
               onImageClick={(src, alt) => setLightboxImage({ src, alt })}
+              redayUiEnabled={redayUiEnabled}
+              onStartReday={onStartReday}
             />
           );
         })}

@@ -88,6 +88,23 @@ data class ChallengeCalendarResponse(
     val participants: List<ParticipantCalendarItem>
 )
 
+/**
+ * 모임 홈에서 "지금 리데이를 쓸 수 있는 내 기록" 한 건 (v0.11 F11)
+ *
+ * 본인 기록만 담는다. 보유 티켓 잔액과 광고 시청 이력은 모임원에게 공개하지 않으므로
+ * 이 응답에도 넣지 않는다. 화면은 잔액이 필요하면 본인 전용 잔액 API를 따로 조회한다.
+ */
+data class RedayCandidateResponse(
+    val recordId: Long,
+    val challengeId: Long,
+    val challengeTitle: String,
+    val targetDate: LocalDate,
+    val penaltyAmount: Int,
+    val penaltyStatus: PenaltyStatus,
+    val redayDeadline: LocalDateTime,
+    val remainingSeconds: Long
+)
+
 data class RedayEligibilityResponse(
     val recordId: Long,
     val verificationId: Long?,

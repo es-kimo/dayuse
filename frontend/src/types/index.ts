@@ -297,19 +297,137 @@ export type RedayIneligibleReason =
   | 'ALREADY_CONFIRMED'
   | 'EXPIRED';
 
+export type VerificationTimePhase =
+  | 'NORMAL'
+  | 'LATE'
+  | 'OVERDUE_REDAY_ELIGIBLE'
+  | 'OVERDUE_EXPIRED';
+
+/** GET /daily-records/{id}/reday-eligibility 응답. 필드 이름은 백엔드 RedayEligibilityResponse와 1:1이다. */
 export interface RedayEligibilityResponse {
-  dailyRecordId: number;
+  recordId: number;
   verificationId?: number | null;
   challengeId: number;
   targetDate: string;
   eligible: boolean;
   reason: RedayIneligibleReason;
-  message: string;
-  penaltyStatus: PenaltyStatus;
+  reasonMessage: string;
+  redayAllowed: boolean;
+  timePhase: VerificationTimePhase;
   penaltyAmount: number;
+  penaltyStatus: PenaltyStatus;
   redayApplied: boolean;
-  redayAppliedAt?: string | null;
-  redayDeadline?: string | null;
+  redayDeadline: string;
+  /** 서버가 계산한 기한까지 남은 초. 화면 타이머는 이 값을 기준으로 내려간다. */
+  remainingSeconds: number;
+}
+
+// ── v0.11 F05~F10: 리데이 티켓 및 보상형 광고 ──────────────────────
+
+export type RedayTicketStatus = 'AVAILABLE' | 'USED';
+export type RedayTicketSource = 'REWARD_AD' | 'ADMIN_GRANT' | 'WELCOME_BONUS';
+
+export interface RedayTicketBalance {
+  userId: number;
+  availableCount: number;
+  totalCount: number;
+}
+
+export interface ApplyRedayPayload {
+  dailyRecordId: number;
+  ticketId?: number;
+}
+
+export interface ApplyRedayResponse {
+  ticketId: number;
+  dailyRecordId: number;
+  penaltyExempted: boolean;
+  previousPenaltyAmount: number;
+  resultPenaltyAmount: number;
+  appliedAt: string;
+}
+
+/** GET /groups/{groupId}/reday-candidates 응답 한 건. 본인 기록만 내려온다. */
+export interface RedayCandidate {
+  recordId: number;
+  challengeId: number;
+  challengeTitle: string;
+  targetDate: string;
+  penaltyAmount: number;
+  penaltyStatus: PenaltyStatus;
+  redayDeadline: string;
+  remainingSeconds: number;
+}
+
+export type AdSessionStatus = 'ISSUED' | 'IMPRESSED' | 'COMPLETED' | 'ABANDONED' | 'EXPIRED';
+export type AdUnavailableReason = 'NO_AVAILABLE_AD' | 'DAILY_LIMIT_REACHED';
+
+export interface AdCreative {
+  id: number;
+  campaignId: number;
+  title: string;
+  description: string;
+  imageUrl?: string | null;
+  ctaText?: string | null;
+  /** 자체 광고 고정 표기 문구. 서버가 정하며 화면은 그대로 보여준다. */
+  badgeText: string;
+  minWatchSeconds: number;
+  active: boolean;
+}
+
+export interface AdSessionDetail {
+  sessionId: number;
+  sessionToken: string;
+  userId: number;
+  dailyRecordId: number;
+  campaignId: number;
+  creativeId: number;
+  status: AdSessionStatus;
+  requiredWatchSeconds: number;
+  issuedAt: string;
+  expiresAt: string;
+  creative: AdCreative;
+}
+
+export interface AdSessionIssueResponse {
+  available: boolean;
+  unavailableReason?: AdUnavailableReason | null;
+  message?: string | null;
+  session?: AdSessionDetail | null;
+}
+
+export interface AdImpressionResponse {
+  sessionId: number;
+  sessionToken: string;
+  status: AdSessionStatus;
+  impressionAt: string;
+  firstImpression: boolean;
+  expiresAt: string;
+  requiredWatchSeconds: number;
+}
+
+export interface AdAbandonResponse {
+  sessionId: number;
+  sessionToken: string;
+  status: AdSessionStatus;
+  firstAbandon: boolean;
+  abandonedAt: string;
+}
+
+export interface CompleteAdSessionResponse {
+  sessionId: number;
+  sessionToken: string;
+  status: AdSessionStatus;
+  /** 이번 요청에서 최초로 지급되었는지. 재시도(멱등 응답)에서는 false다. */
+  newlyGranted: boolean;
+  rewardHistoryId: number;
+  grantedTicketId: number;
+  availableTicketCount: number;
+  completedAt: string;
+  dailyRecordId: number;
+  targetRecordRedayEligible: boolean;
+  targetRecordDeadlineExpired: boolean;
+  message: string;
 }
 
 export interface VerificationDetail {

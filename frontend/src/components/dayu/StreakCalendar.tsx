@@ -1,3 +1,5 @@
+import { Ticket } from 'lucide-react';
+
 export type DayStatus = "done" | "miss" | "wait" | "future" | "none";
 
 /**
@@ -5,9 +7,11 @@ export type DayStatus = "done" | "miss" | "wait" | "future" | "none";
  * - done: 파란 원(흰 숫자)  - miss: 빨간 점선 원(숫자 대신 가로줄)
  * - wait: 오늘 인증 대기(노란 원)  - future: 흐린 숫자  - none: 챌린지 기간 밖
  */
-export function StreakCalendar({ year, month, statusOf, today }: {
+export function StreakCalendar({ year, month, statusOf, today, redayOf, onStartReday }: {
   year: number; month: number;            // month: 1~12
   statusOf: (day: number) => DayStatus;
+  redayOf?: (day: number) => 'available' | 'applied' | undefined;
+  onStartReday?: (day: number) => void;
   today?: number;                          // 이번 달이면 오늘 날짜
 }) {
   const first = new Date(year, month - 1, 1).getDay();
@@ -23,6 +27,7 @@ export function StreakCalendar({ year, month, statusOf, today }: {
       {cells.map((d, i) => {
         if (d === null) return <div key={`b${i}`} />;
         const s = statusOf(d);
+        const reday = redayOf?.(d);
         const col = i % 7;
         const joinL = s === "done" && col > 0 && isDone(d - 1);
         const joinR = s === "done" && col < 6 && isDone(d + 1);
@@ -34,13 +39,23 @@ export function StreakCalendar({ year, month, statusOf, today }: {
           none: "text-slate-300 font-medium",
         }[s];
         return (
-          <div key={d} role="gridcell" aria-label={`${d}일 ${label(s)}`} className="relative grid h-10 place-items-center">
+          <div key={d} role="gridcell" aria-label={`${d}일 ${label(s)}${reday === "applied" ? ", 리데이 사용 완료" : ""}`} className="relative grid h-10 place-items-center">
             {joinL && <span className="absolute inset-y-[3px] left-0 right-1/2 bg-blue-100" />}
             {joinR && <span className="absolute inset-y-[3px] left-1/2 right-0 bg-blue-100" />}
             <span className={`relative z-[1] grid h-[34px] w-[34px] place-items-center rounded-full text-[13px] font-bold tabular-nums ${circle}
               ${d === today ? "shadow-[0_0_0_2px_#fff,0_0_0_4px_#1E293B]" : ""}`}>
               {s === "miss" ? <span className="h-[1.5px] w-2.5 rounded bg-red-400" /> : d}
             </span>
+            {reday === 'available' && onStartReday && (
+              <button type="button" onClick={() => onStartReday(d)}
+                aria-label={`${month}월 ${d}일 리데이 사용하기`}
+                className="absolute inset-0 z-[2] rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                <span className="absolute bottom-0 right-0 grid size-5 place-items-center rounded-[7px] border border-blue-200 bg-white text-blue-600 shadow-sm">
+                  <Ticket className="size-3.5" />
+                </span>
+              </button>
+            )}
+            {reday === 'applied' && <span aria-hidden="true" className="absolute bottom-0 right-0 z-[2] grid size-5 place-items-center rounded-[7px] bg-slate-100 text-slate-500"><Ticket className="size-3.5" /></span>}
           </div>
         );
       })}
