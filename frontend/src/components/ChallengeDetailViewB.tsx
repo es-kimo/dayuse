@@ -7,6 +7,7 @@ import { ChallengeHeroCard } from './ChallengeHeroCard';
 import { MyRecordCard } from './MyRecordCard';
 import { HowToCertifyCard } from './HowToCertifyCard';
 import { ParticipantsCard } from './ParticipantsCard';
+import { RedayActionCard } from './RedayActionCard';
 import { getTodayKstString } from '../utils/date';
 
 import { SubPageHeader } from './layout/SubPageHeader';
@@ -37,6 +38,9 @@ interface ChallengeDetailViewBProps {
   onEditChallenge?: () => void;
   onOpenMidJoin?: () => void;
   onRestartChallenge?: () => void;
+  /** 주 N회·리데이 미허용 챌린지에서는 false. 리데이 안내 카드를 렌더하지 않는다. */
+  redayUiEnabled?: boolean;
+  onStartReday?: (record: CalendarDailyRecordItem) => void;
 }
 
 export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
@@ -58,6 +62,8 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
   onEditChallenge,
   onOpenMidJoin,
   onRestartChallenge,
+  redayUiEnabled = false,
+  onStartReday,
 }) => {
   const myParticipant = calendarData?.participants.find((p) => p.userId === currentUserId);
   const myRecords: CalendarDailyRecordItem[] = myParticipant?.records || [];
@@ -252,6 +258,15 @@ export const ChallengeDetailViewB: React.FC<ChallengeDetailViewBProps> = ({
           currentDayNumber={currentDayNumber}
           isTodayCompleted={isTodayCompleted}
         />
+
+        {/* 2-1. 리데이 사용 안내 (기한 안에 쓸 수 있는 지각 기록이 있을 때만) */}
+        {onStartReday && (
+          <RedayActionCard
+            myRecords={myRecords}
+            redayUiEnabled={redayUiEnabled}
+            onStartReday={onStartReday}
+          />
+        )}
 
         {/* 3. How to Certify Card */}
         <HowToCertifyCard challenge={challenge} />

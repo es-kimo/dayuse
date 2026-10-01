@@ -475,6 +475,8 @@ export const ChallengeDetailPage: React.FC = () => {
           onEditChallenge={challenge.isCreator ? () => { setShowEditModal(true); setActionError(null); } : undefined}
           onOpenMidJoin={() => setShowJoinModal(true)}
           onRestartChallenge={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
+          redayUiEnabled={redayUiEnabled}
+          onStartReday={handleStartReday}
         />
       ) : (
         <>

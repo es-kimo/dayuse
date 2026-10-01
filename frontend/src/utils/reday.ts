@@ -1,3 +1,4 @@
+import { parseKstDate } from './date';
 import type {
   PenaltyStatus,
   RedayEligibilityResponse,
@@ -277,4 +278,53 @@ export function shouldShowRedayUi(
 ): boolean {
   if (periodType === 'WEEKLY_N') return false;
   return redayAllowed !== false;
+}
+
+/** 리데이 사용 경로를 띄울 수 있는 기록의 최소 조건. 최종 판정은 서버가 다시 한다. */
+export interface RedayCandidateRecord {
+  status: string;
+  isLate: boolean;
+  depositStatus: string;
+  penaltyStatus?: PenaltyStatus;
+  redayApplied?: boolean;
+  redayDeadline?: string | null;
+}
+
+/**
+ * 기록 목록에서 리데이를 바로 쓸 수 있는 것만 고른다.
+ *
+ * 달력 한 칸에 버튼을 숨기지 않고 별도 카드로 올리기 위한 선별이다.
+ * 리데이는 기한이 걸린 동작인데 월 단위 달력은 이번 달만 그리므로,
+ * 지난달 대상일의 기록은 달력 안에서는 영원히 보이지 않는다.
+ *
+ * @param now 기한 비교 기준 시각. 호출부가 타이머로 갱신한 값을 넘긴다.
+ */
+export function pickRedayUsableRecords<T extends RedayCandidateRecord>(
+  records: T[] | null | undefined,
+  now: Date = new Date()
+): T[] {
+  if (!records || records.length === 0) return [];
+  return records.filter((record) => {
+    if (record.status !== 'COMPLETED' || !record.isLate) return false;
+    if (record.redayApplied) return false;
+    if (record.penaltyStatus !== 'PENDING') return false;
+    // 입금 신고 중이거나 정산이 끝난 기록은 되돌릴 수 없다.
+    if (record.depositStatus !== 'UNPAID') return false;
+    return calculateRemainingSeconds(record.redayDeadline, now) > 0;
+  });
+}
+
+/**
+ * 기한까지 남은 초.
+ *
+ * 서버의 `redayDeadline`은 오프셋 없는 KST LocalDateTime 문자열이라
+ * `new Date()`에 그대로 넘기면 브라우저 시간대만큼 틀어진다. [parseKstDate]가 +09:00을 보정한다.
+ */
+export function calculateRemainingSeconds(
+  deadline: string | null | undefined,
+  now: Date = new Date()
+): number {
+  const parsed = parseKstDate(deadline);
+  if (!parsed) return 0;
+  return Math.max(0, Math.floor((parsed.getTime() - now.getTime()) / 1000));
 }

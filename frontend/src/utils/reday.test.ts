@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  calculateRemainingSeconds,
+  pickRedayUsableRecords,
   REDAY_EARN_BUTTON_LABEL,
   REDAY_USE_BUTTON_LABEL,
   adFailureMessage,
@@ -195,5 +197,68 @@ describe('redayIneligibleMessage', () => {
     for (const reason of reasons) {
       expect(redayIneligibleMessage(reason).length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('pickRedayUsableRecords', () => {
+  const now = new Date('2026-10-01T12:00:00+09:00');
+  const base = {
+    status: 'COMPLETED',
+    isLate: true,
+    depositStatus: 'UNPAID',
+    penaltyStatus: 'PENDING' as const,
+    redayApplied: false,
+    redayDeadline: '2026-10-02T09:00:00',
+  };
+
+  it('기한 안의 지각·보류 기록만 고른다', () => {
+    expect(pickRedayUsableRecords([base], now)).toHaveLength(1);
+  });
+
+  it('지난달 대상일이라도 기한이 남아 있으면 고른다', () => {
+    // 월 단위 달력에는 안 보이는 9월 기록이 빠지지 않는지가 핵심이다.
+    const lastMonth = { ...base, date: '2026-09-30' };
+    expect(pickRedayUsableRecords([lastMonth], now)).toHaveLength(1);
+  });
+
+  it('기한이 지난 기록은 제외한다', () => {
+    expect(pickRedayUsableRecords([{ ...base, redayDeadline: '2026-10-01T09:00:00' }], now)).toHaveLength(0);
+  });
+
+  it('이미 적용·면제·확정·정산 중인 기록은 제외한다', () => {
+    const cases = [
+      { ...base, redayApplied: true },
+      { ...base, penaltyStatus: 'EXEMPTED' as const },
+      { ...base, penaltyStatus: 'CONFIRMED' as const },
+      { ...base, depositStatus: 'WAITING_CONFIRMATION' },
+    ];
+    for (const record of cases) {
+      expect(pickRedayUsableRecords([record], now)).toHaveLength(0);
+    }
+  });
+
+  it('인증 미완료 또는 지각이 아닌 기록은 제외한다', () => {
+    expect(pickRedayUsableRecords([{ ...base, status: 'UNCHECKED' }], now)).toHaveLength(0);
+    expect(pickRedayUsableRecords([{ ...base, isLate: false }], now)).toHaveLength(0);
+  });
+
+  it('빈 목록과 null을 안전하게 처리한다', () => {
+    expect(pickRedayUsableRecords([], now)).toEqual([]);
+    expect(pickRedayUsableRecords(null, now)).toEqual([]);
+    expect(pickRedayUsableRecords(undefined, now)).toEqual([]);
+  });
+});
+
+describe('calculateRemainingSeconds', () => {
+  it('오프셋 없는 서버 시각을 KST로 보정해 계산한다', () => {
+    const now = new Date('2026-10-01T12:00:00+09:00');
+    expect(calculateRemainingSeconds('2026-10-01T13:00:00', now)).toBe(3600);
+  });
+
+  it('기한이 지났거나 값이 없으면 0이다', () => {
+    const now = new Date('2026-10-01T12:00:00+09:00');
+    expect(calculateRemainingSeconds('2026-10-01T11:00:00', now)).toBe(0);
+    expect(calculateRemainingSeconds(null, now)).toBe(0);
+    expect(calculateRemainingSeconds('이상한값', now)).toBe(0);
   });
 });
