@@ -200,6 +200,9 @@ class VerificationService(
         if (records.any { it.redayApplied || it.penaltyStatus == com.dayuse.domain.dailyrecord.PenaltyStatus.EXEMPTED }) {
             throw BadRequestException("리데이가 적용된 인증 기록은 삭제할 수 없습니다.")
         }
+        if (records.any { it.penaltyStatus == com.dayuse.domain.dailyrecord.PenaltyStatus.CONFIRMED && it.penaltyAmount > 0 }) {
+            throw BadRequestException("이미 벌금이 확정된 기록의 인증은 삭제할 수 없습니다.")
+        }
 
         shareCardRepository?.findAllByVerificationIdAndIsActiveTrue(verificationId)?.forEach {
             it.deactivate()
