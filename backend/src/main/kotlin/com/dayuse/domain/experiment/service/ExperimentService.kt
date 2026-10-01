@@ -64,6 +64,31 @@ class ExperimentService @Autowired constructor(
         return ExperimentResponse.from(saved)
     }
 
+    /**
+     * 정의된 실험을 멱등하게 보장한다. (v0.10 F09-1)
+     *
+     * 이미 같은 `experimentKey`가 있으면 기존 정의를 그대로 반환하고 아무것도 바꾸지 않는다.
+     * 운영 중 실험의 상태(`ACTIVE`/`STOPPED`)나 rollout 값을 시드가 되돌려서는 안 되기 때문이다.
+     */
+    @Transactional
+    fun ensureExperiment(
+        request: ExperimentCreateRequest,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): ExperimentResponse {
+        val normalizedKey = Experiment.validateExperimentKey(request.experimentKey)
+        experimentRepository.findByExperimentKey(normalizedKey)?.let {
+            return ExperimentResponse.from(it)
+        }
+
+        return try {
+            createExperiment(request, now)
+        } catch (ex: DuplicateResourceException) {
+            // 동시 기동(다중 인스턴스)으로 다른 쪽이 먼저 넣은 경우도 정상으로 취급한다.
+            log.debug("실험 정의가 이미 존재합니다: {} ({})", normalizedKey, ex.message)
+            ExperimentResponse.from(findExperimentOrThrow(normalizedKey))
+        }
+    }
+
     @Transactional(readOnly = true)
     fun getExperiment(experimentKey: String): ExperimentResponse {
         val experiment = findExperimentOrThrow(experimentKey)

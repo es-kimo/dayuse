@@ -58,6 +58,12 @@ features:
     enabled: true
     rollout-percentage: 100
 
+experiment:
+  seed:
+    # 기동 시 DayuseExperimentDefinitions의 실험 정의를 멱등하게 등록한다(항상 DRAFT로 생성).
+    # 이미 존재하는 실험의 상태·rollout은 절대 덮어쓰지 않는다.
+    enabled: ${EXPERIMENT_SEED_ENABLED:true}
+
 analytics:
   # 집계·퍼널 조회를 허용할 userId 목록(쉼표 구분). 비워 두면 로그인 사용자 누구나 조회할 수 있다.
   admin-user-ids: ${ANALYTICS_ADMIN_USER_IDS:}
@@ -101,6 +107,12 @@ features:
   ui-refresh-01:
     enabled: true
     rollout-percentage: 100
+
+experiment:
+  seed:
+    # 기동 시 DayuseExperimentDefinitions의 실험 정의를 멱등하게 등록한다(항상 DRAFT로 생성).
+    # 이미 존재하는 실험의 상태·rollout은 절대 덮어쓰지 않는다.
+    enabled: ${EXPERIMENT_SEED_ENABLED:true}
 
 analytics:
   # 집계·퍼널 조회를 허용할 userId 목록(쉼표 구분). 비워 두면 로그인 사용자 누구나 조회할 수 있다.
@@ -160,6 +172,14 @@ features:
     enabled: ${FEATURE_UI_REFRESH_01_ENABLED:true}
     rollout-percentage: ${FEATURE_UI_REFRESH_01_ROLLOUT_PERCENTAGE:100}
 
+experiment:
+  seed:
+    # 기동 시 DayuseExperimentDefinitions의 실험 정의를 멱등하게 등록한다(항상 DRAFT로 생성).
+    # 이미 존재하는 실험의 상태·rollout은 절대 덮어쓰지 않는다.
+    enabled: ${EXPERIMENT_SEED_ENABLED:true}
+
 analytics:
-  # 집계·퍼널 조회를 허용할 userId 목록(쉼표 구분). 운영에서는 반드시 지정한다.
+  # 집계·퍼널 조회 및 실험 관리를 허용할 관리자 userId 목록(쉼표 구분).
+  # prod에서는 allow-all-when-empty=false(Fail-Closed)이므로 미지정 시 전원 403으로 차단된다.
   admin-user-ids: ${ANALYTICS_ADMIN_USER_IDS:}
+  allow-all-when-empty: ${ANALYTICS_ALLOW_ALL_WHEN_EMPTY:false}
