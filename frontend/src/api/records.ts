@@ -6,6 +6,7 @@ import type {
   DailyRecordDetail,
   LateVerificationPayload,
   VerificationDetail,
+  RedayEligibilityResponse,
 } from '../types';
 
 export const recordsApi = {
@@ -36,6 +37,22 @@ export const recordsApi = {
     const res = await apiClient.post<VerificationDetail>(
       `/daily-records/${recordId}/verify-late`,
       payload
+    );
+    return res.data;
+  },
+
+  getRedayEligibility: async (recordId: number): Promise<RedayEligibilityResponse> => {
+    const res = await apiClient.get<RedayEligibilityResponse>(
+      `/daily-records/${recordId}/reday-eligibility`
+    );
+    return res.data;
+  },
+
+  getRedayEligibilityByVerification: async (
+    verificationId: number
+  ): Promise<RedayEligibilityResponse> => {
+    const res = await apiClient.get<RedayEligibilityResponse>(
+      `/verifications/${verificationId}/reday-eligibility`
     );
     return res.data;
   },

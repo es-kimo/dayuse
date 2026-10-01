@@ -57,7 +57,24 @@ export const HowToCertifyCard: React.FC<HowToCertifyCardProps> = ({ challenge })
           <Coins className="w-3.5 h-3.5 text-slate-500 shrink-0" />
           {penaltyText}
         </span>
+        {challenge.redayRuleDescription && (
+          <span
+            className={`inline-flex items-center gap-1.5 h-[30px] px-2.5 rounded-[9px] text-[12.5px] font-semibold ${
+              challenge.redayAllowed
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-slate-100 text-slate-600'
+            }`}
+          >
+            🎟️ {challenge.redayAllowed ? '리데이 허용' : '리데이 미허용'}
+          </span>
+        )}
       </div>
+
+      {challenge.redayRuleDescription && (
+        <p className="text-[12.5px] text-slate-600 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200/70 leading-relaxed">
+          {challenge.redayRuleDescription}
+        </p>
+      )}
 
       {/* Lock Notice */}
       <p className="flex items-center gap-1.5 text-[12.5px] text-slate-500">

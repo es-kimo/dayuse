@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useExperiment } from '../hooks/useExperiment';
+import { CHALLENGE_REDAY_UI_EXPERIMENT } from '../constants/experiments';
+import type { ExperimentState } from '../types/experiment';
 import { track } from '../utils/tracker';
+import { navigateAfterChallengeCreation } from '../utils/challengeNavigation';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { groupsApi } from '../api/groups';
@@ -56,6 +60,10 @@ export const NewChallengePage: React.FC = () => {
   const [executionType, setExecutionType] = useState<ExecutionType>('INDIVIDUAL');
   const [targetFrequency, setTargetFrequency] = useState<number>(3);
   const [penaltyAmount, setPenaltyAmount] = useState<number>(5000);
+  const [redayAllowed, setRedayAllowed] = useState<boolean>(true);
+
+  const canEnableReday = periodType === 'DAILY' && executionType === 'INDIVIDUAL' && penaltyAmount > 0;
+  const effectiveRedayAllowed = canEnableReday && redayAllowed;
 
   // 모임원 다중 선택 및 참가자별 벌금 상태
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
@@ -67,6 +75,12 @@ export const NewChallengePage: React.FC = () => {
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
   const [isTemplateLoaded, setIsTemplateLoaded] = useState(false);
   const [activeRestartId, setActiveRestartId] = useState<string | null>(restartFromId);
+
+  const { uiVersion } = useUiVersion();
+  const redayPreview = import.meta.env.DEV && ['A', 'B'].includes(searchParams.get('reday_ui') ?? '');
+  const redayExperimentEligible = !redayPreview && uiVersion === 'B' && !activeRestartId && !isTemplateLoaded && !isLoadingTemplate;
+  const redayExperiment = useExperiment(CHALLENGE_REDAY_UI_EXPERIMENT, redayExperimentEligible);
+  const redayExposure = React.useRef<ExperimentState | null>(null);
 
   // 이전 챌린지 불러오기 모달 상태
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -143,6 +157,7 @@ export const NewChallengePage: React.FC = () => {
         setEndDate(template.suggestedEndDate);
         if (template.periodType) setPeriodType(template.periodType);
         if (template.targetFrequency) setTargetFrequency(template.targetFrequency);
+        setRedayAllowed(Boolean(template.redayAllowed));
         if (template.executionType) {
           setExecutionType(template.executionType);
           if (template.executionType === 'TOGETHER') {
@@ -287,6 +302,7 @@ export const NewChallengePage: React.FC = () => {
         setSelectedPreset(matched ? matched.days : 'custom');
         if (template.periodType) setPeriodType(template.periodType);
         if (template.targetFrequency) setTargetFrequency(template.targetFrequency);
+        setRedayAllowed(Boolean(template.redayAllowed));
         if (template.executionType) {
           setExecutionType(template.executionType);
           if (template.executionType === 'TOGETHER') {
@@ -312,6 +328,7 @@ export const NewChallengePage: React.FC = () => {
         setSelectedPreset(matched ? matched.days : 'custom');
         if (selected.periodType) setPeriodType(selected.periodType);
         if (selected.targetFrequency) setTargetFrequency(selected.targetFrequency);
+        setRedayAllowed(Boolean(selected.redayAllowed));
         if (selected.executionType) {
           setExecutionType(selected.executionType);
           if (selected.executionType === 'TOGETHER') {
@@ -410,6 +427,7 @@ export const NewChallengePage: React.FC = () => {
         periodType,
         targetFrequency: periodType === 'WEEKLY_N' ? targetFrequency : null,
         executionType,
+        redayAllowed: effectiveRedayAllowed,
         myPenaltyAmount: executionType === 'TOGETHER' ? 0 : penaltyAmount,
         participants: participantsList.map((p) => ({
           userId: p.userId,
@@ -424,13 +442,23 @@ export const NewChallengePage: React.FC = () => {
       }
 
       // 생성 API가 실제로 성공해 챌린지가 만들어진 뒤에만 기록한다.
-      track('challenge_created', {
+      // 노출 뒤 조건/템플릿을 바꿔도 완료율 분모에서 빠지지 않게 최초 노출에 귀속한다.
+      const experimentContext = redayPreview ? undefined : redayExposure.current ?? undefined;
+      const creationProperties = {
         challengeId: createdChallenge.id,
         groupId: createdChallenge.groupId,
         isRestart: !!activeRestartId,
-      });
+        redayAllowed: effectiveRedayAllowed,
+        redayEligible: canEnableReday,
+        isTemplate: isTemplateLoaded,
+        uiVersion,
+      };
+      track('challenge_created', creationProperties, experimentContext);
+      if (effectiveRedayAllowed && experimentContext) {
+        track('challenge_created_reday_allowed', creationProperties, experimentContext);
+      }
 
-      navigate(`/challenges/${createdChallenge.id}`);
+      navigateAfterChallengeCreation(navigate, createdChallenge.groupId, createdChallenge.id);
     } catch (err: any) {
       console.error('Failed to create challenge:', err);
       setError(err.response?.data?.message || '챌린지 생성에 실패했습니다.');
@@ -439,8 +467,6 @@ export const NewChallengePage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-
-  const { uiVersion } = useUiVersion();
 
   if (uiVersion === 'B') {
     return (
@@ -465,6 +491,10 @@ export const NewChallengePage: React.FC = () => {
         setExecutionType={setExecutionType}
         penaltyAmount={penaltyAmount}
         setPenaltyAmount={setPenaltyAmount}
+        redayExperiment={redayExperimentEligible ? redayExperiment : undefined}
+        onRedayExposure={(state) => { redayExposure.current = state; }}
+        redayAllowed={redayAllowed}
+        setRedayAllowed={setRedayAllowed}
         groupMembers={groupMembers}
         selectedMemberIds={selectedMemberIds}
         onToggleMember={handleToggleMember}
@@ -911,6 +941,38 @@ export const NewChallengePage: React.FC = () => {
             </p>
           </div>
         )}
+
+        {/* 리데이(벌금 면제권) 허용 여부 설정 (F01) */}
+        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                <span>🎟️ 리데이(벌금 면제권) 허용</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                    effectiveRedayAllowed
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  {effectiveRedayAllowed ? '허용됨' : '미허용'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                {canEnableReday
+                  ? '지각 인증(익일 09시~이틀 뒤 09시 전) 등록 후 리데이 티켓을 사용하면 해당 날짜 벌금이 면제돼요.'
+                  : '매일(DAILY) · 각자하기 · 벌금이 있는 챌린지에서만 리데이를 허용할 수 있어요.'}
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              checked={effectiveRedayAllowed}
+              disabled={!canEnableReday}
+              onChange={(e) => setRedayAllowed(e.target.checked)}
+              className="w-4 h-4 accent-blue-600 rounded cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            />
+          </div>
+        </div>
 
         {/* 함께할 모임원 선택 리스트 & 참가자별 약정금 설정 */}
         <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">

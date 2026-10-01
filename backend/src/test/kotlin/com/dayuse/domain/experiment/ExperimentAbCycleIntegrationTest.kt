@@ -131,9 +131,12 @@ class ExperimentAbCycleIntegrationTest {
         assertEquals(ExperimentStatus.DRAFT, seeded!!.status)
         assertEquals(100, seeded.rolloutPercentage)
 
-        // 시드는 멱등하다. 두 번 돌려도 정의가 하나뿐이고 중복 예외도 없다.
+        // 시드는 멱등하다. 두 번 돌려도 등록된 정의가 중복되지 않는다.
         experimentSeeder.seed()
-        assertEquals(1, experimentRepository.findAllByOrderByCreatedAtDesc().size)
+        assertEquals(DayuseExperimentDefinitions.SEEDS.size, experimentRepository.findAllByOrderByCreatedAtDesc().size)
+        val reday = experimentRepository.findByExperimentKey(DayuseExperimentDefinitions.CHALLENGE_REDAY_UI_V1)!!
+        assertEquals(ExperimentStatus.DRAFT, reday.status)
+        assertEquals(100, reday.rolloutPercentage)
 
         // 2. DRAFT 상태에서는 아무도 실험에 참여하지 않는다 (기본 경험 A).
         val participants = createParticipants(12)

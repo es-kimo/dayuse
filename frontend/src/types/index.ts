@@ -91,6 +91,7 @@ export interface ChallengeSummary {
   periodType?: PeriodType;
   targetFrequency?: number | null;
   executionType?: ExecutionType;
+  redayAllowed?: boolean;
   status: ChallengeStatus;
   participantCount: number;
   participants?: ChallengeParticipantPreview[];
@@ -134,6 +135,9 @@ export interface JoinPreviewResponse {
   options: JoinOption[];
   defaultPenaltyAmount: number;
   executionType?: ExecutionType;
+  periodType?: PeriodType;
+  redayAllowed?: boolean;
+  redayRuleDescription?: string | null;
 }
 
 export interface ChallengeDetail {
@@ -151,6 +155,8 @@ export interface ChallengeDetail {
   periodType?: PeriodType;
   targetFrequency?: number | null;
   executionType?: ExecutionType;
+  redayAllowed?: boolean;
+  redayRuleDescription?: string | null;
   totalTargetCount?: number;
   totalCompletedCount?: number;
   progressRate?: number;
@@ -190,6 +196,7 @@ export interface CreateChallengePayload {
   periodType?: PeriodType;
   targetFrequency?: number | null;
   executionType?: ExecutionType;
+  redayAllowed?: boolean;
   myPenaltyAmount: number;
   participants?: CreateParticipantPayload[];
 }
@@ -203,6 +210,7 @@ export interface ChallengeRestartTemplate {
   periodType?: PeriodType;
   targetFrequency?: number | null;
   executionType?: ExecutionType;
+  redayAllowed?: boolean;
   suggestedStartDate: string;
   suggestedEndDate: string;
   suggestedPenaltyAmount: number;
@@ -216,6 +224,8 @@ export interface UpdateChallengePayload {
   endDate?: string;
   periodType?: PeriodType;
   targetFrequency?: number | null;
+  executionType?: ExecutionType;
+  redayAllowed?: boolean;
 }
 
 export interface JoinChallengePayload {
@@ -270,6 +280,38 @@ export interface PresignedUrlResponse {
   expiresAt: string;
 }
 
+export type PenaltyStatus = 'NONE' | 'PENDING' | 'CONFIRMED' | 'EXEMPTED';
+
+export type RedayIneligibleReason =
+  | 'ELIGIBLE'
+  | 'NOT_OWNER'
+  | 'NOT_ALLOWED'
+  | 'WEEKLY_NOT_SUPPORTED'
+  | 'TOGETHER_NOT_SUPPORTED'
+  | 'NO_PENALTY'
+  | 'CHALLENGE_ABORTED'
+  | 'NOT_VERIFIED'
+  | 'NOT_OVERDUE'
+  | 'ALREADY_APPLIED'
+  | 'ALREADY_SETTLED'
+  | 'ALREADY_CONFIRMED'
+  | 'EXPIRED';
+
+export interface RedayEligibilityResponse {
+  dailyRecordId: number;
+  verificationId?: number | null;
+  challengeId: number;
+  targetDate: string;
+  eligible: boolean;
+  reason: RedayIneligibleReason;
+  message: string;
+  penaltyStatus: PenaltyStatus;
+  penaltyAmount: number;
+  redayApplied: boolean;
+  redayAppliedAt?: string | null;
+  redayDeadline?: string | null;
+}
+
 export interface VerificationDetail {
   id: number;
   groupId: number;
@@ -281,6 +323,12 @@ export interface VerificationDetail {
   isLate: boolean;
   createdAt: string;
   updatedAt: string;
+  dailyRecordId?: number | null;
+  redayAllowed?: boolean;
+  redayEligible?: boolean;
+  redayDeadline?: string | null;
+  penaltyStatus?: PenaltyStatus;
+  penaltyAmount?: number;
 }
 
 export interface FeedItem {
@@ -328,6 +376,7 @@ export interface StatusSummaryResponse {
   groupId: number;
   uncheckedCount: number;
   unpaidPenaltyAmount: number;
+  pendingPenaltyAmount?: number;
 }
 
 export interface UncheckedRecordItem {
@@ -338,6 +387,9 @@ export interface UncheckedRecordItem {
   status: DailyRecordStatus;
   penaltyAmount: number;
   verificationCriteria: string;
+  redayAllowed?: boolean;
+  penaltyStatus?: PenaltyStatus;
+  redayDeadline?: string | null;
 }
 
 export interface LateVerificationPayload {
@@ -354,10 +406,14 @@ export interface DailyRecordDetail {
   date: string;
   status: DailyRecordStatus;
   penaltyAmount: number;
+  penaltyStatus?: PenaltyStatus;
   depositStatus: DepositStatus;
   verificationId?: number | null;
   isLate: boolean;
   failedAt?: string | null;
+  redayApplied?: boolean;
+  redayAppliedAt?: string | null;
+  redayDeadline?: string | null;
 }
 
 export interface CalendarDailyRecordItem {
@@ -370,6 +426,10 @@ export interface CalendarDailyRecordItem {
   verificationId?: number | null;
   imageUrl?: string | null;
   comment?: string | null;
+  penaltyStatus?: PenaltyStatus;
+  redayApplied?: boolean;
+  redayAppliedAt?: string | null;
+  redayDeadline?: string | null;
 }
 
 export interface ParticipantCalendarItem {
@@ -384,6 +444,7 @@ export interface ChallengeCalendarResponse {
   title: string;
   startDate: string;
   endDate: string;
+  redayAllowed?: boolean;
   participants: ParticipantCalendarItem[];
 }
 
@@ -489,9 +550,11 @@ export interface DepositReportDetail {
 export interface SettlementSummary {
   groupId: number;
   unpaidAmount: number;
+  pendingAmount?: number;
   waitingAmount: number;
   confirmedAmount: number;
   myUnpaidAmount: number;
+  myPendingAmount?: number;
   accountRegistered: boolean;
   account?: GroupAccount | null;
 }

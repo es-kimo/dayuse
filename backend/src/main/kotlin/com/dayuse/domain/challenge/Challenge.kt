@@ -69,7 +69,10 @@ class Challenge(
         nullable = false,
         length = 20
     )
-    var executionType: ExecutionType = ExecutionType.INDIVIDUAL
+    var executionType: ExecutionType = ExecutionType.INDIVIDUAL,
+
+    @Column(nullable = false)
+    var redayAllowed: Boolean = false
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -110,6 +113,33 @@ class Challenge(
                     throw BadRequestException("주 N회 챌린지의 목표 횟수는 1회 이상 7회 이하여야 합니다.")
                 }
             }
+        }
+        validateRedayPolicy(
+            targetPeriodType = periodType,
+            targetExecutionType = executionType,
+            targetRedayAllowed = redayAllowed
+        )
+    }
+
+    fun isRedaySupportedType(): Boolean {
+        return periodType == PeriodType.DAILY && executionType == ExecutionType.INDIVIDUAL
+    }
+
+    fun isRedayActive(): Boolean {
+        return redayAllowed && isRedaySupportedType()
+    }
+
+    private fun validateRedayPolicy(
+        targetPeriodType: PeriodType,
+        targetExecutionType: ExecutionType,
+        targetRedayAllowed: Boolean
+    ) {
+        if (!targetRedayAllowed) return
+        if (targetPeriodType != PeriodType.DAILY) {
+            throw BadRequestException("주 N회 챌린지에는 리데이 설정을 허용할 수 없습니다.")
+        }
+        if (targetExecutionType != ExecutionType.INDIVIDUAL) {
+            throw BadRequestException("함께하기 챌린지에는 리데이 설정을 허용할 수 없습니다.")
         }
     }
 
@@ -209,6 +239,7 @@ class Challenge(
         newPeriodType: PeriodType? = null,
         newTargetFrequency: Int? = null,
         newExecutionType: ExecutionType? = null,
+        newRedayAllowed: Boolean? = null,
         today: LocalDate = DateTimeUtils.todayKst()
     ) {
         if (isAborted()) {
@@ -227,6 +258,7 @@ class Challenge(
         val nextEndDate = newEndDate ?: this.endDate
         val nextPeriodType = newPeriodType ?: this.periodType
         val nextTargetFrequency = if (nextPeriodType == PeriodType.DAILY) null else (newTargetFrequency ?: this.targetFrequency)
+        val nextRedayAllowed = newRedayAllowed ?: this.redayAllowed
 
         // 2. 전체 검증
         if (isStarted(today)) {
@@ -235,7 +267,8 @@ class Challenge(
                         nextStartDate != this.startDate ||
                         nextEndDate != this.endDate ||
                         nextPeriodType != this.periodType ||
-                        nextTargetFrequency != this.targetFrequency
+                        nextTargetFrequency != this.targetFrequency ||
+                        nextRedayAllowed != this.redayAllowed
 
             if (conditionsChanged) {
                 throw BadRequestException("챌린지 시작 후에는 제목과 설명만 수정할 수 있습니다.")
@@ -259,6 +292,12 @@ class Challenge(
                     throw BadRequestException("주 N회 챌린지의 목표 횟수는 1회 이상 7회 이하여야 합니다.")
                 }
             }
+
+            validateRedayPolicy(
+                targetPeriodType = nextPeriodType,
+                targetExecutionType = this.executionType,
+                targetRedayAllowed = nextRedayAllowed
+            )
         }
 
         if (newTitle != null && (nextTitle.isBlank() || nextTitle.length > 50)) {
@@ -272,6 +311,7 @@ class Challenge(
         this.endDate = nextEndDate
         this.periodType = nextPeriodType
         this.targetFrequency = nextTargetFrequency
+        this.redayAllowed = nextRedayAllowed
     }
 
     companion object {
@@ -286,6 +326,7 @@ class Challenge(
             newPeriodType: PeriodType? = null,
             newTargetFrequency: Int? = null,
             newExecutionType: ExecutionType? = null,
+            newRedayAllowed: Boolean? = null,
             today: LocalDate = DateTimeUtils.todayKst()
         ): Challenge {
             if (!source.isEnded(today) && !source.isAborted()) {
@@ -311,6 +352,7 @@ class Challenge(
             val finalPeriodType = newPeriodType ?: source.periodType
             val finalTargetFrequency = if (finalPeriodType == PeriodType.DAILY) null else (newTargetFrequency ?: source.targetFrequency)
             val finalExecutionType = newExecutionType ?: source.executionType
+            val finalRedayAllowed = newRedayAllowed ?: (source.redayAllowed && finalPeriodType == PeriodType.DAILY && finalExecutionType == ExecutionType.INDIVIDUAL)
 
             return Challenge(
                 id = 0L,
@@ -323,7 +365,8 @@ class Challenge(
                 endDate = newEndDate,
                 periodType = finalPeriodType,
                 targetFrequency = finalTargetFrequency,
-                executionType = finalExecutionType
+                executionType = finalExecutionType,
+                redayAllowed = finalRedayAllowed
             )
         }
     }

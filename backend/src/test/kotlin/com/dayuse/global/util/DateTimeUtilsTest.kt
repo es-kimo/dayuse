@@ -59,4 +59,58 @@ class DateTimeUtilsTest {
         // 낮 14:00:00 -> 거짓
         assertFalse(DateTimeUtils.isNightGraceWindow(LocalDateTime.of(2026, 9, 22, 14, 0, 0)))
     }
+
+    @Test
+    fun `F02 KST 기준 인증 시각 구간 판별 경계값 테스트`() {
+        val targetDate = LocalDate.of(2026, 10, 1)
+
+        // 1. 당일 00:00 ~ 23:59:59 -> NORMAL
+        org.junit.jupiter.api.Assertions.assertEquals(
+            com.dayuse.domain.dailyrecord.VerificationTimePhase.NORMAL,
+            DateTimeUtils.evaluateVerificationPhase(targetDate, LocalDateTime.of(2026, 10, 1, 0, 0, 0))
+        )
+        org.junit.jupiter.api.Assertions.assertEquals(
+            com.dayuse.domain.dailyrecord.VerificationTimePhase.NORMAL,
+            DateTimeUtils.evaluateVerificationPhase(targetDate, LocalDateTime.of(2026, 10, 1, 23, 59, 59))
+        )
+
+        // 2. 익일 00:00:00 ~ 08:59:59 -> LATE (벌금 없음)
+        org.junit.jupiter.api.Assertions.assertEquals(
+            com.dayuse.domain.dailyrecord.VerificationTimePhase.LATE,
+            DateTimeUtils.evaluateVerificationPhase(targetDate, LocalDateTime.of(2026, 10, 2, 0, 0, 0))
+        )
+        org.junit.jupiter.api.Assertions.assertEquals(
+            com.dayuse.domain.dailyrecord.VerificationTimePhase.LATE,
+            DateTimeUtils.evaluateVerificationPhase(targetDate, LocalDateTime.of(2026, 10, 2, 8, 59, 59))
+        )
+
+        // 3. 익일 09:00:00 ~ 익익일 08:59:59 -> OVERDUE_REDAY_ELIGIBLE (지각 인증 & 리데이 가능 구간)
+        org.junit.jupiter.api.Assertions.assertEquals(
+            com.dayuse.domain.dailyrecord.VerificationTimePhase.OVERDUE_REDAY_ELIGIBLE,
+            DateTimeUtils.evaluateVerificationPhase(targetDate, LocalDateTime.of(2026, 10, 2, 9, 0, 0))
+        )
+        org.junit.jupiter.api.Assertions.assertEquals(
+            com.dayuse.domain.dailyrecord.VerificationTimePhase.OVERDUE_REDAY_ELIGIBLE,
+            DateTimeUtils.evaluateVerificationPhase(targetDate, LocalDateTime.of(2026, 10, 3, 8, 59, 59))
+        )
+
+        // 4. 익익일 09:00:00 이상 -> OVERDUE_EXPIRED (리데이 불가, 벌금 확정 구간)
+        org.junit.jupiter.api.Assertions.assertEquals(
+            com.dayuse.domain.dailyrecord.VerificationTimePhase.OVERDUE_EXPIRED,
+            DateTimeUtils.evaluateVerificationPhase(targetDate, LocalDateTime.of(2026, 10, 3, 9, 0, 0))
+        )
+    }
+
+    @Test
+    fun `F02 리데이 마감 시각은 항상 대상일 + 2일 09시로 고정된다`() {
+        val targetDate = LocalDate.of(2026, 10, 1)
+        val deadline = DateTimeUtils.calculateRedayDeadline(targetDate)
+
+        org.junit.jupiter.api.Assertions.assertEquals(LocalDateTime.of(2026, 10, 3, 9, 0, 0), deadline)
+        assertTrue(DateTimeUtils.isWithinRedayWindow(targetDate, LocalDateTime.of(2026, 10, 2, 9, 0, 0)))
+        assertTrue(DateTimeUtils.isWithinRedayWindow(targetDate, LocalDateTime.of(2026, 10, 3, 8, 59, 59)))
+        assertFalse(DateTimeUtils.isWithinRedayWindow(targetDate, LocalDateTime.of(2026, 10, 3, 9, 0, 0)))
+        assertFalse(DateTimeUtils.isRedayDeadlineExpired(targetDate, LocalDateTime.of(2026, 10, 3, 8, 59, 59)))
+        assertTrue(DateTimeUtils.isRedayDeadlineExpired(targetDate, LocalDateTime.of(2026, 10, 3, 9, 0, 0)))
+    }
 }

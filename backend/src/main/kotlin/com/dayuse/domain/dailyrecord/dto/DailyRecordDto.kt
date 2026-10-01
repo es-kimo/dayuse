@@ -2,6 +2,9 @@ package com.dayuse.domain.dailyrecord.dto
 
 import com.dayuse.domain.dailyrecord.DailyRecordStatus
 import com.dayuse.domain.dailyrecord.DepositStatus
+import com.dayuse.domain.dailyrecord.PenaltyStatus
+import com.dayuse.domain.dailyrecord.RedayIneligibleReason
+import com.dayuse.domain.dailyrecord.VerificationTimePhase
 import jakarta.validation.constraints.NotBlank
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -10,6 +13,7 @@ data class StatusSummaryResponse(
     val groupId: Long,
     val uncheckedCount: Long,
     val unpaidPenaltyAmount: Int,
+    val pendingPenaltyAmount: Int = 0,
     val verifiedUserIds: List<Long> = emptyList()
 )
 
@@ -20,7 +24,10 @@ data class UncheckedRecordResponse(
     val date: LocalDate,
     val status: DailyRecordStatus,
     val penaltyAmount: Int,
-    val verificationCriteria: String
+    val verificationCriteria: String,
+    val redayAllowed: Boolean = false,
+    val penaltyStatus: PenaltyStatus = PenaltyStatus.NONE,
+    val redayDeadline: LocalDateTime? = null
 )
 
 data class LateVerificationRequest(
@@ -42,7 +49,11 @@ data class DailyRecordDetailResponse(
     val depositStatus: DepositStatus,
     val verificationId: Long?,
     val isLate: Boolean,
-    val failedAt: LocalDateTime?
+    val failedAt: LocalDateTime?,
+    val penaltyStatus: PenaltyStatus = PenaltyStatus.NONE,
+    val redayApplied: Boolean = false,
+    val redayAppliedAt: LocalDateTime? = null,
+    val redayDeadline: LocalDateTime? = null
 )
 
 data class CalendarDailyRecordItem(
@@ -54,7 +65,11 @@ data class CalendarDailyRecordItem(
     val isLate: Boolean,
     val verificationId: Long?,
     val imageUrl: String?,
-    val comment: String?
+    val comment: String?,
+    val penaltyStatus: PenaltyStatus = PenaltyStatus.NONE,
+    val redayApplied: Boolean = false,
+    val redayAppliedAt: LocalDateTime? = null,
+    val redayDeadline: LocalDateTime? = null
 )
 
 data class ParticipantCalendarItem(
@@ -69,5 +84,23 @@ data class ChallengeCalendarResponse(
     val title: String,
     val startDate: LocalDate,
     val endDate: LocalDate,
+    val redayAllowed: Boolean = false,
     val participants: List<ParticipantCalendarItem>
+)
+
+data class RedayEligibilityResponse(
+    val recordId: Long,
+    val verificationId: Long?,
+    val challengeId: Long,
+    val targetDate: LocalDate,
+    val eligible: Boolean,
+    val reason: RedayIneligibleReason,
+    val reasonMessage: String,
+    val redayAllowed: Boolean,
+    val timePhase: VerificationTimePhase,
+    val penaltyAmount: Int,
+    val penaltyStatus: PenaltyStatus,
+    val redayApplied: Boolean,
+    val redayDeadline: LocalDateTime,
+    val remainingSeconds: Long
 )

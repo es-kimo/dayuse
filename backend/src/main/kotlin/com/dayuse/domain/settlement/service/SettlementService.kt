@@ -92,15 +92,17 @@ class SettlementService(
         return toAccountResponse(saved)
     }
 
-    @Transactional(readOnly = true)
     fun getUnpaidRecords(
         groupId: Long,
-        userId: Long
+        userId: Long,
+        now: java.time.LocalDateTime = com.dayuse.global.util.DateTimeUtils.nowKst()
     ): List<UnpaidRecordItemResponse> {
         validateMember(
             groupId,
             userId
         )
+        confirmExpiredPendingPenaltiesInGroup(groupId, now)
+
         val dailyRecords = dailyRecordRepository.findUnpaidRecordsForDeposit(
             userId,
             groupId
@@ -153,7 +155,8 @@ class SettlementService(
     fun createDepositReport(
         groupId: Long,
         userId: Long,
-        request: CreateDepositReportRequest
+        request: CreateDepositReportRequest,
+        now: java.time.LocalDateTime = com.dayuse.global.util.DateTimeUtils.nowKst()
     ): DepositReportDetailResponse {
         validateMember(
             groupId,
@@ -163,6 +166,8 @@ class SettlementService(
         if (!groupAccountRepository.existsByGroupId(groupId)) {
             throw BadRequestException("모임 계좌가 등록되지 않아 입금 신고를 진행할 수 없습니다. (ACCOUNT_NOT_REGISTERED)")
         }
+
+        confirmExpiredPendingPenaltiesInGroup(groupId, now)
 
         val distinctDailyIds = request.dailyRecordIds.distinct()
         val distinctPeriodIds = request.periodSettlementIds.distinct()
@@ -187,8 +192,16 @@ class SettlementService(
             if (record.userId != userId || record.groupId != groupId) {
                 throw ForbiddenException("본인의 모임 미수행 기록만 신고할 수 있습니다.")
             }
-            if (record.status != DailyRecordStatus.FAILED) {
-                throw BadRequestException("미수행 확정된 기록만 입금 신고할 수 있습니다.")
+            if (record.penaltyStatus == com.dayuse.domain.dailyrecord.PenaltyStatus.PENDING) {
+                throw BadRequestException("리데이 기한 내 보류 상태인 벌금은 아직 입금 신고할 수 없습니다.")
+            }
+            if (record.penaltyStatus == com.dayuse.domain.dailyrecord.PenaltyStatus.EXEMPTED || record.redayApplied) {
+                throw BadRequestException("리데이 적용으로 면제된 기록은 입금 신고할 수 없습니다.")
+            }
+            val isConfirmedPenalty = record.penaltyStatus == com.dayuse.domain.dailyrecord.PenaltyStatus.CONFIRMED ||
+                (record.status == DailyRecordStatus.FAILED && record.penaltyStatus == com.dayuse.domain.dailyrecord.PenaltyStatus.NONE)
+            if (!isConfirmedPenalty) {
+                throw BadRequestException("미수행 또는 벌금 확정된 기록만 입금 신고할 수 있습니다.")
             }
             if (record.depositStatus != DepositStatus.UNPAID) {
                 throw BadRequestException("이미 입금 확인 대기 중이거나 완료된 기록이 포함되어 있습니다.")
@@ -623,15 +636,17 @@ class SettlementService(
         )
     }
 
-    @Transactional(readOnly = true)
     fun getSettlementSummary(
         groupId: Long,
-        userId: Long
+        userId: Long,
+        now: java.time.LocalDateTime = com.dayuse.global.util.DateTimeUtils.nowKst()
     ): SettlementSummaryResponse {
         validateMember(
             groupId,
             userId
         )
+
+        confirmExpiredPendingPenaltiesInGroup(groupId, now)
 
         val unpaidAmount = dailyRecordRepository.calculateGroupUnpaidPenaltyAmount(groupId) +
                 (challengePeriodSettlementRepository?.calculateGroupUnpaidPenaltyAmount(groupId) ?: 0)
@@ -645,6 +660,8 @@ class SettlementService(
                     userId,
                     groupId
                 ) ?: 0)
+        val pendingAmount = dailyRecordRepository.calculateGroupPendingPenaltyAmount(groupId, now)
+        val myPendingAmount = dailyRecordRepository.calculatePendingPenaltyAmount(userId, groupId, now)
 
         val account = groupAccountRepository.findByGroupId(groupId)
 
@@ -655,8 +672,27 @@ class SettlementService(
             confirmedAmount = confirmedAmount,
             myUnpaidAmount = myUnpaidAmount,
             accountRegistered = account != null,
-            account = account?.let { toAccountResponse(it) }
+            account = account?.let { toAccountResponse(it) },
+            pendingAmount = pendingAmount,
+            myPendingAmount = myPendingAmount
         )
+    }
+
+    private fun confirmExpiredPendingPenaltiesInGroup(
+        groupId: Long,
+        now: java.time.LocalDateTime = com.dayuse.global.util.DateTimeUtils.nowKst()
+    ) {
+        val pendingRecords = dailyRecordRepository.findPendingRecordsByGroupId(groupId)
+        if (pendingRecords.isEmpty()) return
+        val challengeIds = pendingRecords.map { it.challengeId }.distinct()
+        val challenges = challengeRepository.findAllById(challengeIds).associateBy { it.id }
+        for (record in pendingRecords) {
+            val challenge = challenges[record.challengeId]
+            if (challenge != null && challenge.isAborted() && record.date >= challenge.abortedAt!!.toLocalDate()) {
+                continue
+            }
+            record.confirmExpiredPendingPenalty(record.penaltyAmount, now)
+        }
     }
 
     private fun validateMember(

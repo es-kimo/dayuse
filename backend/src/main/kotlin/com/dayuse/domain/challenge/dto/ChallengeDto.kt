@@ -68,6 +68,8 @@ data class CreateChallengeRequest(
 
     val executionType: ExecutionType = ExecutionType.INDIVIDUAL,
 
+    val redayAllowed: Boolean = false,
+
     @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
     val myPenaltyAmount: Int = 5000,
 
@@ -95,6 +97,8 @@ data class RestartChallengeRequest(
 
     val executionType: ExecutionType? = null,
 
+    val redayAllowed: Boolean? = null,
+
     @field:Min(value = 0, message = "약정 벌금은 0원 이상이어야 합니다.")
     val myPenaltyAmount: Int = 5000
 )
@@ -108,6 +112,7 @@ data class ChallengeRestartTemplateResponse(
     val periodType: PeriodType = PeriodType.DAILY,
     val targetFrequency: Int? = null,
     val executionType: ExecutionType = ExecutionType.INDIVIDUAL,
+    val redayAllowed: Boolean = false,
     val suggestedStartDate: LocalDate,
     val suggestedEndDate: LocalDate,
     val suggestedPenaltyAmount: Int
@@ -129,7 +134,9 @@ data class UpdateChallengeRequest(
 
     val targetFrequency: Int? = null,
 
-    val executionType: ExecutionType? = null
+    val executionType: ExecutionType? = null,
+
+    val redayAllowed: Boolean? = null
 )
 
 data class JoinChallengeRequest(
@@ -159,7 +166,10 @@ data class JoinPreviewResponse(
     val isStarted: Boolean,
     val options: List<JoinOptionDto>,
     val defaultPenaltyAmount: Int = 5000,
-    val executionType: ExecutionType = ExecutionType.INDIVIDUAL
+    val executionType: ExecutionType = ExecutionType.INDIVIDUAL,
+    val periodType: PeriodType = PeriodType.DAILY,
+    val redayAllowed: Boolean = false,
+    val redayRuleDescription: String? = null
 )
 
 data class AbortChallengeRequest(
@@ -178,6 +188,7 @@ data class ChallengeSummaryResponse(
     val periodType: PeriodType = PeriodType.DAILY,
     val targetFrequency: Int? = null,
     val executionType: ExecutionType = ExecutionType.INDIVIDUAL,
+    val redayAllowed: Boolean = false,
     val status: ChallengeStatus,
     val participantCount: Int,
     val isParticipating: Boolean,
@@ -222,6 +233,8 @@ data class ChallengeDetailResponse(
     val periodType: PeriodType = PeriodType.DAILY,
     val targetFrequency: Int? = null,
     val executionType: ExecutionType = ExecutionType.INDIVIDUAL,
+    val redayAllowed: Boolean = false,
+    val redayRuleDescription: String? = null,
     val totalTargetCount: Int = 14,
     val totalCompletedCount: Int = 0,
     val progressRate: Int = 0,

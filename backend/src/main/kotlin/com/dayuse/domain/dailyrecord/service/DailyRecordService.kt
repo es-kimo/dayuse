@@ -9,11 +9,15 @@ import com.dayuse.domain.dailyrecord.DailyRecord
 import com.dayuse.domain.dailyrecord.DailyRecordRepository
 import com.dayuse.domain.dailyrecord.DailyRecordStatus
 import com.dayuse.domain.dailyrecord.DepositStatus
+import com.dayuse.domain.dailyrecord.PenaltyStatus
+import com.dayuse.domain.dailyrecord.RedayIneligibleReason
+import com.dayuse.domain.dailyrecord.VerificationTimePhase
 import com.dayuse.domain.dailyrecord.dto.CalendarDailyRecordItem
 import com.dayuse.domain.dailyrecord.dto.ChallengeCalendarResponse
 import com.dayuse.domain.dailyrecord.dto.DailyRecordDetailResponse
 import com.dayuse.domain.dailyrecord.dto.LateVerificationRequest
 import com.dayuse.domain.dailyrecord.dto.ParticipantCalendarItem
+import com.dayuse.domain.dailyrecord.dto.RedayEligibilityResponse
 import com.dayuse.domain.dailyrecord.dto.StatusSummaryResponse
 import com.dayuse.domain.dailyrecord.dto.UncheckedRecordResponse
 import com.dayuse.domain.group.GroupMemberRepository
@@ -28,7 +32,9 @@ import com.dayuse.global.exception.ResourceNotFoundException
 import com.dayuse.global.util.DateTimeUtils
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Service
 @Transactional
@@ -119,10 +125,39 @@ class DailyRecordService(
         }
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * 모임 내 기한 만료된 보류 벌금(PENDING)을 확정(CONFIRMED) 상태로 전환합니다. (v0.11 F04)
+     */
+    fun confirmExpiredPendingPenaltiesInGroup(
+        groupId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): Int {
+        val pendingRecords = dailyRecordRepository.findPendingRecordsByGroupId(groupId)
+        if (pendingRecords.isEmpty()) return 0
+
+        val challengeIds = pendingRecords.map { it.challengeId }.distinct()
+        val challenges = challengeRepository.findAllById(challengeIds).associateBy { it.id }
+        val participantIds = pendingRecords.map { it.challengeParticipantId }.distinct()
+        val participants = challengeParticipantRepository.findAllById(participantIds).associateBy { it.id }
+
+        var confirmedCount = 0
+        for (record in pendingRecords) {
+            val challenge = challenges[record.challengeId]
+            if (challenge != null && challenge.isAborted() && record.date >= challenge.abortedAt!!.toLocalDate()) {
+                continue
+            }
+            val participantPenalty = participants[record.challengeParticipantId]?.penaltyAmount ?: record.penaltyAmount
+            if (record.confirmExpiredPendingPenalty(participantPenalty, now)) {
+                confirmedCount++
+            }
+        }
+        return confirmedCount
+    }
+
     fun getStatusSummary(
         groupId: Long,
-        userId: Long
+        userId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
     ): StatusSummaryResponse {
         val isMember = groupMemberRepository.existsByGroupIdAndUserId(
             groupId,
@@ -132,7 +167,9 @@ class DailyRecordService(
             throw ForbiddenException("해당 모임의 멤버만 상태 요약을 조회할 수 있습니다.")
         }
 
-        val today = DateTimeUtils.todayKst()
+        confirmExpiredPendingPenaltiesInGroup(groupId, now)
+
+        val today = now.toLocalDate()
         val uncheckedCount = dailyRecordRepository.countUncheckedRecords(
             userId,
             groupId,
@@ -142,11 +179,17 @@ class DailyRecordService(
             userId,
             groupId
         ) + (challengePeriodSettlementRepository?.calculateUnpaidPenaltyAmount(userId, groupId) ?: 0)
+        val pendingPenaltyAmount = dailyRecordRepository.calculatePendingPenaltyAmount(
+            userId,
+            groupId,
+            now
+        )
 
         return StatusSummaryResponse(
             groupId = groupId,
             uncheckedCount = uncheckedCount,
             unpaidPenaltyAmount = unpaidPenaltyAmount,
+            pendingPenaltyAmount = pendingPenaltyAmount,
             verifiedUserIds = verificationRepository.findAllByGroupIdAndTargetDate(groupId, today).map { it.userId }.distinct()
         )
     }
@@ -154,7 +197,8 @@ class DailyRecordService(
     @Transactional(readOnly = true)
     fun getUncheckedRecords(
         groupId: Long,
-        userId: Long
+        userId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
     ): List<UncheckedRecordResponse> {
         val isMember = groupMemberRepository.existsByGroupIdAndUserId(
             groupId,
@@ -164,7 +208,7 @@ class DailyRecordService(
             throw ForbiddenException("해당 모임의 멤버만 미확인 기록을 조회할 수 있습니다.")
         }
 
-        val today = DateTimeUtils.todayKst()
+        val today = now.toLocalDate()
         val uncheckedRecords = dailyRecordRepository.findUncheckedRecords(
             userId,
             groupId,
@@ -181,6 +225,13 @@ class DailyRecordService(
             val challenge = challenges[record.challengeId]
             val participant = participants[record.challengeParticipantId]
             val effectiveStatus = record.currentStatus(today)
+            val redayActive = challenge?.isRedayActive() == true && (participant?.penaltyAmount ?: 0) > 0
+            val evalPenaltyStatus = record.evaluatePenaltyStatus(
+                redayAllowed = redayActive,
+                participantPenaltyAmount = participant?.penaltyAmount ?: 0,
+                challengeAbortedAt = challenge?.abortedAt,
+                now = now
+            )
             UncheckedRecordResponse(
                 id = record.id,
                 challengeId = record.challengeId,
@@ -188,7 +239,10 @@ class DailyRecordService(
                 date = record.date,
                 status = effectiveStatus,
                 penaltyAmount = participant?.penaltyAmount ?: 0,
-                verificationCriteria = challenge?.verificationCriteria ?: ""
+                verificationCriteria = challenge?.verificationCriteria ?: "",
+                redayAllowed = redayActive,
+                penaltyStatus = evalPenaltyStatus,
+                redayDeadline = if (redayActive) record.effectiveRedayDeadline() else null
             )
         }
     }
@@ -196,7 +250,8 @@ class DailyRecordService(
     @Transactional(readOnly = true)
     fun getChallengeCalendar(
         challengeId: Long,
-        userId: Long
+        userId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
     ): ChallengeCalendarResponse {
         val challenge = challengeRepository.findById(challengeId)
             .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
@@ -209,7 +264,7 @@ class DailyRecordService(
             throw ForbiddenException("해당 모임의 멤버만 캘린더를 조회할 수 있습니다.")
         }
 
-        val today = DateTimeUtils.todayKst()
+        val today = now.toLocalDate()
         val participants = challengeParticipantRepository.findAllByChallengeIdAndStatus(
             challengeId,
             ParticipantStatus.ACTIVE
@@ -226,6 +281,7 @@ class DailyRecordService(
 
         val participantCalendarItems = participants.map { participant ->
             val user = users[participant.userId]
+            val redayActive = challenge.isRedayActive() && participant.penaltyAmount > 0
             val actualRecords = recordsByParticipant[participant.id].orEmpty()
                 .sortedBy { it.date }
                 .map { record ->
@@ -245,6 +301,13 @@ class DailyRecordService(
                         record.currentStatus(today)
                     }
 
+                    val evalPenaltyStatus = record.evaluatePenaltyStatus(
+                        redayAllowed = redayActive,
+                        participantPenaltyAmount = participant.penaltyAmount,
+                        challengeAbortedAt = challenge.abortedAt,
+                        now = now
+                    )
+
                     CalendarDailyRecordItem(
                         id = record.id,
                         date = record.date,
@@ -254,7 +317,11 @@ class DailyRecordService(
                         isLate = record.isLate,
                         verificationId = record.verificationId,
                         imageUrl = imageUrl,
-                        comment = verification?.comment
+                        comment = verification?.comment,
+                        penaltyStatus = evalPenaltyStatus,
+                        redayApplied = record.redayApplied,
+                        redayAppliedAt = record.redayAppliedAt,
+                        redayDeadline = if (redayActive) record.effectiveRedayDeadline() else null
                     )
                 }
 
@@ -290,13 +357,15 @@ class DailyRecordService(
             title = challenge.title,
             startDate = challenge.startDate,
             endDate = challenge.endDate,
+            redayAllowed = challenge.isRedayActive(),
             participants = participantCalendarItems
         )
     }
 
     fun markFailed(
         recordId: Long,
-        userId: Long
+        userId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
     ): DailyRecordDetailResponse {
         val record = dailyRecordRepository.findById(recordId)
             .orElseThrow { ResourceNotFoundException("일일 기록을 찾을 수 없습니다.") }
@@ -317,11 +386,17 @@ class DailyRecordService(
             }
         }
 
-        val today = DateTimeUtils.todayKst()
+        val today = now.toLocalDate()
         val participant = challengeParticipantRepository.findById(record.challengeParticipantId)
             .orElseThrow { ResourceNotFoundException("챌린지 참여 정보를 찾을 수 없습니다.") }
 
-        record.markFailed(participant.penaltyAmount, today)
+        val redayActive = challenge.isRedayActive() && participant.penaltyAmount > 0
+        record.markFailed(
+            penalty = participant.penaltyAmount,
+            today = today,
+            redayAllowed = redayActive,
+            now = now
+        )
 
         return toDetailResponse(record)
     }
@@ -329,7 +404,8 @@ class DailyRecordService(
     fun verifyLate(
         recordId: Long,
         userId: Long,
-        request: LateVerificationRequest
+        request: LateVerificationRequest,
+        now: LocalDateTime = DateTimeUtils.nowKst()
     ): VerificationDetailResponse {
         val record = dailyRecordRepository.findById(recordId)
             .orElseThrow { ResourceNotFoundException("일일 기록을 찾을 수 없습니다.") }
@@ -344,7 +420,7 @@ class DailyRecordService(
             throw BadRequestException("중단된 챌린지에는 인증을 등록할 수 없습니다.")
         }
 
-        val today = DateTimeUtils.todayKst()
+        val today = now.toLocalDate()
         record.validateLateVerification(today)
 
         presignedUrlService.validateImageOwnership(
@@ -353,7 +429,15 @@ class DailyRecordService(
             userId
         )
 
-        val isLate = DateTimeUtils.isLateVerification(record.date)
+        val participant = challengeParticipantRepository.findById(record.challengeParticipantId)
+            .orElseThrow { ResourceNotFoundException("챌린지 참여 정보를 찾을 수 없습니다.") }
+
+        val redayActive = challenge.isRedayActive() && participant.penaltyAmount > 0
+        val isLate = if (challenge.redayAllowed) {
+            DateTimeUtils.evaluateVerificationPhase(record.date, now).isOverdue
+        } else {
+            DateTimeUtils.isLateVerification(record.date, now)
+        }
 
         val verification = Verification(
             groupId = record.groupId,
@@ -367,9 +451,20 @@ class DailyRecordService(
         val savedVerification = verificationRepository.save(verification)
 
         record.verifyLate(
-            savedVerification.id,
+            verificationId = savedVerification.id,
             isLate = isLate,
-            today = today
+            today = today,
+            redayAllowed = redayActive,
+            penaltyAmountForOverdue = if (redayActive) participant.penaltyAmount else 0,
+            submittedAt = now
+        )
+
+        val eligibility = evaluateRedayEligibilityInternal(
+            record = record,
+            challenge = challenge,
+            participant = participant,
+            requestUserId = userId,
+            now = now
         )
 
         return VerificationDetailResponse(
@@ -386,18 +481,160 @@ class DailyRecordService(
             comment = savedVerification.comment,
             isLate = savedVerification.isLate,
             createdAt = savedVerification.createdAt,
-            updatedAt = savedVerification.updatedAt
+            updatedAt = savedVerification.updatedAt,
+            dailyRecordId = record.id,
+            redayAllowed = redayActive,
+            redayEligible = eligibility.eligible,
+            redayDeadline = record.redayDeadline,
+            penaltyStatus = record.penaltyStatus,
+            penaltyAmount = record.penaltyAmount
         )
     }
 
-    fun onVerificationCreated(verification: Verification) {
+    /**
+     * 일일 기록(DailyRecord) ID 기준 리데이 가능 여부 및 사유 검증 (v0.11 F03)
+     */
+    @Transactional(readOnly = true)
+    fun checkRedayEligibility(
+        recordId: Long,
+        userId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): RedayEligibilityResponse {
+        val record = dailyRecordRepository.findById(recordId)
+            .orElseThrow { ResourceNotFoundException("일일 기록을 찾을 수 없습니다.") }
+
+        if (record.userId != userId) {
+            val isMember = groupMemberRepository.existsByGroupIdAndUserId(record.groupId, userId)
+            if (!isMember) {
+                throw ForbiddenException("본인의 기록만 리데이 가능 여부를 확인할 수 있습니다.")
+            }
+        }
+
+        val challenge = challengeRepository.findById(record.challengeId)
+            .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
+
+        val participant = challengeParticipantRepository.findById(record.challengeParticipantId)
+            .orElseThrow { ResourceNotFoundException("챌린지 참여 정보를 찾을 수 없습니다.") }
+
+        return evaluateRedayEligibilityInternal(
+            record = record,
+            challenge = challenge,
+            participant = participant,
+            requestUserId = userId,
+            now = now
+        )
+    }
+
+    /**
+     * 인증(Verification) ID 기준 리데이 가능 여부 및 사유 검증 (v0.11 F03)
+     */
+    @Transactional(readOnly = true)
+    fun checkRedayEligibilityByVerificationId(
+        verificationId: Long,
+        userId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): RedayEligibilityResponse {
+        val verification = verificationRepository.findById(verificationId)
+            .orElseThrow { ResourceNotFoundException("인증 내역을 찾을 수 없습니다.") }
+
+        if (verification.userId != userId) {
+            val isMember = groupMemberRepository.existsByGroupIdAndUserId(verification.groupId, userId)
+            if (!isMember) {
+                throw ForbiddenException("본인의 인증 기록만 리데이 가능 여부를 확인할 수 있습니다.")
+            }
+        }
+
+        val challenge = challengeRepository.findById(verification.challengeId)
+            .orElseThrow { ResourceNotFoundException("챌린지를 찾을 수 없습니다.") }
+
+        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(
+            verification.challengeId,
+            verification.userId
+        ) ?: throw ResourceNotFoundException("챌린지 참여 정보를 찾을 수 없습니다.")
+
+        val record = dailyRecordRepository.findByChallengeParticipantIdAndDate(
+            participant.id,
+            verification.targetDate
+        ) ?: throw ResourceNotFoundException("일일 기록을 찾을 수 없습니다.")
+
+        return evaluateRedayEligibilityInternal(
+            record = record,
+            challenge = challenge,
+            participant = participant,
+            requestUserId = userId,
+            now = now
+        )
+    }
+
+    fun evaluateRedayEligibilityInternal(
+        record: DailyRecord,
+        challenge: Challenge,
+        participant: ChallengeParticipant,
+        requestUserId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): RedayEligibilityResponse {
+        val deadline = record.effectiveRedayDeadline()
+        val remainingSeconds = maxOf(0L, Duration.between(now, deadline).seconds)
+        val timePhase = DateTimeUtils.evaluateVerificationPhase(record.date, now)
+        val redayActive = challenge.isRedayActive() && participant.penaltyAmount > 0
+        val evalPenaltyStatus = record.evaluatePenaltyStatus(
+            redayAllowed = redayActive,
+            participantPenaltyAmount = participant.penaltyAmount,
+            challengeAbortedAt = challenge.abortedAt,
+            now = now
+        )
+
+        val reason = when {
+            record.userId != requestUserId -> RedayIneligibleReason.NOT_OWNER
+            challenge.periodType != com.dayuse.domain.challenge.PeriodType.DAILY -> RedayIneligibleReason.WEEKLY_NOT_SUPPORTED
+            challenge.executionType != com.dayuse.domain.challenge.ExecutionType.INDIVIDUAL -> RedayIneligibleReason.TOGETHER_NOT_SUPPORTED
+            participant.penaltyAmount <= 0 -> RedayIneligibleReason.NO_PENALTY
+            !challenge.redayAllowed -> RedayIneligibleReason.NOT_ALLOWED
+            challenge.isAborted() -> RedayIneligibleReason.CHALLENGE_ABORTED
+            record.redayApplied || record.penaltyStatus == PenaltyStatus.EXEMPTED -> RedayIneligibleReason.ALREADY_APPLIED
+            record.isLocked() -> RedayIneligibleReason.ALREADY_SETTLED
+            record.penaltyStatus == PenaltyStatus.CONFIRMED && now < deadline -> RedayIneligibleReason.ALREADY_CONFIRMED
+            record.status != DailyRecordStatus.COMPLETED || record.verificationId == null -> RedayIneligibleReason.NOT_VERIFIED
+            !record.isLate -> RedayIneligibleReason.NOT_OVERDUE
+            now >= deadline -> RedayIneligibleReason.EXPIRED
+            record.penaltyStatus == PenaltyStatus.CONFIRMED -> RedayIneligibleReason.ALREADY_CONFIRMED
+            else -> RedayIneligibleReason.ELIGIBLE
+        }
+
+        val effectivePenalty = when (evalPenaltyStatus) {
+            PenaltyStatus.EXEMPTED, PenaltyStatus.NONE -> 0
+            else -> if (record.penaltyAmount > 0) record.penaltyAmount else participant.penaltyAmount
+        }
+
+        return RedayEligibilityResponse(
+            recordId = record.id,
+            verificationId = record.verificationId,
+            challengeId = challenge.id,
+            targetDate = record.date,
+            eligible = reason == RedayIneligibleReason.ELIGIBLE,
+            reason = reason,
+            reasonMessage = reason.message,
+            redayAllowed = redayActive,
+            timePhase = timePhase,
+            penaltyAmount = effectivePenalty,
+            penaltyStatus = evalPenaltyStatus,
+            redayApplied = record.redayApplied,
+            redayDeadline = deadline,
+            remainingSeconds = remainingSeconds
+        )
+    }
+
+    fun onVerificationCreated(
+        verification: Verification,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ) {
         val participant = challengeParticipantRepository.findByChallengeIdAndUserId(
             verification.challengeId,
             verification.userId
         ) ?: return
 
         val challenge = challengeRepository.findById(verification.challengeId).orElse(null) ?: return
-        val today = DateTimeUtils.todayKst()
+        val today = now.toLocalDate()
         ensureDailyRecordsForParticipant(
             participant,
             challenge,
@@ -409,13 +646,18 @@ class DailyRecordService(
             verification.targetDate
         )
 
+        val redayActive = challenge.isRedayActive() && participant.penaltyAmount > 0
+
         record?.let {
             if (it.status != DailyRecordStatus.COMPLETED) {
                 if (verification.targetDate < today) {
                     it.verifyLate(
-                        verification.id,
+                        verificationId = verification.id,
                         isLate = verification.isLate,
-                        today = today
+                        today = today,
+                        redayAllowed = redayActive,
+                        penaltyAmountForOverdue = if (redayActive) participant.penaltyAmount else 0,
+                        submittedAt = now
                     )
                 } else {
                     it.verifyToday(verification.id)
@@ -461,7 +703,11 @@ class DailyRecordService(
             depositStatus = record.depositStatus,
             verificationId = record.verificationId,
             isLate = record.isLate,
-            failedAt = record.failedAt
+            failedAt = record.failedAt,
+            penaltyStatus = record.penaltyStatus,
+            redayApplied = record.redayApplied,
+            redayAppliedAt = record.redayAppliedAt,
+            redayDeadline = record.redayDeadline
         )
     }
 }

@@ -1,19 +1,12 @@
-import React, { useState } from 'react';
-import type { GroupMember, ExecutionType, PeriodType } from '../types';
-import { DayuAvatar } from './brand/DayuAvatar';
-import { SubPageHeader } from './layout/SubPageHeader';
-import { BottomActionBar } from './layout/BottomActionBar';
-import { Check, History, Info } from 'lucide-react';
-import {
-  Button,
-  ChoiceCard,
-  Field,
-  Pill,
-  Segmented,
-  StepBar,
-  TextAreaField,
-  TextField,
-} from './dayu/ui';
+import React, { useState } from "react";
+import type { ExperimentState } from "../types/experiment";
+import { RedayExperiment } from "./RedayExperiment";
+import type { GroupMember, ExecutionType, PeriodType } from "../types";
+import { DayuAvatar } from "./brand/DayuAvatar";
+import { SubPageHeader } from "./layout/SubPageHeader";
+import { BottomActionBar } from "./layout/BottomActionBar";
+import { Check, History, Info } from "lucide-react";
+import { Button, ChoiceCard, Field, Pill, Segmented, StepBar, TextAreaField, TextField } from "./dayu/ui";
 
 interface NewChallengeViewBProps {
   title: string;
@@ -26,8 +19,8 @@ interface NewChallengeViewBProps {
   setStartDate: (val: string) => void;
   endDate: string;
   setEndDate: (val: string) => void;
-  selectedPreset: number | 'custom';
-  setSelectedPreset: (val: number | 'custom') => void;
+  selectedPreset: number | "custom";
+  setSelectedPreset: (val: number | "custom") => void;
   periodType: PeriodType;
   setPeriodType: (val: PeriodType) => void;
   targetFrequency: number;
@@ -36,6 +29,10 @@ interface NewChallengeViewBProps {
   setExecutionType: (val: ExecutionType) => void;
   penaltyAmount: number;
   setPenaltyAmount: (val: number) => void;
+  redayExperiment?: ExperimentState;
+  onRedayExposure: (state: ExperimentState) => void;
+  redayAllowed: boolean;
+  setRedayAllowed: (val: boolean) => void;
   groupMembers: GroupMember[];
   selectedMemberIds: Set<number>;
   onToggleMember: (userId: number) => void;
@@ -49,18 +46,13 @@ interface NewChallengeViewBProps {
   currentUserId?: number;
 }
 
-const CRITERIA_SUGGESTIONS = [
-  '제출 성공 화면 캡처',
-  '운동 기록 앱 캡처',
-  '시계가 보이는 사진',
-  '완독한 페이지 사진',
-];
+const CRITERIA_SUGGESTIONS = ["제출 성공 화면 캡처", "운동 기록 앱 캡처", "시계가 보이는 사진", "완독한 페이지 사진"];
 
 const PERIOD_PRESETS = [
-  { label: '1주 (7일)', days: 7 },
-  { label: '2주 (14일)', days: 14 },
-  { label: '3주 (21일)', days: 21 },
-  { label: '4주 (28일)', days: 28 },
+  { label: "1주 (7일)", days: 7 },
+  { label: "2주 (14일)", days: 14 },
+  { label: "3주 (21일)", days: 21 },
+  { label: "4주 (28일)", days: 28 },
 ];
 
 export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
@@ -84,6 +76,10 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
   setExecutionType,
   penaltyAmount,
   setPenaltyAmount,
+  redayExperiment,
+  onRedayExposure,
+  redayAllowed,
+  setRedayAllowed,
   groupMembers,
   selectedMemberIds,
   onToggleMember,
@@ -97,6 +93,9 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
   currentUserId,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  const canEnableReday = periodType === "DAILY" && executionType === "INDIVIDUAL" && penaltyAmount > 0;
+  const effectiveRedayAllowed = canEnableReday && redayAllowed;
 
   const canProceedStep1 = title.trim().length > 0 && verificationCriteria.trim().length > 0;
   const canProceedStep2 = durationDays > 0;
@@ -226,7 +225,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
                     value={startDate}
                     onChange={(e) => {
                       setStartDate(e.target.value);
-                      setSelectedPreset('custom');
+                      setSelectedPreset("custom");
                     }}
                   />
                 </Field>
@@ -237,7 +236,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
                     value={endDate}
                     onChange={(e) => {
                       setEndDate(e.target.value);
-                      setSelectedPreset('custom');
+                      setSelectedPreset("custom");
                     }}
                   />
                 </Field>
@@ -250,11 +249,11 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
                 value={periodType}
                 onChange={setPeriodType}
                 options={[
-                  { value: 'DAILY', label: '매일' },
-                  { value: 'WEEKLY_N', label: '주 N회' },
+                  { value: "DAILY", label: "매일" },
+                  { value: "WEEKLY_N", label: "주 N회" },
                 ]}
               />
-              {periodType === 'WEEKLY_N' && (
+              {periodType === "WEEKLY_N" && (
                 <div className="flex flex-wrap gap-1.5">
                   {[1, 2, 3, 4, 5, 6].map((freq) => (
                     <Pill key={freq} active={targetFrequency === freq} onClick={() => setTargetFrequency(freq)}>
@@ -268,14 +267,14 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
             <Field label="방식">
               <div className="flex gap-2">
                 <ChoiceCard
-                  active={executionType === 'INDIVIDUAL'}
-                  onClick={() => setExecutionType('INDIVIDUAL')}
+                  active={executionType === "INDIVIDUAL"}
+                  onClick={() => setExecutionType("INDIVIDUAL")}
                   title="각자하기"
                   desc="각자 목표를 채우고, 못 한 날은 각자 약정 금액을 내요"
                 />
                 <ChoiceCard
-                  active={executionType === 'TOGETHER'}
-                  onClick={() => setExecutionType('TOGETHER')}
+                  active={executionType === "TOGETHER"}
+                  onClick={() => setExecutionType("TOGETHER")}
                   title="함께하기"
                   desc="하루에 한 명만 인증해도 모두 성공. 벌금 없이 가볍게"
                 />
@@ -288,7 +287,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
           <>
             <h2 className="text-[21px] font-extrabold tracking-[-0.02em] text-slate-800">누구와 함께할까요?</h2>
 
-            {executionType === 'INDIVIDUAL' && (
+            {executionType === "INDIVIDUAL" && (
               <Field label="못 한 날 약정 금액" help="모든 참여자에게 똑같이 적용돼요">
                 <div className="flex flex-wrap gap-1.5">
                   {[1000, 3000, 5000, 10000].map((amt) => (
@@ -301,9 +300,47 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
             )}
 
             <Field
+              label="리데이 (벌금 면제권)"
+              help={
+                canEnableReday
+                  ? "익일 오전 9시~이틀 뒤 오전 9시 전 지각 인증 후 리데이 티켓을 쓰면 해당 날 벌금이 면제돼요"
+                  : "매일 · 각자하기 · 벌금이 있는 챌린지에서만 리데이를 사용할 수 있어요"
+              }
+            >
+              {canEnableReday ? (
+                <RedayExperiment
+                  state={redayExperiment}
+                  allowed={effectiveRedayAllowed}
+                  onChange={setRedayAllowed}
+                  onExposure={onRedayExposure}
+                >
+                  <div className="flex gap-2">
+                    <ChoiceCard
+                      active={effectiveRedayAllowed}
+                      onClick={() => setRedayAllowed(true)}
+                      title="허용"
+                      desc="지각 인증 후 리데이 티켓을 쓰면 벌금을 면제받아요"
+                    />
+                    <ChoiceCard
+                      active={!effectiveRedayAllowed}
+                      onClick={() => setRedayAllowed(false)}
+                      title="미허용"
+                      desc="지각 인증을 해도 약정 벌금이 그대로 부과돼요"
+                    />
+                  </div>
+                </RedayExperiment>
+              ) : (
+                <div className="rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-[13px] text-slate-500">
+                  주 N회 · 함께하기 · 무벌금 챌린지에서는 리데이가 적용되지 않아요.
+                </div>
+              )}
+            </Field>
+
+            <Field
               label={
                 <>
-                  함께할 모임원 <span className="font-normal text-slate-500">· 나 포함 {selectedMemberIds.size + 1}명</span>
+                  함께할 모임원{" "}
+                  <span className="font-normal text-slate-500">· 나 포함 {selectedMemberIds.size + 1}명</span>
                 </>
               }
             >
@@ -320,8 +357,8 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
                       disabled={isCreator}
                       onClick={() => !isCreator && onToggleMember(m.userId)}
                       className={`flex items-center gap-2.5 rounded-[14px] border-[1.5px] px-[13.5px] py-[11.5px] text-left transition-colors ${
-                        isSelected ? 'border-blue-600 bg-blue-50' : 'border-slate-200 bg-white hover:bg-slate-50'
-                      } ${isCreator ? 'cursor-default' : 'cursor-pointer'}`}
+                        isSelected ? "border-blue-600 bg-blue-50" : "border-slate-200 bg-white hover:bg-slate-50"
+                      } ${isCreator ? "cursor-default" : "cursor-pointer"}`}
                     >
                       <DayuAvatar profileImageUrl={m.profileImageUrl} size={36} />
                       <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
@@ -331,7 +368,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
                       <span
                         aria-hidden
                         className={`grid size-[22px] shrink-0 place-items-center rounded-[7px] border-[1.5px] ${
-                          isSelected ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'
+                          isSelected ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300"
                         }`}
                       >
                         {isSelected && <Check className="size-3.5 stroke-3" />}
@@ -345,25 +382,31 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
             <div className="flex flex-col gap-2 rounded-[18px] bg-slate-100 p-4 text-[13.5px]">
               <div className="flex justify-between gap-3">
                 <span className="text-slate-500">챌린지</span>
-                <b className="truncate text-right font-bold text-slate-800">{title || '-'}</b>
+                <b className="truncate text-right font-bold text-slate-800">{title || "-"}</b>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-slate-500">기간</span>
                 <b className="text-right font-bold text-slate-800">
-                  {startDate} ~ · {durationDays}일
+                  {startDate} ~ {endDate} · {durationDays}일
                 </b>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-slate-500">주기 · 방식</span>
                 <b className="text-right font-bold text-slate-800">
-                  {periodType === 'DAILY' ? '매일' : `주 ${targetFrequency}회`} ·{' '}
-                  {executionType === 'INDIVIDUAL' ? '각자하기' : '함께하기'}
+                  {periodType === "DAILY" ? "매일" : `주 ${targetFrequency}회`} ·{" "}
+                  {executionType === "INDIVIDUAL" ? "각자하기" : "함께하기"}
                 </b>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="text-slate-500">약정</span>
                 <b className="text-right font-bold text-slate-800">
-                  {executionType === 'INDIVIDUAL' ? `하루 ${penaltyAmount.toLocaleString()}원` : '없음'}
+                  {executionType === "INDIVIDUAL" ? `하루 ${penaltyAmount.toLocaleString()}원` : "없음"}
+                </b>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-500">리데이</span>
+                <b className="text-right font-bold text-slate-800">
+                  {effectiveRedayAllowed ? "허용 (벌금 면제권 사용 가능)" : "미허용"}
                 </b>
               </div>
             </div>
@@ -389,7 +432,7 @@ export const NewChallengeViewB: React.FC<NewChallengeViewBProps> = ({
           onClick={handleNext}
           disabled={(step === 1 && !canProceedStep1) || isSubmitting}
         >
-          {isSubmitting ? '만드는 중...' : step === 3 ? '챌린지 만들기' : '다음'}
+          {isSubmitting ? "만드는 중..." : step === 3 ? "챌린지 만들기" : "다음"}
         </Button>
       </BottomActionBar>
     </div>

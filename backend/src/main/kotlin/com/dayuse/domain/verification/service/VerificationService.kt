@@ -79,7 +79,16 @@ class VerificationService(
         }
 
         // 4. 지각 여부 계산 (대상 날짜 익일 09:00 KST 이전이면 정상, 이후이면 지각)
-        val isLate = if (targetDate < today) DateTimeUtils.isLateVerification(targetDate) else false
+        val now = DateTimeUtils.nowKst()
+        val isLate = if (targetDate < today) {
+            if (challenge.redayAllowed) {
+                DateTimeUtils.evaluateVerificationPhase(targetDate, now).isOverdue
+            } else {
+                DateTimeUtils.isLateVerification(targetDate, now)
+            }
+        } else {
+            false
+        }
 
         // 5. 중복 인증 애플리케이션 레벨 1차 체크
         if (verificationRepository.existsByChallengeIdAndUserIdAndTargetDate(
@@ -108,7 +117,7 @@ class VerificationService(
                 comment = request.comment
             )
             val saved = verificationRepository.save(verification)
-            dailyRecordService?.onVerificationCreated(saved)
+            dailyRecordService?.onVerificationCreated(saved, now)
             challengeProgressService?.onVerificationCreated(
                 saved,
                 challenge
@@ -118,7 +127,7 @@ class VerificationService(
                 isSuccess = true,
                 metadata = mapOf("challengeId" to challenge.id)
             )
-            return toDetailResponse(saved)
+            return toDetailResponse(saved, challenge, now)
         } catch (e: Exception) {
             featureFlagService?.evaluateAndLogCertAction(
                 userId = userId,
@@ -183,10 +192,13 @@ class VerificationService(
             throw ForbiddenException("본인이 작성한 인증만 삭제할 수 있습니다.")
         }
 
-        // 정산 락 확인
+        // 정산 락 및 리데이 적용 여부 확인
         val records = dailyRecordRepository?.findAllByVerificationId(verificationId).orEmpty()
         if (records.any { it.isLocked() }) {
             throw BadRequestException("정산 진행 중이거나 완료된 기록의 인증은 삭제할 수 없습니다.")
+        }
+        if (records.any { it.redayApplied || it.penaltyStatus == com.dayuse.domain.dailyrecord.PenaltyStatus.EXEMPTED }) {
+            throw BadRequestException("리데이가 적용된 인증 기록은 삭제할 수 없습니다.")
         }
 
         shareCardRepository?.findAllByVerificationIdAndIsActiveTrue(verificationId)?.forEach {
@@ -205,7 +217,29 @@ class VerificationService(
         }
     }
 
-    private fun toDetailResponse(v: Verification): VerificationDetailResponse {
+    private fun toDetailResponse(
+        v: Verification,
+        challenge: com.dayuse.domain.challenge.Challenge? = null,
+        now: java.time.LocalDateTime = DateTimeUtils.nowKst()
+    ): VerificationDetailResponse {
+        val record = dailyRecordRepository?.findByChallengeIdAndUserIdAndDate(
+            v.challengeId,
+            v.userId,
+            v.targetDate
+        )
+        val effectiveChallenge = challenge ?: challengeRepository.findById(v.challengeId).orElse(null)
+        val participant = challengeParticipantRepository.findByChallengeIdAndUserId(v.challengeId, v.userId)
+        val redayActive = effectiveChallenge?.isRedayActive() == true && (participant?.penaltyAmount ?: 0) > 0
+        val eligibility = if (record != null && effectiveChallenge != null && participant != null && dailyRecordService != null) {
+            dailyRecordService.evaluateRedayEligibilityInternal(
+                record = record,
+                challenge = effectiveChallenge,
+                participant = participant,
+                requestUserId = v.userId,
+                now = now
+            )
+        } else null
+
         return VerificationDetailResponse(
             id = v.id,
             groupId = v.groupId,
@@ -220,7 +254,13 @@ class VerificationService(
             comment = v.comment,
             isLate = v.isLate,
             createdAt = v.createdAt,
-            updatedAt = v.updatedAt
+            updatedAt = v.updatedAt,
+            dailyRecordId = record?.id,
+            redayAllowed = redayActive,
+            redayEligible = eligibility?.eligible ?: false,
+            redayDeadline = record?.redayDeadline,
+            penaltyStatus = record?.penaltyStatus ?: com.dayuse.domain.dailyrecord.PenaltyStatus.NONE,
+            penaltyAmount = record?.penaltyAmount ?: 0
         )
     }
 }

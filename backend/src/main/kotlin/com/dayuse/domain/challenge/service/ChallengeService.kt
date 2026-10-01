@@ -124,6 +124,15 @@ class ChallengeService(
             throw BadRequestException("모임에 속하지 않은 회원이 포함되어 있습니다.")
         }
 
+        if (request.redayAllowed) {
+            if (isTogether) {
+                throw BadRequestException("함께하기 챌린지에는 리데이 설정을 허용할 수 없습니다.")
+            }
+            if (participantsList.any { it.penaltyAmount <= 0 }) {
+                throw BadRequestException("약정 벌금이 없는 챌린지에는 리데이 설정을 허용할 수 없습니다.")
+            }
+        }
+
         val challenge = challengeRepository.save(
             Challenge(
                 groupId = groupId,
@@ -135,7 +144,8 @@ class ChallengeService(
                 endDate = calculatedEndDate,
                 periodType = request.periodType,
                 targetFrequency = request.targetFrequency,
-                executionType = request.executionType
+                executionType = request.executionType,
+                redayAllowed = request.redayAllowed
             )
         )
 
@@ -210,6 +220,8 @@ class ChallengeService(
             periodType = challenge.periodType,
             targetFrequency = challenge.targetFrequency,
             executionType = challenge.executionType,
+            redayAllowed = challenge.redayAllowed,
+            redayRuleDescription = buildRedayRuleDescription(challenge),
             totalTargetCount = initCalc.totalTargetCount,
             totalCompletedCount = 0,
             progressRate = 0,
@@ -275,6 +287,7 @@ class ChallengeService(
             periodType = challenge.periodType,
             targetFrequency = challenge.targetFrequency,
             executionType = challenge.executionType,
+            redayAllowed = challenge.redayAllowed,
             suggestedStartDate = suggestedStartDate,
             suggestedEndDate = suggestedEndDate,
             suggestedPenaltyAmount = if (challenge.executionType.isTogether) 0 else suggestedPenalty
@@ -320,6 +333,9 @@ class ChallengeService(
         }
 
         val isTogether = (request.executionType ?: sourceChallenge.executionType).isTogether
+        if (request.redayAllowed == true && (isTogether || request.myPenaltyAmount <= 0)) {
+            throw BadRequestException("약정 벌금이 없는 챌린지에는 리데이 설정을 허용할 수 없습니다.")
+        }
 
         val newChallenge = Challenge.recreateFrom(
             source = sourceChallenge,
@@ -332,6 +348,7 @@ class ChallengeService(
             newPeriodType = request.periodType,
             newTargetFrequency = request.targetFrequency,
             newExecutionType = request.executionType ?: sourceChallenge.executionType,
+            newRedayAllowed = request.redayAllowed ?: if (request.myPenaltyAmount <= 0) false else null,
             today = today
         )
         val savedChallenge = challengeRepository.save(newChallenge)
@@ -395,6 +412,8 @@ class ChallengeService(
             periodType = savedChallenge.periodType,
             targetFrequency = savedChallenge.targetFrequency,
             executionType = savedChallenge.executionType,
+            redayAllowed = savedChallenge.redayAllowed,
+            redayRuleDescription = buildRedayRuleDescription(savedChallenge),
             totalTargetCount = initCalc.totalTargetCount,
             totalCompletedCount = 0,
             progressRate = 0,
@@ -471,6 +490,7 @@ class ChallengeService(
                 periodType = challenge.periodType,
                 targetFrequency = challenge.targetFrequency,
                 executionType = challenge.executionType,
+                redayAllowed = challenge.redayAllowed,
                 status = status,
                 participantCount = participantCount,
                 isParticipating = myParticipant != null,
@@ -644,6 +664,8 @@ class ChallengeService(
             periodType = challenge.periodType,
             targetFrequency = challenge.targetFrequency,
             executionType = challenge.executionType,
+            redayAllowed = challenge.redayAllowed,
+            redayRuleDescription = buildRedayRuleDescription(challenge),
             totalTargetCount = progressResult.totalTargetCount,
             totalCompletedCount = progressResult.totalCompletedCount,
             progressRate = progressResult.progressRate,
@@ -751,7 +773,10 @@ class ChallengeService(
             isStarted = isStarted,
             options = options,
             defaultPenaltyAmount = if (challenge.executionType.isTogether) 0 else 5000,
-            executionType = challenge.executionType
+            executionType = challenge.executionType,
+            periodType = challenge.periodType,
+            redayAllowed = challenge.redayAllowed,
+            redayRuleDescription = buildRedayRuleDescription(challenge)
         )
     }
 
@@ -790,6 +815,9 @@ class ChallengeService(
         )
 
         val isTogether = challenge.executionType.isTogether
+        if (challenge.redayAllowed && !isTogether && request.penaltyAmount <= 0) {
+            throw BadRequestException("리데이 허용 챌린지는 약정 벌금을 0원보다 크게 설정해야 합니다.")
+        }
         val effectivePenaltyAmount = if (isTogether) 0 else request.penaltyAmount
 
         val participant = if (existing != null && existing.status == ParticipantStatus.CANCELLED) {
@@ -882,6 +910,10 @@ class ChallengeService(
             throw BadRequestException("함께하기 챌린지는 약정 벌금을 변경할 수 없습니다.")
         }
 
+        if (challenge.redayAllowed && request.penaltyAmount <= 0) {
+            throw BadRequestException("리데이 허용 챌린지는 약정 벌금을 0원보다 크게 설정해야 합니다.")
+        }
+
         groupMemberRepository.findByGroupIdAndUserId(
             challenge.groupId,
             userId
@@ -947,6 +979,16 @@ class ChallengeService(
             throw BadRequestException("챌린지 수행 방식은 수정할 수 없습니다.")
         }
 
+        if (request.redayAllowed == true) {
+            val activeParticipants = challengeParticipantRepository.findAllByChallengeIdAndStatus(
+                challengeId,
+                ParticipantStatus.ACTIVE
+            )
+            if (activeParticipants.any { it.penaltyAmount <= 0 }) {
+                throw BadRequestException("약정 벌금이 0원인 참여자가 있어 리데이 설정을 허용할 수 없습니다.")
+            }
+        }
+
         challenge.updateConditions(
             newTitle = request.title,
             newDescription = request.description,
@@ -956,6 +998,7 @@ class ChallengeService(
             newPeriodType = request.periodType,
             newTargetFrequency = request.targetFrequency,
             newExecutionType = request.executionType,
+            newRedayAllowed = request.redayAllowed,
             today = today
         )
 
@@ -1149,6 +1192,17 @@ class ChallengeService(
             userId,
             now.toLocalDate()
         )
+    }
+
+    private fun buildRedayRuleDescription(challenge: Challenge): String? {
+        if (!challenge.isRedaySupportedType()) {
+            return null
+        }
+        return if (challenge.redayAllowed) {
+            "익일 오전 9시 이후~이틀 뒤 오전 9시 전 지각 인증 등록 후 리데이 티켓을 사용하면 벌금이 면제돼요. (지각 기록은 유지)"
+        } else {
+            "이 챌린지는 리데이를 허용하지 않아요."
+        }
     }
 
     private fun ChallengePeriodInterval.toDto() = ChallengePeriodIntervalDto(
