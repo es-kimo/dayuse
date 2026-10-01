@@ -76,7 +76,8 @@ export const NewChallengePage: React.FC = () => {
   const [activeRestartId, setActiveRestartId] = useState<string | null>(restartFromId);
 
   const { uiVersion } = useUiVersion();
-  const redayExperimentEligible = uiVersion === 'B' && !activeRestartId && !isTemplateLoaded && !isLoadingTemplate;
+  const redayPreview = import.meta.env.DEV && ['A', 'B'].includes(searchParams.get('reday_ui') ?? '');
+  const redayExperimentEligible = !redayPreview && uiVersion === 'B' && !activeRestartId && !isTemplateLoaded && !isLoadingTemplate;
   const redayExperiment = useExperiment(CHALLENGE_REDAY_UI_EXPERIMENT, redayExperimentEligible);
   const redayExposure = React.useRef<ExperimentState | null>(null);
 
@@ -441,7 +442,7 @@ export const NewChallengePage: React.FC = () => {
 
       // 생성 API가 실제로 성공해 챌린지가 만들어진 뒤에만 기록한다.
       // 노출 뒤 조건/템플릿을 바꿔도 완료율 분모에서 빠지지 않게 최초 노출에 귀속한다.
-      const experimentContext = redayExposure.current ?? undefined;
+      const experimentContext = redayPreview ? undefined : redayExposure.current ?? undefined;
       const creationProperties = {
         challengeId: createdChallenge.id,
         groupId: createdChallenge.groupId,
