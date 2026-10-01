@@ -3,6 +3,7 @@ import { useExperiment } from '../hooks/useExperiment';
 import { CHALLENGE_REDAY_UI_EXPERIMENT } from '../constants/experiments';
 import type { ExperimentState } from '../types/experiment';
 import { track } from '../utils/tracker';
+import { navigateAfterChallengeCreation } from '../utils/challengeNavigation';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { groupsApi } from '../api/groups';
@@ -457,7 +458,7 @@ export const NewChallengePage: React.FC = () => {
         track('challenge_created_reday_allowed', creationProperties, experimentContext);
       }
 
-      navigate(`/challenges/${createdChallenge.id}`);
+      navigateAfterChallengeCreation(navigate, createdChallenge.groupId, createdChallenge.id);
     } catch (err: any) {
       console.error('Failed to create challenge:', err);
       setError(err.response?.data?.message || '챌린지 생성에 실패했습니다.');
