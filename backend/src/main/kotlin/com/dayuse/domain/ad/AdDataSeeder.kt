@@ -49,6 +49,42 @@ class AdDataSeeder(
     companion object {
         val DEFAULT_CAMPAIGN_SEEDS: List<CreateAdCampaignRequest> = listOf(
             CreateAdCampaignRequest(
+                campaignKey = "dayuse-autumn-feature-guide-v1",
+                title = "가을 시즌 기능 안내 캠페인 (알림 · 친구 초대 · 데이유 색)",
+                slotType = AdSlotType.REDAY_TICKET_REWARD,
+                status = AdCampaignStatus.ACTIVE,
+                priority = 20,
+                dailyImpressionLimit = 3,
+                startAt = LocalDateTime.of(2026, 10, 1, 0, 0),
+                endAt = LocalDateTime.of(2026, 12, 31, 23, 59, 59),
+                creatives = listOf(
+                    CreateAdCreativeInput(
+                        title = "자정 전에 데이유가 먼저 알려드려요",
+                        description = "알림을 켜 두면 남은 인증이 있는 날에만 정한 시간에 한 번 알려드려요. 바쁜 날에도 루틴이 끊기지 않아요.",
+                        imageUrl = "/ads/banners/banner-01-reminder.webp",
+                        ctaText = "10초 동안 안내를 확인하면 리데이 티켓 1장이 지급돼요. 알림은 내 정보 › 미인증 알림에서 켤 수 있어요.",
+                        minWatchSeconds = 10,
+                        active = true
+                    ),
+                    CreateAdCreativeInput(
+                        title = "혼자보다 친구와 할 때 더 오래가요",
+                        description = "모임 멤버 탭에서 초대 링크를 카톡으로 보내 보세요. 목표는 달라도 같은 모임에서 서로의 인증을 볼 수 있어요.",
+                        imageUrl = "/ads/banners/banner-02-invite.webp",
+                        ctaText = "10초 동안 안내를 확인하면 리데이 티켓 1장이 지급돼요. 초대 링크는 모임 › 멤버 탭에 있어요.",
+                        minWatchSeconds = 10,
+                        active = true
+                    ),
+                    CreateAdCreativeInput(
+                        title = "내 데이유 색, 이제 직접 고를 수 있어요",
+                        description = "내 정보에서 프로필 데이유를 눌러 10가지 색 중 하나를 골라 보세요. 모임 피드와 멤버 목록에 바로 반영돼요.",
+                        imageUrl = "/ads/banners/banner-03-dayu-color.webp",
+                        ctaText = "10초 동안 안내를 확인하면 리데이 티켓 1장이 지급돼요. 내 정보 › 프로필 데이유에서 바꿀 수 있어요.",
+                        minWatchSeconds = 10,
+                        active = true
+                    )
+                )
+            ),
+            CreateAdCampaignRequest(
                 campaignKey = "dayuse-reday-guide-default",
                 title = "dayuse 리데이 제도 안내 캠페인",
                 slotType = AdSlotType.REDAY_TICKET_REWARD,

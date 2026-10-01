@@ -348,6 +348,7 @@ class AdService(
         val startOfDay = now.toLocalDate().atStartOfDay()
         val endOfDay = startOfDay.plusDays(1)
 
+        var selectedTodayImpressions = 0L
         val selectedPair = servableCandidates.firstOrNull { (campaign, _) ->
             val todayImpressions = adSessionRepository.countActualImpressionsByCampaignAndUserBetween(
                 campaignId = campaign.id,
@@ -355,14 +356,19 @@ class AdService(
                 startOfDay = startOfDay,
                 endOfDay = endOfDay
             )
-            todayImpressions < campaign.dailyImpressionLimit
+            if (todayImpressions < campaign.dailyImpressionLimit) {
+                selectedTodayImpressions = todayImpressions
+                true
+            } else {
+                false
+            }
         } ?: return AdSessionIssueResponse.unavailable(
             reason = AdUnavailableReason.DAILY_LIMIT_REACHED,
             message = "오늘 시청 가능한 광고 횟수를 모두 사용했습니다."
         )
 
         val (selectedCampaign, activeCreatives) = selectedPair
-        val selectedCreative = activeCreatives.first()
+        val selectedCreative = activeCreatives[(selectedTodayImpressions % activeCreatives.size).toInt()]
 
         val session = adSessionRepository.save(
             AdSession(
