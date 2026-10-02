@@ -12,13 +12,15 @@ interface CommentsBottomSheetProps {
   /** 닫혀 있을 때는 null이다 */
   verificationId: number | null;
   onClose: () => void;
-  onCommentCountChange?: (delta: number) => void;
+  onOpenChangeComplete?: (open: boolean) => void;
+  onCommentCountChange?: (verificationId: number, delta: number) => void;
 }
 
 export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
   isOpen,
   verificationId,
   onClose,
+  onOpenChangeComplete,
   onCommentCountChange,
 }) => {
   const [comments, setComments] = useState<CommentItem[]>([]);
@@ -26,11 +28,6 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
   const [content, setContent] = useState<string>("");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  const currentVerificationIdRef = useRef(verificationId);
-  useEffect(() => {
-    currentVerificationIdRef.current = verificationId;
-  }, [verificationId]);
 
   /*
    * 시트가 열려 있을 때만 불러온다.
@@ -68,13 +65,9 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
     try {
       const newComment = await verificationsApi.createComment(verificationId, content.trim());
 
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-
-      if (verificationId === currentVerificationIdRef.current) {
-        setComments((prev) => [...prev, newComment]);
-      }
+      setComments((prev) => [...prev, newComment]);
       setContent("");
-      onCommentCountChange?.(1);
+      onCommentCountChange?.(verificationId, 1);
     } catch (err) {
       console.error("Failed to create comment:", err);
       alert("댓글 등록에 실패했습니다.");
@@ -84,12 +77,13 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
   };
 
   const handleDelete = async (commentId: number) => {
+    if (verificationId === null) return;
     if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
     setDeletingId(commentId);
     try {
       await verificationsApi.deleteComment(commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
-      onCommentCountChange?.(-1);
+      onCommentCountChange?.(verificationId, -1);
     } catch (err) {
       console.error("Failed to delete comment:", err);
       alert("댓글 삭제에 실패했습니다.");
@@ -99,7 +93,12 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
   };
 
   return (
-    <BottomSheet open={isOpen} size="tall" onOpenChange={(next) => !next && onClose()}>
+    <BottomSheet
+      open={isOpen}
+      size="tall"
+      onOpenChange={(next) => !next && onClose()}
+      onOpenChangeComplete={onOpenChangeComplete}
+    >
       <>
         {/* 손잡이 · 헤더 */}
         <div className="flex shrink-0 flex-col gap-3.5 px-5 pt-2.5">

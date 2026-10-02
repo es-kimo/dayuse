@@ -40,7 +40,6 @@ export const GroupDetailPage: React.FC = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-
   const tabParam = searchParams.get("tab");
   const activeTab: "home" | "challenges" | "members" =
     tabParam === "challenges" || tabParam === "members"
@@ -106,6 +105,7 @@ export const GroupDetailPage: React.FC = () => {
   // 모달 및 바텀시트 상태
   const [activeVerificationAction, setActiveVerificationAction] = useState<TodayAction | null>(null);
   const [activeCommentVerificationId, setActiveCommentVerificationId] = useState<number | null>(null);
+  const [isCommentsBottomSheetOpen, setIsCommentsBottomSheetOpen] = useState(false);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
@@ -231,6 +231,11 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
+  const handleCommentOpen = (verificationId: number) => {
+    setIsCommentsBottomSheetOpen(true);
+    setActiveCommentVerificationId(verificationId);
+  };
+
   const handleMarkFailed = async (recordId: number) => {
     try {
       await recordsApi.markFailed(recordId);
@@ -340,14 +345,10 @@ export const GroupDetailPage: React.FC = () => {
     }
   };
 
-  const handleCommentCountChange = (delta: number) => {
-    console.log("activeCommentVerificationId: ", activeCommentVerificationId);
-    if (!activeCommentVerificationId) return;
+  const handleCommentCountChange = (verificationId: number, delta: number) => {
     setFeedItems((prev) =>
       prev.map((item) =>
-        item.id === activeCommentVerificationId
-          ? { ...item, commentCount: Math.max(0, item.commentCount + delta) }
-          : item,
+        item.id === verificationId ? { ...item, commentCount: Math.max(0, item.commentCount + delta) } : item,
       ),
     );
   };
@@ -476,9 +477,11 @@ export const GroupDetailPage: React.FC = () => {
 
       {/* 댓글 바텀시트 */}
       <CommentsBottomSheet
-        isOpen={activeCommentVerificationId !== null}
+        key={activeCommentVerificationId}
+        isOpen={isCommentsBottomSheetOpen}
         verificationId={activeCommentVerificationId}
-        onClose={() => setActiveCommentVerificationId(null)}
+        onClose={() => setIsCommentsBottomSheetOpen(false)}
+        onOpenChangeComplete={(open) => !open && setActiveCommentVerificationId(null)}
         onCommentCountChange={handleCommentCountChange}
       />
 
@@ -532,7 +535,7 @@ export const GroupDetailPage: React.FC = () => {
               hasMore={hasMoreFeed}
               onLoadMore={() => fetchFeed(feedPage + 1)}
               loadingMore={loadingMoreFeed}
-              onOpenComments={setActiveCommentVerificationId}
+              onOpenComments={handleCommentOpen}
               onDeleteVerification={handleDeleteVerification}
             />
             <GroupSettlementCard
