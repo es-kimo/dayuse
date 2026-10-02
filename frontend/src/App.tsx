@@ -29,8 +29,6 @@ import { preloadKakao } from './utils/kakao';
 import { registerServiceWorker } from './utils/webPush';
 import { initPwaInstallTracking } from './utils/pwaAnalytics';
 
-import { UiVersionProvider, UiVersionSwitcherFloat } from './context/UiVersionContext';
-
 export const App: React.FC = () => {
   // 카카오 SDK 및 웹 푸시 Service Worker, PWA 설치 추적을 부팅 때 초기화한다.
   useEffect(() => {
@@ -48,40 +46,37 @@ export const App: React.FC = () => {
         <BrowserRouter>
           <PageMetaTracker />
           <ScrollToTop />
-          <UiVersionProvider>
-            <AuthProvider>
-              <UiVersionSwitcherFloat />
-              <Routes>
+          <AuthProvider>
+            <Routes>
 
-              <Route path="/" element={<Navigate to="/groups" replace />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/oauth/callback/kakao" element={<KakaoCallbackPage />} />
-              <Route path="/groups" element={<GroupsPage />} />
-              <Route path="/groups/new" element={<NewGroupPage />} />
-              <Route path="/groups/:groupId/invite-created" element={<InviteCreatedPage />} />
-              <Route path="/groups/:groupId" element={<GroupDetailPage />} />
-              <Route path="/groups/:groupId/challenges" element={<GroupDetailPage />} />
-              <Route path="/groups/:groupId/challenges/new" element={<NewChallengePage />} />
-              <Route path="/groups/:groupId/settlements" element={<SettlementManagePage />} />
-              <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
-              <Route path="/shares/:token" element={<PublicShareLandingPage />} />
-              <Route path="/invite/:inviteCode" element={<InviteLandingPage />} />
-              <Route path="/today" element={<TodayPage />} />
-              <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
-              <Route path="/me/notifications" element={<NotificationSettingsPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/me" element={<ProfilePage />} />
-              <Route path="/profile/avatar" element={<AvatarCustomPage />} />
-              <Route path="/me/avatar" element={<AvatarCustomPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/guide" element={<GuidePage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="*" element={<Navigate to="/groups" replace />} />
-            </Routes>
-          </AuthProvider>
-        </UiVersionProvider>
+            <Route path="/" element={<Navigate to="/groups" replace />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/oauth/callback/kakao" element={<KakaoCallbackPage />} />
+            <Route path="/groups" element={<GroupsPage />} />
+            <Route path="/groups/new" element={<NewGroupPage />} />
+            <Route path="/groups/:groupId/invite-created" element={<InviteCreatedPage />} />
+            <Route path="/groups/:groupId" element={<GroupDetailPage />} />
+            <Route path="/groups/:groupId/challenges" element={<GroupDetailPage />} />
+            <Route path="/groups/:groupId/challenges/new" element={<NewChallengePage />} />
+            <Route path="/groups/:groupId/settlements" element={<SettlementManagePage />} />
+            <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
+            <Route path="/shares/:token" element={<PublicShareLandingPage />} />
+            <Route path="/invite/:inviteCode" element={<InviteLandingPage />} />
+            <Route path="/today" element={<TodayPage />} />
+            <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
+            <Route path="/me/notifications" element={<NotificationSettingsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/me" element={<ProfilePage />} />
+            <Route path="/profile/avatar" element={<AvatarCustomPage />} />
+            <Route path="/me/avatar" element={<AvatarCustomPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/guide" element={<GuidePage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="*" element={<Navigate to="/groups" replace />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
       </ToastProvider>
     </ErrorBoundary>

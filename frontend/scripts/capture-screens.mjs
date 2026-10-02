@@ -356,15 +356,8 @@ async function captureAll(baseUrl = 'http://localhost:5173') {
       });
     };
 
-    // 0. 피처 플래그 및 이벤트 (v0.8 신규 UI 보장)
-    if (url.includes('/features/assignment')) {
-      respondJson({
-        featureKey: 'ui_refresh_01',
-        variant: 'B',
-        isOverride: false,
-        isKillSwitchActive: false,
-      });
-    } else if (url.includes('/features/events')) {
+    // 0. 피처 이벤트
+    if (url.includes('/features/events')) {
       respondJson({ status: 'accepted' }, 202);
     }
     // 1. 내 정보

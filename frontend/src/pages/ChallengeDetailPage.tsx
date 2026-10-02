@@ -6,52 +6,18 @@ import { recordsApi } from '../api/records';
 import type { ChallengeDetail, ChallengeCalendarResponse, CalendarDailyRecordItem, ChallengePeriodInterval } from '../types';
 import { MobileLayout } from '../components/MobileLayout';
 import { Screen } from '../components/screens/Screen';
-import { ChallengeCalendarSection } from '../components/ChallengeCalendarSection';
 import { RedayTicketSheet } from '../components/RedayTicketSheet';
 import { shouldShowRedayUi } from '../utils/reday';
-import { ChallengePeriodSection } from '../components/ChallengePeriodSection';
 import { PeriodSettlementModal } from '../components/PeriodSettlementModal';
 import { VerificationModal } from '../components/VerificationModal';
 import { AbortChallengeModal } from '../components/AbortChallengeModal';
 import { MidJoinBottomSheet } from '../components/MidJoinBottomSheet';
 import { useAuth } from '../context/AuthContext';
-import { DayuAvatar } from '../components/brand/DayuAvatar';
-import { useUiVersion } from '../context/UiVersionContext';
 import { ChallengeDetailViewB } from '../components/ChallengeDetailViewB';
 import { getTodayKstString, getDurationDaysKst } from '../utils/date';
-import {
-  ArrowLeft,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Coins,
-  Crown,
-  Edit3,
-  Loader2,
-  Trash2,
-  Users,
-  AlertCircle,
-  AlertTriangle,
-  Lock,
-  Flame,
-  RotateCcw,
-  Repeat,
-  MoreVertical,
-  StopCircle,
-} from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { ShareCardModal } from '../components/ShareCardModal';
-import {
-  Dialog,
-  ConfirmDialog,
-  Menu,
-  MenuTrigger,
-  MenuPopup,
-  MenuItem,
-  Button,
-  FormField,
-  Input,
-  Textarea,
-} from '../components/ui';
+import { Dialog, ConfirmDialog, Button, FormField, Input, Textarea } from '../components/ui';
 
 export const ChallengeDetailPage: React.FC = () => {
   const { challengeId } = useParams<{ challengeId: string }>();
@@ -89,12 +55,10 @@ export const ChallengeDetailPage: React.FC = () => {
 
   // 캘린더 히스토리 상태
   const [calendarData, setCalendarData] = useState<ChallengeCalendarResponse | null>(null);
-  const [calendarLoading, setCalendarLoading] = useState<boolean>(false);
 
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const { uiVersion } = useUiVersion();
 
   const todayStr = getTodayKstString();
   const totalDurationDays = useMemo(() => {
@@ -205,14 +169,11 @@ export const ChallengeDetailPage: React.FC = () => {
 
   const fetchCalendar = async () => {
     if (!challengeId) return;
-    setCalendarLoading(true);
     try {
       const data = await recordsApi.getChallengeCalendar(Number(challengeId));
       setCalendarData(data);
     } catch (err) {
       console.error('Failed to fetch challenge calendar:', err);
-    } finally {
-      setCalendarLoading(false);
     }
   };
 
@@ -315,18 +276,6 @@ export const ChallengeDetailPage: React.FC = () => {
     }
   };
 
-  const handleStartVerify = (record: CalendarDailyRecordItem, isLate: boolean) => {
-    if (challenge?.status === 'ABORTED') {
-      alert('중단된 챌린지에는 인증을 등록할 수 없습니다.');
-      return;
-    }
-    setVerificationTarget({
-      recordId: isLate ? record.id : undefined,
-      isLate,
-      targetDate: record.date,
-    });
-  };
-
   const handleVerificationSuccess = () => {
     setVerificationTarget(null);
     fetchCalendar();
@@ -391,483 +340,37 @@ export const ChallengeDetailPage: React.FC = () => {
     );
   }
 
-  const getStatusBadge = () => {
-    switch (challenge.status) {
-      case 'IN_PROGRESS':
-        return (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            진행 중
-          </span>
-        );
-      case 'NOT_STARTED':
-        return (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            시작 전
-          </span>
-        );
-      case 'ENDED':
-        return (
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-            종료
-          </span>
-        );
-      case 'ABORTED':
-        return (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" />
-            중단됨
-          </span>
-        );
-    }
-  };
-
-  // B 화면은 자체 헤더와 본문 여백을 소유한다.
-  const DetailLayout = uiVersion === 'B' ? Screen : MobileLayout;
-
   return (
-    <DetailLayout>
-      {uiVersion === 'B' ? (
-        <ChallengeDetailViewB
-          challenge={challenge}
-          calendarData={calendarData}
-          dDay={dDay}
-          totalDurationDays={totalDurationDays}
-          currentDayNumber={currentDayNumber}
-          progressPercent={progressPercent}
-          remainingDays={remainingDays}
-          isTodayCompleted={isTodayCompleted}
-          streakCount={streakCount}
-          calendarMonthDays={calendarMonthDays}
-          currentUserId={user?.id}
-          onBack={() => {
-            if (window.history.length > 1) {
-              navigate(-1);
-            } else {
-              navigate(`/groups/${challenge.groupId}?tab=challenges`);
-            }
-          }}
-          onShare={() => setShowStreakModal(true)}
-          onOpenCert={handleStartTodayVerify}
-          onAbortChallenge={challenge.canAbort ? () => setShowAbortModal(true) : undefined}
-          onDeleteChallenge={challenge.isCreator ? () => setShowDeleteConfirm(true) : undefined}
-          onEditChallenge={challenge.isCreator ? () => { setShowEditModal(true); setActionError(null); } : undefined}
-          onOpenMidJoin={() => setShowJoinModal(true)}
-          onRestartChallenge={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
-          redayUiEnabled={redayUiEnabled}
-          onStartReday={handleStartReday}
-        />
-      ) : (
-        <>
-          {/* 상단 네비게이션 헤더 */}
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => {
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate(`/groups/${challenge.groupId}?tab=challenges`);
-                }
-              }}
-              className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
-              aria-label="뒤로가기"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-2">
-          {getStatusBadge()}
-          {challenge.executionType === 'TOGETHER' ? (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              함께하기
-            </span>
-          ) : (
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
-              각자하기
-            </span>
-          )}
-          {challenge.isParticipating && challenge.status !== 'ABORTED' && (
-            <button
-              onClick={() => setShowStreakModal(true)}
-              className="px-2.5 py-1 text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/60 rounded-md transition flex items-center gap-1 text-[11px] font-bold"
-              title="연속 기록 공유 카드 만들기"
-            >
-              <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-              <span>기록 공유</span>
-            </button>
-          )}
-          {(challenge.isCreator || challenge.canAbort) && (
-            <Menu>
-              <MenuTrigger
-                className="p-1.5 text-ink-muted hover:text-ink rounded-md transition focus-ring min-w-[36px] min-h-[36px] inline-flex items-center justify-center cursor-pointer"
-                aria-label="챌린지 관리 메뉴"
-              >
-                <MoreVertical className="w-4 h-4" aria-hidden="true" />
-              </MenuTrigger>
-              <MenuPopup sideOffset={6}>
-                {challenge.isCreator && (
-                  <MenuItem
-                    onSelect={() => {
-                      setShowEditModal(true);
-                      setActionError(null);
-                    }}
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    <span>챌린지 수정</span>
-                  </MenuItem>
-                )}
-                {challenge.isCreator && challenge.status === 'NOT_STARTED' && (
-                  <MenuItem
-                    destructive
-                    onSelect={() => setShowDeleteConfirm(true)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>챌린지 삭제</span>
-                  </MenuItem>
-                )}
-                {challenge.canAbort && (
-                  <MenuItem
-                    destructive
-                    onSelect={() => {
-                      setShowAbortModal(true);
-                      setActionError(null);
-                    }}
-                  >
-                    <StopCircle className="w-4 h-4" />
-                    <span>챌린지 중단</span>
-                  </MenuItem>
-                )}
-              </MenuPopup>
-            </Menu>
-          )}
-        </div>
-      </div>
-
-      {/* 챌린지 기본 정보 헤더 */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4 shadow-xs">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h1 className="text-base font-bold text-slate-800 leading-snug">{challenge.title}</h1>
-        </div>
-
-        {challenge.description && (
-          <p className="text-xs text-slate-600 mb-3 whitespace-pre-wrap">{challenge.description}</p>
-        )}
-
-        <div className="flex items-center gap-3 text-[11px] text-slate-400 pt-2 border-t border-slate-100">
-          <span>모임: {challenge.groupName}</span>
-          <span>·</span>
-          <span>생성자: {challenge.creatorNickname}</span>
-        </div>
-      </div>
-
-      {/* 진행 기간 & 인증 기준 */}
-      <div className="space-y-3 mb-5">
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[10px] text-slate-400 block">
-                진행 기간 ({challenge.periodType === 'WEEKLY_N' ? `주 ${challenge.targetFrequency}회 수행` : '매일 수행'})
-              </span>
-              <span className="text-xs font-semibold text-slate-700">
-                {challenge.startDate} ~ {challenge.endDate} ({getDurationDaysKst(challenge.startDate, challenge.endDate)}일간)
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* 주 N회 또는 매일형 현재 구간 달성 현황 */}
-        {challenge.currentPeriod && (
-          <div className="bg-blue-50/80 border border-blue-200 rounded-md p-3.5 space-y-2.5 shadow-xs">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-blue-900 flex items-center gap-1.5">
-                <Repeat className="w-3.5 h-3.5 text-blue-600" />
-                <span>현재 {challenge.currentPeriod.index}구간 진행 현황</span>
-              </span>
-              <span className="font-bold text-blue-700">
-                {challenge.currentPeriod.completedCount} / {challenge.currentPeriod.targetCount}회 달성
-              </span>
-            </div>
-            <div className="text-[11px] text-slate-500 flex justify-between items-center">
-              <span>{challenge.currentPeriod.startDate} ~ {challenge.currentPeriod.endDate}</span>
-              {challenge.currentPeriod.isAchieved ? (
-                <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  구간 달성 완료! 🎉
-                </span>
-              ) : (
-                <span className="text-blue-600 font-medium">
-                  남은 목표: {Math.max(0, challenge.currentPeriod.targetCount - challenge.currentPeriod.completedCount)}회
-                </span>
-              )}
-            </div>
-            {challenge.progressRate !== undefined && (
-              <div className="pt-1 border-t border-blue-100">
-                <div className="flex justify-between text-[11px] text-slate-600 mb-1">
-                  <span>전체 달성률</span>
-                  <span className="font-bold text-blue-700">{challenge.progressRate}%</span>
-                </div>
-                <div className="w-full bg-blue-100 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-blue-600 h-2 w-full origin-left rounded-full transition-transform duration-300 ease-out"
-                    style={{
-                      transform: `scaleX(${Math.min(100, Math.max(0, challenge.progressRate)) / 100})`,
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>인증 기준</span>
-          </div>
-          <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-md whitespace-pre-wrap border border-slate-100">
-            {challenge.verificationCriteria}
-          </p>
-          {challenge.redayRuleDescription && (
-            <div className="mt-2.5 pt-2.5 border-t border-slate-100 flex items-start justify-between gap-2 text-[11px]">
-              <span className="text-slate-600 leading-relaxed">
-                🎟️ {challenge.redayRuleDescription}
-              </span>
-              <span
-                className={`shrink-0 px-2 py-0.5 rounded-full font-semibold ${
-                  challenge.redayAllowed
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : 'bg-slate-100 text-slate-500'
-                }`}
-              >
-                {challenge.redayAllowed ? '리데이 허용' : '리데이 불가'}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* 중단 안내 배너 */}
-        {challenge.status === 'ABORTED' && (
-          <div className="bg-rose-50 border border-rose-200 rounded-lg p-3.5 text-xs text-rose-800 flex items-start gap-2.5 shadow-xs">
-            <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <span className="font-bold block text-sm text-rose-900">챌린지가 중단되었습니다</span>
-              <p className="text-[11px] text-rose-700">
-                {challenge.abortedByNickname ? `${challenge.abortedByNickname}님에 의해 ` : ''}
-                {challenge.abortedAt ? new Date(challenge.abortedAt).toLocaleDateString('ko-KR') : ''}에 조기 중단 처리되었습니다. 중단 시점의 열린 구간과 이후 구간은 정산에서 제외됩니다.
-              </p>
-              {challenge.abortReason && (
-                <p className="text-[11px] bg-white/80 p-2 rounded border border-rose-200 text-rose-800 font-medium">
-                  사유: {challenge.abortReason}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* 시작 후 잠금 알림 안내 배너 */}
-        {challenge.status !== 'NOT_STARTED' && challenge.status !== 'ABORTED' && (
-          <div className="bg-slate-50 border border-slate-200 rounded-md p-3 text-[11px] text-slate-600 flex items-start gap-2">
-            <Lock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-semibold block text-slate-700">챌린지 진행/수정 잠금 적용 중</span>
-              챌린지 시작일(00:00 KST) 이후에는 참여자 추가/취소 및 인증 기준 변경이 불가합니다.
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 주차별(구간별) 달성 및 정산 현황 */}
-      {challenge.periodType === 'WEEKLY_N' && challenge.intervals && (
-        <ChallengePeriodSection
-          intervals={challenge.intervals}
-          isParticipating={challenge.isParticipating}
-          onOpenConfirmModal={(interval) => setSelectedPeriodForConfirm(interval)}
-        />
-      )}
-
-      {/* 날짜별 수행 히스토리 달력 */}
-      <ChallengeCalendarSection
+    <Screen>
+      <ChallengeDetailViewB
+        challenge={challenge}
         calendarData={calendarData}
-        loading={calendarLoading}
+        dDay={dDay}
+        totalDurationDays={totalDurationDays}
+        currentDayNumber={currentDayNumber}
+        progressPercent={progressPercent}
+        remainingDays={remainingDays}
+        isTodayCompleted={isTodayCompleted}
+        streakCount={streakCount}
+        calendarMonthDays={calendarMonthDays}
         currentUserId={user?.id}
-        onStartVerify={handleStartVerify}
+        onBack={() => {
+          if (window.history.length > 1) {
+            navigate(-1);
+          } else {
+            navigate(`/groups/${challenge.groupId}?tab=challenges`);
+          }
+        }}
+        onShare={() => setShowStreakModal(true)}
+        onOpenCert={handleStartTodayVerify}
+        onAbortChallenge={challenge.canAbort ? () => setShowAbortModal(true) : undefined}
+        onDeleteChallenge={challenge.isCreator ? () => setShowDeleteConfirm(true) : undefined}
+        onEditChallenge={challenge.isCreator ? () => { setShowEditModal(true); setActionError(null); } : undefined}
+        onOpenMidJoin={() => setShowJoinModal(true)}
+        onRestartChallenge={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
         redayUiEnabled={redayUiEnabled}
         onStartReday={handleStartReday}
       />
-
-      {/* 참여자 카드 목록 */}
-      <div className="bg-white border border-slate-200 rounded-lg p-4 flex-1 shadow-xs mb-28">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-            <Users className="w-4 h-4 text-blue-600" />
-            <span>참여자 목록 ({challenge.participants.length}명)</span>
-          </div>
-          {challenge.executionType === 'TOGETHER' ? (
-            <span className="text-[11px] text-indigo-700 font-semibold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-              공동 목표 (벌금 없음)
-            </span>
-          ) : (
-            challenge.isParticipating && challenge.myPenaltyAmount !== undefined && (
-              <span className="text-[11px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-md">
-                나의 약정: {challenge.myPenaltyAmount?.toLocaleString()}원
-              </span>
-            )
-          )}
-        </div>
-
-        <div className="divide-y divide-slate-100">
-          {challenge.participants.map((p) => (
-            <div key={p.id} className="py-2.5 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <DayuAvatar
-                  profileImageUrl={p.profileImageUrl}
-                  size={32}
-                  alt={p.nickname}
-                />
-                <div>
-
-                  <div className="text-xs font-medium text-slate-800 flex items-center gap-1">
-                    {p.nickname}
-                    {p.isCreator && (
-                      <span className="text-[9px] bg-amber-50 text-amber-700 px-1 py-0.2 rounded font-semibold flex items-center gap-0.5">
-                        <Crown className="w-2.5 h-2.5" />
-                        생성자
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-                    <span>{p.startDate} 시작</span>
-                    <span>·</span>
-                    <span>{p.joinedAt.split('T')[0]} 신청</span>
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                {challenge.executionType === 'TOGETHER' ? (
-                  <>
-                    <span className="text-xs font-bold text-indigo-600 block">
-                      벌금 없음
-                    </span>
-                    <div className="flex items-center justify-end gap-1 mt-0.5">
-                      {p.completionRate !== undefined && (
-                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-100">
-                          개인 인증 {p.completionRate}%
-                        </span>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-xs font-bold text-amber-600 block">
-                      {p.penaltyAmount.toLocaleString()}원
-                    </span>
-                    <div className="flex items-center justify-end gap-1 mt-0.5">
-                      <span className="text-[9px] text-slate-400">1일 약정</span>
-                      {p.completionRate !== undefined && (
-                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-100">
-                          달성 {p.completionRate}%
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/*
-        하단 고정 액션 바.
-
-        고칠 점이 네 가지였다.
-        1) safe-area 패딩이 없어 홈 인디케이터가 버튼 아래를 덮었다.
-        2) 폭이 max-w-md(448px)라 앱 셸(max-w-app)과 어긋났다.
-        3) z-index 스케일 밖이라 겹침 순서가 DOM 순서에 의존했다.
-        4) 흰 배경 + 얇은 테두리뿐이라 페이지 배경(#F8FAFC)과 잘 구분되지 않았다.
-           shadow-sheet(0 -8px 24px)는 이런 하단 바를 위해 정의된 토큰이다.
-      */}
-      <div className="fixed bottom-0 left-0 right-0 z-header max-w-app mx-auto bg-card/95 backdrop-blur-md border-t border-line shadow-sheet px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        {challenge.canJoin ? (
-          <Button
-            size="lg"
-            fullWidth
-            onClick={() => {
-              setShowJoinModal(true);
-              setActionError(null);
-            }}
-            leftIcon={<Coins className="w-4 h-4" />}
-          >
-            {(() => {
-              if (challenge.status === 'NOT_STARTED') return '챌린지 참여하기';
-              const todayStr = getTodayKstString();
-              if (challenge.endDate === todayStr) return '오늘 하루 참여하기';
-              const diffDays = Math.max(
-                1,
-                Math.round(
-                  (new Date(challenge.endDate).getTime() - new Date(todayStr).getTime()) /
-                    (1000 * 60 * 60 * 24)
-                ) + 1
-              );
-              return `남은 ${diffDays}일 참여하기`;
-            })()}
-          </Button>
-        ) : (challenge.status === 'ENDED' || challenge.status === 'ABORTED') ? (
-          <Button
-            size="lg"
-            fullWidth
-            onClick={() => navigate(`/groups/${challenge.groupId}/challenges/new?restartFrom=${challenge.id}`)}
-            leftIcon={<RotateCcw className="w-4 h-4" />}
-          >
-            이 챌린지 다시 시작하기
-          </Button>
-        ) : challenge.isParticipating ? (
-          <div className="flex gap-2">
-            {(challenge.status === 'NOT_STARTED' || challenge.canCancel) ? (
-              <>
-                {challenge.executionType !== 'TOGETHER' && (
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    fullWidth
-                    onClick={() => {
-                      setShowPenaltyModal(true);
-                      setActionError(null);
-                    }}
-                  >
-                    약정 금액 변경
-                  </Button>
-                )}
-                {/* 파괴적 동작이지만 보조 위치라 솔리드 대신 옅은 배경을 쓴다 */}
-                {challenge.canCancel && (
-                  <button
-                    type="button"
-                    onClick={() => setShowLeaveConfirm(true)}
-                    disabled={actionLoading}
-                    className={`h-btn-md min-h-[44px] px-4 ${challenge.executionType === 'TOGETHER' ? 'w-full' : 'shrink-0'} bg-danger-bg hover:bg-danger-border text-danger font-semibold text-body-sm rounded-md transition active:scale-[0.98] focus-ring disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    참여 취소
-                  </button>
-                )}
-              </>
-            ) : (
-              <div className="flex-1 h-btn-md min-h-[44px] bg-sunken border border-line text-ink-muted font-medium text-body-sm rounded-md flex items-center justify-center gap-1.5">
-                <Lock className="w-4 h-4 text-ink-disabled shrink-0" aria-hidden="true" />
-                <span>수행 진행 중 (약정·취소 고정)</span>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-2 text-xs text-slate-400">
-            현재 참여할 수 없는 상태입니다.
-          </div>
-        )}
-      </div>
-    </>
-  )}
 
       {/* 중도/신규 참여 바텀시트 */}
       <MidJoinBottomSheet
@@ -1163,6 +666,6 @@ export const ChallengeDetailPage: React.FC = () => {
           }}
         />
       )}
-    </DetailLayout>
+    </Screen>
   );
 };

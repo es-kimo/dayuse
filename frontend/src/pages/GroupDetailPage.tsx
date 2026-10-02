@@ -26,35 +26,13 @@ import type {
   RedayCandidate,
 } from "../types";
 import { MobileLayout } from "../components/MobileLayout";
-import { TodayActionSection } from "../components/TodayActionSection";
 import { VerificationModal } from "../components/VerificationModal";
 import { GroupFeedSection } from "../components/GroupFeedSection";
-import { DayuAvatar } from "../components/brand/DayuAvatar";
-import { useUiVersion } from "../context/UiVersionContext";
 import { CommentsBottomSheet } from "../components/CommentsBottomSheet";
-import { GroupStatusSummaryBanner } from "../components/GroupStatusSummaryBanner";
 import { UncheckedRecordsBottomSheet } from "../components/UncheckedRecordsBottomSheet";
 import { GroupSettlementCard } from "../components/GroupSettlementCard";
 import { DepositReportModal } from "../components/DepositReportModal";
-import { Button, Select } from "../components/ui";
-import { formatKstDate } from "../utils/date";
-import {
-  ArrowLeft,
-  Copy,
-  Check,
-  RefreshCw,
-  ShieldAlert,
-  Crown,
-  User as UserIcon,
-  Loader2,
-  Trophy,
-  Plus,
-  Calendar,
-  Clock,
-  ChevronRight,
-  Home,
-  UserCheck,
-} from "lucide-react";
+import { ShieldAlert, Loader2 } from "lucide-react";
 
 export const GroupDetailPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
@@ -62,7 +40,6 @@ export const GroupDetailPage: React.FC = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const { uiVersion } = useUiVersion();
 
   const tabParam = searchParams.get("tab");
   const activeTab: "home" | "challenges" | "members" =
@@ -87,10 +64,6 @@ export const GroupDetailPage: React.FC = () => {
     );
   };
 
-  const [challengeFilter, setChallengeFilter] = useState<string>("ALL");
-  // 상태 필터와 별개의 축이라 AND로 함께 적용한다.
-  const [onlyParticipating, setOnlyParticipating] = useState<boolean>(false);
-
   const [homeImage, setHomeImage] = useState<string | null>(null);
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [challenges, setChallenges] = useState<ChallengeSummary[]>([]);
@@ -102,7 +75,6 @@ export const GroupDetailPage: React.FC = () => {
 
   // 미확인/미수행 상태 요약
   const [statusSummary, setStatusSummary] = useState<StatusSummaryResponse | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState<boolean>(false);
   const [uncheckedRecords, setUncheckedRecords] = useState<UncheckedRecordItem[]>([]);
   const [uncheckedLoading, setUncheckedLoading] = useState<boolean>(false);
   const [showUncheckedSheet, setShowUncheckedSheet] = useState<boolean>(false);
@@ -226,14 +198,11 @@ export const GroupDetailPage: React.FC = () => {
 
   const fetchStatusSummary = async () => {
     if (!groupId) return;
-    setSummaryLoading(true);
     try {
       const data = await recordsApi.getStatusSummary(Number(groupId));
       setStatusSummary(data);
     } catch (err) {
       console.error("Failed to fetch status summary:", err);
-    } finally {
-      setSummaryLoading(false);
     }
   };
 
@@ -260,11 +229,6 @@ export const GroupDetailPage: React.FC = () => {
       console.error("Failed to fetch reday candidates:", err);
       setRedayCandidates([]);
     }
-  };
-
-  const handleOpenUncheckedSheet = () => {
-    setShowUncheckedSheet(true);
-    fetchUncheckedRecords();
   };
 
   const handleMarkFailed = async (recordId: number) => {
@@ -336,25 +300,6 @@ export const GroupDetailPage: React.FC = () => {
       setChallengesLoading(false);
     }
   };
-
-  /*
-   * 필터는 두 축이다.
-   *  - 범위(전체 / 내 참여): 가장 자주 쓰므로 1차 컨트롤로 크게 노출한다.
-   *  - 상태(전체·진행 중·시작 전·종료): 드물게 쓰므로 Select로 접어둔다.
-   * 범위 버튼의 개수는 현재 상태 필터를 반영해야 눌렀을 때 결과와 어긋나지 않는다.
-   */
-  const statusMatchedChallenges =
-    challengeFilter === "ALL"
-      ? challenges
-      : challengeFilter === "PAST"
-        ? challenges.filter((c) => c.status === "ENDED" || c.status === "ABORTED")
-        : challenges.filter((c) => c.status === challengeFilter);
-
-  const myChallengeCount = statusMatchedChallenges.filter((c) => c.isParticipating).length;
-
-  const filteredChallenges = onlyParticipating
-    ? statusMatchedChallenges.filter((c) => c.isParticipating)
-    : statusMatchedChallenges;
 
   useEffect(() => {
     fetchGroup();
@@ -552,445 +497,76 @@ export const GroupDetailPage: React.FC = () => {
       {homeImage && <Lightbox open onClose={() => setHomeImage(null)} src={homeImage} alt="인증 사진" />}
     </>
   );
-  if (uiVersion === "B") {
-    return (
-      <>
-        <GroupHomeScreen
-          group={group}
-          challengeCount={challenges.length}
-          tab={activeTab}
-          actions={todayActions}
-          loading={todayLoading}
-          verifiedUserIds={verifiedUserIds}
-          copied={copied}
-          onBack={() => navigate("/groups")}
-          onInvite={handleCopyLink}
-          onTab={handleTabChange}
-          onVerify={setActiveVerificationAction}
-          onImage={setHomeImage}
-          redaySlot={<RedayActionCard items={redayItems} onStartReday={handleStartReday} />}
-          uncheckedSlot={
-            <UncheckedRecordsCard
-              count={statusSummary?.uncheckedCount ?? 0}
-              onOpen={() => {
-                fetchUncheckedRecords();
-                setShowUncheckedSheet(true);
-              }}
-            />
-          }
-        >
-          {activeTab === "home" && (
-            <>
-              <GroupFeedSection
-                screen
-                feedItems={feedItems}
-                loading={feedLoading}
-                hasMore={hasMoreFeed}
-                onLoadMore={() => fetchFeed(feedPage + 1)}
-                loadingMore={loadingMoreFeed}
-                onOpenComments={setActiveCommentVerificationId}
-                onDeleteVerification={handleDeleteVerification}
-              />
-              <GroupSettlementCard
-                screen
-                groupId={Number(groupId)}
-                isHost={group.isHost}
-                summary={settlementSummary}
-                loading={settlementLoading}
-                onRefresh={() => {
-                  fetchSettlementSummary();
-                  fetchStatusSummary();
-                }}
-                onOpenDepositModal={() => setShowDepositModal(true)}
-              />
-            </>
-          )}
-
-          {activeTab === "challenges" && (
-            <GroupChallengesViewB groupId={Number(groupId)} challenges={challenges} loading={challengesLoading} />
-          )}
-
-          {activeTab === "members" && (
-            <GroupMembersViewB
-              group={group}
-              inviteUrl={inviteUrl}
-              isHost={group.isHost}
-              onRefreshInviteCode={handleRefreshInviteCode}
-              isRefreshing={isRefreshing}
-              currentUserId={currentUser?.id}
-              verifiedUserIds={verifiedUserIds}
-            />
-          )}
-        </GroupHomeScreen>
-        {modals}
-      </>
-    );
-  }
-
   return (
-    <MobileLayout showHeader={true}>
-      {/* 상단 헤더 */}
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          onClick={() => navigate("/groups")}
-          className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-lg font-bold text-slate-800 truncate flex-1">{group.name}</h1>
-        {group.isHost && (
-          <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-            <Crown className="w-3 h-3" />
-            모임장
-          </span>
-        )}
-      </div>
-
-      {/* 탭 네비게이션 */}
-      <div className="flex border-b border-slate-200 mb-4">
-        <button
-          onClick={() => handleTabChange("home")}
-          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
-            activeTab === "home"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <Home className="w-3.5 h-3.5" />
-          <span>홈</span>
-        </button>
-        <button
-          onClick={() => handleTabChange("challenges")}
-          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
-            activeTab === "challenges"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <Trophy className="w-3.5 h-3.5" />
-          <span>챌린지 ({challenges.length})</span>
-        </button>
-        <button
-          onClick={() => handleTabChange("members")}
-          className={`flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition ${
-            activeTab === "members"
-              ? "border-blue-600 text-blue-600"
-              : "border-transparent text-slate-500 hover:text-slate-800"
-          }`}
-        >
-          <UserIcon className="w-3.5 h-3.5" />
-          <span>멤버 ({group.members.length})</span>
-        </button>
-      </div>
-
-      {activeTab === "home" && (
-        <div className="space-y-5 flex-1 flex flex-col">
-          {/* 상단: 미확인 기록 및 미납 벌금 요약 배너 */}
-          <GroupStatusSummaryBanner
-            summary={statusSummary}
-            loading={summaryLoading}
-            onOpenUncheckedSheet={handleOpenUncheckedSheet}
-          />
-
-          {/* 리데이 사용 안내 (기한 안에 쓸 수 있는 지각 기록이 있을 때만) */}
-          <RedayActionCard items={redayItems} onStartReday={handleStartReday} />
-
-          {/* UI(A): 기존 오늘 할 일 */}
-          <TodayActionSection
-            todayActions={todayActions}
-            loading={todayLoading}
-            onOpenVerificationModal={(action) => setActiveVerificationAction(action)}
-          />
-
-          {/* 모임 정산 & 계좌 카드 (F07) */}
-          <GroupSettlementCard
-            groupId={Number(groupId)}
-            isHost={!!group?.isHost}
-            summary={settlementSummary}
-            loading={settlementLoading}
-            onRefresh={() => {
-              fetchSettlementSummary();
-              fetchStatusSummary();
+    <>
+      <GroupHomeScreen
+        group={group}
+        challengeCount={challenges.length}
+        tab={activeTab}
+        actions={todayActions}
+        loading={todayLoading}
+        verifiedUserIds={verifiedUserIds}
+        copied={copied}
+        onBack={() => navigate("/groups")}
+        onInvite={handleCopyLink}
+        onTab={handleTabChange}
+        onVerify={setActiveVerificationAction}
+        onImage={setHomeImage}
+        redaySlot={<RedayActionCard items={redayItems} onStartReday={handleStartReday} />}
+        uncheckedSlot={
+          <UncheckedRecordsCard
+            count={statusSummary?.uncheckedCount ?? 0}
+            onOpen={() => {
+              fetchUncheckedRecords();
+              setShowUncheckedSheet(true);
             }}
-            onOpenDepositModal={() => setShowDepositModal(true)}
           />
+        }
+      >
+        {activeTab === "home" && (
+          <>
+            <GroupFeedSection
+              screen
+              feedItems={feedItems}
+              loading={feedLoading}
+              hasMore={hasMoreFeed}
+              onLoadMore={() => fetchFeed(feedPage + 1)}
+              loadingMore={loadingMoreFeed}
+              onOpenComments={setActiveCommentVerificationId}
+              onDeleteVerification={handleDeleteVerification}
+            />
+            <GroupSettlementCard
+              screen
+              groupId={Number(groupId)}
+              isHost={group.isHost}
+              summary={settlementSummary}
+              loading={settlementLoading}
+              onRefresh={() => {
+                fetchSettlementSummary();
+                fetchStatusSummary();
+              }}
+              onOpenDepositModal={() => setShowDepositModal(true)}
+            />
+          </>
+        )}
 
-          <hr className="border-slate-200/80 -mx-4" />
+        {activeTab === "challenges" && (
+          <GroupChallengesViewB groupId={Number(groupId)} challenges={challenges} loading={challengesLoading} />
+        )}
 
-          {/* 하단: 모임 피드 */}
-          <GroupFeedSection
-            feedItems={feedItems}
-            loading={feedLoading}
-            hasMore={hasMoreFeed}
-            onLoadMore={() => fetchFeed(feedPage + 1)}
-            loadingMore={loadingMoreFeed}
-            onOpenComments={(verificationId) => setActiveCommentVerificationId(verificationId)}
-            onDeleteVerification={handleDeleteVerification}
+        {activeTab === "members" && (
+          <GroupMembersViewB
+            group={group}
+            inviteUrl={inviteUrl}
+            isHost={group.isHost}
+            onRefreshInviteCode={handleRefreshInviteCode}
+            isRefreshing={isRefreshing}
+            currentUserId={currentUser?.id}
+            verifiedUserIds={verifiedUserIds}
           />
-        </div>
-      )}
-
-      {activeTab === "challenges" && (
-        <div className="space-y-4 flex-1 flex flex-col">
-          {/*
-            챌린지 상단 바.
-
-            범위(전체 / 내 참여)가 실제로 자주 쓰는 축이라 세그먼트 컨트롤로 크게 올린다.
-            상태 필터는 드물게 쓰이므로 칩 4개를 늘어놓는 대신 Select 하나로 접었다.
-            390px에서 칩 5개 + 만들기 버튼이 한 줄에 들어가지 않던 문제도 함께 해소된다.
-
-            tablist가 아니라 role="group" + aria-pressed를 쓰는 이유: 탭은 각자
-            패널을 가질 때 쓰는 역할이고, 여기서는 같은 목록에 거는 필터다.
-          */}
-          <div className="space-y-2.5">
-            <div
-              role="group"
-              aria-label="챌린지 범위"
-              className="flex items-center gap-1 p-1 bg-sunken rounded-lg border border-line"
-            >
-              <button
-                type="button"
-                onClick={() => setOnlyParticipating(false)}
-                aria-pressed={!onlyParticipating}
-                className={`flex-1 min-h-[40px] px-3 text-body-sm font-semibold rounded-md transition select-none cursor-pointer focus-ring flex items-center justify-center gap-1.5 ${
-                  onlyParticipating ? "text-ink-secondary hover:text-ink" : "bg-card text-primary shadow-xs"
-                }`}
-              >
-                <span>전체</span>
-                <span className="tabular-nums opacity-70">{statusMatchedChallenges.length}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setOnlyParticipating(true)}
-                aria-pressed={onlyParticipating}
-                className={`flex-1 min-h-[40px] px-3 text-body-sm font-semibold rounded-md transition select-none cursor-pointer focus-ring flex items-center justify-center gap-1.5 ${
-                  onlyParticipating ? "bg-card text-primary shadow-xs" : "text-ink-secondary hover:text-ink"
-                }`}
-              >
-                <UserCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
-                <span>내 참여</span>
-                <span className="tabular-nums opacity-70">{myChallengeCount}</span>
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between gap-2">
-              <Select
-                aria-label="챌린지 상태 필터"
-                fullWidth={false}
-                value={challengeFilter}
-                onChange={(e) => setChallengeFilter(e.target.value)}
-              >
-                <option value="ALL">전체 상태</option>
-                <option value="IN_PROGRESS">진행 중</option>
-                <option value="PAST">지난 기록 (종료·중단)</option>
-                <option value="NOT_STARTED">시작 전</option>
-                <option value="ENDED">종료</option>
-                <option value="ABORTED">중단됨</option>
-              </Select>
-
-              <Button
-                size="md"
-                onClick={() => navigate(`/groups/${group.id}/challenges/new`)}
-                leftIcon={<Plus className="w-4 h-4" />}
-                className="shrink-0"
-              >
-                챌린지 만들기
-              </Button>
-            </div>
-          </div>
-
-          {/* 챌린지 목록 */}
-          {challengesLoading ? (
-            <div className="flex-1 flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-            </div>
-          ) : challenges.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-lg text-center my-4">
-              <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-3">
-                <Trophy className="w-6 h-6" />
-              </div>
-              <h3 className="text-sm font-bold text-slate-800 mb-1">아직 등록된 챌린지가 없습니다.</h3>
-              <p className="text-xs text-slate-500 mb-5 max-w-xs leading-relaxed">
-                모임원들과 함께 매일 실천할 첫 번째 챌린지를 만들어 보세요.
-              </p>
-              <button
-                onClick={() => navigate(`/groups/${group.id}/challenges/new`)}
-                className="min-h-[44px] px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-semibold transition shadow-xs active:scale-[0.98] flex items-center gap-1.5"
-              >
-                <Plus className="w-4 h-4" />
-                <span>새 챌린지 만들기</span>
-              </button>
-            </div>
-          ) : filteredChallenges.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white border border-dashed border-slate-200 rounded-lg text-center my-4">
-              <p className="text-xs text-slate-400">
-                {onlyParticipating ? "참여 중인 챌린지가 없습니다." : "해당 상태의 챌린지가 없습니다."}
-              </p>
-              {onlyParticipating && (
-                <button
-                  type="button"
-                  onClick={() => setOnlyParticipating(false)}
-                  className="mt-2 text-xs font-semibold text-primary hover:text-primary-hover focus-ring rounded-md px-2 py-1"
-                >
-                  전체 챌린지 보기
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3 pb-6">
-              {filteredChallenges.map((c) => (
-                <div
-                  key={c.id}
-                  onClick={() => navigate(`/challenges/${c.id}`)}
-                  className="bg-white border border-slate-200 hover:border-blue-300 rounded-lg p-4 shadow-xs transition cursor-pointer active:scale-[0.98] space-y-2.5"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        {c.status === "IN_PROGRESS" && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            진행 중
-                          </span>
-                        )}
-                        {c.status === "NOT_STARTED" && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            시작 전
-                          </span>
-                        )}
-                        {c.status === "ENDED" && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                            종료
-                          </span>
-                        )}
-                        {c.status === "ABORTED" && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                            중단됨
-                          </span>
-                        )}
-
-                        {c.executionType === "TOGETHER" ? (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                            함께하기
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
-                            각자하기
-                          </span>
-                        )}
-
-                        {c.isParticipating && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                            참여 중
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-sm font-bold text-slate-800 line-clamp-1">{c.title}</h3>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-slate-300 shrink-0 mt-1" />
-                  </div>
-
-                  {c.description && <p className="text-xs text-slate-500 line-clamp-2">{c.description}</p>}
-
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      {c.status === "ABORTED" && c.abortedAt ? (
-                        <span className="text-rose-600 font-medium">중단일: {c.abortedAt.slice(0, 10)}</span>
-                      ) : (
-                        <span>
-                          {c.startDate} ~ {c.endDate}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span>참여자 {c.participantCount}명</span>
-                      {c.executionType === "TOGETHER" ? (
-                        <span className="text-indigo-600 font-medium">벌금 없음</span>
-                      ) : (
-                        c.myPenaltyAmount && (
-                          <span className="text-amber-600 font-medium">{c.myPenaltyAmount.toLocaleString()}원/일</span>
-                        )
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === "members" && (
-        <div className="space-y-4 flex-1">
-          {/* 초대 링크 관리 카드 */}
-          <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-700">모임 초대 링크</span>
-              {group.isHost && (
-                <button
-                  onClick={handleRefreshInviteCode}
-                  disabled={isRefreshing}
-                  className="text-[11px] text-slate-400 hover:text-blue-600 flex items-center gap-1 transition"
-                >
-                  <RefreshCw className={`w-3 h-3 ${isRefreshing ? "animate-spin" : ""}`} />
-                  코드 재발급
-                </button>
-              )}
-            </div>
-            <p className="text-[11px] text-slate-400 mb-2">
-              비공개 모임입니다. 초대 링크를 받은 사람만 가입할 수 있습니다.
-            </p>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={inviteUrl}
-                className="flex-1 text-base bg-slate-50 border border-slate-200 rounded-md px-2.5 py-2 text-slate-600 truncate outline-hidden select-all"
-              />
-              <button
-                onClick={handleCopyLink}
-                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md flex items-center gap-1 shadow-xs transition active:scale-[0.98]"
-              >
-                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? "복사됨" : "복사"}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* 모임 멤버 목록 */}
-          <div className="bg-white border border-slate-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-semibold text-slate-700">모임 멤버 ({group.members.length}명)</h2>
-            </div>
-
-            <div className="flex flex-col divide-y divide-slate-100">
-              {group.members.map((member) => (
-                <div key={member.id} className="py-2.5 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <DayuAvatar profileImageUrl={member.profileImageUrl} size={32} alt={member.nickname} />
-                    <div>
-                      <div className="text-xs font-medium text-slate-800 flex items-center gap-1">
-                        {member.nickname}
-                        {member.role === "HOST" && (
-                          <span className="text-[9px] bg-amber-50 text-amber-700 px-1 py-0.2 rounded font-semibold">
-                            모임장
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[10px] text-slate-400">{formatKstDate(member.joinedAt)} 가입</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
+        )}
+      </GroupHomeScreen>
       {modals}
-    </MobileLayout>
+    </>
   );
 };
