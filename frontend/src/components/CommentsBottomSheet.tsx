@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { verificationsApi } from '../api/verifications';
-import type { CommentItem } from '../types';
-import { formatKstDateTime } from '../utils/date';
-import { X, Send, Loader2 } from 'lucide-react';
-import { BottomSheet, BottomSheetTitle, BottomSheetClose } from './ui/BottomSheet';
-import { SheetGrab } from './dayu/ui';
-import { DayuAvatar } from './brand/DayuAvatar';
+import React, { useEffect, useState } from "react";
+import { verificationsApi } from "../api/verifications";
+import type { CommentItem } from "../types";
+import { formatKstDateTime } from "../utils/date";
+import { X, Send, Loader2 } from "lucide-react";
+import { BottomSheet, BottomSheetTitle, BottomSheetClose } from "./ui/BottomSheet";
+import { SheetGrab } from "./dayu/ui";
+import { DayuAvatar } from "./brand/DayuAvatar";
 
 interface CommentsBottomSheetProps {
   isOpen: boolean;
@@ -23,7 +23,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
 }) => {
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [content, setContent] = useState<string>('');
+  const [content, setContent] = useState<string>("");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -44,7 +44,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
         if (!cancelled) setComments(list);
       })
       .catch((err) => {
-        console.error('Failed to load comments:', err);
+        console.error("Failed to load comments:", err);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -62,27 +62,31 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
     setSubmitting(true);
     try {
       const newComment = await verificationsApi.createComment(verificationId, content.trim());
+
+      // 재현용
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
       setComments((prev) => [...prev, newComment]);
-      setContent('');
+      setContent("");
       onCommentCountChange?.(1);
     } catch (err) {
-      console.error('Failed to create comment:', err);
-      alert('댓글 등록에 실패했습니다.');
+      console.error("Failed to create comment:", err);
+      alert("댓글 등록에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (commentId: number) => {
-    if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
+    if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
     setDeletingId(commentId);
     try {
       await verificationsApi.deleteComment(commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
       onCommentCountChange?.(-1);
     } catch (err) {
-      console.error('Failed to delete comment:', err);
-      alert('댓글 삭제에 실패했습니다.');
+      console.error("Failed to delete comment:", err);
+      alert("댓글 삭제에 실패했습니다.");
     } finally {
       setDeletingId(null);
     }
@@ -130,9 +134,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-1.5">
                     <b className="truncate text-[14px] font-bold text-slate-800">{comment.authorNickname}</b>
-                    <span className="shrink-0 text-[13px] text-slate-500">
-                      {formatKstDateTime(comment.createdAt)}
-                    </span>
+                    <span className="shrink-0 text-[13px] text-slate-500">{formatKstDateTime(comment.createdAt)}</span>
                   </div>
                   <p className="mt-0.5 text-[14.5px] leading-[1.5] break-words whitespace-pre-wrap text-slate-800">
                     {comment.content}
@@ -146,7 +148,7 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
                     className="shrink-0 cursor-pointer py-1 text-[12.5px] font-bold text-slate-500 transition-colors hover:text-red-700"
                     aria-label="댓글 삭제"
                   >
-                    {deletingId === comment.id ? <Loader2 className="size-4 animate-spin" /> : '삭제'}
+                    {deletingId === comment.id ? <Loader2 className="size-4 animate-spin" /> : "삭제"}
                   </button>
                 )}
               </div>
