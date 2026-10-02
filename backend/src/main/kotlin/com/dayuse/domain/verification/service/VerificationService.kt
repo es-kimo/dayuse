@@ -32,8 +32,7 @@ class VerificationService(
     private val dailyRecordService: DailyRecordService? = null,
     private val dailyRecordRepository: DailyRecordRepository? = null,
     private val shareCardRepository: com.dayuse.domain.share.ShareCardRepository? = null,
-    private val challengeProgressService: com.dayuse.domain.challenge.service.ChallengeProgressService? = null,
-    private val featureFlagService: com.dayuse.domain.feature.service.FeatureFlagService? = null
+    private val challengeProgressService: com.dayuse.domain.challenge.service.ChallengeProgressService? = null
 ) {
 
     fun createVerification(
@@ -122,19 +121,8 @@ class VerificationService(
                 saved,
                 challenge
             )
-            featureFlagService?.evaluateAndLogCertAction(
-                userId = userId,
-                isSuccess = true,
-                metadata = mapOf("challengeId" to challenge.id)
-            )
             return toDetailResponse(saved, challenge, now)
         } catch (e: Exception) {
-            featureFlagService?.evaluateAndLogCertAction(
-                userId = userId,
-                isSuccess = false,
-                errorMessage = e.message ?: "인증 등록 실패",
-                metadata = mapOf("challengeId" to challenge.id)
-            )
             if (e is DataIntegrityViolationException) {
                 val constraintViolation = generateSequence<Throwable>(e) { it.cause }
                     .filterIsInstance<ConstraintViolationException>()

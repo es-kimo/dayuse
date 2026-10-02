@@ -1,12 +1,5 @@
 import { apiClient } from './client';
 
-export interface FeatureAssignmentResponse {
-  featureKey: string;
-  variant: 'A' | 'B';
-  isOverride: boolean;
-  isKillSwitchActive: boolean;
-}
-
 export interface FeatureEventRequest {
   featureKey: string;
   variant: string;
@@ -15,23 +8,6 @@ export interface FeatureEventRequest {
 }
 
 export const featuresApi = {
-  /**
-   * 피처 플래그 배정 정보 조회 (계정 고정 배정 / QA 오버라이드 / 킬스위치)
-   */
-  getFeatureAssignment: async (
-    featureKey: string = 'ui_refresh_01',
-    uiVariant?: string
-  ): Promise<FeatureAssignmentResponse> => {
-    const params = new URLSearchParams({ featureKey });
-    if (uiVariant) {
-      params.append('ui_variant', uiVariant);
-    }
-    const response = await apiClient.get<FeatureAssignmentResponse>(
-      `/features/assignment?${params.toString()}`
-    );
-    return response.data;
-  },
-
   /**
    * 노출(Impression) 및 액션 비동기 로깅 전송
    * 로깅 실패 시에도 UI나 메인 비즈니스를 차단하지 않도록 안전하게 격리 처리

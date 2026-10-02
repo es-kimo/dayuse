@@ -4,8 +4,6 @@ import { verificationsApi } from '../api/verifications';
 import { recordsApi } from '../api/records';
 import type { TodayAction, VerificationDetail } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { useUiVersion } from '../context/UiVersionContext';
-import { logCertFlowAction } from '../hooks/useFeatureLogging';
 import { track } from '../utils/tracker';
 import { useTrackOnce } from '../hooks/useTrackOnce';
 import { toFailureReason, toStatusCode } from '../utils/trackErrorReason';
@@ -51,7 +49,6 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   onSuccess,
 }) => {
   const { user } = useAuth();
-  const { uiVersion } = useUiVersion();
 
   /*
    * 인증 퍼널 문맥. 내부 식별자만 싣는다.
@@ -65,13 +62,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
   /*
    * 인증 작성 흐름 진입. 모달 인스턴스당 1회만 기록한다.
-   * v0.8 A/B 실험 로그(CERT_FLOW_*)는 ui_refresh_01 변형 비교용으로 남기되,
-   * 공통 tracker와 같은 시점에서만 발화하도록 한 곳에 모아 두 측정이 어긋나지 않게 한다.
    */
   useTrackOnce('certification_started', certContext);
-  useEffect(() => {
-    void logCertFlowAction(uiVersion, 'CERT_FLOW_ENTER', { challengeId: action.challengeId });
-  }, [uiVersion, action.challengeId]);
 
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -243,10 +235,6 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         ...certContext,
         verificationId: savedVerification.id,
       });
-      void logCertFlowAction(uiVersion, 'CERT_FLOW_SUCCESS', {
-        challengeId: action.challengeId,
-        verificationId: savedVerification.id,
-      });
     } catch (err: any) {
       console.error('인증 등록 실패:', err);
       const msg =
@@ -262,10 +250,6 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         ...certContext,
         reason: toFailureReason(err),
         statusCode: toStatusCode(err),
-      });
-      void logCertFlowAction(uiVersion, 'CERT_FLOW_FAIL', {
-        challengeId: action.challengeId,
-        error: msg,
       });
     } finally {
       setIsSubmitting(false);

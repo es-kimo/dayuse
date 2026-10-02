@@ -4,8 +4,6 @@ import { VerificationModal } from './VerificationModal';
 
 const mocks = vi.hoisted(() => ({ standalone: false, success: vi.fn(), guide: vi.fn() }));
 vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ user: { nickname: '테스터' } }) }));
-vi.mock('../context/UiVersionContext', () => ({ useUiVersion: () => ({ uiVersion: 'B' }) }));
-vi.mock('../hooks/useFeatureLogging', () => ({ logCertFlowAction: vi.fn() }));
 vi.mock('../utils/pwaAnalytics', () => ({ logPwaImpression: vi.fn(), logPwaGuideOpen: mocks.guide }));
 vi.mock('../utils/webPush', () => ({ isStandalone: () => mocks.standalone, isIos: () => false }));
 vi.mock('./ShareCardModal', () => ({ ShareCardModal: () => <div>공유 카드 화면</div> }));

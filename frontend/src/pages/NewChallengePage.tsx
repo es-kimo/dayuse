@@ -8,29 +8,9 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { challengesApi } from '../api/challenges';
 import { groupsApi } from '../api/groups';
 import { useAuth } from '../context/AuthContext';
-import { useUiVersion } from '../context/UiVersionContext';
 import { NewChallengeViewB } from '../components/NewChallengeViewB';
-import { MobileLayout } from '../components/MobileLayout';
-import {
-  ArrowLeft,
-  Calendar,
-  ShieldCheck,
-  Coins,
-  AlertCircle,
-  Loader2,
-  History,
-  RotateCcw,
-  Sparkles,
-  X,
-  Check,
-  Repeat,
-  Layers,
-  Users,
-  SlidersHorizontal,
-} from 'lucide-react';
 import { getTodayKstString, addDaysKst } from '../utils/date';
 import type { ChallengeSummary, PeriodType, ExecutionType, GroupMember, CreateChallengePayload } from '../types';
-import { Button, FormField, Input, Textarea, Modal, ModalTitle, ModalDescription, ModalClose } from '../components/ui';
 
 const PERIOD_PRESETS = [
   { label: '1주 (7일)', days: 7 },
@@ -44,8 +24,6 @@ export const NewChallengePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const titleInputRef = React.useRef<HTMLInputElement>(null);
-  const criteriaInputRef = React.useRef<HTMLTextAreaElement>(null);
 
   const restartFromId = searchParams.get('restartFrom');
   const today = getTodayKstString();
@@ -67,30 +45,24 @@ export const NewChallengePage: React.FC = () => {
 
   // 모임원 다중 선택 및 참가자별 벌금 상태
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
-  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [selectedMemberIds, setSelectedMemberIds] = useState<Set<number>>(new Set());
   const [memberPenalties, setMemberPenalties] = useState<Record<number, number>>({});
-  const [isCustomPenaltyPerMember, setIsCustomPenaltyPerMember] = useState(false);
 
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
   const [isTemplateLoaded, setIsTemplateLoaded] = useState(false);
   const [activeRestartId, setActiveRestartId] = useState<string | null>(restartFromId);
 
-  const { uiVersion } = useUiVersion();
   const redayPreview = import.meta.env.DEV && ['A', 'B'].includes(searchParams.get('reday_ui') ?? '');
-  const redayExperimentEligible = !redayPreview && uiVersion === 'B' && !activeRestartId && !isTemplateLoaded && !isLoadingTemplate;
+  const redayExperimentEligible = !redayPreview && !activeRestartId && !isTemplateLoaded && !isLoadingTemplate;
   const redayExperiment = useExperiment(CHALLENGE_REDAY_UI_EXPERIMENT, redayExperimentEligible);
   const redayExposure = React.useRef<ExperimentState | null>(null);
 
   // 이전 챌린지 불러오기 모달 상태
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [historyChallenges, setHistoryChallenges] = useState<ChallengeSummary[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [, setShowHistoryModal] = useState(false);
+  const [, setHistoryChallenges] = useState<ChallengeSummary[]>([]);
+  const [, setIsLoadingHistory] = useState(false);
 
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   // 총 진행 일수 계산
   const durationDays = useMemo(() => {
@@ -100,54 +72,12 @@ export const NewChallengePage: React.FC = () => {
     return Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1;
   }, [startDate, endDate]);
 
-  // 주 N회 선택 시 7일 구간 분할 계산 (프리뷰용)
-  const previewIntervals = useMemo(() => {
-    if (periodType !== 'WEEKLY_N' || !startDate || !endDate || endDate < startDate) {
-      return [];
-    }
-    const intervals: Array<{
-      index: number;
-      startDate: string;
-      endDate: string;
-      days: number;
-      targetCount: number;
-      isShort: boolean;
-    }> = [];
-
-    let cur = startDate;
-    let idx = 1;
-
-    while (cur <= endDate) {
-      const naturalEnd = addDaysKst(cur, 6);
-      const curEnd = naturalEnd > endDate ? endDate : naturalEnd;
-      const sMs = new Date(cur).getTime();
-      const eMs = new Date(curEnd).getTime();
-      const days = Math.round((eMs - sMs) / (1000 * 60 * 60 * 24)) + 1;
-      const target = Math.min(targetFrequency, days);
-
-      intervals.push({
-        index: idx,
-        startDate: cur,
-        endDate: curEnd,
-        days,
-        targetCount: target,
-        isShort: days < 7,
-      });
-
-      cur = addDaysKst(curEnd, 1);
-      idx++;
-    }
-
-    return intervals;
-  }, [periodType, targetFrequency, startDate, endDate]);
-
   // 1. URL restartFrom 쿼리 파라미터가 있을 때 템플릿 로드
   useEffect(() => {
     if (!groupId || !restartFromId) return;
 
     const loadTemplate = async () => {
       setIsLoadingTemplate(true);
-      setError(null);
       try {
         const template = await challengesApi.getRestartTemplate(Number(groupId), Number(restartFromId));
         setTitle(template.title);
@@ -173,10 +103,8 @@ export const NewChallengePage: React.FC = () => {
         setSelectedPreset(matched ? matched.days : 'custom');
         setIsTemplateLoaded(true);
         setActiveRestartId(restartFromId);
-        setSuccessNotice('종료된 챌린지 설정을 성공적으로 불러왔습니다.');
       } catch (err: any) {
         console.error('Failed to load restart template:', err);
-        setError(err.response?.data?.message || '챌린지 정보를 불러오는데 실패했습니다.');
       } finally {
         setIsLoadingTemplate(false);
       }
@@ -189,28 +117,15 @@ export const NewChallengePage: React.FC = () => {
   useEffect(() => {
     if (!groupId) return;
     const fetchGroupMembers = async () => {
-      setIsLoadingMembers(true);
       try {
         const detail = await groupsApi.getGroupDetail(Number(groupId));
         setGroupMembers(detail.members || []);
       } catch (err) {
         console.error('Failed to load group members:', err);
-      } finally {
-        setIsLoadingMembers(false);
       }
     };
     fetchGroupMembers();
   }, [groupId]);
-
-  const handleSelectExecutionType = (type: ExecutionType) => {
-    setExecutionType(type);
-    if (type === 'TOGETHER') {
-      setPenaltyAmount(0);
-      setIsCustomPenaltyPerMember(false);
-    } else if (penaltyAmount === 0) {
-      setPenaltyAmount(5000);
-    }
-  };
 
   const handleToggleMember = (userId: number) => {
     if (userId === currentUser?.id) return; // 생성자는 필수 참여
@@ -259,14 +174,14 @@ export const NewChallengePage: React.FC = () => {
           userId: m.userId,
           nickname: m.nickname,
           profileImageUrl: m.profileImageUrl,
-          penaltyAmount: executionType === 'TOGETHER' ? 0 : (isCustomPenaltyPerMember ? (memberPenalties[m.userId] ?? penaltyAmount) : penaltyAmount),
+          penaltyAmount: executionType === 'TOGETHER' ? 0 : penaltyAmount,
           isCreator: false,
         });
       }
     });
 
     return list;
-  }, [groupMembers, currentUser, selectedMemberIds, memberPenalties, penaltyAmount, isCustomPenaltyPerMember, executionType]);
+  }, [groupMembers, currentUser, selectedMemberIds, memberPenalties, penaltyAmount, executionType]);
 
   // 2. 모임 내 기존 챌린지 목록 조회 (불러오기 모달용)
   const handleOpenHistoryModal = async () => {
@@ -283,138 +198,9 @@ export const NewChallengePage: React.FC = () => {
     }
   };
 
-  // 3. 특정 기존 챌린지 선택하여 불러오기
-  const handleSelectHistoryChallenge = async (selected: ChallengeSummary) => {
-    if (!groupId) return;
-    setError(null);
-    setIsLoadingTemplate(true);
-
-    try {
-      if (selected.status === 'ENDED' || selected.status === 'ABORTED') {
-        const template = await challengesApi.getRestartTemplate(Number(groupId), selected.id);
-        setTitle(template.title);
-        setDescription(template.description || '');
-        setVerificationCriteria(template.verificationCriteria);
-        setStartDate(template.suggestedStartDate);
-        setEndDate(template.suggestedEndDate);
-        const dur = Math.round((new Date(template.suggestedEndDate).getTime() - new Date(template.suggestedStartDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        const matched = PERIOD_PRESETS.find((p) => p.days === dur);
-        setSelectedPreset(matched ? matched.days : 'custom');
-        if (template.periodType) setPeriodType(template.periodType);
-        if (template.targetFrequency) setTargetFrequency(template.targetFrequency);
-        setRedayAllowed(Boolean(template.redayAllowed));
-        if (template.executionType) {
-          setExecutionType(template.executionType);
-          if (template.executionType === 'TOGETHER') {
-            setPenaltyAmount(0);
-          } else {
-            setPenaltyAmount(template.suggestedPenaltyAmount || 5000);
-          }
-        } else {
-          setPenaltyAmount(template.suggestedPenaltyAmount || 5000);
-        }
-        setActiveRestartId(String(selected.id));
-      } else {
-        setTitle(selected.title);
-        setDescription(selected.description || '');
-        setVerificationCriteria(selected.verificationCriteria);
-        const nextStart = addDaysKst(today, 1);
-        setStartDate(nextStart);
-        const startMs = new Date(selected.startDate).getTime();
-        const endMs = new Date(selected.endDate).getTime();
-        const days = Math.max(1, Math.round((endMs - startMs) / (1000 * 60 * 60 * 24)) + 1);
-        setEndDate(addDaysKst(nextStart, days - 1));
-        const matched = PERIOD_PRESETS.find((p) => p.days === days);
-        setSelectedPreset(matched ? matched.days : 'custom');
-        if (selected.periodType) setPeriodType(selected.periodType);
-        if (selected.targetFrequency) setTargetFrequency(selected.targetFrequency);
-        setRedayAllowed(Boolean(selected.redayAllowed));
-        if (selected.executionType) {
-          setExecutionType(selected.executionType);
-          if (selected.executionType === 'TOGETHER') {
-            setPenaltyAmount(0);
-          } else if (selected.myPenaltyAmount) {
-            setPenaltyAmount(selected.myPenaltyAmount);
-          }
-        } else if (selected.myPenaltyAmount) {
-          setPenaltyAmount(selected.myPenaltyAmount);
-        }
-        setActiveRestartId(null);
-      }
-
-      setIsTemplateLoaded(true);
-      setShowHistoryModal(false);
-      setSuccessNotice(`'${selected.title}' 챌린지 설정을 불러왔습니다.`);
-      setTimeout(() => setSuccessNotice(null), 3000);
-    } catch (err: any) {
-      console.error('Failed to import challenge:', err);
-      setError(err.response?.data?.message || '챌린지 설정을 불러오는데 실패했습니다.');
-    } finally {
-      setIsLoadingTemplate(false);
-    }
-  };
-
-  const handleSelectPreset = (days: number) => {
-    setSelectedPreset(days);
-    setEndDate(addDaysKst(startDate, days - 1));
-  };
-
-  const handleStartDateChange = (newStart: string) => {
-    setStartDate(newStart);
-    if (typeof selectedPreset === 'number') {
-      setEndDate(addDaysKst(newStart, selectedPreset - 1));
-    } else if (newStart > endDate) {
-      setEndDate(newStart);
-    }
-  };
-
-  const handleEndDateChange = (newEnd: string) => {
-    if (newEnd >= startDate) {
-      setEndDate(newEnd);
-      const diff = Math.round((new Date(newEnd).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      const matched = PERIOD_PRESETS.find((p) => p.days === diff);
-      setSelectedPreset(matched ? matched.days : 'custom');
-    }
-  };
-
-  const handleOpenConfirm = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!title.trim()) {
-      setError('챌린지 제목을 입력해주세요.');
-      titleInputRef.current?.focus();
-      return;
-    }
-    if (!verificationCriteria.trim()) {
-      setError('인증 기준을 상세히 입력해주세요.');
-      criteriaInputRef.current?.focus();
-      return;
-    }
-    if (startDate < today) {
-      setError('시작일은 오늘 이후 날짜여야 합니다.');
-      return;
-    }
-    if (endDate < startDate) {
-      setError('종료일은 시작일 이후여야 합니다.');
-      return;
-    }
-    if (periodType === 'WEEKLY_N' && (targetFrequency < 1 || targetFrequency > 7)) {
-      setError('주 N회 챌린지의 목표 횟수는 1회 이상 7회 이하여야 합니다.');
-      return;
-    }
-    if (executionType !== 'TOGETHER' && penaltyAmount < 0) {
-      setError('약정 금액은 0원 이상이어야 합니다.');
-      return;
-    }
-
-    setShowConfirmModal(true);
-  };
-
   const handleConfirmSubmit = async () => {
     if (!groupId || isSubmitting) return;
     setIsSubmitting(true);
-    setError(null);
 
     try {
       let createdChallenge;
@@ -451,7 +237,6 @@ export const NewChallengePage: React.FC = () => {
         redayAllowed: effectiveRedayAllowed,
         redayEligible: canEnableReday,
         isTemplate: isTemplateLoaded,
-        uiVersion,
       };
       track('challenge_created', creationProperties, experimentContext);
       if (effectiveRedayAllowed && experimentContext) {
@@ -461,885 +246,54 @@ export const NewChallengePage: React.FC = () => {
       navigateAfterChallengeCreation(navigate, createdChallenge.groupId, createdChallenge.id);
     } catch (err: any) {
       console.error('Failed to create challenge:', err);
-      setError(err.response?.data?.message || '챌린지 생성에 실패했습니다.');
-      setShowConfirmModal(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (uiVersion === 'B') {
-    return (
-      <NewChallengeViewB
-        title={title}
-        setTitle={setTitle}
-        description={description}
-        setDescription={setDescription}
-        verificationCriteria={verificationCriteria}
-        setVerificationCriteria={setVerificationCriteria}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
-        selectedPreset={selectedPreset}
-        setSelectedPreset={setSelectedPreset}
-        periodType={periodType}
-        setPeriodType={setPeriodType}
-        targetFrequency={targetFrequency}
-        setTargetFrequency={setTargetFrequency}
-        executionType={executionType}
-        setExecutionType={setExecutionType}
-        penaltyAmount={penaltyAmount}
-        setPenaltyAmount={setPenaltyAmount}
-        redayExperiment={redayExperimentEligible ? redayExperiment : undefined}
-        onRedayExposure={(state) => { redayExposure.current = state; }}
-        redayAllowed={redayAllowed}
-        setRedayAllowed={setRedayAllowed}
-        groupMembers={groupMembers}
-        selectedMemberIds={selectedMemberIds}
-        onToggleMember={handleToggleMember}
-        memberPenalties={memberPenalties}
-        onMemberPenaltyChange={handleMemberPenaltyChange}
-        durationDays={durationDays}
-        isSubmitting={isSubmitting}
-        onBack={() => {
-          if (window.history.length > 1) {
-            navigate(-1);
-          } else {
-            navigate(`/groups/${groupId}?tab=challenges`);
-          }
-        }}
-        onSubmit={handleConfirmSubmit}
-        onOpenHistory={handleOpenHistoryModal}
-        currentUserId={currentUser?.id}
-      />
-    );
-  }
-
   return (
-    <MobileLayout>
-      {/* 상단 헤더 */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                navigate(`/groups/${groupId}?tab=challenges`);
-              }
-            }}
-            className="p-1 -ml-1 text-slate-500 hover:text-slate-800 rounded-md"
-            aria-label="뒤로가기"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-lg font-bold text-slate-800">
-            {activeRestartId ? '챌린지 다시 시작' : '새 챌린지 만들기'}
-          </h1>
-        </div>
-
-        {/* 이전 챌린지 불러오기 버튼 */}
-        <button
-          type="button"
-          onClick={handleOpenHistoryModal}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md text-xs font-semibold transition active:scale-[0.98]"
-        >
-          <History className="w-3.5 h-3.5" />
-          <span>기존 내용 불러오기</span>
-        </button>
-      </div>
-
-      {isLoadingTemplate && (
-        <div className="p-4 mb-4 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-xs flex items-center justify-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-          <span>이전 챌린지 설정을 불러오는 중입니다...</span>
-        </div>
-      )}
-
-      {successNotice && (
-        <div className="p-3 mb-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center justify-between gap-2 reveal">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{successNotice}</span>
-          </div>
-          <button
-            onClick={() => setSuccessNotice(null)}
-            className="text-emerald-500 hover:text-emerald-700"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {error && (
-        <div className="p-3 mb-4 rounded-md bg-red-50 border border-red-200 text-red-600 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      <form onSubmit={handleOpenConfirm} noValidate className="space-y-4 flex-1">
-        {/* 제목 */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs">
-          <FormField label="챌린지 제목" required id="challenge-title">
-            <Input
-              ref={titleInputRef}
-              id="challenge-title"
-              required
-              maxLength={50}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="예: 주 3회 헬스장 가기"
-            />
-          </FormField>
-        </div>
-
-        {/* 설명 */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs">
-          <FormField label="챌린지 설명 (선택)" id="challenge-desc">
-            <Textarea
-              id="challenge-desc"
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="모임원들에게 챌린지의 목표나 규칙을 소개해 주세요."
-              className="resize-none"
-            />
-          </FormField>
-        </div>
-
-        {/* 인증 기준 */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs">
-          <FormField
-            label="인증 기준"
-            required
-            id="challenge-criteria"
-            description="1일 최대 1회 인증"
-          >
-            <Textarea
-              ref={criteriaInputRef}
-              id="challenge-criteria"
-              rows={3}
-              required
-              value={verificationCriteria}
-              onChange={(e) => setVerificationCriteria(e.target.value)}
-              placeholder="예: 헬스장 락커 번호표와 운동 인증 사진 1장 (자정 전까지 제출)"
-              className="resize-none"
-            />
-          </FormField>
-        </div>
-
-        {/* 기간 설정 */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-              <Calendar className="w-4 h-4 text-blue-600" />
-              <span>진행 기간 설정</span>
-              {isTemplateLoaded && (
-                <span className="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
-                  불러온 기간
-                </span>
-              )}
-            </div>
-            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
-              총 {durationDays}일간 진행
-            </span>
-          </div>
-
-          {/* 추천 기간 선택 칩 */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] text-slate-500 font-medium">추천 기간</span>
-              {selectedPreset === 'custom' && (
-                <span className="text-[10px] text-slate-400">직접 설정 중</span>
-              )}
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {PERIOD_PRESETS.map((preset) => {
-                const isSelected = selectedPreset === preset.days;
-                return (
-                  <button
-                    key={preset.days}
-                    type="button"
-                    onClick={() => handleSelectPreset(preset.days)}
-                    className={`py-2 px-2 text-[11px] rounded-md border font-medium transition text-center whitespace-nowrap ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-2xs'
-                        : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                );
-              })}
-              <button
-                type="button"
-                onClick={() => setSelectedPreset('custom')}
-                className={`col-span-2 py-2 px-2 text-[11px] rounded-md border font-medium transition text-center whitespace-nowrap ${
-                  selectedPreset === 'custom'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold shadow-2xs'
-                    : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                직접 날짜 설정
-              </button>
-            </div>
-          </div>
-
-          {/* 날짜 직접 선택 피커 */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            <div className="min-w-0">
-              <span className="block text-[11px] text-slate-500 mb-1">시작일</span>
-              <input
-                type="date"
-                required
-                min={today}
-                value={startDate}
-                onChange={(e) => handleStartDateChange(e.target.value)}
-                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-slate-50"
-              />
-            </div>
-            <div className="min-w-0">
-              <span className="block text-[11px] text-slate-500 mb-1">종료일</span>
-              <input
-                type="date"
-                required
-                min={startDate}
-                value={endDate}
-                onChange={(e) => handleEndDateChange(e.target.value)}
-                className="w-full min-w-0 max-w-full text-xs sm:text-sm px-2 py-2 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-slate-50"
-              />
-            </div>
-          </div>
-          <p className="text-[11px] text-slate-400">
-            {startDate}부터 {endDate}까지 {durationDays}일간 진행돼요. (최소 1일부터 자유롭게 설정 가능)
-          </p>
-        </div>
-
-        {/* 수행 주기 설정 */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-              <Repeat className="w-4 h-4 text-blue-600" />
-              <span>수행 주기 설정</span>
-            </div>
-            <span className="text-[11px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full">
-              {periodType === 'DAILY' ? '매일 1회' : `주 ${targetFrequency}회`}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setPeriodType('DAILY')}
-              className={`py-2 px-3 text-xs rounded-md border font-medium transition flex items-center justify-center gap-1.5 ${
-                periodType === 'DAILY'
-                  ? 'border-blue-500 bg-blue-50 text-blue-700 font-semibold'
-                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <span>매일 (1일 1회)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setPeriodType('WEEKLY_N')}
-              className={`py-2 px-3 text-xs rounded-md border font-medium transition flex items-center justify-center gap-1.5 ${
-                periodType === 'WEEKLY_N'
-                  ? 'border-blue-500 bg-blue-50 text-blue-700 font-semibold'
-                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <span>주 N회</span>
-            </button>
-          </div>
-
-          {periodType === 'WEEKLY_N' && (
-            <div className="space-y-3 pt-2 border-t border-slate-100 reveal">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-600 font-medium">주당 목표 횟수</span>
-                <select
-                  value={targetFrequency}
-                  onChange={(e) => setTargetFrequency(Number(e.target.value))}
-                  className="text-xs px-2.5 py-1.5 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-white font-semibold text-slate-800"
-                >
-                  {[1, 2, 3, 4, 5, 6, 7].map((num) => (
-                    <option key={num} value={num}>
-                      주 {num}회
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <p className="text-[11px] text-slate-400">
-                참여자 시작일부터 7일마다 N회 인증합니다. (달력 월~일 기준이 아닌 참여일 기준 7일 주기)
-              </p>
-
-              {/* 구간 분할 미리보기 */}
-              <div className="bg-slate-50 rounded-md p-3 border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-semibold text-slate-700 flex items-center gap-1">
-                    <Layers className="w-3.5 h-3.5 text-blue-600" />
-                    <span>구간 분할 미리보기 ({previewIntervals.length}개 구간)</span>
-                  </span>
-                  <span className="text-blue-600 font-semibold">
-                    총 목표 {previewIntervals.reduce((sum, item) => sum + item.targetCount, 0)}회
-                  </span>
-                </div>
-
-                <div className="space-y-1.5 max-h-40 overflow-y-auto overscroll-contain pr-0.5">
-                  {previewIntervals.map((iv) => (
-                    <div
-                      key={iv.index}
-                      className={`p-2 rounded-md text-[11px] flex items-center justify-between border ${
-                        iv.isShort
-                          ? 'bg-amber-50/60 border-amber-200 text-amber-900'
-                          : 'bg-white border-slate-200 text-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-slate-800">{iv.index}구간</span>
-                        <span className="text-slate-400">
-                          {iv.startDate.slice(5)} ~ {iv.endDate.slice(5)} ({iv.days}일간)
-                        </span>
-                      </div>
-                      <div className="font-semibold">
-                        <span>목표 {iv.targetCount}회</span>
-                        {iv.isShort && (
-                          <span className="ml-1 text-[10px] text-amber-600 font-normal">
-                            (남은 {iv.days}일 맞춤)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {previewIntervals.some((iv) => iv.isShort) && (() => {
-                  const lastShort = previewIntervals.find((iv) => iv.isShort);
-                  return (
-                    <p className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-md border border-amber-200/70 leading-relaxed">
-                      💡 마지막 주차는 남은 기간({lastShort?.days}일)이 1주일보다 짧아, 무리하지 않도록 목표가 최대 {lastShort?.targetCount}회로 자동 조정돼요!
-                    </p>
-                  );
-                })()}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 수행 방식 설정 (F01) */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-              <Users className="w-4 h-4 text-blue-600" />
-              <span>수행 방식 선택</span>
-            </div>
-            <span
-              className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                executionType === 'TOGETHER'
-                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                  : 'bg-blue-50 text-blue-600 border border-blue-200'
-              }`}
-            >
-              {executionType === 'TOGETHER' ? '함께하기' : '각자하기'}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleSelectExecutionType('INDIVIDUAL')}
-              className={`p-3 text-left rounded-md border transition ${
-                executionType === 'INDIVIDUAL'
-                  ? 'border-blue-500 bg-blue-50/50 text-blue-900 shadow-2xs font-semibold'
-                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <div className="font-bold text-xs mb-1 flex items-center justify-between">
-                <span>각자하기</span>
-                {executionType === 'INDIVIDUAL' && <Check className="w-3.5 h-3.5 text-blue-600" />}
-              </div>
-              <p className="text-[11px] text-slate-500 leading-snug">
-                각자 목표를 달성하고, 미인증 시 각자 약정 벌금을 정산해요.
-              </p>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectExecutionType('TOGETHER')}
-              className={`p-3 text-left rounded-md border transition ${
-                executionType === 'TOGETHER'
-                  ? 'border-indigo-500 bg-indigo-50/50 text-indigo-900 shadow-2xs font-semibold'
-                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <div className="font-bold text-xs mb-1 flex items-center justify-between">
-                <span className="text-indigo-700">함께하기</span>
-                {executionType === 'TOGETHER' && <Check className="w-3.5 h-3.5 text-indigo-600" />}
-              </div>
-              <p className="text-[11px] text-slate-500 leading-snug">
-                하루 1명만 인증해도 전원 성공! 벌금 없이 부담 없이 함께 도전해요.
-              </p>
-            </button>
-          </div>
-        </div>
-
-        {/* 본인 및 기본 약정 금액 설정 */}
-        {executionType === 'TOGETHER' ? (
-          <div className="bg-indigo-50/60 border border-indigo-200 rounded-lg p-3.5 space-y-1.5">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
-              <Coins className="w-4 h-4 text-indigo-600" />
-              <span>약정 벌금 없음 (함께하기 모드)</span>
-            </div>
-            <p className="text-[11px] text-indigo-700 leading-relaxed">
-              함께하기 챌린지는 벌금이 부과되지 않으므로 약정 금액을 설정할 필요가 없습니다. 모임원들과 함께 부담 없이 완주해보세요!
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                <Coins className="w-4 h-4 text-amber-500" />
-                <span>{periodType === 'WEEKLY_N' ? '미수행 1회당 약정 금액' : '1일 미수행 약정 금액'}</span>
-              </div>
-              <span className="text-xs font-bold text-amber-600">
-                {penaltyAmount.toLocaleString()}원
-              </span>
-            </div>
-
-            <div className="flex gap-2">
-              {[3000, 5000, 10000].map((amt) => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => setPenaltyAmount(amt)}
-                  className={`flex-1 py-1.5 text-xs rounded-md border transition ${
-                    penaltyAmount === amt
-                      ? 'border-amber-500 bg-amber-50 text-amber-800 font-semibold'
-                      : 'border-slate-200 bg-slate-50 text-slate-600'
-                  }`}
-                >
-                  {amt.toLocaleString()}원
-                </button>
-              ))}
-            </div>
-
-            <div>
-              <span className="block text-[11px] text-slate-500 mb-1">직접 입력 (원 단위)</span>
-              <input
-                type="number"
-                min={0}
-                step={1000}
-                value={penaltyAmount}
-                onChange={(e) => setPenaltyAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                className="w-full text-base px-3 py-2 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-white"
-              />
-            </div>
-            <p className="text-[11px] text-slate-400">
-              {isCustomPenaltyPerMember
-                ? `생성자 본인 및 별도 지정하지 않은 참가자의 ${periodType === 'WEEKLY_N' ? '미수행 1회당' : '1일'} 기본 약정 금액입니다.`
-                : `모든 참가자에게 동일하게 적용되는 ${periodType === 'WEEKLY_N' ? '미수행 1회당' : '1일 미수행'} 약정 금액입니다.`}
-            </p>
-          </div>
-        )}
-
-        {/* 리데이(벌금 면제권) 허용 여부 설정 (F01) */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-2.5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                <span>🎟️ 리데이(벌금 면제권) 허용</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
-                    effectiveRedayAllowed
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : 'bg-slate-100 text-slate-500'
-                  }`}
-                >
-                  {effectiveRedayAllowed ? '허용됨' : '미허용'}
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                {canEnableReday
-                  ? '지각 인증(익일 09시~이틀 뒤 09시 전) 등록 후 리데이 티켓을 사용하면 해당 날짜 벌금이 면제돼요.'
-                  : '매일(DAILY) · 각자하기 · 벌금이 있는 챌린지에서만 리데이를 허용할 수 있어요.'}
-              </p>
-            </div>
-            <input
-              type="checkbox"
-              checked={effectiveRedayAllowed}
-              disabled={!canEnableReday}
-              onChange={(e) => setRedayAllowed(e.target.checked)}
-              className="w-4 h-4 accent-blue-600 rounded cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-            />
-          </div>
-        </div>
-
-        {/* 함께할 모임원 선택 리스트 & 참가자별 약정금 설정 */}
-        <div className="bg-white border border-slate-200 rounded-lg p-3.5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-              <Users className="w-4 h-4 text-blue-600" />
-              <span>함께할 모임원 선택</span>
-            </div>
-            <span className="text-[11px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full">
-              나 포함 총 {participantsList.length}명 참여
-            </span>
-          </div>
-
-          <p className="text-[11px] text-slate-400">
-            생성자는 필수 참여되며, 모임원을 터치하여 함께 도전할 멤버를 선택하세요.
-          </p>
-
-          {isLoadingMembers ? (
-            <div className="py-6 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-              <span>모임원 목록을 불러오는 중...</span>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-72 overflow-y-auto overscroll-contain pr-0.5">
-              {groupMembers.map((member) => {
-                const isCreator = member.userId === currentUser?.id;
-                const isSelected = isCreator || selectedMemberIds.has(member.userId);
-                const currentPenalty = isCreator
-                  ? penaltyAmount
-                  : (isCustomPenaltyPerMember ? (memberPenalties[member.userId] ?? penaltyAmount) : penaltyAmount);
-
-                return (
-                  <div
-                    key={member.userId}
-                    onClick={() => !isCreator && handleToggleMember(member.userId)}
-                    className={`p-3 rounded-md border transition ${
-                      isCreator ? 'cursor-default' : 'cursor-pointer'
-                    } ${
-                      isSelected
-                        ? 'border-blue-400 bg-blue-50/40 shadow-xs'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2.5">
-                      {/* 좌측: 체크박스 + 프로필 + 닉네임 */}
-                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          disabled={isCreator}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={() => !isCreator && handleToggleMember(member.userId)}
-                          className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 disabled:opacity-60 cursor-pointer"
-                        />
-                        {member.profileImageUrl ? (
-                          <img
-                            src={member.profileImageUrl}
-                            alt={member.nickname}
-                            className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-100"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs text-slate-600 font-bold shrink-0">
-                            {member.nickname.slice(0, 1)}
-                          </div>
-                        )}
-                        <div className="min-w-0 flex items-center gap-1.5">
-                          <span className="text-xs font-semibold text-slate-800 truncate">
-                            {member.nickname}
-                          </span>
-                          {isCreator && (
-                            <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium shrink-0">
-                              생성자 (필수)
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* 우측: 약정금 / 모드 뱃지 */}
-                      {isSelected && (
-                        executionType === 'TOGETHER' ? (
-                          <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md shrink-0">
-                            공동 달성
-                          </span>
-                        ) : (
-                          <span className="text-[11px] font-semibold text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded-md shrink-0">
-                            {currentPenalty.toLocaleString()}원
-                          </span>
-                        )
-                      )}
-                    </div>
-
-                    {/* 참가자별 개별 약정금 설정 필드 (토글 ON일 때만 서브 행으로 표시, 함께하기는 숨김) */}
-                    {executionType !== 'TOGETHER' && isCustomPenaltyPerMember && isSelected && !isCreator && (
-                      <div
-                        className="mt-2.5 pt-2 border-t border-blue-100 flex items-center justify-between reveal"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="text-[11px] text-slate-500 font-medium">
-                          개별 약정 금액
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="number"
-                            min={0}
-                            step={1000}
-                            value={currentPenalty}
-                            onChange={(e) => {
-                              const val = Math.max(0, parseInt(e.target.value) || 0);
-                              handleMemberPenaltyChange(member.userId, val);
-                            }}
-                            className="w-20 text-xs px-2 py-1 rounded-md border border-slate-200 focus:outline-hidden focus:border-blue-500 bg-white font-bold text-right text-amber-700"
-                          />
-                          <span className="text-[11px] text-slate-600">원</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* 참가자별 약정 금액 다르게 설정 토글 스위치 (각자하기 모드일 때만 표시) */}
-          {executionType !== 'TOGETHER' && (
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
-                <span>참가자별로 금액 다르게 설정하기</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsCustomPenaltyPerMember(!isCustomPenaltyPerMember)}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                  isCustomPenaltyPerMember ? 'bg-blue-600' : 'bg-slate-200'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                    isCustomPenaltyPerMember ? 'translate-x-4' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* 당일 시작 챌린지 즉시 확정 경고 */}
-        {startDate === today && (
-          <div className="p-3 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2 reveal">
-            <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
-            <div className="leading-relaxed">
-              <span className="font-semibold block">⚠️ 오늘 시작하는 챌린지 주의</span>
-              오늘 시작하는 챌린지는 생성 즉시 조건이 확정되어 취소/수정이 불가합니다.
-            </div>
-          </div>
-        )}
-
-        {/* 제출 버튼 */}
-        <div className="pt-2">
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            isLoading={isSubmitting}
-            leftIcon={activeRestartId ? <RotateCcw className="w-4 h-4" /> : undefined}
-          >
-            {activeRestartId ? '새로운 조건으로 다시 시작하기' : '챌린지 생성 확인'}
-          </Button>
-        </div>
-      </form>
-
-      {/* 이전 챌린지 불러오기 모달 */}
-      <Modal
-        open={showHistoryModal}
-        onOpenChange={setShowHistoryModal}
-        className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4 max-h-[85dvh] flex flex-col"
-      >
-        <>
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <History className="w-4 h-4 text-blue-600" aria-hidden="true" />
-              <ModalTitle className="text-sm font-bold text-slate-800">이전 챌린지 불러오기</ModalTitle>
-            </div>
-            <ModalClose
-              aria-label="닫기"
-              className="text-slate-400 hover:text-slate-600 p-1 -mr-1 rounded-md focus-ring"
-            >
-              <X className="w-4 h-4" aria-hidden="true" />
-            </ModalClose>
-          </div>
-
-          <ModalDescription className="text-xs text-slate-500">
-            이전에 진행했던 챌린지의 제목, 인증 기준, 기간 및 수행 주기를 그대로 불러옵니다.
-          </ModalDescription>
-
-          <div className="flex-1 overflow-y-auto overscroll-contain space-y-2 pr-0.5">
-            {isLoadingHistory ? (
-              <div className="py-8 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
-                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                <span>모임 챌린지 목록을 불러오는 중...</span>
-              </div>
-            ) : historyChallenges.length === 0 ? (
-              <div className="py-8 text-center text-xs text-slate-400">
-                불러올 수 있는 이전 챌린지가 없습니다.
-              </div>
-            ) : (
-              historyChallenges.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => handleSelectHistoryChallenge(c)}
-                  className="w-full text-left p-3 rounded-md border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 transition group"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-slate-800 group-hover:text-blue-600 line-clamp-1">
-                      {c.title}
-                    </span>
-                    <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                        c.status === 'ABORTED'
-                          ? 'bg-rose-50 text-rose-600'
-                          : c.status === 'ENDED'
-                          ? 'bg-slate-100 text-slate-600'
-                          : c.status === 'IN_PROGRESS'
-                          ? 'bg-emerald-50 text-emerald-600'
-                          : 'bg-blue-50 text-blue-600'
-                      }`}
-                    >
-                      {c.status === 'ABORTED' ? '중단됨' : c.status === 'ENDED' ? '종료됨' : c.status === 'IN_PROGRESS' ? '진행 중' : '시작 전'}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                    <span>{c.startDate} ~ {c.endDate} · {c.periodType === 'WEEKLY_N' ? `주 ${c.targetFrequency}회` : '매일'}</span>
-                    <span className="text-blue-600 font-semibold flex items-center gap-0.5">
-                      불러오기 <Check className="w-3 h-3" />
-                    </span>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </>
-      </Modal>
-
-      {/* 최종 확인 모달 */}
-      <Modal
-        open={showConfirmModal}
-        onOpenChange={setShowConfirmModal}
-        layer="sheet"
-        disablePointerDismissal={isSubmitting}
-        className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl space-y-4"
-      >
-        <>
-          <div className="flex items-center gap-2 text-slate-800">
-            <ShieldCheck className="w-5 h-5 text-blue-600" aria-hidden="true" />
-            <ModalTitle className="text-sm font-bold">
-              {activeRestartId ? '다시 시작 챌린지 생성 최종 확인' : '챌린지 생성 최종 확인'}
-            </ModalTitle>
-          </div>
-
-          <div className="bg-slate-50 rounded-md p-3.5 space-y-2 text-xs border border-slate-200">
-            <div className="flex justify-between">
-              <span className="text-slate-500">챌린지명</span>
-              <span className="font-semibold text-slate-800 truncate max-w-[180px]">{title}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">수행 방식</span>
-              <span className="font-semibold text-slate-800">
-                {executionType === 'TOGETHER' ? '함께하기 (공동 달성)' : '각자하기 (개별 정산)'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">진행 기간</span>
-              <span className="font-semibold text-slate-800">{startDate} ~ {endDate} ({durationDays}일)</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">수행 주기</span>
-              <span className="font-semibold text-slate-800">
-                {periodType === 'WEEKLY_N' ? `주 ${targetFrequency}회` : '매일 1회'}
-              </span>
-            </div>
-            {periodType === 'WEEKLY_N' && (
-              <div className="flex justify-between">
-                <span className="text-slate-500">총 목표 횟수</span>
-                <span className="font-semibold text-blue-600">
-                  총 {previewIntervals.reduce((sum, item) => sum + item.targetCount, 0)}회 ({previewIntervals.length}개 구간)
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between items-center">
-              <span className="text-slate-500">최종 참여 인원</span>
-              <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                나 포함 총 {participantsList.length}명
-              </span>
-            </div>
-
-            {/* 참가자별 약정금 명단 요약 (함께하기는 벌금 없음 안내) */}
-            {executionType === 'TOGETHER' ? (
-              <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
-                <span className="text-slate-500">약정 벌금</span>
-                <span className="font-semibold text-emerald-600">없음 (공동 목표 달성 모드)</span>
-              </div>
-            ) : (
-              <div className="pt-2 border-t border-slate-200 space-y-1">
-                <span className="text-[11px] text-slate-500 block font-medium">참가자별 약정 금액:</span>
-                <div className="max-h-28 overflow-y-auto overscroll-contain space-y-1 bg-white p-2 rounded-md border border-slate-200/80">
-                  {participantsList.map((p) => (
-                    <div key={p.userId} className="flex justify-between text-[11px]">
-                      <span className="text-slate-700 truncate max-w-[140px]">
-                        {p.nickname} {p.isCreator && '(생성자)'}
-                      </span>
-                      <span className="font-semibold text-amber-700">
-                        {p.penaltyAmount.toLocaleString()}원 / {periodType === 'WEEKLY_N' ? '회' : '일'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="pt-1 border-t border-slate-200">
-              <span className="text-[11px] text-slate-500 block mb-0.5">인증 기준 안내:</span>
-              <p className="text-[11px] text-slate-700 whitespace-pre-wrap">{verificationCriteria}</p>
-            </div>
-          </div>
-
-          {activeRestartId && (
-            <div className="text-[11px] text-blue-700 bg-blue-50 p-2.5 rounded-md border border-blue-200">
-              ℹ️ 기존 챌린지의 과거 기록(인증 사진 등)은 새 챌린지로 복사되지 않으며 이번에 설정한 참가자 명단으로 새롭게 시작됩니다.
-            </div>
-          )}
-
-          {startDate === today ? (
-            <div className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-md border border-amber-200 leading-relaxed font-medium">
-              ⚠️ 오늘 시작하는 챌린지는 생성 즉시 조건이 확정되어 취소/수정이 불가합니다.
-            </div>
-          ) : (
-            <div className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-md border border-amber-200">
-              ⚠️ 챌린지가 시작(시작일 00:00 KST)되면 기간 및 수행 주기, 인증 기준 수정과 챌린지 삭제가 잠깁니다.
-            </div>
-          )}
-
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => setShowConfirmModal(false)}
-              disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition"
-            >
-              다시 수정
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirmSubmit}
-              disabled={isSubmitting}
-              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-semibold rounded-md flex items-center justify-center gap-1 shadow-xs transition"
-            >
-              {isSubmitting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <span>{activeRestartId ? '다시 시작하기' : '확정하고 생성하기'}</span>
-              )}
-            </button>
-          </div>
-        </>
-      </Modal>
-    </MobileLayout>
+    <NewChallengeViewB
+      title={title}
+      setTitle={setTitle}
+      description={description}
+      setDescription={setDescription}
+      verificationCriteria={verificationCriteria}
+      setVerificationCriteria={setVerificationCriteria}
+      startDate={startDate}
+      setStartDate={setStartDate}
+      endDate={endDate}
+      setEndDate={setEndDate}
+      selectedPreset={selectedPreset}
+      setSelectedPreset={setSelectedPreset}
+      periodType={periodType}
+      setPeriodType={setPeriodType}
+      targetFrequency={targetFrequency}
+      setTargetFrequency={setTargetFrequency}
+      executionType={executionType}
+      setExecutionType={setExecutionType}
+      penaltyAmount={penaltyAmount}
+      setPenaltyAmount={setPenaltyAmount}
+      redayExperiment={redayExperimentEligible ? redayExperiment : undefined}
+      onRedayExposure={(state) => { redayExposure.current = state; }}
+      redayAllowed={redayAllowed}
+      setRedayAllowed={setRedayAllowed}
+      groupMembers={groupMembers}
+      selectedMemberIds={selectedMemberIds}
+      onToggleMember={handleToggleMember}
+      memberPenalties={memberPenalties}
+      onMemberPenaltyChange={handleMemberPenaltyChange}
+      durationDays={durationDays}
+      isSubmitting={isSubmitting}
+      onBack={() => {
+        if (window.history.length > 1) {
+          navigate(-1);
+        } else {
+          navigate(`/groups/${groupId}?tab=challenges`);
+        }
+      }}
+      onSubmit={handleConfirmSubmit}
+      onOpenHistory={handleOpenHistoryModal}
+      currentUserId={currentUser?.id}
+    />
   );
 };

@@ -26,8 +26,7 @@ Dayuse의 실험 시스템은 **`experiments` (실험 정의)** 와 **`product_e
 
 > [!IMPORTANT]
 > **왜 별도의 배정 테이블(`experiment_assignments`)을 두지 않나요?**
-> - 점진적 기능 배포용 Feature Flag(`feature_assignments`)는 롤아웃 비율을 조정해도 기존 사용자의 UI가 바뀌면 안 되므로 DB에 저장합니다.
-> - 반면 **A/B 실험(`Experiment`)** 은 결정론적 해시만으로 활성 기간 중 일관된 Variant가 보장되며, 실험 종료(`STOPPED`) 시 전원 즉시 기본 경험(`A`)으로 돌아가야 하므로 별도 배정 테이블이 필요 없습니다.
+> - **A/B 실험(`Experiment`)** 은 결정론적 해시만으로 활성 기간 중 일관된 Variant가 보장되며, 실험 종료(`STOPPED`) 시 전원 즉시 기본 경험(`A`)으로 돌아가야 하므로 별도 배정 테이블이 필요 없습니다.
 
 ---
 

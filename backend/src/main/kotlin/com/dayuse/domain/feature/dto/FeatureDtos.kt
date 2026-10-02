@@ -3,13 +3,6 @@ package com.dayuse.domain.feature.dto
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
 
-data class FeatureAssignmentResponse(
-    val featureKey: String,
-    val variant: String,
-    val isOverride: Boolean = false,
-    val isKillSwitchActive: Boolean = false
-)
-
 data class FeatureEventRequest(
     @field:NotBlank(message = "피처 키는 필수입니다.")
     @field:Size(max = 64)
@@ -30,9 +23,3 @@ data class FeatureEventResponse(
     val id: Long,
     val status: String = "recorded"
 )
-
-enum class CertFlowActionType {
-    ENTER,
-    SUCCESS,
-    FAIL
-}
