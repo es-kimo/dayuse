@@ -477,7 +477,6 @@ export const GroupDetailPage: React.FC = () => {
 
       {/* 댓글 바텀시트 */}
       <CommentsBottomSheet
-        key={activeCommentVerificationId}
         isOpen={isCommentsBottomSheetOpen}
         verificationId={activeCommentVerificationId}
         onClose={() => setIsCommentsBottomSheetOpen(false)}
