@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { verificationsApi } from "../api/verifications";
 import type { CommentItem } from "../types";
 import { formatKstDateTime } from "../utils/date";
@@ -26,6 +26,11 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
   const [content, setContent] = useState<string>("");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const currentVerificationIdRef = useRef(verificationId);
+  useEffect(() => {
+    currentVerificationIdRef.current = verificationId;
+  }, [verificationId]);
 
   /*
    * 시트가 열려 있을 때만 불러온다.
@@ -63,10 +68,11 @@ export const CommentsBottomSheet: React.FC<CommentsBottomSheetProps> = ({
     try {
       const newComment = await verificationsApi.createComment(verificationId, content.trim());
 
-      // 재현용
       await new Promise((resolve) => setTimeout(resolve, 5000));
 
-      setComments((prev) => [...prev, newComment]);
+      if (verificationId === currentVerificationIdRef.current) {
+        setComments((prev) => [...prev, newComment]);
+      }
       setContent("");
       onCommentCountChange?.(1);
     } catch (err) {
