@@ -56,7 +56,6 @@ export const App: React.FC = () => {
             <Route path="/groups/new" element={<NewGroupPage />} />
             <Route path="/groups/:groupId/invite-created" element={<InviteCreatedPage />} />
             <Route path="/groups/:groupId" element={<GroupDetailPage />} />
-            <Route path="/groups/:groupId/challenges" element={<GroupDetailPage />} />
             <Route path="/groups/:groupId/challenges/new" element={<NewChallengePage />} />
             <Route path="/groups/:groupId/settlements" element={<SettlementManagePage />} />
             <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
