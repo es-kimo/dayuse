@@ -7,7 +7,7 @@ import { GroupChallengesViewB } from "../components/GroupChallengesViewB";
 import { GroupMembersViewB } from "../components/GroupMembersViewB";
 import { Lightbox } from "../components/ui/Lightbox";
 import React, { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { groupsApi } from "../api/groups";
 import { challengesApi } from "../api/challenges";
 import { todayApi } from "../api/today";
@@ -37,16 +37,11 @@ import { ShieldAlert, Loader2 } from "lucide-react";
 export const GroupDetailPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const tabParam = searchParams.get("tab");
   const activeTab: "home" | "challenges" | "members" =
-    tabParam === "challenges" || tabParam === "members"
-      ? tabParam
-      : location.pathname.endsWith("/challenges")
-        ? "challenges"
-        : "home";
+    tabParam === "challenges" || tabParam === "members" ? tabParam : "home";
 
   const handleTabChange = (tab: "home" | "challenges" | "members") => {
     setSearchParams(
