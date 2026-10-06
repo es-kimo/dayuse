@@ -212,28 +212,13 @@ class AnnouncementService(
         userId: Long,
         now: LocalDateTime = DateTimeUtils.nowKst()
     ): AnnouncementUnreadDotResponse {
-        val activeCandidates = findPublishedAnnouncementsSorted()
-            .filter { announcement ->
-                announcement.isWithinActiveNoticeWindow(now) &&
-                    featureEligibilityEvaluator.isEligible(userId, announcement)
-            }
-
-        if (activeCandidates.isEmpty()) {
-            return AnnouncementUnreadDotResponse(hasUnread = false, unreadNoticeCount = 0)
-        }
-
-        val stateByAnnouncementId = loadUserStateMap(userId, activeCandidates.map { it.id })
-        val unreadAndUndismissedCount = activeCandidates.count { announcement ->
-            val state = stateByAnnouncementId[announcement.id]
-            val isRead = state?.isRead ?: false
-            val isDismissed = state?.isDismissed ?: false
-            !isRead && !isDismissed
-        }
-
-        return AnnouncementUnreadDotResponse(
-            hasUnread = unreadAndUndismissedCount > 0,
-            unreadNoticeCount = unreadAndUndismissedCount
-        )
+        // TODO [사용자 미션 3-2]: 새로운 소식 진입점의 미확인 점(Dot) 표시 여부를 판정하세요.
+        // 조건:
+        // 1) findPublishedAnnouncementsSorted() 중에서 현재 안내 기간 내(isWithinActiveNoticeWindow(now))이고
+        //    featureEligibilityEvaluator.isEligible(userId, announcement)를 충족하는 후보를 추립니다.
+        // 2) loadUserStateMap(userId, ...)으로 사용자 상태를 조회한 뒤,
+        //    아직 읽지 않았고(!isRead) 닫지도 않은(!isDismissed) 소식의 개수를 세어 반환합니다.
+        return AnnouncementUnreadDotResponse(hasUnread = false, unreadNoticeCount = 0)
     }
 
     /**
@@ -252,36 +237,14 @@ class AnnouncementService(
         placement: AnnouncementPlacement,
         now: LocalDateTime = DateTimeUtils.nowKst()
     ): AnnouncementPlacementNoticeResponse {
-        val placementCandidates = findPublishedAnnouncementsSorted()
-            .filter { announcement ->
-                announcement.isActiveForPlacement(placement, now) &&
-                    featureEligibilityEvaluator.isEligible(userId, announcement)
-            }
-
-        if (placementCandidates.isEmpty()) {
-            return AnnouncementPlacementNoticeResponse(
-                placement = placement,
-                announcement = null
-            )
-        }
-
-        val stateByAnnouncementId = loadUserStateMap(userId, placementCandidates.map { it.id })
-        val selected = placementCandidates.firstOrNull { announcement ->
-            val state = stateByAnnouncementId[announcement.id]
-            val isRead = state?.isRead ?: false
-            val isDismissed = state?.isDismissed ?: false
-            !isRead && !isDismissed
-        }
-
+        // TODO [사용자 미션 3-3]: 요청한 화면 위치(placement)에 노출할 적격 안내 소식을 최대 1건 선택하세요.
+        // 조건:
+        // 1) findPublishedAnnouncementsSorted() (이미 publishAt DESC, id DESC 정렬됨) 중에서
+        //    announcement.isActiveForPlacement(placement, now) 및 featureEligibilityEvaluator.isEligible(userId, announcement)를 만족하는 후보를 필터링합니다.
+        // 2) 사용자 상태(loadUserStateMap)에서 미열람(!isRead) && 미닫기(!isDismissed)인 첫 번째(firstOrNull) 소식을 선택해 반환합니다.
         return AnnouncementPlacementNoticeResponse(
             placement = placement,
-            announcement = selected?.let {
-                AnnouncementUserItemResponse.from(
-                    announcement = it,
-                    userState = stateByAnnouncementId[it.id],
-                    now = now
-                )
-            }
+            announcement = null
         )
     }
 

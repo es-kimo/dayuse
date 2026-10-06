@@ -75,10 +75,9 @@ class AnnouncementUserState(
      * 기존 `dismissedAt` 상태는 변경하지 않는다.
      */
     fun markRead(now: LocalDateTime = DateTimeUtils.nowKst()) {
-        if (readAt == null) {
-            readAt = now
-            updatedAt = now
-        }
+        // TODO [사용자 미션 2-1]: 읽음(readAt) 상태를 멱등하게 기록하세요.
+        // - 이미 readAt이 기록되어 있다면 최초 시각을 덮어쓰지 않고 유지합니다.
+        // - readAt이 null일 때만 readAt = now, updatedAt = now 로 갱신하며, dismissedAt은 건드리지 않습니다.
     }
 
     /**
@@ -88,9 +87,8 @@ class AnnouncementUserState(
      * 닫기는 읽음(`readAt`)과 별개이므로 `readAt`을 기록하지 않는다.
      */
     fun markDismissed(now: LocalDateTime = DateTimeUtils.nowKst()) {
-        if (dismissedAt == null) {
-            dismissedAt = now
-            updatedAt = now
-        }
+        // TODO [사용자 미션 2-2]: 닫기(dismissedAt) 상태를 읽음(readAt)과 분리하여 멱등하게 기록하세요.
+        // - 이미 dismissedAt이 기록되어 있다면 최초 시각을 유지합니다.
+        // - dismissedAt이 null일 때만 dismissedAt = now, updatedAt = now 로 갱신하며, readAt은 절대 변경하지 않습니다.
     }
 }
