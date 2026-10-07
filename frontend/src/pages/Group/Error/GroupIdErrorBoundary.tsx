@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo } from "react";
+import { useParams } from "react-router-dom";
 
 export class InvalidGroupIdError extends Error {
   constructor(message = "invalid group id from url") {
@@ -15,7 +16,7 @@ interface State {
   error: Error | null;
 }
 
-export class GroupIdErrorBoundary extends Component<Props, State> {
+class GroupIdErrorBoundaryBase extends Component<Props, State> {
   public state: State = {
     isInvalidGroupId: false,
     error: null,
@@ -43,3 +44,11 @@ export class GroupIdErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
+/**
+ * url 기준으로 상태 초기화하는 에러 바운더리
+ */
+export const GroupIdErrorBoundary = ({ children }: Props) => {
+  const { groupId } = useParams<{ groupId: string }>();
+  return <GroupIdErrorBoundaryBase key={groupId}>{children}</GroupIdErrorBoundaryBase>;
+};
