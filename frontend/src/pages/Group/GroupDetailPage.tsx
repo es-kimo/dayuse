@@ -1,41 +1,43 @@
-import { GroupHomeScreen } from "../components/screens/GroupHomeScreen";
-import { UncheckedRecordsCard } from "../components/screens/UncheckedRecordsCard";
-import { RedayActionCard, type RedayActionItem } from "../components/RedayActionCard";
-import { RedayTicketSheet } from "../components/RedayTicketSheet";
-import { redayApi } from "../api/reday";
-import { GroupChallengesViewB } from "../components/GroupChallengesViewB";
-import { GroupMembersViewB } from "../components/GroupMembersViewB";
-import { Lightbox } from "../components/ui/Lightbox";
-import React, { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { groupsApi } from "../api/groups";
-import { challengesApi } from "../api/challenges";
-import { todayApi } from "../api/today";
-import { verificationsApi } from "../api/verifications";
-import { recordsApi } from "../api/records";
-import { settlementApi } from "../api/settlement";
-import { useAuth } from "../context/AuthContext";
+import { Loader2, ShieldAlert } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { challengesApi } from "../../api/challenges";
+import { groupsApi } from "../../api/groups";
+import { recordsApi } from "../../api/records";
+import { redayApi } from "../../api/reday";
+import { settlementApi } from "../../api/settlement";
+import { todayApi } from "../../api/today";
+import { verificationsApi } from "../../api/verifications";
+import { CommentsBottomSheet } from "../../components/CommentsBottomSheet";
+import { DepositReportModal } from "../../components/DepositReportModal";
+import { GroupChallengesViewB } from "../../components/GroupChallengesViewB";
+import { GroupFeedSection } from "../../components/GroupFeedSection";
+import { GroupMembersViewB } from "../../components/GroupMembersViewB";
+import { GroupSettlementCard } from "../../components/GroupSettlementCard";
+import { MobileLayout } from "../../components/MobileLayout";
+import { RedayActionCard, type RedayActionItem } from "../../components/RedayActionCard";
+import { RedayTicketSheet } from "../../components/RedayTicketSheet";
+import { GroupHomeScreen } from "../../components/screens/GroupHomeScreen";
+import { UncheckedRecordsCard } from "../../components/screens/UncheckedRecordsCard";
+import { Lightbox } from "../../components/ui/Lightbox";
+import { UncheckedRecordsBottomSheet } from "../../components/UncheckedRecordsBottomSheet";
+import { VerificationModal } from "../../components/VerificationModal";
+import { useAuth } from "../../context/AuthContext";
 import type {
-  GroupDetail,
   ChallengeSummary,
-  TodayAction,
   FeedItem,
-  StatusSummaryResponse,
-  UncheckedRecordItem,
-  SettlementSummary,
+  GroupDetail,
   RedayCandidate,
-} from "../types";
-import { MobileLayout } from "../components/MobileLayout";
-import { VerificationModal } from "../components/VerificationModal";
-import { GroupFeedSection } from "../components/GroupFeedSection";
-import { CommentsBottomSheet } from "../components/CommentsBottomSheet";
-import { UncheckedRecordsBottomSheet } from "../components/UncheckedRecordsBottomSheet";
-import { GroupSettlementCard } from "../components/GroupSettlementCard";
-import { DepositReportModal } from "../components/DepositReportModal";
-import { ShieldAlert, Loader2 } from "lucide-react";
+  SettlementSummary,
+  StatusSummaryResponse,
+  TodayAction,
+  UncheckedRecordItem,
+} from "../../types";
+import { useGroupIdOrThrow } from "./hooks/useGroupIdOrThrow";
 
 export const GroupDetailPage: React.FC = () => {
-  const { groupId } = useParams<{ groupId: string }>();
+  const groupId = useGroupIdOrThrow();
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -122,9 +124,8 @@ export const GroupDetailPage: React.FC = () => {
   }, [feedItems, completedTodayCount, currentUser?.id, statusSummary]);
 
   const fetchGroup = async () => {
-    if (!groupId) return;
     try {
-      const data = await groupsApi.getGroupDetail(Number(groupId));
+      const data = await groupsApi.getGroupDetail(groupId);
       setGroup(data);
     } catch (err: any) {
       console.error("Failed to fetch group detail:", err);
@@ -141,10 +142,9 @@ export const GroupDetailPage: React.FC = () => {
   };
 
   const fetchTodayActions = async () => {
-    if (!groupId) return;
     setTodayLoading(true);
     try {
-      const actions = await todayApi.getTodayActions(Number(groupId));
+      const actions = await todayApi.getTodayActions(groupId);
       setTodayActions(actions);
     } catch (err) {
       console.error("Failed to fetch today actions:", err);
@@ -154,7 +154,6 @@ export const GroupDetailPage: React.FC = () => {
   };
 
   const fetchFeed = async (page = 0) => {
-    if (!groupId) return;
     if (page === 0) {
       setFeedLoading(true);
     } else {
@@ -162,7 +161,7 @@ export const GroupDetailPage: React.FC = () => {
     }
 
     try {
-      const data = await verificationsApi.getGroupFeed(Number(groupId), page, 10);
+      const data = await verificationsApi.getGroupFeed(groupId, page, 10);
       if (page === 0) {
         setFeedItems(data.items);
       } else {
@@ -179,10 +178,9 @@ export const GroupDetailPage: React.FC = () => {
   };
 
   const fetchSettlementSummary = async () => {
-    if (!groupId) return;
     setSettlementLoading(true);
     try {
-      const data = await settlementApi.getSettlementSummary(Number(groupId));
+      const data = await settlementApi.getSettlementSummary(groupId);
       setSettlementSummary(data);
     } catch (err) {
       console.error("Failed to fetch settlement summary:", err);
@@ -192,9 +190,8 @@ export const GroupDetailPage: React.FC = () => {
   };
 
   const fetchStatusSummary = async () => {
-    if (!groupId) return;
     try {
-      const data = await recordsApi.getStatusSummary(Number(groupId));
+      const data = await recordsApi.getStatusSummary(groupId);
       setStatusSummary(data);
     } catch (err) {
       console.error("Failed to fetch status summary:", err);
@@ -202,10 +199,9 @@ export const GroupDetailPage: React.FC = () => {
   };
 
   const fetchUncheckedRecords = async () => {
-    if (!groupId) return;
     setUncheckedLoading(true);
     try {
-      const data = await recordsApi.getUncheckedRecords(Number(groupId));
+      const data = await recordsApi.getUncheckedRecords(groupId);
       setUncheckedRecords(data);
     } catch (err) {
       console.error("Failed to fetch unchecked records:", err);
@@ -215,9 +211,8 @@ export const GroupDetailPage: React.FC = () => {
   };
 
   const fetchRedayCandidates = async () => {
-    if (!groupId) return;
     try {
-      const data = await redayApi.getGroupCandidates(Number(groupId));
+      const data = await redayApi.getGroupCandidates(groupId);
       setRedayCandidates(data);
     } catch (err) {
       // 리데이 안내를 못 불러와도 모임 홈의 다른 영역은 그대로 보여야 한다.
@@ -289,10 +284,9 @@ export const GroupDetailPage: React.FC = () => {
   };
 
   const fetchChallenges = async () => {
-    if (!groupId) return;
     setChallengesLoading(true);
     try {
-      const list = await challengesApi.getGroupChallenges(Number(groupId));
+      const list = await challengesApi.getGroupChallenges(groupId);
       setChallenges(list);
     } catch (err) {
       console.error("Failed to fetch challenges:", err);
@@ -307,16 +301,14 @@ export const GroupDetailPage: React.FC = () => {
   }, [groupId]);
 
   useEffect(() => {
-    if (groupId) {
-      if (activeTab === "home") {
-        fetchStatusSummary();
-        fetchRedayCandidates();
-        fetchSettlementSummary();
-        fetchTodayActions();
-        fetchFeed(0);
-      } else if (activeTab === "challenges") {
-        fetchChallenges();
-      }
+    if (activeTab === "home") {
+      fetchStatusSummary();
+      fetchRedayCandidates();
+      fetchSettlementSummary();
+      fetchTodayActions();
+      fetchFeed(0);
+    } else if (activeTab === "challenges") {
+      fetchChallenges();
     }
   }, [groupId, activeTab]);
 
@@ -481,7 +473,7 @@ export const GroupDetailPage: React.FC = () => {
 
       {/* 미수행 입금 신고 모달 */}
       <DepositReportModal
-        groupId={Number(groupId)}
+        groupId={groupId}
         isOpen={showDepositModal}
         account={settlementSummary?.account}
         onClose={() => setShowDepositModal(false)}
@@ -534,7 +526,7 @@ export const GroupDetailPage: React.FC = () => {
             />
             <GroupSettlementCard
               screen
-              groupId={Number(groupId)}
+              groupId={groupId}
               isHost={group.isHost}
               summary={settlementSummary}
               loading={settlementLoading}
@@ -548,7 +540,7 @@ export const GroupDetailPage: React.FC = () => {
         )}
 
         {activeTab === "challenges" && (
-          <GroupChallengesViewB groupId={Number(groupId)} challenges={challenges} loading={challengesLoading} />
+          <GroupChallengesViewB groupId={groupId} challenges={challenges} loading={challengesLoading} />
         )}
 
         {activeTab === "members" && (

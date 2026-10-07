@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useExperiment } from '../hooks/useExperiment';
-import { CHALLENGE_REDAY_UI_EXPERIMENT } from '../constants/experiments';
-import type { ExperimentState } from '../types/experiment';
-import { track } from '../utils/tracker';
-import { navigateAfterChallengeCreation } from '../utils/challengeNavigation';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { challengesApi } from '../api/challenges';
-import { groupsApi } from '../api/groups';
-import { useAuth } from '../context/AuthContext';
-import { NewChallengeViewB } from '../components/NewChallengeViewB';
-import { getTodayKstString, addDaysKst } from '../utils/date';
-import type { ChallengeSummary, PeriodType, ExecutionType, GroupMember, CreateChallengePayload } from '../types';
+import { useExperiment } from '../../hooks/useExperiment';
+import { CHALLENGE_REDAY_UI_EXPERIMENT } from '../../constants/experiments';
+import type { ExperimentState } from '../../types/experiment';
+import { track } from '../../utils/tracker';
+import { navigateAfterChallengeCreation } from '../../utils/challengeNavigation';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { challengesApi } from '../../api/challenges';
+import { groupsApi } from '../../api/groups';
+import { useAuth } from '../../context/AuthContext';
+import { NewChallengeViewB } from '../../components/NewChallengeViewB';
+import { getTodayKstString, addDaysKst } from '../../utils/date';
+import type { ChallengeSummary, PeriodType, ExecutionType, GroupMember, CreateChallengePayload } from '../../types';
+import { useGroupIdOrThrow } from './hooks/useGroupIdOrThrow';
 
 const PERIOD_PRESETS = [
   { label: '1주 (7일)', days: 7 },
@@ -20,7 +21,7 @@ const PERIOD_PRESETS = [
 ] as const;
 
 export const NewChallengePage: React.FC = () => {
-  const { groupId } = useParams<{ groupId: string }>();
+  const groupId = useGroupIdOrThrow();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
@@ -74,12 +75,12 @@ export const NewChallengePage: React.FC = () => {
 
   // 1. URL restartFrom 쿼리 파라미터가 있을 때 템플릿 로드
   useEffect(() => {
-    if (!groupId || !restartFromId) return;
+    if (!restartFromId) return;
 
     const loadTemplate = async () => {
       setIsLoadingTemplate(true);
       try {
-        const template = await challengesApi.getRestartTemplate(Number(groupId), Number(restartFromId));
+        const template = await challengesApi.getRestartTemplate(groupId, Number(restartFromId));
         setTitle(template.title);
         setDescription(template.description || '');
         setVerificationCriteria(template.verificationCriteria);
@@ -115,10 +116,9 @@ export const NewChallengePage: React.FC = () => {
 
   // 1-1. 모임원 목록 조회
   useEffect(() => {
-    if (!groupId) return;
     const fetchGroupMembers = async () => {
       try {
-        const detail = await groupsApi.getGroupDetail(Number(groupId));
+        const detail = await groupsApi.getGroupDetail(groupId);
         setGroupMembers(detail.members || []);
       } catch (err) {
         console.error('Failed to load group members:', err);
@@ -185,11 +185,10 @@ export const NewChallengePage: React.FC = () => {
 
   // 2. 모임 내 기존 챌린지 목록 조회 (불러오기 모달용)
   const handleOpenHistoryModal = async () => {
-    if (!groupId) return;
     setShowHistoryModal(true);
     setIsLoadingHistory(true);
     try {
-      const list = await challengesApi.getGroupChallenges(Number(groupId));
+      const list = await challengesApi.getGroupChallenges(groupId);
       setHistoryChallenges(list);
     } catch (err: any) {
       console.error('Failed to load group challenges:', err);
@@ -199,7 +198,7 @@ export const NewChallengePage: React.FC = () => {
   };
 
   const handleConfirmSubmit = async () => {
-    if (!groupId || isSubmitting) return;
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
@@ -222,9 +221,9 @@ export const NewChallengePage: React.FC = () => {
       };
 
       if (activeRestartId) {
-        createdChallenge = await challengesApi.restartChallenge(Number(groupId), Number(activeRestartId), payload);
+        createdChallenge = await challengesApi.restartChallenge(groupId, Number(activeRestartId), payload);
       } else {
-        createdChallenge = await challengesApi.createChallenge(Number(groupId), payload);
+        createdChallenge = await challengesApi.createChallenge(groupId, payload);
       }
 
       // 생성 API가 실제로 성공해 챌린지가 만들어진 뒤에만 기록한다.
