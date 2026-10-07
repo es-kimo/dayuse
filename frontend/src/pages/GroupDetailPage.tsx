@@ -1,41 +1,44 @@
-import { GroupHomeScreen } from "../components/screens/GroupHomeScreen";
-import { UncheckedRecordsCard } from "../components/screens/UncheckedRecordsCard";
-import { RedayActionCard, type RedayActionItem } from "../components/RedayActionCard";
-import { RedayTicketSheet } from "../components/RedayTicketSheet";
-import { redayApi } from "../api/reday";
-import { GroupChallengesViewB } from "../components/GroupChallengesViewB";
-import { GroupMembersViewB } from "../components/GroupMembersViewB";
-import { Lightbox } from "../components/ui/Lightbox";
-import React, { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { groupsApi } from "../api/groups";
+import { Loader2, ShieldAlert } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { challengesApi } from "../api/challenges";
+import { groupsApi } from "../api/groups";
+import { recordsApi } from "../api/records";
+import { redayApi } from "../api/reday";
+import { settlementApi } from "../api/settlement";
 import { todayApi } from "../api/today";
 import { verificationsApi } from "../api/verifications";
-import { recordsApi } from "../api/records";
-import { settlementApi } from "../api/settlement";
-import { useAuth } from "../context/AuthContext";
-import type {
-  GroupDetail,
-  ChallengeSummary,
-  TodayAction,
-  FeedItem,
-  StatusSummaryResponse,
-  UncheckedRecordItem,
-  SettlementSummary,
-  RedayCandidate,
-} from "../types";
-import { MobileLayout } from "../components/MobileLayout";
-import { VerificationModal } from "../components/VerificationModal";
-import { GroupFeedSection } from "../components/GroupFeedSection";
 import { CommentsBottomSheet } from "../components/CommentsBottomSheet";
-import { UncheckedRecordsBottomSheet } from "../components/UncheckedRecordsBottomSheet";
-import { GroupSettlementCard } from "../components/GroupSettlementCard";
 import { DepositReportModal } from "../components/DepositReportModal";
-import { ShieldAlert, Loader2 } from "lucide-react";
+import { GroupChallengesViewB } from "../components/GroupChallengesViewB";
+import { GroupFeedSection } from "../components/GroupFeedSection";
+import { GroupMembersViewB } from "../components/GroupMembersViewB";
+import { GroupSettlementCard } from "../components/GroupSettlementCard";
+import { MobileLayout } from "../components/MobileLayout";
+import { RedayActionCard, type RedayActionItem } from "../components/RedayActionCard";
+import { RedayTicketSheet } from "../components/RedayTicketSheet";
+import { GroupHomeScreen } from "../components/screens/GroupHomeScreen";
+import { UncheckedRecordsCard } from "../components/screens/UncheckedRecordsCard";
+import { Lightbox } from "../components/ui/Lightbox";
+import { UncheckedRecordsBottomSheet } from "../components/UncheckedRecordsBottomSheet";
+import { VerificationModal } from "../components/VerificationModal";
+import { useAuth } from "../context/AuthContext";
+import { useVerifyParamAndThrow } from "../hooks/useVerifyParamAndThrow";
+import type {
+  ChallengeSummary,
+  FeedItem,
+  GroupDetail,
+  RedayCandidate,
+  SettlementSummary,
+  StatusSummaryResponse,
+  TodayAction,
+  UncheckedRecordItem,
+} from "../types";
 
 export const GroupDetailPage: React.FC = () => {
-  const { groupId } = useParams<{ groupId: string }>();
+  const { groupId: possibleGroupId } = useParams<{ groupId: string }>();
+  const groupId = useVerifyParamAndThrow(possibleGroupId);
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
