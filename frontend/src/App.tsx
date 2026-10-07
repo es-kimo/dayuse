@@ -54,17 +54,12 @@ export const App: React.FC = () => {
               <Route path="/oauth/callback/kakao" element={<KakaoCallbackPage />} />
               <Route path="/groups" element={<GroupsPage />} />
               <Route path="/groups/new" element={<NewGroupPage />} />
-              <Route path="/groups/:groupId/invite-created" element={<InviteCreatedPage />} />
-              <Route
-                path="/groups/:groupId"
-                element={
-                  <GroupIdErrorBoundary>
-                    <GroupDetailPage />
-                  </GroupIdErrorBoundary>
-                }
-              />
-              <Route path="/groups/:groupId/challenges/new" element={<NewChallengePage />} />
-              <Route path="/groups/:groupId/settlements" element={<SettlementManagePage />} />
+              <Route path="/groups/:groupId" element={<GroupIdErrorBoundary />}>
+                <Route path="/groups/:groupId/invite-created" element={<InviteCreatedPage />} />
+                <Route path="/groups/:groupId" element={<GroupDetailPage />} />
+                <Route path="/groups/:groupId/challenges/new" element={<NewChallengePage />} />
+                <Route path="/groups/:groupId/settlements" element={<SettlementManagePage />} />
+              </Route>
               <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
               <Route path="/shares/:token" element={<PublicShareLandingPage />} />
               <Route path="/invite/:inviteCode" element={<InviteLandingPage />} />
