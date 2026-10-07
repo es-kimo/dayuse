@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useExperiment } from '../hooks/useExperiment';
-import { CHALLENGE_REDAY_UI_EXPERIMENT } from '../constants/experiments';
-import type { ExperimentState } from '../types/experiment';
-import { track } from '../utils/tracker';
-import { navigateAfterChallengeCreation } from '../utils/challengeNavigation';
+import { useExperiment } from '../../hooks/useExperiment';
+import { CHALLENGE_REDAY_UI_EXPERIMENT } from '../../constants/experiments';
+import type { ExperimentState } from '../../types/experiment';
+import { track } from '../../utils/tracker';
+import { navigateAfterChallengeCreation } from '../../utils/challengeNavigation';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { challengesApi } from '../api/challenges';
-import { groupsApi } from '../api/groups';
-import { useAuth } from '../context/AuthContext';
-import { NewChallengeViewB } from '../components/NewChallengeViewB';
-import { getTodayKstString, addDaysKst } from '../utils/date';
-import type { ChallengeSummary, PeriodType, ExecutionType, GroupMember, CreateChallengePayload } from '../types';
+import { challengesApi } from '../../api/challenges';
+import { groupsApi } from '../../api/groups';
+import { useAuth } from '../../context/AuthContext';
+import { NewChallengeViewB } from '../../components/NewChallengeViewB';
+import { getTodayKstString, addDaysKst } from '../../utils/date';
+import type { ChallengeSummary, PeriodType, ExecutionType, GroupMember, CreateChallengePayload } from '../../types';
 
 const PERIOD_PRESETS = [
   { label: '1주 (7일)', days: 7 },

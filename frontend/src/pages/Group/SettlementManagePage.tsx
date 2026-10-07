@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import type { DepositReportDetail, DepositReportStatus } from "../types";
-import { settlementApi } from "../api/settlement";
-import { groupsApi } from "../api/groups";
-import { Screen } from "../components/screens/Screen";
-import { Dayu } from "../components/dayu/DayuAvatar";
-import { DayuAvatar } from "../components/brand/DayuAvatar";
-import { Button as DayuButton, Card, Chip, Segmented, Notice } from "../components/dayu/ui";
-import { SubPageHeader } from "../components/layout/SubPageHeader";
-import { Button, FormField, Textarea, Modal, ModalTitle, ModalClose } from "../components/ui";
+import type { DepositReportDetail, DepositReportStatus } from "../../types";
+import { settlementApi } from "../../api/settlement";
+import { groupsApi } from "../../api/groups";
+import { Screen } from "../../components/screens/Screen";
+import { Dayu } from "../../components/dayu/DayuAvatar";
+import { DayuAvatar } from "../../components/brand/DayuAvatar";
+import { Button as DayuButton, Card, Chip, Segmented, Notice } from "../../components/dayu/ui";
+import { SubPageHeader } from "../../components/layout/SubPageHeader";
+import { Button, FormField, Textarea, Modal, ModalTitle, ModalClose } from "../../components/ui";
 import { Loader2, Info, AlertTriangle, ChevronDown, X } from "lucide-react";
 
 export const SettlementManagePage: React.FC = () => {

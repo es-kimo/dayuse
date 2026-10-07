@@ -1,28 +1,28 @@
 import { Loader2, ShieldAlert } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { challengesApi } from "../api/challenges";
-import { groupsApi } from "../api/groups";
-import { recordsApi } from "../api/records";
-import { redayApi } from "../api/reday";
-import { settlementApi } from "../api/settlement";
-import { todayApi } from "../api/today";
-import { verificationsApi } from "../api/verifications";
-import { CommentsBottomSheet } from "../components/CommentsBottomSheet";
-import { DepositReportModal } from "../components/DepositReportModal";
-import { GroupChallengesViewB } from "../components/GroupChallengesViewB";
-import { GroupFeedSection } from "../components/GroupFeedSection";
-import { GroupMembersViewB } from "../components/GroupMembersViewB";
-import { GroupSettlementCard } from "../components/GroupSettlementCard";
-import { MobileLayout } from "../components/MobileLayout";
-import { RedayActionCard, type RedayActionItem } from "../components/RedayActionCard";
-import { RedayTicketSheet } from "../components/RedayTicketSheet";
-import { GroupHomeScreen } from "../components/screens/GroupHomeScreen";
-import { UncheckedRecordsCard } from "../components/screens/UncheckedRecordsCard";
-import { Lightbox } from "../components/ui/Lightbox";
-import { UncheckedRecordsBottomSheet } from "../components/UncheckedRecordsBottomSheet";
-import { VerificationModal } from "../components/VerificationModal";
-import { useAuth } from "../context/AuthContext";
+import { challengesApi } from "../../api/challenges";
+import { groupsApi } from "../../api/groups";
+import { recordsApi } from "../../api/records";
+import { redayApi } from "../../api/reday";
+import { settlementApi } from "../../api/settlement";
+import { todayApi } from "../../api/today";
+import { verificationsApi } from "../../api/verifications";
+import { CommentsBottomSheet } from "../../components/CommentsBottomSheet";
+import { DepositReportModal } from "../../components/DepositReportModal";
+import { GroupChallengesViewB } from "../../components/GroupChallengesViewB";
+import { GroupFeedSection } from "../../components/GroupFeedSection";
+import { GroupMembersViewB } from "../../components/GroupMembersViewB";
+import { GroupSettlementCard } from "../../components/GroupSettlementCard";
+import { MobileLayout } from "../../components/MobileLayout";
+import { RedayActionCard, type RedayActionItem } from "../../components/RedayActionCard";
+import { RedayTicketSheet } from "../../components/RedayTicketSheet";
+import { GroupHomeScreen } from "../../components/screens/GroupHomeScreen";
+import { UncheckedRecordsCard } from "../../components/screens/UncheckedRecordsCard";
+import { Lightbox } from "../../components/ui/Lightbox";
+import { UncheckedRecordsBottomSheet } from "../../components/UncheckedRecordsBottomSheet";
+import { VerificationModal } from "../../components/VerificationModal";
+import { useAuth } from "../../context/AuthContext";
 import type {
   ChallengeSummary,
   FeedItem,
@@ -32,8 +32,8 @@ import type {
   StatusSummaryResponse,
   TodayAction,
   UncheckedRecordItem,
-} from "../types";
-import { useGroupIdFromUrl } from "./Group/hooks/useGroupIdFromUrl";
+} from "../../types";
+import { useGroupIdFromUrl } from "./hooks/useGroupIdFromUrl";
 
 export const GroupDetailPage: React.FC = () => {
   const groupId = useGroupIdFromUrl();

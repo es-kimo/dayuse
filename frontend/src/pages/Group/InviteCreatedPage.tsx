@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { groupsApi } from '../api/groups';
-import type { GroupDetail } from '../types';
-import { Dayu } from '../components/dayu/DayuAvatar';
-import { Card, Button, RowText } from '../components/dayu/ui';
-import { HeaderIconButton } from '../components/layout/AppHeader';
+import { groupsApi } from '../../api/groups';
+import type { GroupDetail } from '../../types';
+import { Dayu } from '../../components/dayu/DayuAvatar';
+import { Card, Button, RowText } from '../../components/dayu/ui';
+import { HeaderIconButton } from '../../components/layout/AppHeader';
 import { X, Copy, Check, MessageCircle, Trophy, ChevronRight, Loader2 } from 'lucide-react';
-import { useToast } from '../context/ToastContext';
-import { shareToKakao, isKakaoReady } from '../utils/kakao';
-import { track } from '../utils/tracker';
-import { BRAND_INVITE_OG } from '../utils/meta';
+import { useToast } from '../../context/ToastContext';
+import { shareToKakao, isKakaoReady } from '../../utils/kakao';
+import { track } from '../../utils/tracker';
+import { BRAND_INVITE_OG } from '../../utils/meta';
 
 export const InviteCreatedPage: React.FC = () => {
   const { id, groupId } = useParams<{ id?: string; groupId?: string }>();

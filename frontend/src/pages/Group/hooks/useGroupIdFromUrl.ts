@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { isPositiveIntegerString } from "../../../utils/validation";
-import { InvalidGroupIdError } from "../Error/GroupIdErrorBoundary";
+import { InvalidGroupIdError } from "../error/GroupIdErrorBoundary";
 
 export const useGroupIdFromUrl = (): number => {
   const { groupId: possibleGroupId } = useParams<{ groupId: string }>();
