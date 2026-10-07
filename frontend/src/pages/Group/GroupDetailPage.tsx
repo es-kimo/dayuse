@@ -33,10 +33,10 @@ import type {
   TodayAction,
   UncheckedRecordItem,
 } from "../../types";
-import { useGroupIdFromUrl } from "./hooks/useGroupIdFromUrl";
+import { useGroupIdOrThrow } from "./hooks/useGroupIdOrThrow";
 
 export const GroupDetailPage: React.FC = () => {
-  const groupId = useGroupIdFromUrl();
+  const groupId = useGroupIdOrThrow();
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

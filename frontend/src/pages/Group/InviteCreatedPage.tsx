@@ -10,10 +10,10 @@ import { useToast } from '../../context/ToastContext';
 import { shareToKakao, isKakaoReady } from '../../utils/kakao';
 import { track } from '../../utils/tracker';
 import { BRAND_INVITE_OG } from '../../utils/meta';
-import { useGroupIdFromUrl } from './hooks/useGroupIdFromUrl';
+import { useGroupIdOrThrow } from './hooks/useGroupIdOrThrow';
 
 export const InviteCreatedPage: React.FC = () => {
-  const groupId = useGroupIdFromUrl();
+  const groupId = useGroupIdOrThrow();
   const navigate = useNavigate();
   const { showToast } = useToast();
 

@@ -10,10 +10,10 @@ import { Button as DayuButton, Card, Chip, Segmented, Notice } from "../../compo
 import { SubPageHeader } from "../../components/layout/SubPageHeader";
 import { Button, FormField, Textarea, Modal, ModalTitle, ModalClose } from "../../components/ui";
 import { Loader2, Info, AlertTriangle, ChevronDown, X } from "lucide-react";
-import { useGroupIdFromUrl } from "./hooks/useGroupIdFromUrl";
+import { useGroupIdOrThrow } from "./hooks/useGroupIdOrThrow";
 
 export const SettlementManagePage: React.FC = () => {
-  const groupId = useGroupIdFromUrl();
+  const groupId = useGroupIdOrThrow();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<DepositReportStatus>("WAITING_CONFIRMATION");

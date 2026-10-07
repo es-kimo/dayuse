@@ -11,7 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { NewChallengeViewB } from '../../components/NewChallengeViewB';
 import { getTodayKstString, addDaysKst } from '../../utils/date';
 import type { ChallengeSummary, PeriodType, ExecutionType, GroupMember, CreateChallengePayload } from '../../types';
-import { useGroupIdFromUrl } from './hooks/useGroupIdFromUrl';
+import { useGroupIdOrThrow } from './hooks/useGroupIdOrThrow';
 
 const PERIOD_PRESETS = [
   { label: '1주 (7일)', days: 7 },
@@ -21,7 +21,7 @@ const PERIOD_PRESETS = [
 ] as const;
 
 export const NewChallengePage: React.FC = () => {
-  const groupId = useGroupIdFromUrl();
+  const groupId = useGroupIdOrThrow();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
