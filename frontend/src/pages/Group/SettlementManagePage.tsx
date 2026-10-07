@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { DepositReportDetail, DepositReportStatus } from "../../types";
 import { settlementApi } from "../../api/settlement";
 import { groupsApi } from "../../api/groups";
@@ -10,9 +10,10 @@ import { Button as DayuButton, Card, Chip, Segmented, Notice } from "../../compo
 import { SubPageHeader } from "../../components/layout/SubPageHeader";
 import { Button, FormField, Textarea, Modal, ModalTitle, ModalClose } from "../../components/ui";
 import { Loader2, Info, AlertTriangle, ChevronDown, X } from "lucide-react";
+import { useGroupIdFromUrl } from "./hooks/useGroupIdFromUrl";
 
 export const SettlementManagePage: React.FC = () => {
-  const { groupId } = useParams<{ groupId: string }>();
+  const groupId = useGroupIdFromUrl();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<DepositReportStatus>("WAITING_CONFIRMATION");
@@ -34,16 +35,13 @@ export const SettlementManagePage: React.FC = () => {
   const cancelReasonRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (groupId) {
-      fetchGroupInfo();
-      fetchReports();
-    }
+    fetchGroupInfo();
+    fetchReports();
   }, [groupId, activeTab]);
 
   const fetchGroupInfo = async () => {
-    if (!groupId) return;
     try {
-      const data = await groupsApi.getGroupDetail(Number(groupId));
+      const data = await groupsApi.getGroupDetail(groupId);
       if (!data.isHost) {
         alert("모임장만 정산 관리 페이지에 접근할 수 있습니다.");
         navigate(`/groups/${groupId}`);
@@ -54,10 +52,9 @@ export const SettlementManagePage: React.FC = () => {
   };
 
   const fetchReports = async () => {
-    if (!groupId) return;
     setLoading(true);
     try {
-      const data = await settlementApi.getDepositReports(Number(groupId), activeTab);
+      const data = await settlementApi.getDepositReports(groupId, activeTab);
       setReports(data);
     } catch (err) {
       console.error("Failed to fetch deposit reports:", err);

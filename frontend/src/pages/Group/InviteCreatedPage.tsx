@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { groupsApi } from '../../api/groups';
 import type { GroupDetail } from '../../types';
 import { Dayu } from '../../components/dayu/DayuAvatar';
@@ -10,10 +10,10 @@ import { useToast } from '../../context/ToastContext';
 import { shareToKakao, isKakaoReady } from '../../utils/kakao';
 import { track } from '../../utils/tracker';
 import { BRAND_INVITE_OG } from '../../utils/meta';
+import { useGroupIdFromUrl } from './hooks/useGroupIdFromUrl';
 
 export const InviteCreatedPage: React.FC = () => {
-  const { id, groupId } = useParams<{ id?: string; groupId?: string }>();
-  const actualGroupId = Number(id || groupId);
+  const groupId = useGroupIdFromUrl();
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -23,18 +23,16 @@ export const InviteCreatedPage: React.FC = () => {
   const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!actualGroupId) return;
-
     const fetchGroupAndInvite = async () => {
       try {
-        const detail = await groupsApi.getGroupDetail(actualGroupId);
+        const detail = await groupsApi.getGroupDetail(groupId);
         setGroup(detail);
 
         if (detail.inviteCode) {
           setInviteCode(detail.inviteCode);
         } else {
           // 초대 코드가 없으면 새로 발급
-          const refreshed = await groupsApi.refreshInviteCode(actualGroupId);
+          const refreshed = await groupsApi.refreshInviteCode(groupId);
           setInviteCode(refreshed.inviteCode);
         }
       } catch (err) {
@@ -46,7 +44,7 @@ export const InviteCreatedPage: React.FC = () => {
     };
 
     fetchGroupAndInvite();
-  }, [actualGroupId, showToast]);
+  }, [groupId, showToast]);
 
   const inviteUrl = inviteCode
     ? `${window.location.origin}/invite/${inviteCode}`
@@ -57,7 +55,7 @@ export const InviteCreatedPage: React.FC = () => {
     track('share_clicked', {
       channel,
       surface: 'group_invite',
-      groupId: Number.isFinite(actualGroupId) ? actualGroupId : null,
+      groupId,
     });
   };
 
@@ -112,7 +110,7 @@ export const InviteCreatedPage: React.FC = () => {
       {/* Header with Close Button */}
       <header className="sticky top-0 z-20 mx-auto flex h-14 w-full max-w-app items-center justify-between bg-slate-50/92 pr-2.5 pl-3 backdrop-blur-md">
         <div className="flex-1" />
-        <HeaderIconButton onClick={() => navigate(`/groups/${actualGroupId}`)} aria-label="닫기">
+        <HeaderIconButton onClick={() => navigate(`/groups/${groupId}`)} aria-label="닫기">
           <X className="size-[22px]" />
         </HeaderIconButton>
       </header>
@@ -160,11 +158,11 @@ export const InviteCreatedPage: React.FC = () => {
         <div
           role="button"
           tabIndex={0}
-          onClick={() => navigate(`/groups/${actualGroupId}/challenges/new`)}
+          onClick={() => navigate(`/groups/${groupId}/challenges/new`)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              navigate(`/groups/${actualGroupId}/challenges/new`);
+              navigate(`/groups/${groupId}/challenges/new`);
             }
           }}
           className="flex cursor-pointer items-center gap-3 rounded-[18px] border border-slate-200 bg-white p-4 transition-colors select-none hover:border-slate-300"
