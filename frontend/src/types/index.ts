@@ -1,4 +1,4 @@
-export type GroupRole = 'HOST' | 'MEMBER';
+export type GroupRole = "HOST" | "MEMBER";
 
 export interface User {
   id: number;
@@ -40,7 +40,13 @@ export interface GroupDetail {
 
 export interface InviteInfo {
   members?: { nickname: string; profileImageUrl?: string | null }[];
-  challenges?: { id: number; title: string; periodType: PeriodType; targetFrequency?: number | null; participantCount: number }[];
+  challenges?: {
+    id: number;
+    title: string;
+    periodType: PeriodType;
+    targetFrequency?: number | null;
+    participantCount: number;
+  }[];
   groupId: number;
   groupName: string;
   hostNickname: string;
@@ -54,10 +60,16 @@ export interface AuthResponse {
   user: User;
 }
 
-export type ChallengeStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'ENDED' | 'ABORTED';
-export type PeriodType = 'DAILY' | 'WEEKLY_N';
-export type ExecutionType = 'INDIVIDUAL' | 'TOGETHER';
-export type PeriodSettlementStatus = 'IN_PROGRESS' | 'ACHIEVED' | 'NEEDS_CONFIRMATION' | 'CONFIRMED_FAILED' | 'NOT_ACHIEVED' | 'EXCLUDED_ABORTED';
+export type ChallengeStatus = "NOT_STARTED" | "IN_PROGRESS" | "ENDED" | "ABORTED";
+export type PeriodType = "DAILY" | "WEEKLY_N";
+export type ExecutionType = "INDIVIDUAL" | "TOGETHER";
+export type PeriodSettlementStatus =
+  | "IN_PROGRESS"
+  | "ACHIEVED"
+  | "NEEDS_CONFIRMATION"
+  | "CONFIRMED_FAILED"
+  | "NOT_ACHIEVED"
+  | "EXCLUDED_ABORTED";
 
 export interface ChallengePeriodInterval {
   index: number;
@@ -79,7 +91,7 @@ export interface ChallengeParticipantPreview {
   profileImageUrl?: string | null;
 }
 
-export interface ChallengeSummary {
+export type ChallengeSummary = {
   id: number;
   groupId: number;
   title: string;
@@ -92,16 +104,23 @@ export interface ChallengeSummary {
   targetFrequency?: number | null;
   executionType?: ExecutionType;
   redayAllowed?: boolean;
-  status: ChallengeStatus;
   participantCount: number;
   participants?: ChallengeParticipantPreview[];
   isParticipating: boolean;
   isCreator: boolean;
   myPenaltyAmount?: number | null;
   canAbort?: boolean;
-  abortedAt?: string | null;
   createdAt: string;
-}
+} & (
+  | {
+      status: Exclude<ChallengeStatus, "ABORTED">;
+      abortedAt?: null;
+    }
+  | {
+      status: "ABORTED";
+      abortedAt: string;
+    }
+);
 
 export interface ChallengeParticipant {
   id: number;
@@ -116,8 +135,8 @@ export interface ChallengeParticipant {
   isCreator: boolean;
 }
 
-export type StartDateType = 'TODAY' | 'TOMORROW';
-export type ParticipantStatus = 'ACTIVE' | 'CANCELLED';
+export type StartDateType = "TODAY" | "TOMORROW";
+export type ParticipantStatus = "ACTIVE" | "CANCELLED";
 
 export interface JoinOption {
   type: StartDateType;
@@ -140,7 +159,7 @@ export interface JoinPreviewResponse {
   redayRuleDescription?: string | null;
 }
 
-export interface ChallengeDetail {
+export type ChallengeDetail = {
   id: number;
   groupId: number;
   groupName: string;
@@ -162,7 +181,6 @@ export interface ChallengeDetail {
   progressRate?: number;
   currentPeriod?: ChallengePeriodInterval | null;
   intervals?: ChallengePeriodInterval[] | null;
-  status: ChallengeStatus;
   isCreator: boolean;
   isParticipating: boolean;
   myPenaltyAmount?: number | null;
@@ -171,12 +189,21 @@ export interface ChallengeDetail {
   canDelete: boolean;
   canModifyFull: boolean;
   canAbort?: boolean;
-  abortedAt?: string | null;
-  abortedBy?: number | null;
-  abortedByNickname?: string | null;
   abortReason?: string | null;
   participants: ChallengeParticipant[];
-}
+  abortedByNickName?: string | null;
+} & (
+  | {
+      status: Exclude<ChallengeStatus, "ABORTED">;
+      abortedAt?: null;
+      abortedBy?: null;
+    }
+  | {
+      status: "ABORTED";
+      abortedAt: string;
+      abortedBy: number;
+    }
+);
 
 export interface AbortChallengePayload {
   reason?: string;
@@ -280,28 +307,24 @@ export interface PresignedUrlResponse {
   expiresAt: string;
 }
 
-export type PenaltyStatus = 'NONE' | 'PENDING' | 'CONFIRMED' | 'EXEMPTED';
+export type PenaltyStatus = "NONE" | "PENDING" | "CONFIRMED" | "EXEMPTED";
 
 export type RedayIneligibleReason =
-  | 'ELIGIBLE'
-  | 'NOT_OWNER'
-  | 'NOT_ALLOWED'
-  | 'WEEKLY_NOT_SUPPORTED'
-  | 'TOGETHER_NOT_SUPPORTED'
-  | 'NO_PENALTY'
-  | 'CHALLENGE_ABORTED'
-  | 'NOT_VERIFIED'
-  | 'NOT_OVERDUE'
-  | 'ALREADY_APPLIED'
-  | 'ALREADY_SETTLED'
-  | 'ALREADY_CONFIRMED'
-  | 'EXPIRED';
+  | "ELIGIBLE"
+  | "NOT_OWNER"
+  | "NOT_ALLOWED"
+  | "WEEKLY_NOT_SUPPORTED"
+  | "TOGETHER_NOT_SUPPORTED"
+  | "NO_PENALTY"
+  | "CHALLENGE_ABORTED"
+  | "NOT_VERIFIED"
+  | "NOT_OVERDUE"
+  | "ALREADY_APPLIED"
+  | "ALREADY_SETTLED"
+  | "ALREADY_CONFIRMED"
+  | "EXPIRED";
 
-export type VerificationTimePhase =
-  | 'NORMAL'
-  | 'LATE'
-  | 'OVERDUE_REDAY_ELIGIBLE'
-  | 'OVERDUE_EXPIRED';
+export type VerificationTimePhase = "NORMAL" | "LATE" | "OVERDUE_REDAY_ELIGIBLE" | "OVERDUE_EXPIRED";
 
 /** GET /daily-records/{id}/reday-eligibility 응답. 필드 이름은 백엔드 RedayEligibilityResponse와 1:1이다. */
 export interface RedayEligibilityResponse {
@@ -324,8 +347,8 @@ export interface RedayEligibilityResponse {
 
 // ── v0.11 F05~F10: 리데이 티켓 및 보상형 광고 ──────────────────────
 
-export type RedayTicketStatus = 'AVAILABLE' | 'USED';
-export type RedayTicketSource = 'REWARD_AD' | 'ADMIN_GRANT' | 'WELCOME_BONUS';
+export type RedayTicketStatus = "AVAILABLE" | "USED";
+export type RedayTicketSource = "REWARD_AD" | "ADMIN_GRANT" | "WELCOME_BONUS";
 
 export interface RedayTicketBalance {
   userId: number;
@@ -359,8 +382,8 @@ export interface RedayCandidate {
   remainingSeconds: number;
 }
 
-export type AdSessionStatus = 'ISSUED' | 'IMPRESSED' | 'COMPLETED' | 'ABANDONED' | 'EXPIRED';
-export type AdUnavailableReason = 'NO_AVAILABLE_AD' | 'DAILY_LIMIT_REACHED';
+export type AdSessionStatus = "ISSUED" | "IMPRESSED" | "COMPLETED" | "ABANDONED" | "EXPIRED";
+export type AdUnavailableReason = "NO_AVAILABLE_AD" | "DAILY_LIMIT_REACHED";
 
 export interface AdCreative {
   id: number;
@@ -486,8 +509,8 @@ export interface CommentItem {
   createdAt: string;
 }
 
-export type DailyRecordStatus = 'NOT_PARTICIPATED' | 'PLANNED' | 'WAITING' | 'COMPLETED' | 'UNCHECKED' | 'FAILED';
-export type DepositStatus = 'UNPAID' | 'WAITING_CONFIRMATION' | 'CONFIRMED';
+export type DailyRecordStatus = "NOT_PARTICIPATED" | "PLANNED" | "WAITING" | "COMPLETED" | "UNCHECKED" | "FAILED";
+export type DepositStatus = "UNPAID" | "WAITING_CONFIRMATION" | "CONFIRMED";
 
 export interface StatusSummaryResponse {
   verifiedUserIds?: number[];
@@ -566,13 +589,13 @@ export interface ChallengeCalendarResponse {
   participants: ParticipantCalendarItem[];
 }
 
-export type DepositReportStatus = 'WAITING_CONFIRMATION' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED';
+export type DepositReportStatus = "WAITING_CONFIRMATION" | "CONFIRMED" | "REJECTED" | "CANCELLED";
 export type DepositAuditAction =
-  | 'REPORTED'
-  | 'CANCELLED_BY_USER'
-  | 'CONFIRMED_BY_HOST'
-  | 'REJECTED_BY_HOST'
-  | 'CONFIRMATION_CANCELLED_BY_HOST';
+  | "REPORTED"
+  | "CANCELLED_BY_USER"
+  | "CONFIRMED_BY_HOST"
+  | "REJECTED_BY_HOST"
+  | "CONFIRMATION_CANCELLED_BY_HOST";
 
 export interface GroupAccount {
   id: number;
@@ -677,7 +700,7 @@ export interface SettlementSummary {
   account?: GroupAccount | null;
 }
 
-export type ShareCardType = 'TODAY_VERIFICATION' | 'STREAK';
+export type ShareCardType = "TODAY_VERIFICATION" | "STREAK";
 
 export interface StreakHistoryItem {
   date: string;
@@ -716,6 +739,3 @@ export interface PublicShareCardResponse {
   actualVerifierNickname?: string | null;
   createdAt: string;
 }
-
-
-
