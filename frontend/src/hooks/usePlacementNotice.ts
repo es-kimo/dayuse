@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { AnnouncementPlacement, AnnouncementUserItemResponse } from '../types';
 import { getPlacementNotice, markAnnouncementAsDismissed } from '../api/announcements';
 import { useAnnouncementNotification } from '../context/AnnouncementNotificationContext';
@@ -15,7 +15,6 @@ export function usePlacementNotice(placement: AnnouncementPlacement) {
   const { refreshUnreadDot } = useAnnouncementNotification();
   const [notice, setNotice] = useState<AnnouncementUserItemResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const isFetchedRef = useRef(false);
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) {
@@ -23,9 +22,6 @@ export function usePlacementNotice(placement: AnnouncementPlacement) {
       setLoading(false);
       return;
     }
-
-    if (isFetchedRef.current) return;
-    isFetchedRef.current = true;
 
     let active = true;
     setLoading(true);
