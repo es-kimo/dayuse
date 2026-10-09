@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 @ConditionalOnProperty(
     name = ["announcement.seed.enabled"],
     havingValue = "true",
-    matchIfMissing = true
+    matchIfMissing = false
 )
 class AnnouncementDataSeeder(
     private val announcementRepository: AnnouncementRepository,
