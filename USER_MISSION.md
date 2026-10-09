@@ -1,70 +1,63 @@
-# 🎯 사용자 핵심 학습 미션 가이드 (#127: 소식 데이터·게시·노출 정책)
+# 🎯 사용자 핵심 학습 미션 가이드 (#131: 공지 분석 이벤트 연결 및 소식 출처 귀속)
 
-이 문서는 **[v0.12] 01. 소식 데이터·게시·노출 정책 (F05~F06, 시각·상태·권한)** 이슈의 핵심 학습 포인트를 직접 구현하고 검증하기 위한 가이드입니다.
+이 문서는 **[v0.12] 02. 공지 분석 연결(F10) 및 초기 콘텐츠 준비(F11)** 이슈의 핵심 학습 포인트를 직접 구현하고 검증하기 위한 가이드입니다.
 
-> 💡 **빠른 빈칸 위치 확인**:
-> 터미널에서 `git diff HEAD~1`을 실행하면, 어떤 파일의 어느 라인을 채워 넣어야 하는지(그리고 이전 커밋의 레퍼런스 구현은 무엇인지) 한눈에 비교할 수 있습니다.
+> 💡 **빠른 빈칸 위치 및 정답 확인**:
+> 터미널에서 `git diff HEAD~1`을 실행하면, 어떤 파일의 어느 라인을 채워 넣어야 하는지(그리고 이전 커밋의 레퍼런스 구현은 무엇인지) 한눈에 확인할 수 있습니다.
 
 ---
 
 ## 📌 미션 목록 및 대상 파일
 
-### 1️⃣ [사용자 미션 1] 소식 생명주기 전이 및 안내 기간 vs 게시 종료 분리 판정
-- **대상 파일**: `backend/src/main/kotlin/com/dayuse/domain/announcement/Announcement.kt`
-- **구현 대상 메서드**:
-  1. `resolveDisplayPhase(now: LocalDateTime): AnnouncementDisplayPhase` (`TODO [사용자 미션 1-1]`)
-     - 저장된 `status`(`DRAFT`, `PUBLISHED`, `ENDED`)와 서버 KST 시각(`now`, `publishAt`, `noticeEndsAt`)을 조합하여 파생 노출 단계를 반환합니다.
-     - `PUBLISHED` 상태일 때:
-       - `publishAt == null` 또는 `now < publishAt` → `SCHEDULED` (예약 대기)
-       - `publishAt <= now < noticeEndsAt` → `ACTIVE_NOTICE` (안내 기간 중: 홈 카드·인라인·미확인 점 + 목록·상세 모두 활성)
-       - `now >= noticeEndsAt` → `NOTICE_EXPIRED` (**안내 기간 종료**: 홈 카드·인라인·미확인 점은 중단하되, **목록·상세 조회는 유지**)
-  2. `publish(...)` (`TODO [사용자 미션 1-2]`)
-     - 이미 `ENDED`(게시 종료) 상태인 소식은 재게시할 수 없도록 `BadRequestException`으로 차단합니다.
-     - `requestedNoticeEndsAt`이 생략된 경우 기본값으로 `effectivePublishAt.plusDays(DEFAULT_NOTICE_DURATION_DAYS)`(14일)을 적용하고, `validateScheduleWindow(effectivePublishAt, effectiveNoticeEndsAt)`로 `noticeEndsAt > publishAt`을 검증합니다.
-  3. `end(...)` (`TODO [사용자 미션 1-3]`)
-     - `DRAFT` 상태이거나 이미 `ENDED` 상태이면 `BadRequestException`을 던집니다.
-     - `PUBLISHED` 상태일 때만 `ENDED`로 전이하고 `endedAt`, `endedBy`, `updatedBy`, `updatedAt`을 기록합니다.
+### 1️⃣ [사용자 미션 1] 동일 화면 방문 내 노출 중복 방지 및 `announcement_impression` 발화 (F10)
+- **대상 파일**: `frontend/src/utils/announcementTracking.ts`
+- **구현 대상 함수**:
+  - `trackAnnouncementImpression(announcementId, placement, featureKey): boolean` (`TODO [사용자 미션 1]`)
+- **구현 요구사항**:
+  1. `getImpressionKey(announcementId, placement)`를 생성합니다.
+  2. 이미 `recordedImpressions` Set에 존재하는 키라면 중복 노출이므로 `false`를 반환합니다.
+  3. 존재하지 않는다면 세트에 키를 추가하고, `track('announcement_impression', { announcementId, placement, featureKey })`를 발화한 뒤 `true`를 반환합니다.
+- **학습 포인트**:
+  - API 응답을 수신한 시점이 아니라 사용자의 화면에 실제 렌더링된 시점에 노출을 기록해야 하는 이유
+  - 동일한 화면 방문(세션/마운트) 중에 리렌더링 등으로 인해 같은 소식이 반복 측정되는 현상을 방지하는 방법
 
 ---
 
-### 2️⃣ [사용자 미션 2] 계정×소식 단위 읽음(`readAt`)과 닫기(`dismissedAt`) 분리 및 멱등 처리 (F05)
-- **대상 파일**: `backend/src/main/kotlin/com/dayuse/domain/announcement/AnnouncementUserState.kt`
-- **구현 대상 메서드**:
-  1. `markRead(now: LocalDateTime)` (`TODO [사용자 미션 2-1]`)
-     - `readAt == null`일 때만 `readAt = now`, `updatedAt = now`로 기록합니다 (중복 호출 시 최초 시각 유지).
-     - 기존 `dismissedAt` 값은 건드리지 않습니다.
-  2. `markDismissed(now: LocalDateTime)` (`TODO [사용자 미션 2-2]`)
-     - `dismissedAt == null`일 때만 `dismissedAt = now`, `updatedAt = now`로 기록합니다.
-     - **중요**: 홈/인라인에서 닫더라도 목록에서는 `읽지 않은 소식`으로 남아야 하므로 `readAt`은 절대 변경하지 않습니다.
-
----
-
-### 3️⃣ [사용자 미션 3] 기능 제공 조건(Fail-Safe) 및 위치별 적격 소식 최대 1건 판정 (F06)
-- **대상 파일 1**: `backend/src/main/kotlin/com/dayuse/domain/announcement/service/AnnouncementFeatureEligibilityEvaluator.kt`
-  - `isEligible(userId, conditionType, featureKey)` (`TODO [사용자 미션 3-1]`)
-    - `ALL_USERS`이면 `true`를 반환합니다.
-    - 조건부 소식(`EXPERIMENT_PARTICIPANT`, `EXPERIMENT_VARIANT_B`)이면 `experimentService.assignVariant(cleanedKey, userId)`를 호출해 판정을 위임합니다.
-    - `assignment.isFallback || !assignment.participating`이거나 판정 중 예외가 발생하면 예외를 전파하지 않고 `false`를 반환(Fail-Safe)합니다.
-- **대상 파일 2**: `backend/src/main/kotlin/com/dayuse/domain/announcement/service/AnnouncementService.kt`
-  - `getUnreadDotStatus(userId, now)` (`TODO [사용자 미션 3-2]`)
-    - 현재 안내 기간 내(`isWithinActiveNoticeWindow(now)`) + 기능 조건 충족 + 미열람(`!isRead`) + 미닫기(`!isDismissed`) 소식 개수를 집계합니다.
-  - `getActiveNoticeForPlacement(userId, placement, now)` (`TODO [사용자 미션 3-3]`)
-    - 요청한 화면 위치(`HOME` 또는 `CERT_CREATE`)에 대해 안내 기간 내 + 위치 활성(`isActiveForPlacement`) + 기능 조건 충족 + 미열람 + 미닫기 소식 중 최신 `publishAt`(동일 시각 시 `id` 역순) 기준 **최대 1건**을 선택합니다.
+### 2️⃣ [사용자 미션 2] 소식 출처 귀속(Attribution) 생명주기 및 과대 귀속 방어 (F10)
+- **대상 파일**: `frontend/src/utils/announcementAttribution.ts`
+- **구현 대상 함수**:
+  1. `checkRouteNavigation(newPathname: string): void` (`TODO [사용자 미션 2-1]`)
+     - 라우트 변경 시 호출되어, 사용자가 CTA 목적지 외의 무관한 화면으로 이동했는지 확인합니다.
+     - `getAnnouncementAttribution()`을 확인하고, `destinationPath`가 설정되어 있을 때 `newPathname`이 목적지와 일치하지 않고 모임 맥락(`/groups`) 내 이동도 아니라면 `clearAnnouncementAttribution()`을 호출하여 출처를 즉시 해제합니다.
+  2. `consumeAnnouncementAttribution(properties: EventProperties): EventProperties` (`TODO [사용자 미션 2-2]`)
+     - 기능 성공 이벤트(`certification_completed`, `recovery_completed` 등) 발생 시 호출됩니다.
+     - 저장된 출처 컨텍스트가 없으면 그대로 `properties`를 반환합니다.
+     - 보존된 출처가 있다면 `clearAnnouncementAttribution()`을 호출해 즉시 1회 소비 후 해제합니다.
+     - `properties`에 `sourceAnnouncementId`, `sourcePlacement`, `sourceFeatureKey`를 결합하여 반환합니다.
+- **학습 포인트**:
+  - CTA 버튼 클릭을 곧바로 '기능 사용 성공'으로 간주하지 않고 실제 기능의 성공 이벤트와 연결해야 하는 이유
+  - 사용자가 다른 화면으로 이탈하거나 취소했을 때 출처를 즉시 소멸시켜 이후의 무관한 사용자 활동이 공지 성과로 과대 귀속되는 것을 방어하는 기법
 
 ---
 
 ## 🧪 테스트 실행 및 검증 명령어
 
+### 프론트엔드 미션 테스트 실행:
 ```bash
-cd backend
-./gradlew test --tests "com.dayuse.domain.announcement.*" --console=plain
+cd frontend
+npm run test -- src/utils/announcementTracking.test.ts src/utils/announcementAttribution.test.ts
 ```
 
-모든 빈칸을 올바르게 구현하면 `AnnouncementTest`와 `AnnouncementIntegrationTest`가 모두 **GREEN(통과)**으로 전환됩니다!
+빈칸을 모두 채우면 2개 테스트 파일의 모든 테스트(총 8건)가 **GREEN(통과)**으로 전환됩니다!
+
+전체 프론트엔드 테스트 검증:
+```bash
+npm run test -- --reporter=dot
+```
 
 ---
 
 ## 💬 구현 후 스스로 답해볼 핵심 질문
-1. 안내 기간 종료(`noticeEndsAt` 경과)와 게시 종료(`ENDED`)를 단일 상태나 단일 시각으로 합치지 않고 분리해야 하는 이유는 무엇이며, 각각 홈/인라인 노출·미확인 점·목록/상세 조회에 어떻게 다르게 작용하는가?
-2. 사용자의 '읽음(`readAt`)'과 '안내 닫기(`dismissedAt`)'를 하나의 불리언 플래그로 합치지 않고 별도로 저장해야 하는 이유는 무엇이며, 게시 중 소식 내용이 수정될 때 기존 상태를 초기화하지 않아야 하는 이유는 무엇인가?
-3. 점진 배포나 실험(v0.10) 대상 기능에 연결된 조건부 소식을 조회할 때, 공지 도메인이 자체적으로 기능을 활성화하지 않고 기존 기능 제공 판정을 그대로 위임·검증하며 판정 실패 시 어떻게 안전하게 처리(Fail-Safe)해야 하는가?
+1. **"API 응답을 받은 시점이 아니라 실제 화면에 표시된 시점에 `announcement_impression`을 기록하고, 같은 화면 방문 안에서 동일 소식·위치의 중복 기록을 막아야 하는 이유는 무엇인가?"**
+2. **"`announcement_cta_clicked`(실행 버튼 클릭)를 곧바로 '기능 사용 완료'로 간주하지 않고, 직접 이동으로 이어진 현재 작업의 성공 이벤트에만 소식 출처를 귀속시킨 뒤 완료·취소·이탈·로그아웃 시 즉시 해제해야 하는 이유는 무엇인가?"**
+3. **"출시 시 준비하는 초기 소식 2건을 선정할 때, 왜 문서상의 가정이 아니라 실제 코드베이스에서 제공 중인 기능과 그 성공 이벤트를 확인해 연결해야 하는가?"**

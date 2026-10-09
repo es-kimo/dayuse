@@ -54,26 +54,10 @@ export function getAnnouncementAttribution(): ExtendedAnnouncementAttributionCon
  * 무관한 화면으로 이탈한 경우 소식 출처를 즉시 해제합니다.
  */
 export function checkRouteNavigation(newPathname: string): void {
-  const current = getAnnouncementAttribution();
-  if (!current) return;
-
-  // 목적지 경로가 설정되어 있는 경우
-  if (current.destinationPath) {
-    // 목적지 경로와 같거나 목적지 하위 경로(예: /groups/123)인 경우 출처 유지
-    const isMatchingDestination =
-      newPathname === current.destinationPath ||
-      (current.destinationPath !== '/' &&
-        current.destinationPath !== '/groups' &&
-        newPathname.startsWith(current.destinationPath));
-
-    // /groups 로 시작하는 경우 /groups/:id 등의 이동도 맥락 유지 허용
-    const isGroupContext =
-      current.destinationPath.startsWith('/groups') && newPathname.startsWith('/groups');
-
-    if (!isMatchingDestination && !isGroupContext) {
-      clearAnnouncementAttribution();
-    }
-  }
+  // TODO [사용자 미션 2-1]: 무관한 화면 이동 시 소식 출처(Attribution) 즉시 해제
+  // 1. 현재 저장된 출처 컨텍스트 `getAnnouncementAttribution()`을 조회합니다.
+  // 2. destinationPath가 설정되어 있을 때, 새 경로(`newPathname`)가 목적지와 일치하지 않고
+  //    모임 맥락(/groups) 내 이동도 아니라면 `clearAnnouncementAttribution()`을 호출하여 해제합니다.
 }
 
 export function clearAnnouncementAttribution(): void {
@@ -93,25 +77,9 @@ export function clearAnnouncementAttribution(): void {
 export function consumeAnnouncementAttribution(
   properties: EventProperties = {}
 ): EventProperties {
-  const attribution = getAnnouncementAttribution();
-  if (!attribution) {
-    return { ...properties };
-  }
-
-  // 성공 이벤트 등에 1회 소비 후 즉시 해제하여 이후 작업에 과대 귀속 방지
-  clearAnnouncementAttribution();
-
-  const enriched: EventProperties = {
-    ...properties,
-    sourceAnnouncementId: attribution.sourceAnnouncementId,
-  };
-
-  if (attribution.placement) {
-    enriched.sourcePlacement = attribution.placement;
-  }
-  if (attribution.featureKey) {
-    enriched.sourceFeatureKey = attribution.featureKey;
-  }
-
-  return enriched;
+  // TODO [사용자 미션 2-2]: 소식 출처 결합 및 1회 소비 후 즉시 해제
+  // 1. `getAnnouncementAttribution()`을 확인하여 보존된 출처가 없으면 그대로 `properties`를 반환합니다.
+  // 2. 출처가 있다면 `clearAnnouncementAttribution()`을 호출하여 즉시 해제합니다.
+  // 3. properties에 `sourceAnnouncementId`, `sourcePlacement`, `sourceFeatureKey`를 결합하여 반환합니다.
+  return { ...properties };
 }
