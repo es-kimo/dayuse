@@ -4,6 +4,7 @@ import { reportContractViolation } from './contractViolationReporter';
 import type {
   AbortChallengePayload,
   ChallengeDetail,
+  ChallengeDetailResponse,
   ChallengeParticipant,
   ChallengeRestartTemplate,
   ChallengeSummary,
@@ -26,13 +27,13 @@ export const challengesApi = {
     return res.data;
   },
 
-  restartChallenge: async (groupId: number, challengeId: number, payload: CreateChallengePayload): Promise<ChallengeDetail> => {
-    const res = await apiClient.post<ChallengeDetail>(`/groups/${groupId}/challenges/${challengeId}/restart`, payload);
+  restartChallenge: async (groupId: number, challengeId: number, payload: CreateChallengePayload): Promise<ChallengeDetailResponse> => {
+    const res = await apiClient.post<ChallengeDetailResponse>(`/groups/${groupId}/challenges/${challengeId}/restart`, payload);
     return res.data;
   },
 
-  createChallenge: async (groupId: number, payload: CreateChallengePayload): Promise<ChallengeDetail> => {
-    const res = await apiClient.post<ChallengeDetail>(`/groups/${groupId}/challenges`, payload);
+  createChallenge: async (groupId: number, payload: CreateChallengePayload): Promise<ChallengeDetailResponse> => {
+    const res = await apiClient.post<ChallengeDetailResponse>(`/groups/${groupId}/challenges`, payload);
     return res.data;
   },
 
@@ -57,8 +58,8 @@ export const challengesApi = {
     }
   },
 
-  updateChallenge: async (challengeId: number, payload: UpdateChallengePayload): Promise<ChallengeDetail> => {
-    const res = await apiClient.patch<ChallengeDetail>(`/challenges/${challengeId}`, payload);
+  updateChallenge: async (challengeId: number, payload: UpdateChallengePayload): Promise<ChallengeDetailResponse> => {
+    const res = await apiClient.patch<ChallengeDetailResponse>(`/challenges/${challengeId}`, payload);
     return res.data;
   },
 
@@ -89,8 +90,8 @@ export const challengesApi = {
     await apiClient.post(`/groups/${groupId}/challenges/${challengeId}/periods/${periodIndex}/confirm`);
   },
 
-  abortChallenge: async (challengeId: number, payload?: AbortChallengePayload): Promise<ChallengeDetail> => {
-    const res = await apiClient.post<ChallengeDetail>(`/challenges/${challengeId}/abort`, payload ?? {});
+  abortChallenge: async (challengeId: number, payload?: AbortChallengePayload): Promise<ChallengeDetailResponse> => {
+    const res = await apiClient.post<ChallengeDetailResponse>(`/challenges/${challengeId}/abort`, payload ?? {});
     return res.data;
   },
 };
