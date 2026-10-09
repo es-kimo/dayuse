@@ -59,6 +59,11 @@ experiment:
     # 이미 존재하는 실험의 상태·rollout은 절대 덮어쓰지 않는다.
     enabled: ${EXPERIMENT_SEED_ENABLED:true}
 
+announcement:
+  seed:
+    # 로컬 개발 시 기본 데이유 공지들을 자동 시드
+    enabled: ${ANNOUNCEMENT_SEED_ENABLED:true}
+
 analytics:
   # 집계·퍼널 조회를 허용할 userId 목록(쉼표 구분). 비워 두면 로그인 사용자 누구나 조회할 수 있다.
   admin-user-ids: ${ANALYTICS_ADMIN_USER_IDS:}
@@ -103,6 +108,10 @@ experiment:
     # 기동 시 DayuseExperimentDefinitions의 실험 정의를 멱등하게 등록한다(항상 DRAFT로 생성).
     # 이미 존재하는 실험의 상태·rollout은 절대 덮어쓰지 않는다.
     enabled: ${EXPERIMENT_SEED_ENABLED:true}
+
+announcement:
+  seed:
+    enabled: ${ANNOUNCEMENT_SEED_ENABLED:false}
 
 analytics:
   # 집계·퍼널 조회를 허용할 userId 목록(쉼표 구분). 비워 두면 로그인 사용자 누구나 조회할 수 있다.
