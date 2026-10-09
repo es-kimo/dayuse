@@ -47,10 +47,14 @@ enum class AnnouncementDisplayPhase {
  *
  * - [HOME]: 로그인 홈 화면 안내 카드 (`Announcement.homeVisible == true`인 소식 대상)
  * - [CERT_CREATE]: 인증 작성 화면 인라인 안내 (`Announcement.placement == CERT_CREATE`인 소식 대상)
+ * - [GROUP_DETAIL]: 모임 홈 화면 안내 카드 (`Announcement.placement == GROUP_DETAIL`인 소식 대상)
+ * - [CERT_SUCCESS]: 인증 완료 축하 화면 안내 카드 (`Announcement.placement == CERT_SUCCESS`인 소식 대상)
  */
 enum class AnnouncementPlacement {
     HOME,
-    CERT_CREATE;
+    CERT_CREATE,
+    GROUP_DETAIL,
+    CERT_SUCCESS;
 
     companion object {
         fun fromNullable(raw: String?): AnnouncementPlacement? {

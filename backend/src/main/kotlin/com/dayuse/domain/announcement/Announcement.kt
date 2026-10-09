@@ -224,6 +224,8 @@ class Announcement(
         return when (targetPlacement) {
             AnnouncementPlacement.HOME -> homeVisible
             AnnouncementPlacement.CERT_CREATE -> placement == AnnouncementPlacement.CERT_CREATE
+            AnnouncementPlacement.GROUP_DETAIL -> placement == AnnouncementPlacement.GROUP_DETAIL
+            AnnouncementPlacement.CERT_SUCCESS -> placement == AnnouncementPlacement.CERT_SUCCESS
         }
     }
 
@@ -599,7 +601,7 @@ class Announcement(
 
         fun validatePlacement(placement: AnnouncementPlacement?): AnnouncementPlacement? {
             if (placement == AnnouncementPlacement.HOME) {
-                throw BadRequestException("홈 노출 여부는 homeVisible 플래그로 설정하며, placement 필드에는 CERT_CREATE 등 관련 화면 위치만 지정할 수 있습니다.")
+                throw BadRequestException("홈 노출 여부는 homeVisible 플래그로 설정하며, placement 필드에는 CERT_CREATE, GROUP_DETAIL, CERT_SUCCESS 등 관련 화면 위치만 지정할 수 있습니다.")
             }
             return placement
         }

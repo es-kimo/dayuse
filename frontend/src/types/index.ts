@@ -772,7 +772,7 @@ export type AnnouncementDisplayPhase =
   | "NOTICE_EXPIRED"
   | "ENDED";
 
-export type AnnouncementPlacement = "HOME" | "CERT_CREATE";
+export type AnnouncementPlacement = "HOME" | "CERT_CREATE" | "GROUP_DETAIL" | "CERT_SUCCESS";
 
 export type AnnouncementActionTarget =
   | "HOME"

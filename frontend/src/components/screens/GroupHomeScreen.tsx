@@ -13,6 +13,7 @@ export function GroupHomeScreen({
   loading,
   verifiedUserIds,
   copied,
+  noticeSlot,
   uncheckedSlot,
   redaySlot,
   onBack,
@@ -29,6 +30,8 @@ export function GroupHomeScreen({
   loading: boolean;
   verifiedUserIds: Set<number>;
   copied: boolean;
+  /** 공지/소식 안내 카드가 들어가는 자리 */
+  noticeSlot?: ReactNode;
   /** 오늘 할 일과 "오늘 누가 했을까" 사이에 들어가는 자리(미확인 지난 기록 안내) */
   uncheckedSlot?: ReactNode;
   /**
@@ -68,6 +71,7 @@ export function GroupHomeScreen({
       <main className="flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto px-4 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom,0px))]">
         {tab === "home" && (
           <>
+            {noticeSlot}
             {redaySlot}
             <SectionHead
               icon={<CalendarCheck className="size-4 text-blue-600" />}

@@ -37,6 +37,7 @@ import { InlineAnnouncementCard } from './announcement/InlineAnnouncementCard';
 import { executeAnnouncementCta } from '../utils/announcementCtaHandler';
 import { clearAnnouncementAttribution, consumeAnnouncementAttribution } from '../utils/announcementAttribution';
 import { useToast } from '../context/ToastContext';
+import { useAnnouncementNotification } from '../context/AnnouncementNotificationContext';
 import { useNavigate } from 'react-router-dom';
 
 interface VerificationModalProps {
@@ -75,8 +76,10 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { refreshUnreadDot } = useAnnouncementNotification();
   const { draft, saveDraft, clearDraft, hasDraftFor } = useVerificationDraft();
   const { notice: inlineNotice, dismiss: dismissInlineNotice } = usePlacementNotice('CERT_CREATE');
+  const { notice: successNotice, dismiss: dismissSuccessNotice } = usePlacementNotice('CERT_SUCCESS');
 
   // 드래프트 복원 여부 확인
   const isDraftMatch = hasDraftFor(action.challengeId, recordId);
@@ -446,6 +449,32 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             인증 카드 공유하기
           </Button>
         </div>
+
+        <NoticeTransition noticeKey={`announcement:${successNotice?.id ?? 'empty'}`}>
+          {successNotice && (
+            <InlineAnnouncementCard
+              announcement={successNotice}
+              onDismiss={dismissSuccessNotice}
+              onDetail={() => {
+                requestClose();
+                navigate(`/announcements/${successNotice.id}`);
+              }}
+              onCtaClick={() => {
+                requestClose();
+                void executeAnnouncementCta({
+                  target: successNotice.ctaTarget,
+                  announcementId: successNotice.id,
+                  placement: 'CERT_SUCCESS',
+                  featureKey: successNotice.featureKey,
+                  navigate,
+                  showToast,
+                  onRefreshUnread: refreshUnreadDot,
+                  activeGroupId: action.groupId,
+                });
+              }}
+            />
+          )}
+        </NoticeTransition>
 
         {!isStandalone() && (
           <button

@@ -22,7 +22,13 @@ import { UncheckedRecordsCard } from "../../components/screens/UncheckedRecordsC
 import { Lightbox } from "../../components/ui/Lightbox";
 import { UncheckedRecordsBottomSheet } from "../../components/UncheckedRecordsBottomSheet";
 import { VerificationModal } from "../../components/VerificationModal";
+import { HomeAnnouncementCard } from "../../components/announcement/HomeAnnouncementCard";
+import { NoticeTransition } from "../../components/announcement/NoticeTransition";
 import { useAuth } from "../../context/AuthContext";
+import { useAnnouncementNotification } from "../../context/AnnouncementNotificationContext";
+import { useToast } from "../../context/ToastContext";
+import { usePlacementNotice } from "../../hooks/usePlacementNotice";
+import { executeAnnouncementCta } from "../../utils/announcementCtaHandler";
 import type {
   ChallengeSummary,
   FeedItem,
@@ -39,6 +45,9 @@ export const GroupDetailPage: React.FC = () => {
   const groupId = useGroupIdOrThrow();
 
   const navigate = useNavigate();
+  const { showToast } = useToast();
+  const { refreshUnreadDot } = useAnnouncementNotification();
+  const { notice: groupNotice, dismiss: dismissGroupNotice } = usePlacementNotice('GROUP_DETAIL');
   const [searchParams, setSearchParams] = useSearchParams();
 
   const tabParam = searchParams.get("tab");
@@ -501,6 +510,28 @@ export const GroupDetailPage: React.FC = () => {
         onTab={handleTabChange}
         onVerify={setActiveVerificationAction}
         onImage={setHomeImage}
+        noticeSlot={
+          <NoticeTransition noticeKey={`announcement:${groupNotice?.id ?? 'empty'}`}>
+            {groupNotice && (
+              <HomeAnnouncementCard
+                announcement={groupNotice}
+                onDismiss={dismissGroupNotice}
+                onDetail={() => navigate(`/announcements/${groupNotice.id}`)}
+                onCtaClick={() => {
+                  void executeAnnouncementCta({
+                    target: groupNotice.ctaTarget,
+                    announcementId: groupNotice.id,
+                    placement: 'GROUP_DETAIL',
+                    featureKey: groupNotice.featureKey,
+                    navigate,
+                    showToast,
+                    onRefreshUnread: refreshUnreadDot,
+                  });
+                }}
+              />
+            )}
+          </NoticeTransition>
+        }
         redaySlot={<RedayActionCard items={redayItems} onStartReday={handleStartReday} />}
         uncheckedSlot={
           <UncheckedRecordsCard

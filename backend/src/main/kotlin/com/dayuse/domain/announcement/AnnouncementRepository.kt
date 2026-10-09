@@ -6,4 +6,6 @@ interface AnnouncementRepository : JpaRepository<Announcement, Long> {
     fun findAllByStatusOrderByPublishAtDescIdDesc(status: AnnouncementStatus): List<Announcement>
 
     fun findAllByOrderByCreatedAtDescIdDesc(): List<Announcement>
+
+    fun existsByTitle(title: String): Boolean
 }

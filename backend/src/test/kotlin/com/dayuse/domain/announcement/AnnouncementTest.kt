@@ -296,4 +296,38 @@ class AnnouncementTest {
         assertNotNull(state.readAt)
         assertEquals(readTime, state.readAt)
     }
+
+    @Test
+    @DisplayName("신규 placement(GROUP_DETAIL, CERT_SUCCESS)에 대한 활성화 여부가 정확하게 평가된다")
+    fun isActiveForExpandedPlacements() {
+        val groupAnnouncement = Announcement.createDraft(
+            actorId = 1L,
+            title = "모임 가이드",
+            summary = "모임 홈 상단 안내 요약",
+            body = "모임 이용 안내 본문",
+            placement = AnnouncementPlacement.GROUP_DETAIL,
+            now = baseNow
+        )
+        groupAnnouncement.publish(actorId = 1L, requestedPublishAt = baseNow, now = baseNow)
+
+        val certSuccessAnnouncement = Announcement.createDraft(
+            actorId = 1L,
+            title = "인증 축하 가이드",
+            summary = "인증 축하 모달 안내 요약",
+            body = "인증 축하 본문",
+            placement = AnnouncementPlacement.CERT_SUCCESS,
+            now = baseNow
+        )
+        certSuccessAnnouncement.publish(actorId = 1L, requestedPublishAt = baseNow, now = baseNow)
+
+        assertTrue(groupAnnouncement.isActiveForPlacement(AnnouncementPlacement.GROUP_DETAIL, baseNow))
+        assertFalse(groupAnnouncement.isActiveForPlacement(AnnouncementPlacement.CERT_SUCCESS, baseNow))
+        assertFalse(groupAnnouncement.isActiveForPlacement(AnnouncementPlacement.CERT_CREATE, baseNow))
+        assertFalse(groupAnnouncement.isActiveForPlacement(AnnouncementPlacement.HOME, baseNow))
+
+        assertTrue(certSuccessAnnouncement.isActiveForPlacement(AnnouncementPlacement.CERT_SUCCESS, baseNow))
+        assertFalse(certSuccessAnnouncement.isActiveForPlacement(AnnouncementPlacement.GROUP_DETAIL, baseNow))
+        assertFalse(certSuccessAnnouncement.isActiveForPlacement(AnnouncementPlacement.CERT_CREATE, baseNow))
+        assertFalse(certSuccessAnnouncement.isActiveForPlacement(AnnouncementPlacement.HOME, baseNow))
+    }
 }

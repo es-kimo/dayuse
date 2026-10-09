@@ -172,6 +172,11 @@ experiment:
     # 이미 존재하는 실험의 상태·rollout은 절대 덮어쓰지 않는다.
     enabled: ${EXPERIMENT_SEED_ENABLED:true}
 
+announcement:
+  seed:
+    # 프로덕션 기동 시 기본 공지/새소식 멱등 시드
+    enabled: ${ANNOUNCEMENT_SEED_ENABLED:true}
+
 analytics:
   # 집계·퍼널 조회 및 실험 관리를 허용할 관리자 userId 목록(쉼표 구분).
   # prod에서는 allow-all-when-empty=false(Fail-Closed)이므로 미지정 시 전원 403으로 차단된다.

@@ -115,6 +115,7 @@ describe('Frontend Tracker (F02)', () => {
     });
 
     it('재시도 간격은 1초, 3초 기준(±20%)으로 벌어진다', async () => {
+      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
       fetchMock.mockResolvedValue(res(503));
       const done = deliver(FIXTURE);
       await vi.advanceTimersByTimeAsync(0);
@@ -130,6 +131,7 @@ describe('Frontend Tracker (F02)', () => {
       await vi.advanceTimersByTimeAsync(1201);
       await done;
       expect(fetchMock).toHaveBeenCalledTimes(3);
+      randomSpy.mockRestore();
     });
 
     it('accessToken이 있으면 Authorization 헤더를 붙이고 없으면 붙이지 않는다', async () => {

@@ -125,7 +125,15 @@ export const AdminAnnouncementsPage: React.FC = () => {
                     )}
                     {item.placement && (
                       <span className="rounded bg-sunken px-1.5 py-0.5 text-[10.5px] font-bold text-ink-muted">
-                        위치: {item.placement === 'CERT_CREATE' ? '인증 작성' : item.placement}
+                        위치: {
+                          item.placement === 'CERT_CREATE'
+                            ? '인증 작성'
+                            : item.placement === 'GROUP_DETAIL'
+                            ? '모임 홈'
+                            : item.placement === 'CERT_SUCCESS'
+                            ? '인증 축하'
+                            : item.placement
+                        }
                       </span>
                     )}
                     {item.featureConditionType !== 'ALL_USERS' && (

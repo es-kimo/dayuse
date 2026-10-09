@@ -441,6 +441,8 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                   >
                     <option value="">인라인 노출 안 함</option>
                     <option value="CERT_CREATE">인증 작성 화면 하단</option>
+                    <option value="GROUP_DETAIL">모임 홈 화면 상단</option>
+                    <option value="CERT_SUCCESS">인증 완료 축하 모달</option>
                   </select>
                 </div>
 
