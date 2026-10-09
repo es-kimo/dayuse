@@ -395,26 +395,23 @@ class AnnouncementService(
             return existing
         }
 
-        return try {
-            announcementUserStateRepository.saveAndFlush(
-                AnnouncementUserState(
-                    userId = userId,
-                    announcementId = announcementId,
-                    readAt = now,
-                    dismissedAt = null,
-                    createdAt = now,
-                    updatedAt = now
-                )
-            )
-        } catch (ex: DataIntegrityViolationException) {
-            val concurrent = announcementUserStateRepository.findByUserIdAndAnnouncementId(
-                userId,
-                announcementId
-            )
-                ?: throw ex
-            concurrent.markRead(now)
-            concurrent
-        }
+        announcementUserStateRepository.upsertReadNative(
+            userId = userId,
+            announcementId = announcementId,
+            now = now
+        )
+
+        return announcementUserStateRepository.findByUserIdAndAnnouncementId(
+            userId,
+            announcementId
+        ) ?: AnnouncementUserState(
+            userId = userId,
+            announcementId = announcementId,
+            readAt = now,
+            dismissedAt = null,
+            createdAt = now,
+            updatedAt = now
+        )
     }
 
     private fun upsertDismissedState(
@@ -431,26 +428,23 @@ class AnnouncementService(
             return existing
         }
 
-        return try {
-            announcementUserStateRepository.saveAndFlush(
-                AnnouncementUserState(
-                    userId = userId,
-                    announcementId = announcementId,
-                    readAt = null,
-                    dismissedAt = now,
-                    createdAt = now,
-                    updatedAt = now
-                )
-            )
-        } catch (ex: DataIntegrityViolationException) {
-            val concurrent = announcementUserStateRepository.findByUserIdAndAnnouncementId(
-                userId,
-                announcementId
-            )
-                ?: throw ex
-            concurrent.markDismissed(now)
-            concurrent
-        }
+        announcementUserStateRepository.upsertDismissedNative(
+            userId = userId,
+            announcementId = announcementId,
+            now = now
+        )
+
+        return announcementUserStateRepository.findByUserIdAndAnnouncementId(
+            userId,
+            announcementId
+        ) ?: AnnouncementUserState(
+            userId = userId,
+            announcementId = announcementId,
+            readAt = null,
+            dismissedAt = now,
+            createdAt = now,
+            updatedAt = now
+        )
     }
 
     private fun findPublishedAnnouncementsSorted(): List<Announcement> {
