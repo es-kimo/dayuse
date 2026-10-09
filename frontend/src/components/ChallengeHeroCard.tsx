@@ -1,6 +1,6 @@
-import React from 'react';
-import type { ChallengeDetail } from '../types';
-import { Dayu } from './dayu/DayuAvatar';
+import React from "react";
+import type { ChallengeDetail } from "../types";
+import { Dayu } from "./dayu/DayuAvatar";
 
 interface ChallengeHeroCardProps {
   challenge: ChallengeDetail;
@@ -27,35 +27,29 @@ export const ChallengeHeroCard: React.FC<ChallengeHeroCardProps> = ({
 
   const getStatusChip = () => {
     switch (challenge.status) {
-      case 'IN_PROGRESS':
+      case "IN_PROGRESS":
         return (
           <span className="inline-flex items-center gap-1 h-6 px-2 rounded-[7px] text-xs font-bold bg-emerald-50 text-emerald-700 whitespace-nowrap">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" />
             진행 중
           </span>
         );
-      case 'NOT_STARTED':
+      case "NOT_STARTED":
         return (
           <span className="inline-flex items-center gap-1 h-6 px-2 rounded-[7px] text-xs font-bold bg-amber-50 text-amber-700 whitespace-nowrap">
             시작 전
           </span>
         );
-      case 'ENDED':
+      case "ENDED":
         return (
           <span className="inline-flex items-center gap-1 h-6 px-2 rounded-[7px] text-xs font-bold bg-slate-100 text-slate-600 whitespace-nowrap">
             종료
           </span>
         );
-      case 'ABORTED':
+      case "ABORTED":
         return (
           <span className="inline-flex items-center gap-1 h-6 px-2 rounded-[7px] text-xs font-bold bg-rose-50 text-rose-600 whitespace-nowrap">
             중단됨
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 h-6 px-2 rounded-[7px] text-xs font-bold bg-slate-100 text-slate-600 whitespace-nowrap">
-            {challenge.status}
           </span>
         );
     }
@@ -67,7 +61,7 @@ export const ChallengeHeroCard: React.FC<ChallengeHeroCardProps> = ({
       <div className="flex items-center gap-1.5">
         {getStatusChip()}
         <span className="inline-flex items-center h-6 px-2 rounded-[7px] text-xs font-bold bg-white text-slate-600 border border-blue-100 whitespace-nowrap">
-          {challenge.executionType === 'TOGETHER' ? '함께하기' : '각자하기'}
+          {challenge.executionType === "TOGETHER" ? "함께하기" : "각자하기"}
         </span>
         {dDay && (
           <span className="ml-auto inline-flex items-center font-extrabold text-[13px] text-blue-600 bg-white border border-blue-100 px-2.5 py-1 rounded-lg tabular-nums leading-none">
@@ -83,15 +77,15 @@ export const ChallengeHeroCard: React.FC<ChallengeHeroCardProps> = ({
             {challenge.title}
           </h1>
           <p className="mt-1.5 text-[13px] text-slate-600 truncate">
-            {challenge.groupName || '스터디'} · {challenge.creatorNickname || '모임원'}이 만들었어요
+            {challenge.groupName || "스터디"} · {challenge.creatorNickname || "모임원"}이 만들었어요
           </p>
         </div>
         <div className="shrink-0 -mr-1 -mb-1">
           <Dayu
             color="#2563EB"
-            face={isTodayCompleted ? 'done' : 'cheer'}
+            face={isTodayCompleted ? "done" : "cheer"}
             size={76}
-            title={isTodayCompleted ? '완료한 데이유' : '응원하는 데이유'}
+            title={isTodayCompleted ? "완료한 데이유" : "응원하는 데이유"}
           />
         </div>
       </div>

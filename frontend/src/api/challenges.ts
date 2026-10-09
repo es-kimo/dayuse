@@ -1,7 +1,10 @@
 import { apiClient } from './client';
+import { ContractError, parseChallengeDetail } from './challengeDetailContract';
+import { reportContractViolation } from './contractViolationReporter';
 import type {
   AbortChallengePayload,
   ChallengeDetail,
+  ChallengeDetailResponse,
   ChallengeParticipant,
   ChallengeRestartTemplate,
   ChallengeSummary,
@@ -24,23 +27,39 @@ export const challengesApi = {
     return res.data;
   },
 
-  restartChallenge: async (groupId: number, challengeId: number, payload: CreateChallengePayload): Promise<ChallengeDetail> => {
-    const res = await apiClient.post<ChallengeDetail>(`/groups/${groupId}/challenges/${challengeId}/restart`, payload);
+  restartChallenge: async (groupId: number, challengeId: number, payload: CreateChallengePayload): Promise<ChallengeDetailResponse> => {
+    const res = await apiClient.post<ChallengeDetailResponse>(`/groups/${groupId}/challenges/${challengeId}/restart`, payload);
     return res.data;
   },
 
-  createChallenge: async (groupId: number, payload: CreateChallengePayload): Promise<ChallengeDetail> => {
-    const res = await apiClient.post<ChallengeDetail>(`/groups/${groupId}/challenges`, payload);
+  createChallenge: async (groupId: number, payload: CreateChallengePayload): Promise<ChallengeDetailResponse> => {
+    const res = await apiClient.post<ChallengeDetailResponse>(`/groups/${groupId}/challenges`, payload);
     return res.data;
   },
 
+  /**
+   * 응답을 화면 모델로 바꿔 돌려준다. 계약 위반은 보고하되 표시 가능한 상세는 유지하고,
+   * 표시할 수 없는 응답이면 ContractError를 던진다.
+   */
   getChallengeDetail: async (challengeId: number): Promise<ChallengeDetail> => {
-    const res = await apiClient.get<ChallengeDetail>(`/challenges/${challengeId}`);
-    return res.data;
+    const res = await apiClient.get<unknown>(`/challenges/${challengeId}`);
+    const api = 'GET /challenges/{id}';
+    try {
+      const { detail, violations } = parseChallengeDetail(res.data);
+      if (violations.length > 0) {
+        reportContractViolation({ api, resourceId: challengeId, violations, fatal: false });
+      }
+      return detail;
+    } catch (error) {
+      if (error instanceof ContractError) {
+        reportContractViolation({ api, resourceId: challengeId, violations: error.violations, fatal: true });
+      }
+      throw error;
+    }
   },
 
-  updateChallenge: async (challengeId: number, payload: UpdateChallengePayload): Promise<ChallengeDetail> => {
-    const res = await apiClient.patch<ChallengeDetail>(`/challenges/${challengeId}`, payload);
+  updateChallenge: async (challengeId: number, payload: UpdateChallengePayload): Promise<ChallengeDetailResponse> => {
+    const res = await apiClient.patch<ChallengeDetailResponse>(`/challenges/${challengeId}`, payload);
     return res.data;
   },
 
@@ -71,8 +90,8 @@ export const challengesApi = {
     await apiClient.post(`/groups/${groupId}/challenges/${challengeId}/periods/${periodIndex}/confirm`);
   },
 
-  abortChallenge: async (challengeId: number, payload?: AbortChallengePayload): Promise<ChallengeDetail> => {
-    const res = await apiClient.post<ChallengeDetail>(`/challenges/${challengeId}/abort`, payload ?? {});
+  abortChallenge: async (challengeId: number, payload?: AbortChallengePayload): Promise<ChallengeDetailResponse> => {
+    const res = await apiClient.post<ChallengeDetailResponse>(`/challenges/${challengeId}/abort`, payload ?? {});
     return res.data;
   },
 };
