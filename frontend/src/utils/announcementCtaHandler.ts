@@ -1,10 +1,14 @@
 import type { NavigateFunction } from 'react-router-dom';
-import type { AnnouncementActionTarget } from '../types';
+import type { AnnouncementActionTarget, AnnouncementPlacement } from '../types';
 import { markAnnouncementAsRead } from '../api/announcements';
+import { track } from './tracker';
+import { setAnnouncementAttribution } from './announcementAttribution';
 
 export interface AnnouncementCtaContext {
   target?: AnnouncementActionTarget | null;
   announcementId?: number;
+  placement?: AnnouncementPlacement | string | null;
+  featureKey?: string | null;
   navigate: NavigateFunction;
   showToast: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
   onRefreshUnread?: () => void;
@@ -78,7 +82,26 @@ export async function executeAnnouncementCta(ctx: AnnouncementCtaContext): Promi
       return false;
   }
 
-  // 2. 소식 읽음 비동기 기록 (이동을 차단하지 않음)
+  // 2. 공지 분석 이벤트 기록 및 출처 귀속 컨텍스트 유지 (F10)
+  if (announcementId) {
+    track('announcement_cta_clicked', {
+      announcementId,
+      placement: ctx.placement ?? null,
+      featureKey: ctx.featureKey ?? null,
+      destinationTarget: target,
+      destinationPath,
+    });
+
+    setAnnouncementAttribution({
+      sourceAnnouncementId: announcementId,
+      placement: ctx.placement ?? null,
+      featureKey: ctx.featureKey ?? null,
+      destinationTarget: target,
+      destinationPath,
+    });
+  }
+
+  // 3. 소식 읽음 비동기 기록 (이동을 차단하지 않음)
   if (announcementId) {
     markAnnouncementAsRead(announcementId)
       .then(() => {
@@ -89,7 +112,7 @@ export async function executeAnnouncementCta(ctx: AnnouncementCtaContext): Promi
       });
   }
 
-  // 3. 목적지로 안전 이동
+  // 4. 목적지로 안전 이동
   navigate(destinationPath);
   return true;
 }

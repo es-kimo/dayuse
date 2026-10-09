@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ArrowRight, X } from 'lucide-react';
 import { Button } from '../dayu/ui';
 import { AnnouncementImage } from './AnnouncementImage';
 import type { AnnouncementUserItemResponse } from '../../types';
+import { trackAnnouncementImpression } from '../../utils/announcementTracking';
 
 interface HomeAnnouncementCardProps {
   announcement: AnnouncementUserItemResponse;
@@ -17,6 +18,9 @@ export const HomeAnnouncementCard: React.FC<HomeAnnouncementCardProps> = ({
   onDetail,
   onCtaClick,
 }) => {
+  useEffect(() => {
+    trackAnnouncementImpression(announcement.id, announcement.placement ?? 'HOME', announcement.featureKey);
+  }, [announcement.id, announcement.placement, announcement.featureKey]);
   return (
     <article
       className="relative overflow-hidden rounded-[20px] border border-blue-100 bg-white p-4.5 shadow-2xs"

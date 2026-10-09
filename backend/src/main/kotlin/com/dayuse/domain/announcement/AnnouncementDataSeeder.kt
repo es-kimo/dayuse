@@ -98,7 +98,8 @@ class AnnouncementDataSeeder(
                     ctaLabel = null,
                     ctaTarget = null,
                     placement = AnnouncementPlacement.CERT_CREATE,
-                    homeVisible = false
+                    homeVisible = false,
+                    featureKey = "clipboard_image_paste"
                 ),
                 autoPublish = true,
                 daysAgo = 1,
@@ -106,7 +107,7 @@ class AnnouncementDataSeeder(
             ),
 
             // 2. 리데이(스트릭 복구권) 제도 안내 (진행 중인 홈 공지)
-            // 독립된 리데이 페이지가 없고 결석 기록이 있을 때 모임 상세에 나타나므로, 혼란스러운 링크 대신 안내 정보 제공 위주로 구성
+            // 홈 카드에서 모임 또는 리데이 기능 화면으로 바로 연결
             AnnouncementSeedItem(
                 upsertRequest = AnnouncementUpsertRequest(
                     title = "아쉽게 놓친 스트릭, '리데이'로 지켜보세요",
@@ -123,10 +124,11 @@ class AnnouncementDataSeeder(
                     """.trimIndent(),
                     imageUrl = "/assets/announcements/reday-ticket-guide.png",
                     imageAlt = "리데이 티켓 사용 안내 이미지",
-                    ctaLabel = null,
-                    ctaTarget = null,
+                    ctaLabel = "리데이 내역 확인하기",
+                    ctaTarget = AnnouncementActionTarget.REDAY_HISTORY,
                     placement = null,
-                    homeVisible = true
+                    homeVisible = true,
+                    featureKey = "reday"
                 ),
                 autoPublish = true,
                 daysAgo = 3,

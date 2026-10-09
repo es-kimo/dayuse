@@ -3,6 +3,7 @@ import type { User } from '../types';
 import { authApi } from '../api/auth';
 import { clearExperimentCache } from '../utils/experiment';
 import { clearPendingExperimentRequests } from '../hooks/useExperiment';
+import { clearAnnouncementAttribution } from '../utils/announcementAttribution';
 
 interface AuthContextType {
   user: User | null;
@@ -42,9 +43,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (accessToken: string, refreshToken: string, userData: User) => {
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
-    // 이전 사용자의 Experiment 배정·Exposure 기록이 새 사용자에게 새지 않게 비운다.
+    // 이전 사용자의 Experiment 배정·Exposure 기록 및 소식 출처가 새 사용자에게 새지 않게 비운다.
     clearExperimentCache();
     clearPendingExperimentRequests();
+    clearAnnouncementAttribution();
     setUser(userData);
   };
 
@@ -53,6 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('refreshToken');
     clearExperimentCache();
     clearPendingExperimentRequests();
+    clearAnnouncementAttribution();
     setUser(null);
     window.location.href = '/login';
   };

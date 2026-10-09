@@ -3,6 +3,7 @@ import type { AnnouncementPlacement, AnnouncementUserItemResponse } from '../typ
 import { getPlacementNotice, markAnnouncementAsDismissed } from '../api/announcements';
 import { useAnnouncementNotification } from '../context/AnnouncementNotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { trackAnnouncementDismissed } from '../utils/announcementTracking';
 
 /**
  * 특정 화면에 머무르는 동안 닫거나 확인한 공지 ID를 기록하여
@@ -55,6 +56,7 @@ export function usePlacementNotice(placement: AnnouncementPlacement) {
 
     // 즉시 현재 화면에서 안내 숨김 및 세션 방지 셋에 기록
     dismissedOrViewedIdsInCurrentSession.add(targetId);
+    trackAnnouncementDismissed(targetId, placement, notice.featureKey);
     setNotice(null);
 
     try {
