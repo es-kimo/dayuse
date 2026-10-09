@@ -314,3 +314,40 @@ body {
     cursor: pointer;
   }
 }
+
+/* One continuous, restrained motion. No delayed fade or independent slide.
+ * Existing/cached notices are painted in place; only new arrivals open a slot. */
+.notice-transition {
+  display: grid;
+  flex-shrink: 0;
+  grid-template-rows: 0fr;
+  margin-bottom: calc(-1 * var(--notice-gap, 14px));
+  overflow-anchor: none;
+  transition: grid-template-rows 260ms cubic-bezier(0.22, 0.68, 0.3, 1),
+    margin-bottom 260ms cubic-bezier(0.22, 0.68, 0.3, 1);
+}
+.notice-transition[data-expanded="true"] {
+  grid-template-rows: 1fr;
+  margin-bottom: 0;
+}
+.notice-transition-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+.notice-transition-content {
+  opacity: 0;
+  transition: opacity 260ms cubic-bezier(0.22, 0.68, 0.3, 1);
+}
+.notice-transition[data-expanded="true"] .notice-transition-content {
+  opacity: 1;
+}
+.notice-transition[data-immediate="true"],
+.notice-transition[data-immediate="true"] .notice-transition-content {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .notice-transition,
+  .notice-transition-content {
+    transition: none;
+  }
+}

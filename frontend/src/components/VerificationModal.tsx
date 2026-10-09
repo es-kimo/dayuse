@@ -1,3 +1,4 @@
+import { NoticeTransition } from './announcement/NoticeTransition';
 import { Camera as ScreenCamera, ImageIcon as ScreenImageIcon, Clipboard as ScreenClipboard, X as ScreenX } from './screens/ScreenIcons';
 import React, { useState, useRef, useEffect } from 'react';
 import { verificationsApi } from '../api/verifications';
@@ -502,14 +503,16 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
           </ModalClose>
         </div>
 
-        {inlineNotice && (
-          <InlineAnnouncementCard
-            announcement={inlineNotice}
-            onDismiss={dismissInlineNotice}
-            onDetail={handleInlineNoticeDetail}
-            onCtaClick={handleInlineNoticeCta}
-          />
-        )}
+        <NoticeTransition noticeKey={`announcement:${inlineNotice?.id ?? 'empty'}`}>
+          {inlineNotice && (
+            <InlineAnnouncementCard
+              announcement={inlineNotice}
+              onDismiss={dismissInlineNotice}
+              onDetail={handleInlineNoticeDetail}
+              onCtaClick={handleInlineNoticeCta}
+            />
+          )}
+        </NoticeTransition>
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-[13px] leading-[1.5] text-slate-600">

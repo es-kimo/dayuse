@@ -1,3 +1,4 @@
+import { NoticeTransition } from '../announcement/NoticeTransition';
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Crown, Link, Plus } from "./ScreenIcons";
@@ -118,23 +119,25 @@ export function GroupsScreen({
           empty ? "justify-center px-6 pt-6" : "px-4 pt-1"
         }`}
       >
-        {homeNotice && (
-          <HomeAnnouncementCard
-            announcement={homeNotice}
-            onDismiss={dismissHomeNotice}
-            onDetail={() => navigate(`/announcements/${homeNotice.id}`)}
-            onCtaClick={() => {
-              void executeAnnouncementCta({
-                target: homeNotice.ctaTarget,
-                announcementId: homeNotice.id,
-                navigate,
-                showToast,
-                onRefreshUnread: refreshUnreadDot,
-                userGroupCount: groups.length,
-              });
-            }}
-          />
-        )}
+        <NoticeTransition noticeKey={`announcement:${homeNotice?.id ?? 'empty'}`}>
+          {homeNotice && (
+            <HomeAnnouncementCard
+              announcement={homeNotice}
+              onDismiss={dismissHomeNotice}
+              onDetail={() => navigate(`/announcements/${homeNotice.id}`)}
+              onCtaClick={() => {
+                void executeAnnouncementCta({
+                  target: homeNotice.ctaTarget,
+                  announcementId: homeNotice.id,
+                  navigate,
+                  showToast,
+                  onRefreshUnread: refreshUnreadDot,
+                  userGroupCount: groups.length,
+                });
+              }}
+            />
+          )}
+        </NoticeTransition>
         {loading ? (
           <p className="py-12 text-center text-[13px] text-slate-500" role="status">
             모임 목록을 불러오는 중...
