@@ -17,14 +17,14 @@ export const AnnouncementBodyRenderer: React.FC<AnnouncementBodyRendererProps> =
     return tokens.map((token, index) => {
       if (token.type === 'bold') {
         return (
-          <strong key={index} className="font-semibold text-slate-900">
+          <strong key={index} className="font-semibold text-ink">
             {token.content}
           </strong>
         );
       }
       if (token.type === 'italic') {
         return (
-          <em key={index} className="italic text-slate-700">
+          <em key={index} className="italic text-ink-secondary">
             {token.content}
           </em>
         );
@@ -34,20 +34,20 @@ export const AnnouncementBodyRenderer: React.FC<AnnouncementBodyRendererProps> =
   };
 
   return (
-    <div className={`space-y-4 text-[14.5px] leading-relaxed text-slate-700 ${className}`}>
+    <div className={`space-y-4 text-[14.5px] leading-relaxed text-ink-secondary ${className}`}>
       {blocks.map((block: BlockToken, blockIndex: number) => {
         if (block.type === 'heading') {
           return block.level === 2 ? (
             <h2
               key={blockIndex}
-              className="mt-6 mb-2 text-[17px] font-bold tracking-tight text-slate-900 first:mt-0"
+              className="mt-6 mb-2 text-[17px] font-bold tracking-tight text-ink first:mt-0"
             >
               {renderInline(block.text)}
             </h2>
           ) : (
             <h3
               key={blockIndex}
-              className="mt-5 mb-1.5 text-[15.5px] font-bold tracking-tight text-slate-900 first:mt-0"
+              className="mt-5 mb-1.5 text-[15.5px] font-bold tracking-tight text-ink first:mt-0"
             >
               {renderInline(block.text)}
             </h3>
@@ -56,7 +56,7 @@ export const AnnouncementBodyRenderer: React.FC<AnnouncementBodyRendererProps> =
 
         if (block.type === 'list') {
           return (
-            <ul key={blockIndex} className="space-y-1.5 pl-4 list-disc text-slate-700 marker:text-slate-400">
+            <ul key={blockIndex} className="space-y-1.5 pl-4 list-disc text-ink-secondary marker:text-ink-muted">
               {block.items.map((item, itemIndex) => (
                 <li key={itemIndex} className="leading-relaxed">
                   {renderInline(item)}

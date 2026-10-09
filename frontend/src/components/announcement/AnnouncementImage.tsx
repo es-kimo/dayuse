@@ -18,7 +18,7 @@ export const AnnouncementImage: React.FC<AnnouncementImageProps> = ({
   }
 
   return (
-    <div className={`overflow-hidden rounded-xl bg-slate-100 ${className}`}>
+    <div className={`overflow-hidden rounded-xl bg-sunken ${className}`}>
       <img
         src={src}
         alt={alt || '소식 안내 이미지'}

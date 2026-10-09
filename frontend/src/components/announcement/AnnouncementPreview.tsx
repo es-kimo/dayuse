@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, ChevronRight, X, Sparkles } from 'lucide-react';
+import { Button, Chip } from '../dayu/ui';
 import { AnnouncementBodyRenderer } from './AnnouncementBodyRenderer';
 import { AnnouncementImage } from './AnnouncementImage';
 import type {
@@ -36,35 +37,36 @@ export const AnnouncementPreview: React.FC<AnnouncementPreviewProps> = ({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+    <div className="relative overflow-hidden rounded-[18px] border border-line bg-white">
       {/* 초안/미리보기 격리 워터마크 배지 */}
-      <div className="flex items-center justify-between border-b border-amber-100 bg-amber-50 px-3.5 py-1.5 text-[11px] font-semibold text-amber-800">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-page px-4 py-3 text-label text-ink-muted">
         <span className="flex items-center gap-1">
-          <Sparkles className="size-3 text-amber-600" />
-          [미리보기] {mode === 'list' ? '목록 카드' : mode === 'detail' ? '상세 화면' : mode === 'home' ? '홈 안내 카드' : '인라인 안내'}
+          <Sparkles className="size-3 text-ink-muted" />
+          미리보기 · {mode === 'list' ? '목록 카드' : mode === 'detail' ? '상세 화면' : mode === 'home' ? '홈 안내 카드' : '인라인 안내'}
         </span>
-        <span className="text-amber-600 font-medium text-[10px]">무부작용 격리 모드 (상태/로그 미반영)</span>
+        <span className="text-ink-muted font-medium text-label">실제 게시 화면의 예시예요</span>
       </div>
 
       {/* 1. 홈 안내 카드 (home) */}
       {mode === 'home' && (
-        <div className="relative p-4 bg-gradient-to-br from-blue-50/80 via-white to-slate-50 border-b border-slate-100">
+        <div className="relative p-4 bg-primary-subtle">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <span className="inline-block rounded-md bg-blue-100 px-2 py-0.5 text-[10.5px] font-bold text-blue-700 mb-1.5">
+              <Chip tone="blue" className="mb-2">
                 새로운 소식
-              </span>
-              <h4 className="text-[15px] font-bold text-slate-900 tracking-tight leading-snug line-clamp-1">
+              </Chip>
+              <h4 className="text-[15px] font-bold text-ink tracking-tight leading-snug line-clamp-1">
                 {title}
               </h4>
-              <p className="mt-1 text-[13px] text-slate-600 line-clamp-2 leading-relaxed">
+              <p className="mt-1 text-[13px] text-ink-secondary line-clamp-2 leading-relaxed">
                 {summary}
               </p>
             </div>
             <button
               type="button"
               disabled
-              className="text-slate-400 p-1 -mr-1 -mt-1 cursor-not-allowed opacity-60"
+              aria-label="안내 닫기 (미리보기)"
+              className="text-ink-muted p-1 -mr-1 -mt-1 cursor-not-allowed opacity-60"
               title="미리보기에서는 닫기 동작이 기록되지 않습니다"
             >
               <X className="size-4" />
@@ -78,20 +80,15 @@ export const AnnouncementPreview: React.FC<AnnouncementPreviewProps> = ({
           )}
 
           {ctaLabel && (
-            <div className="mt-3.5 pt-2 border-t border-slate-100/80 flex items-center justify-between">
+            <div className="mt-3.5 pt-2 border-t border-line/80 flex items-center justify-between">
               <button
                 type="button"
                 onClick={handleCtaClick}
-                className="inline-flex items-center gap-1.5 text-[13px] font-bold text-blue-600 hover:text-blue-700"
+                className="focus-ring min-h-11 rounded-sm inline-flex items-center gap-1.5 text-[13px] font-bold text-primary hover:text-primary-hover"
               >
                 <span>{ctaLabel}</span>
                 <ArrowRight className="size-3.5" />
               </button>
-              {ctaTarget && (
-                <span className="text-[11px] text-slate-400 font-mono">
-                  → {ctaTarget}
-                </span>
-              )}
             </div>
           )}
         </div>
@@ -99,25 +96,26 @@ export const AnnouncementPreview: React.FC<AnnouncementPreviewProps> = ({
 
       {/* 2. 인라인 안내 (inline) */}
       {mode === 'inline' && (
-        <div className="p-4 bg-slate-50/90 border border-slate-200/80 rounded-xl m-2">
+        <div className="p-4 bg-page border border-line rounded-[14px] m-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="inline-block rounded bg-slate-200 px-1.5 py-0.5 text-[10.5px] font-semibold text-slate-700">
+                <span className="inline-block rounded bg-slate-200 px-1.5 py-0.5 text-[10.5px] font-semibold text-ink-secondary">
                   안내
                 </span>
-                <h4 className="text-[14px] font-bold text-slate-900 truncate">
+                <h4 className="text-[14px] font-bold text-ink truncate">
                   {title}
                 </h4>
               </div>
-              <p className="text-[12.5px] text-slate-600 leading-relaxed">
+              <p className="text-[12.5px] text-ink-secondary leading-relaxed">
                 {summary}
               </p>
             </div>
             <button
               type="button"
               disabled
-              className="text-slate-400 p-1 cursor-not-allowed opacity-60"
+              aria-label="안내 닫기 (미리보기)"
+              className="text-ink-muted p-1 cursor-not-allowed opacity-60"
             >
               <X className="size-4" />
             </button>
@@ -125,14 +123,14 @@ export const AnnouncementPreview: React.FC<AnnouncementPreviewProps> = ({
 
           {ctaLabel && (
             <div className="mt-3 flex items-center justify-end">
-              <button
+              <Button
                 type="button"
                 onClick={handleCtaClick}
-                className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-1.5 text-[12px] font-semibold text-white shadow-xs"
+                size="sm" className="min-h-11 focus-ring"
               >
                 <span>{ctaLabel}</span>
                 <ArrowRight className="size-3" />
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -140,24 +138,24 @@ export const AnnouncementPreview: React.FC<AnnouncementPreviewProps> = ({
 
       {/* 3. 목록 카드 (list) */}
       {mode === 'list' && (
-        <div className="p-4 hover:bg-slate-50 transition-colors">
+        <div className="p-4 hover:bg-page transition-colors">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="size-2 rounded-full bg-blue-600 inline-block" title="미확인 점(Dot) 예시" />
-                <h4 className="text-[15px] font-bold text-slate-900 tracking-tight line-clamp-1">
+                <span className="size-2 rounded-full bg-primary inline-block" title="미확인 점(Dot) 예시" />
+                <h4 className="text-[15px] font-bold text-ink tracking-tight line-clamp-1">
                   {title}
                 </h4>
               </div>
-              <p className="text-[13px] text-slate-600 line-clamp-2 leading-relaxed">
+              <p className="text-[13px] text-ink-secondary line-clamp-2 leading-relaxed">
                 {summary}
               </p>
-              <span className="mt-2 block text-[11px] text-slate-400">
-                방금 전 · 열람 시 읽음 처리
+              <span className="mt-2 block text-[11px] text-ink-muted">
+                방금 전
               </span>
             </div>
             {imageUrl && (
-              <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200/50">
+              <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-sunken border border-line/50">
                 <img
                   src={imageUrl}
                   alt={imageAlt || ''}
@@ -165,22 +163,22 @@ export const AnnouncementPreview: React.FC<AnnouncementPreviewProps> = ({
                 />
               </div>
             )}
-            <ChevronRight className="size-4 text-slate-400 shrink-0 self-center" />
+            <ChevronRight className="size-4 text-ink-muted shrink-0 self-center" />
           </div>
         </div>
       )}
 
       {/* 4. 상세 화면 (detail) */}
       {mode === 'detail' && (
-        <div className="p-5 max-w-lg mx-auto">
+        <div className="p-5 max-w-app mx-auto">
           <div className="mb-4">
-            <span className="inline-block rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-600 mb-2">
+            <span className="inline-block rounded-md bg-primary-subtle px-2 py-0.5 text-[11px] font-bold text-primary mb-2">
               서비스 소식
             </span>
-            <h2 className="text-[18px] font-extrabold text-slate-900 tracking-tight leading-snug">
+            <h2 className="text-title-md font-extrabold text-ink tracking-tight leading-snug">
               {title}
             </h2>
-            <p className="mt-1 text-[12px] text-slate-400">
+            <p className="mt-1 text-[12px] text-ink-muted">
               {data.publishAt ? `게시일: ${data.publishAt}` : '게시 예정'}
             </p>
           </div>
@@ -191,29 +189,29 @@ export const AnnouncementPreview: React.FC<AnnouncementPreviewProps> = ({
             </div>
           )}
 
-          <div className="mb-6 rounded-xl bg-slate-50 p-3.5 border border-slate-100">
-            <h5 className="text-[11.5px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+          <div className="mb-6 rounded-xl bg-page p-3.5 border border-line">
+            <h5 className="text-label font-bold text-ink-muted mb-1">
               핵심 요약
             </h5>
-            <p className="text-[13.5px] font-medium text-slate-700 leading-relaxed">
+            <p className="text-[13.5px] font-medium text-ink-secondary leading-relaxed">
               {summary}
             </p>
           </div>
 
-          <div className="mb-8 border-t border-slate-100 pt-5">
+          <div className="mb-8 border-t border-line pt-5">
             <AnnouncementBodyRenderer body={body} />
           </div>
 
           {ctaLabel && (
             <div className="sticky bottom-3 z-10 pt-2">
-              <button
+              <Button
                 type="button"
                 onClick={handleCtaClick}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3.5 text-[14.5px] font-bold text-white shadow-md active:bg-blue-700 transition"
+                className="w-full focus-ring"
               >
                 <span>{ctaLabel}</span>
                 <ArrowRight className="size-4" />
-              </button>
+              </Button>
             </div>
           )}
         </div>

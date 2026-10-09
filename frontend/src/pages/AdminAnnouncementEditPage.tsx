@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   Save,
   Send,
-  Eye,
 } from 'lucide-react';
+import { Button, Card, Segmented } from '../components/dayu/ui';
 import { SubPageHeader } from '../components/layout/SubPageHeader';
 import { AnnouncementPreview } from '../components/announcement/AnnouncementPreview';
 import {
@@ -203,7 +203,7 @@ export const AdminAnnouncementEditPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-[13px] text-slate-400">
+      <div className="min-h-dvh bg-page flex items-center justify-center text-[13px] text-ink-muted">
         소식 정보를 불러오는 중입니다...
       </div>
     );
@@ -212,94 +212,74 @@ export const AdminAnnouncementEditPage: React.FC = () => {
   const isEnded = existingAnnouncement?.status === 'ENDED';
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-dvh bg-page pb-24">
       <SubPageHeader
         title={isNew ? '새 소식 작성' : `소식 편집 #${announcementId}`}
         onBack={() => navigate('/admin/announcements')}
       />
 
-      <main className="max-w-3xl mx-auto px-4 pt-4">
+      <main className="w-full max-w-app mx-auto px-4 pt-4">
         {/* 상단 탭 (편집 / 미리보기) */}
-        <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-5">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab('edit')}
-              className={`rounded-xl px-4 py-2 text-[13.5px] font-bold transition ${
-                activeTab === 'edit'
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              편집 폼
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('preview')}
-              className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[13.5px] font-bold transition ${
-                activeTab === 'preview'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              <Eye className="size-4" />
-              4종 표현 미리보기
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
+        <div className="mb-5 space-y-3">
+          <Segmented
+            value={activeTab}
+            onChange={setActiveTab}
+            label="소식 편집 모드"
+            options={[{ value: 'edit', label: '내용 편집' }, { value: 'preview', label: '미리보기' }]}
+          />
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {!isNew && !isEnded && (
               <>
-                <button
+                <Button
                   type="button"
                   disabled={submitting}
                   onClick={() => void handleEnd()}
-                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-[12.5px] font-bold text-rose-700 hover:bg-rose-100 disabled:opacity-50"
+                  variant="line" size="sm" className="min-h-11 focus-ring"
                 >
                   게시 종료
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   disabled={submitting}
                   onClick={() => void handlePublish()}
-                  className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3.5 py-2 text-[12.5px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                  variant="primary" size="sm" className="min-h-11 focus-ring"
                 >
                   <Send className="size-3.5" />
                   {existingAnnouncement?.status === 'PUBLISHED' ? '예약/게시 갱신' : '게시하기'}
-                </button>
+                </Button>
               </>
             )}
             {!isEnded && (
-              <button
+              <Button
                 type="button"
                 disabled={submitting}
                 onClick={() => void handleSaveDraft()}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-[13px] font-bold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50"
+                variant={isNew ? 'primary' : 'line'} size="sm" className="min-h-11 focus-ring"
               >
                 <Save className="size-4" />
                 {isNew ? '초안 생성' : '저장'}
-              </button>
+              </Button>
             )}
           </div>
         </div>
 
         {/* 탭 1: 편집 폼 */}
         {activeTab === 'edit' && (
-          <div className="space-y-6">
+          <div className="space-y-3.5">
             {isEnded && (
               <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-[13px] text-rose-700">
-                이 소식은 이미 <strong>게시 종료(ENDED)</strong>되었습니다. 수정이나 재게시가 불가합니다.
+                이 소식은 이미 <strong>게시 종료</strong>되었습니다. 수정하거나 다시 게시할 수 없어요.
               </div>
             )}
 
             {/* 기본 콘텐츠 */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
-              <h3 className="text-[15px] font-bold text-slate-900 border-b border-slate-100 pb-2">
-                1. 기본 콘텐츠 (F09)
+            <Card className="space-y-4">
+              <h3 className="text-[15px] font-bold text-ink border-b border-line pb-2">
+                기본 내용
               </h3>
 
               <div>
-                <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
+                <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
                   제목 (최대 40자) *
                 </label>
                 <input
@@ -309,15 +289,15 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="예: 간편한 클립보드 인증 이미지 붙여넣기 기능"
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[14px] focus:border-blue-500 focus:outline-none"
+                  className="w-full min-h-input rounded-xl border border-line bg-white px-3.5 py-2.5 text-[14px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                 />
-                <span className="mt-1 block text-right text-[11px] text-slate-400">
+                <span className="mt-1 block text-right text-[11px] text-ink-muted">
                   {title.length}/40
                 </span>
               </div>
 
               <div>
-                <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
+                <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
                   요약 (최대 100자) *
                 </label>
                 <textarea
@@ -327,19 +307,19 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
                   placeholder="홈 카드 및 목록 카드에 노출되는 한두 줄 요약입니다."
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13.5px] focus:border-blue-500 focus:outline-none"
+                  className="w-full min-h-input rounded-xl border border-line bg-white px-3.5 py-2.5 text-[13.5px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                 />
-                <span className="mt-1 block text-right text-[11px] text-slate-400">
+                <span className="mt-1 block text-right text-[11px] text-ink-muted">
                   {summary.length}/100
                 </span>
               </div>
 
               <div>
-                <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
+                <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
                   본문 (최대 5,000자, 제한된 안전 서식 지원) *
                 </label>
-                <p className="text-[11.5px] text-slate-500 mb-2">
-                  지원 서식: 소제목(##, ###), 목록(-, *), 굵게(**텍스트**), 기울임(*텍스트*). raw HTML/스크립트는 차단됩니다.
+                <p className="text-[11.5px] text-ink-muted mb-2">
+                  지원 서식: 소제목(##, ###), 목록(-, *), 굵게(**텍스트**), 기울임(*텍스트*). HTML은 사용할 수 없어요.
                 </p>
                 <textarea
                   rows={8}
@@ -348,13 +328,13 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                   placeholder={`## 새로운 변화\n더욱 간편하게 사진을 붙여넣으세요.\n\n- 모바일 및 웹 지원\n- 최대 5MB 파일`}
-                  className="w-full font-mono rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] leading-relaxed focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-line px-3.5 py-2.5 text-[13px] leading-relaxed focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 gap-3 pt-2">
                 <div>
-                  <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
+                  <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
                     대표 이미지 URL (선택)
                   </label>
                   <input
@@ -363,11 +343,11 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="예: /assets/announcements/feature.png"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[13px] focus:border-blue-500 focus:outline-none"
+                    className="w-full min-h-input rounded-xl border border-line bg-white px-3.5 py-2 text-[13px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
+                  <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
                     이미지 대체 텍스트 (이미지 등록 시 필수)
                   </label>
                   <input
@@ -377,24 +357,24 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                     value={imageAlt}
                     onChange={(e) => setImageAlt(e.target.value)}
                     placeholder="시각장애인/스크린리더를 위한 설명"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[13px] focus:border-blue-500 focus:outline-none"
+                    className="w-full min-h-input rounded-xl border border-line bg-white px-3.5 py-2 text-[13px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                   />
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* 실행 버튼(CTA) 설정 */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
-              <h3 className="text-[15px] font-bold text-slate-900 border-b border-slate-100 pb-2">
-                2. 실행 버튼 (CTA) 설정 (운영 정책 2)
+            <Card className="space-y-4">
+              <h3 className="text-[15px] font-bold text-ink border-b border-line pb-2">
+                연결 버튼
               </h3>
-              <p className="text-[12px] text-slate-500">
+              <p className="text-[12px] text-ink-muted">
                 '확인' 같은 단순 닫기 문구는 금지되며 사전 승인된 내부 목적지만 연결 가능합니다.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
+                  <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
                     버튼 문구 (최대 30자)
                   </label>
                   <input
@@ -404,35 +384,35 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                     value={ctaLabel}
                     onChange={(e) => setCtaLabel(e.target.value)}
                     placeholder="예: 인증하러 가기, 모임 만들기"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[13px] focus:border-blue-500 focus:outline-none"
+                    className="w-full min-h-input rounded-xl border border-line bg-white px-3.5 py-2 text-[13px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
-                    내부 목적지 (ctaTarget)
+                  <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
+                    연결할 화면
                   </label>
                   <select
                     disabled={isEnded}
                     value={ctaTarget}
                     onChange={(e) => setCtaTarget(e.target.value as AnnouncementActionTarget | '')}
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[13px] focus:border-blue-500 focus:outline-none bg-white"
+                    className="w-full min-h-input rounded-xl border border-line bg-white px-3.5 py-2 text-[13px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                   >
                     <option value="">설정 안 함 (버튼 미노출)</option>
-                    <option value="HOME">HOME (홈 화면)</option>
-                    <option value="CERT_CREATE">CERT_CREATE (인증 작성 화면)</option>
-                    <option value="REDAY_HISTORY">REDAY_HISTORY (리데이 내역)</option>
-                    <option value="GROUP_CREATE">GROUP_CREATE (모임 생성)</option>
-                    <option value="ANNOUNCEMENT_LIST">ANNOUNCEMENT_LIST (소식 목록)</option>
-                    <option value="MY_PAGE">MY_PAGE (마이페이지)</option>
+                    <option value="HOME">홈 화면</option>
+                    <option value="CERT_CREATE">인증 작성 화면</option>
+                    <option value="REDAY_HISTORY">리데이 내역</option>
+                    <option value="GROUP_CREATE">모임 생성</option>
+                    <option value="ANNOUNCEMENT_LIST">소식 목록</option>
+                    <option value="MY_PAGE">마이페이지</option>
                   </select>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* 노출 위치 및 일정 */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
-              <h3 className="text-[15px] font-bold text-slate-900 border-b border-slate-100 pb-2">
-                3. 노출 위치 및 게시 일정
+            <Card className="space-y-4">
+              <h3 className="text-[15px] font-bold text-ink border-b border-line pb-2">
+                노출 위치와 일정
               </h3>
 
               <div className="space-y-3">
@@ -442,31 +422,31 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                     disabled={isEnded}
                     checked={homeVisible}
                     onChange={(e) => setHomeVisible(e.target.checked)}
-                    className="size-4 rounded text-blue-600"
+                    className="size-4 rounded accent-primary focus-ring"
                   />
-                  <span className="text-[13.5px] font-semibold text-slate-800">
-                    홈 상단 안내 카드 노출 (homeVisible)
+                  <span className="text-[13.5px] font-semibold text-ink">
+                    홈에 안내 카드 표시
                   </span>
                 </label>
 
                 <div>
-                  <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
+                  <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
                     인라인 화면 노출 위치 (선택)
                   </label>
                   <select
                     disabled={isEnded}
                     value={placement}
                     onChange={(e) => setPlacement(e.target.value as AnnouncementPlacement | '')}
-                    className="w-full max-w-xs rounded-xl border border-slate-200 px-3.5 py-2 text-[13px] bg-white focus:border-blue-500 focus:outline-none"
+                    className="w-full max-w-xs rounded-xl border border-line px-3.5 py-2 text-[13px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                   >
                     <option value="">인라인 노출 안 함</option>
-                    <option value="CERT_CREATE">CERT_CREATE (인증 작성 화면 하단)</option>
+                    <option value="CERT_CREATE">인증 작성 화면 하단</option>
                   </select>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div className="grid grid-cols-1 gap-4 pt-2">
                   <div>
-                    <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
+                    <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
                       게시 시작 일시 (KST)
                     </label>
                     <input
@@ -474,18 +454,18 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                       disabled={isEnded}
                       value={publishAt}
                       onChange={(e) => setPublishAt(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] focus:border-blue-500 focus:outline-none"
+                      className="w-full min-h-input rounded-xl border border-line bg-white px-3 py-2 text-[13px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                     />
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-[12.5px] font-bold text-slate-700">
+                      <label className="text-[12.5px] font-bold text-ink-secondary">
                         안내 종료 일시 (KST)
                       </label>
                       <button
                         type="button"
                         onClick={handle14DaysSuggest}
-                        className="text-[11px] font-semibold text-blue-600 hover:underline"
+                        className="text-[11px] font-semibold text-primary hover:underline"
                       >
                         14일 뒤로 자동 설정
                       </button>
@@ -495,21 +475,21 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                       disabled={isEnded}
                       value={noticeEndsAt}
                       onChange={(e) => setNoticeEndsAt(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] focus:border-blue-500 focus:outline-none"
+                      className="w-full min-h-input rounded-xl border border-line bg-white px-3 py-2 text-[13px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                     />
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
 
             {/* 조건부 기능 노출 설정 */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
-              <h3 className="text-[15px] font-bold text-slate-900 border-b border-slate-100 pb-2">
-                4. 조건부 기능 소식 (선택)
+            <Card className="space-y-4">
+              <h3 className="text-[15px] font-bold text-ink border-b border-line pb-2">
+                공개 대상
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
+                  <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
                     기능 제공 조건
                   </label>
                   <select
@@ -518,21 +498,21 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                     onChange={(e) =>
                       setFeatureConditionType(e.target.value as AnnouncementFeatureConditionType)
                     }
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[13px] bg-white focus:border-blue-500 focus:outline-none"
+                    className="w-full min-h-input rounded-xl border border-line bg-white px-3.5 py-2 text-[13px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                   >
-                    <option value="ALL_USERS">ALL_USERS (전체 사용자)</option>
+                    <option value="ALL_USERS">전체 사용자</option>
                     <option value="EXPERIMENT_PARTICIPANT">
-                      EXPERIMENT_PARTICIPANT (실험 참여자)
+                      실험 참여자
                     </option>
                     <option value="EXPERIMENT_VARIANT_B">
-                      EXPERIMENT_VARIANT_B (실험군 B 참여자)
+                      실험군 B 참여자
                     </option>
                   </select>
                 </div>
                 {featureConditionType !== 'ALL_USERS' && (
                   <div>
-                    <label className="block text-[12.5px] font-bold text-slate-700 mb-1">
-                      연결 실험 식별자 (featureKey) *
+                    <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
+                      연결할 실험 ID *
                     </label>
                     <input
                       type="text"
@@ -540,21 +520,21 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                       value={featureKey}
                       onChange={(e) => setFeatureKey(e.target.value)}
                       placeholder="예: reday-guide-copy-v1"
-                      className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-[13px] focus:border-blue-500 focus:outline-none"
+                      className="w-full min-h-input rounded-xl border border-line bg-white px-3.5 py-2 text-[13px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                     />
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
           </div>
         )}
 
-        {/* 탭 2: 4종 표현 미리보기 (무부작용 격리) */}
+        {/* 탭 2: 미리보기 (무부작용 격리) */}
         {activeTab === 'preview' && (
           <div className="space-y-5">
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              <span className="text-[12px] font-bold text-slate-500 mr-2 shrink-0">
-                표현 선택:
+              <span className="text-[12px] font-bold text-ink-muted mr-2 shrink-0">
+                노출 화면
               </span>
               {[
                 { id: 'home', label: '홈 안내 카드' },
@@ -565,11 +545,12 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                 <button
                   key={tab.id}
                   type="button"
+                  aria-pressed={previewMode === tab.id}
                   onClick={() => setPreviewMode(tab.id as typeof previewMode)}
-                  className={`rounded-xl px-3.5 py-1.5 text-[12.5px] font-bold transition shrink-0 ${
+                  className={`focus-ring min-h-11 rounded-xl px-3 py-2 text-[12.5px] font-bold transition shrink-0 ${
                     previewMode === tab.id
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      ? 'bg-primary text-white'
+                      : 'bg-white text-ink-secondary border border-line hover:bg-sunken'
                   }`}
                 >
                   {tab.label}
@@ -577,7 +558,7 @@ export const AdminAnnouncementEditPage: React.FC = () => {
               ))}
             </div>
 
-            <div className="bg-slate-100/70 p-4 rounded-3xl border border-slate-200/80">
+            <div className="bg-sunken p-2 rounded-[18px] border border-line">
               <AnnouncementPreview
                 data={previewData}
                 mode={previewMode}
