@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, AlertCircle, RefreshCw } from 'lucide-react';
 import { AppHeader } from '../components/layout/AppHeader';
+import { useBackNavigation } from '../hooks/useBackNavigation';
 import { AnnouncementBodyRenderer } from '../components/announcement/AnnouncementBodyRenderer';
 import { AnnouncementImage } from '../components/announcement/AnnouncementImage';
 import { Button } from '../components/dayu/ui';
@@ -14,6 +15,7 @@ import type { AnnouncementUserDetailResponse } from '../types';
 export const AnnouncementDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const handleBack = useBackNavigation('/announcements');
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { refreshUnreadDot } = useAnnouncementNotification();
 
@@ -81,7 +83,7 @@ export const AnnouncementDetailPage: React.FC = () => {
       <AppHeader
         variant="sub"
         title="소식 상세"
-        onBack={() => navigate('/announcements')}
+        onBack={handleBack}
       />
 
       <main className="flex flex-1 flex-col px-4 pt-2 pb-16">
@@ -97,7 +99,8 @@ export const AnnouncementDetailPage: React.FC = () => {
             <Button
               type="button"
               className="mt-6 focus-ring"
-              onClick={() => navigate('/announcements')}
+              // 상세를 목록으로 교체해 목록에서 뒤로 갈 때 이 화면으로 되돌아오지 않게 한다.
+              onClick={() => navigate('/announcements', { replace: true })}
             >
               새로운 소식 목록으로 돌아가기
             </Button>

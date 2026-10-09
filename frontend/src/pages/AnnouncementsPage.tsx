@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Megaphone, ChevronRight, RefreshCw } from 'lucide-react';
 import { AppHeader } from '../components/layout/AppHeader';
+import { useBackNavigation } from '../hooks/useBackNavigation';
 import { listUserAnnouncements } from '../api/announcements';
 import { formatAnnouncementDate } from '../utils/announcementFormat';
 import { useAnnouncementNotification } from '../context/AnnouncementNotificationContext';
@@ -10,6 +11,7 @@ import type { AnnouncementUserItemResponse } from '../types';
 
 export const AnnouncementsPage: React.FC = () => {
   const navigate = useNavigate();
+  const handleBack = useBackNavigation('/groups');
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { refreshUnreadDot } = useAnnouncementNotification();
   const [announcements, setAnnouncements] = useState<AnnouncementUserItemResponse[]>([]);
@@ -46,7 +48,7 @@ export const AnnouncementsPage: React.FC = () => {
       <AppHeader
         variant="sub"
         title="새로운 소식"
-        onBack={() => navigate(-1)}
+        onBack={handleBack}
       />
 
       <main className="flex flex-1 flex-col px-4 pt-2 pb-12">
