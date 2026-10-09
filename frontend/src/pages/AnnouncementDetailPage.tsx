@@ -122,12 +122,13 @@ export const AnnouncementDetailPage: React.FC = () => {
             소식 상세를 불러오는 중이에요...
           </div>
         ) : (
-          <article className="flex flex-1 flex-col pt-1">
+          <article className="flex flex-1 flex-col rounded-[18px] border border-line bg-white p-5 break-words">
             {/* 상단 메타 및 제목 */}
-            <header className="mb-4">
-              <div className="mb-2 flex items-center gap-2">
+            <header className="mb-5">
+              <img src="/assets/brand/expressions/dayu-default-blue.svg" alt="" className="mb-4 size-12" />
+              <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span className="rounded bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
-                  서비스 소식
+                  데이유즈 소식
                 </span>
                 <span className="text-[12.5px] text-slate-500">
                   {formatAnnouncementDate(announcement.publishAt)}
@@ -138,7 +139,7 @@ export const AnnouncementDetailPage: React.FC = () => {
                   </span>
                 )}
               </div>
-              <h1 className="text-[21px] font-extrabold tracking-tight text-slate-900 leading-snug">
+              <h1 className="text-title-lg font-extrabold tracking-tight text-slate-900 leading-snug">
                 {announcement.title}
               </h1>
             </header>
@@ -154,11 +155,11 @@ export const AnnouncementDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* 핵심 요약 */}
+            {/* 한눈에 보기 */}
             {announcement.summary && (
-              <div className="mb-5 rounded-[16px] border border-blue-100 bg-blue-50/60 p-4">
-                <h2 className="mb-1 text-[11.5px] font-bold tracking-tight text-blue-800">
-                  핵심 요약
+              <div className="mb-5 rounded-2xl bg-primary-subtle p-4">
+                <h2 className="mb-2 text-label font-bold tracking-tight text-blue-800">
+                  한눈에 보기
                 </h2>
                 <p className="text-[14px] font-medium text-slate-700 leading-relaxed">
                   {announcement.summary}
@@ -167,17 +168,17 @@ export const AnnouncementDetailPage: React.FC = () => {
             )}
 
             {/* 제한된 서식 본문 */}
-            <div className="flex-1 border-t border-slate-200/70 pt-5 text-slate-800">
+            <div className="flex-1 pt-1 text-ink">
               <AnnouncementBodyRenderer body={announcement.body} />
             </div>
 
             {/* 하단 고정 실행 버튼 (CTA) */}
             {announcement.ctaLabel && (
-              <div className="sticky bottom-4 z-10 mt-8 pt-3 bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent">
+              <div className="mt-6 border-t border-line pt-5">
                 <Button
                   type="button"
                   size="lg"
-                  className="w-full focus-ring shadow-md font-bold"
+                  className="w-full focus-ring !whitespace-normal font-bold"
                   onClick={handleCtaClick}
                 >
                   <span>{announcement.ctaLabel}</span>

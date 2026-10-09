@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Megaphone, ChevronRight, RefreshCw } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Megaphone, RefreshCw } from 'lucide-react';
 import { AppHeader } from '../components/layout/AppHeader';
 import { useBackNavigation } from '../hooks/useBackNavigation';
 import { listUserAnnouncements } from '../api/announcements';
-import { formatAnnouncementDate } from '../utils/announcementFormat';
+import { AnnouncementListCard } from '../components/announcement/AnnouncementListCard';
 import { useAnnouncementNotification } from '../context/AnnouncementNotificationContext';
 import { useAuth } from '../context/AuthContext';
 import type { AnnouncementUserItemResponse } from '../types';
@@ -52,6 +52,10 @@ export const AnnouncementsPage: React.FC = () => {
       />
 
       <main className="flex flex-1 flex-col px-4 pt-2 pb-12">
+        <div className="mb-5 flex items-center gap-3 rounded-2xl bg-primary-subtle p-4">
+          <img src="/assets/brand/expressions/dayu-default-blue.svg" alt="" className="size-12 shrink-0" />
+          <div><h1 className="text-title-sm font-bold text-ink">데이유즈의 작은 변화</h1><p className="mt-1 text-caption text-ink-secondary">새로운 기능과 알아두면 좋은 소식을 모았어요.</p></div>
+        </div>
         {error ? (
           <div className="mt-4 flex items-center justify-between rounded-[18px] border border-red-200 bg-red-50 p-4 text-[13px] text-red-700">
             <span>{error}</span>
@@ -81,59 +85,13 @@ export const AnnouncementsPage: React.FC = () => {
         ) : (
           <div className="space-y-3 pt-1">
             {announcements.map((item) => (
-              <button
-                type="button"
+              <Link
                 key={item.id}
-                onClick={() => navigate(`/announcements/${item.id}`)}
-                className={`group w-full text-left focus-ring rounded-[18px] border p-4 transition-all ${
-                  item.isRead
-                    ? 'border-slate-200 bg-white/80 opacity-90'
-                    : 'border-blue-200/80 bg-white shadow-2xs hover:border-blue-300'
-                }`}
+                to={`/announcements/${item.id}`}
+                className="group block rounded-[18px] text-left focus-ring"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1.5 flex items-center gap-2">
-                      {/* 색상 이외의 수단(텍스트 배지 및 스크린리더 레이블)으로 읽음/안읽음 구분 준수 */}
-                      {!item.isRead ? (
-                        <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[10.5px] font-bold text-blue-700">
-                          <span className="size-1.5 rounded-full bg-blue-600" aria-hidden="true" />
-                          새 소식
-                        </span>
-                      ) : (
-                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10.5px] font-semibold text-slate-500">
-                          읽음
-                        </span>
-                      )}
-                      <span className="text-[12px] text-slate-500">
-                        {formatAnnouncementDate(item.publishAt)}
-                      </span>
-                    </div>
-
-                    <h3 className={`text-[15.5px] tracking-tight leading-snug line-clamp-1 ${
-                      item.isRead ? 'font-semibold text-slate-700' : 'font-extrabold text-slate-900'
-                    }`}>
-                      {item.title}
-                    </h3>
-                    <p className="mt-1 text-[13px] text-slate-600 line-clamp-2 leading-relaxed">
-                      {item.summary}
-                    </p>
-                  </div>
-
-                  {item.imageUrl && (
-                    <div className="size-16 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
-                      <img
-                        src={item.imageUrl}
-                        alt={item.imageAlt || ''}
-                        className="size-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
-
-                  <ChevronRight className="size-4 shrink-0 self-center text-slate-400 transition-transform group-hover:translate-x-0.5" />
-                </div>
-              </button>
+                <AnnouncementListCard {...item} />
+              </Link>
             ))}
           </div>
         )}
