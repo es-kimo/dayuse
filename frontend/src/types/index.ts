@@ -159,7 +159,8 @@ export interface JoinPreviewResponse {
   redayRuleDescription?: string | null;
 }
 
-export type ChallengeDetail = {
+/** 챌린지 상세 응답에서 상태와 무관한 필드 */
+export interface ChallengeDetailBase {
   id: number;
   groupId: number;
   groupName: string;
@@ -192,18 +193,40 @@ export type ChallengeDetail = {
   abortReason?: string | null;
   participants: ChallengeParticipant[];
   abortedByNickname?: string | null;
-} & (
-  | {
-      status: Exclude<ChallengeStatus, "ABORTED">;
-      abortedAt?: null;
-      abortedBy?: null;
-    }
-  | {
-      status: "ABORTED";
-      abortedAt: string;
-      abortedBy: number;
-    }
-);
+}
+
+/** 서버가 약속한 챌린지 상세 응답. ABORTED면 중단 시각과 중단자가 반드시 있다. */
+export type ChallengeDetailResponse = ChallengeDetailBase &
+  (
+    | {
+        status: Exclude<ChallengeStatus, "ABORTED">;
+        abortedAt?: null;
+        abortedBy?: null;
+      }
+    | {
+        status: "ABORTED";
+        abortedAt: string;
+        abortedBy: number;
+      }
+  );
+
+/**
+ * 화면이 쓰는 챌린지 상세. 서버가 계약을 어겨 중단 시각·중단자가 빠진 응답도 표시할 수 있도록
+ * ABORTED의 abortedAt·abortedBy는 null을 허용한다. 위반 여부는 API 경계에서 확인·보고한다.
+ */
+export type ChallengeDetail = ChallengeDetailBase &
+  (
+    | {
+        status: Exclude<ChallengeStatus, "ABORTED">;
+        abortedAt?: null;
+        abortedBy?: null;
+      }
+    | {
+        status: "ABORTED";
+        abortedAt: string | null;
+        abortedBy: number | null;
+      }
+  );
 
 export interface AbortChallengePayload {
   reason?: string;
