@@ -58,7 +58,15 @@ const NAV_ITEMS = [
   { key: "me", label: "내 정보", to: "/profile", Icon: UserRound },
 ] as const;
 
-export function ScreenNav({ active, pending = 0 }: { active: "today" | "groups" | "me"; pending?: number }) {
+export function ScreenNav({
+  active,
+  pending = 0,
+  announcementDot = false,
+}: {
+  active: "today" | "groups" | "me";
+  pending?: number;
+  announcementDot?: boolean;
+}) {
   const navigate = useNavigate();
   return (
     <nav
@@ -76,7 +84,18 @@ export function ScreenNav({ active, pending = 0 }: { active: "today" | "groups" 
               on ? "text-slate-800" : "text-slate-400 hover:text-slate-600"
             }`}
           >
-            <Icon className={`size-[22px] ${on ? "text-blue-600" : ""}`} />
+            <div className="relative">
+              <Icon className={`size-[22px] ${on ? "text-blue-600" : ""}`} />
+              {key === "me" && announcementDot && (
+                <>
+                  <span
+                    className="absolute -top-0.5 -right-0.5 size-2 rounded-full border border-white bg-red-500"
+                    aria-hidden="true"
+                  />
+                  <span className="sr-only">새로운 소식 있음</span>
+                </>
+              )}
+            </div>
             <span>{label}</span>
             {key === "today" && pending > 0 && (
               <span className="absolute top-1 left-1/2 grid h-4 min-w-4 place-items-center rounded-lg bg-blue-600 px-1 text-[10px] leading-4 font-bold text-white">

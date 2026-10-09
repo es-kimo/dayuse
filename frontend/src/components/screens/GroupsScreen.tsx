@@ -6,7 +6,9 @@ import { challengesApi } from "../../api/challenges";
 import { todayApi } from "../../api/today";
 import type { GroupSummary, GroupDetail, ChallengeSummary, TodayAction } from "../../types";
 import { Screen, ScreenAvatar, ScreenNav, screenAssets } from "./Screen";
-import { AppHeader } from "../layout/AppHeader";
+import { AppHeader, HeaderIconButton } from "../layout/AppHeader";
+import { Megaphone } from "lucide-react";
+import { useAnnouncementNotification } from "../../context/AnnouncementNotificationContext";
 import { Button, Card, Chip, GroupIcon, RowText, Segmented, TextField } from "../dayu/ui";
 
 type Details = { group?: GroupDetail; challenges?: ChallengeSummary[] };
@@ -78,6 +80,7 @@ export function GroupsScreen({
     </form>
   );
 
+  const { hasUnread } = useAnnouncementNotification();
   const empty = !loading && !error && groups.length === 0;
 
   return (
@@ -86,12 +89,22 @@ export function GroupsScreen({
         variant="main"
         title="내 모임"
         rightAction={
-          !empty ? (
-            <Button size="sm" onClick={() => navigate("/groups/new")}>
-              <Plus className="size-4" />
-              만들기
-            </Button>
-          ) : undefined
+          <div className="flex items-center gap-1">
+            <HeaderIconButton
+              onClick={() => navigate('/announcements')}
+              aria-label="새로운 소식"
+              dot={hasUnread}
+              dotLabel="새로운 소식 있음"
+            >
+              <Megaphone className="size-[20px]" />
+            </HeaderIconButton>
+            {!empty && (
+              <Button size="sm" onClick={() => navigate("/groups/new")}>
+                <Plus className="size-4" />
+                만들기
+              </Button>
+            )}
+          </div>
         }
       />
       <main
@@ -238,7 +251,7 @@ export function GroupsScreen({
           </>
         )}
       </main>
-      <ScreenNav active="groups" pending={pending} />
+      <ScreenNav active="groups" pending={pending} announcementDot={hasUnread} />
     </Screen>
   );
 }

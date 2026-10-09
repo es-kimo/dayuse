@@ -78,14 +78,22 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
 /** 헤더 우측의 정사각 아이콘 버튼(40px, 둥글기 12) */
 export const HeaderIconButton: React.FC<
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { dot?: boolean }
-> = ({ dot = false, className = "", children, ...p }) => (
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { dot?: boolean; dotLabel?: string }
+> = ({ dot = false, dotLabel = "새로운 소식 있음", className = "", children, ...p }) => (
   <button
     type="button"
     {...p}
     className={`relative grid size-10 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100 ${className}`}
   >
     {children}
-    {dot && <span className="absolute top-[9px] right-[9px] size-[7px] rounded-full border-[1.5px] border-white bg-red-500" />}
+    {dot && (
+      <>
+        <span
+          className="absolute top-[9px] right-[9px] size-[7px] rounded-full border-[1.5px] border-white bg-red-500"
+          aria-hidden="true"
+        />
+        <span className="sr-only">{dotLabel}</span>
+      </>
+    )}
   </button>
 );
