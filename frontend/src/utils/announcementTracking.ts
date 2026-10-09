@@ -28,11 +28,19 @@ export function trackAnnouncementImpression(
   placement?: string | null,
   featureKey?: string | null
 ): boolean {
-  // TODO [사용자 미션 1]: 동일 화면 방문 내 중복 노출 기록 방지 및 announcement_impression 발화
-  // 1. `getImpressionKey(announcementId, placement)`를 생성합니다.
-  // 2. 이미 `recordedImpressions`에 존재하는 키라면 false를 반환합니다.
-  // 3. 존재하지 않는다면 세트에 키를 추가하고 `track('announcement_impression', ...)`을 발화한 뒤 true를 반환합니다.
-  return false;
+  const key = getImpressionKey(announcementId, placement);
+  if (recordedImpressions.has(key)) {
+    return false;
+  }
+  recordedImpressions.add(key);
+
+  track('announcement_impression', {
+    announcementId,
+    placement: placement ?? null,
+    featureKey: featureKey ?? null,
+  });
+
+  return true;
 }
 
 /**
