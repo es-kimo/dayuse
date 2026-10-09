@@ -191,7 +191,7 @@ export type ChallengeDetail = {
   canAbort?: boolean;
   abortReason?: string | null;
   participants: ChallengeParticipant[];
-  abortedByNickName?: string | null;
+  abortedByNickname?: string | null;
 } & (
   | {
       status: Exclude<ChallengeStatus, "ABORTED">;
