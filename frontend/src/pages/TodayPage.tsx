@@ -7,15 +7,35 @@ import { Lightbox } from '../components/ui/Lightbox';
 import { todayApi } from '../api/today';
 import type { TodayAction } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useVerificationDraft } from '../context/VerificationDraftContext';
 
 export const TodayPage: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { draft } = useVerificationDraft();
   const [actions, setActions] = useState<TodayAction[]>([]);
   const [loadError, setLoadError] = useState('');
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedAction, setSelectedAction] = useState<TodayAction | null>(null);
   const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
+
+  // 이전에 저장된 드래프트가 있다면 모달 자동 복원
+  useEffect(() => {
+    if (draft && !selectedAction) {
+      setSelectedAction({
+        challengeId: draft.challengeId,
+        challengeTitle: draft.challengeTitle,
+        verificationCriteria: draft.verificationCriteria || '',
+        groupId: draft.groupId || 0,
+        groupName: '',
+        startDate: '',
+        endDate: '',
+        streakDays: 0,
+        isCompletedToday: false,
+        canVerify: true,
+      });
+    }
+  }, [draft]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {

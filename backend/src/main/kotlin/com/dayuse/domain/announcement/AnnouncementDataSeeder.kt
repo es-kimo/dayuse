@@ -74,7 +74,8 @@ class AnnouncementDataSeeder(
 
     companion object {
         val DEFAULT_ANNOUNCEMENTS: List<AnnouncementSeedItem> = listOf(
-            // 1. 클립보드 이미지 붙여넣기 안내 (진행 중인 활성 공지, 홈 및 인증 화면 노출)
+            // 1. 클립보드 이미지 붙여넣기 안내 (진행 중인 활성 공지, 인증 화면 인라인 노출)
+            // 인증 작성 화면 내에서 제공되는 사용 팁이므로 순환 이동 CTA 없이 안내 자체로 완결
             AnnouncementSeedItem(
                 upsertRequest = AnnouncementUpsertRequest(
                     title = "인증 화면 이미지 바로 붙여넣기 지원",
@@ -94,10 +95,10 @@ class AnnouncementDataSeeder(
                     """.trimIndent(),
                     imageUrl = "/assets/announcements/clipboard-paste-guide.png",
                     imageAlt = "클립보드 이미지 붙여넣기 안내 일러스트",
-                    ctaLabel = "인증하러 가기",
-                    ctaTarget = AnnouncementActionTarget.CERT_CREATE,
+                    ctaLabel = null,
+                    ctaTarget = null,
                     placement = AnnouncementPlacement.CERT_CREATE,
-                    homeVisible = true
+                    homeVisible = false
                 ),
                 autoPublish = true,
                 daysAgo = 1,
@@ -105,6 +106,7 @@ class AnnouncementDataSeeder(
             ),
 
             // 2. 리데이(스트릭 복구권) 제도 안내 (진행 중인 홈 공지)
+            // 독립된 리데이 페이지가 없고 결석 기록이 있을 때 모임 상세에 나타나므로, 혼란스러운 링크 대신 안내 정보 제공 위주로 구성
             AnnouncementSeedItem(
                 upsertRequest = AnnouncementUpsertRequest(
                     title = "아쉽게 놓친 스트릭, '리데이'로 지켜보세요",
@@ -117,12 +119,12 @@ class AnnouncementDataSeeder(
 ### 리데이 활용 팁
 - 당일 자정 전까지 리데이 티켓을 사용해 어제 날짜의 인증 기록을 복구할 수 있어요.
 - 모임원들과 함께 달성률을 유지하고 페널티 정산을 방어하세요.
-- 티켓 발급 내역 및 보유 현황은 리데이 내역 화면에서 언제든 확인할 수 있습니다.
+- 놓친 기록이 있는 경우 각 모임 홈 상단에서 바로 리데이를 사용할 수 있습니다.
                     """.trimIndent(),
                     imageUrl = "/assets/announcements/reday-ticket-guide.png",
                     imageAlt = "리데이 티켓 사용 안내 이미지",
-                    ctaLabel = "리데이 내역 확인",
-                    ctaTarget = AnnouncementActionTarget.REDAY_HISTORY,
+                    ctaLabel = null,
+                    ctaTarget = null,
                     placement = null,
                     homeVisible = true
                 ),

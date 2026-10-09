@@ -6,10 +6,12 @@ import { useBackNavigation } from '../hooks/useBackNavigation';
 import { AnnouncementBodyRenderer } from '../components/announcement/AnnouncementBodyRenderer';
 import { AnnouncementImage } from '../components/announcement/AnnouncementImage';
 import { Button } from '../components/dayu/ui';
-import { getUserAnnouncementDetail, markAnnouncementAsRead } from '../api/announcements';
+import { getUserAnnouncementDetail } from '../api/announcements';
 import { formatAnnouncementDate, formatAnnouncementUpdatedTime } from '../utils/announcementFormat';
 import { useAnnouncementNotification } from '../context/AnnouncementNotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { executeAnnouncementCta } from '../utils/announcementCtaHandler';
 import type { AnnouncementUserDetailResponse } from '../types';
 
 export const AnnouncementDetailPage: React.FC = () => {
@@ -18,6 +20,7 @@ export const AnnouncementDetailPage: React.FC = () => {
   const handleBack = useBackNavigation('/announcements');
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { refreshUnreadDot } = useAnnouncementNotification();
+  const { showToast } = useToast();
 
   const [announcement, setAnnouncement] = useState<AnnouncementUserDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,15 +51,6 @@ export const AnnouncementDetailPage: React.FC = () => {
 
       // 상세 진입 성공 시 미확인 점 갱신
       void refreshUnreadDot();
-
-      // 만에 하나 읽음 처리가 안 되어 있다면 보조 호출 (실패하더라도 화면 열람은 차단하지 않음)
-      if (!data.isRead) {
-        markAnnouncementAsRead(targetId)
-          .then(() => refreshUnreadDot())
-          .catch(() => {
-            // 보조 읽음 처리 실패는 무시
-          });
-      }
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 404 || status === 403) {
@@ -71,11 +65,14 @@ export const AnnouncementDetailPage: React.FC = () => {
   };
 
   const handleCtaClick = () => {
-    if (!announcement?.ctaPath) {
-      navigate('/groups');
-      return;
-    }
-    navigate(announcement.ctaPath);
+    if (!announcement) return;
+    void executeAnnouncementCta({
+      target: announcement.ctaTarget,
+      announcementId: announcement.id,
+      navigate,
+      showToast,
+      onRefreshUnread: refreshUnreadDot,
+    });
   };
 
   return (

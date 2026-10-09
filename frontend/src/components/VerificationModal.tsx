@@ -1,3 +1,4 @@
+import { NoticeTransition } from './announcement/NoticeTransition';
 import { Camera as ScreenCamera, ImageIcon as ScreenImageIcon, Clipboard as ScreenClipboard, X as ScreenX } from './screens/ScreenIcons';
 import React, { useState, useRef, useEffect } from 'react';
 import { verificationsApi } from '../api/verifications';
@@ -30,6 +31,12 @@ import { Button } from './dayu/ui';
 import { IosInstallGuideModal } from './IosInstallGuideModal';
 import { isStandalone, isIos } from '../utils/webPush';
 import { logPwaImpression, logPwaGuideOpen } from '../utils/pwaAnalytics';
+import { useVerificationDraft } from '../context/VerificationDraftContext';
+import { usePlacementNotice } from '../hooks/usePlacementNotice';
+import { InlineAnnouncementCard } from './announcement/InlineAnnouncementCard';
+import { executeAnnouncementCta } from '../utils/announcementCtaHandler';
+import { useToast } from '../context/ToastContext';
+import { useNavigate } from 'react-router-dom';
 
 interface VerificationModalProps {
   action:
@@ -65,10 +72,19 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
    */
   useTrackOnce('certification_started', certContext);
 
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const { draft, saveDraft, clearDraft, hasDraftFor } = useVerificationDraft();
+  const { notice: inlineNotice, dismiss: dismissInlineNotice } = usePlacementNotice('CERT_CREATE');
+
+  // 드래프트 복원 여부 확인
+  const isDraftMatch = hasDraftFor(action.challengeId, recordId);
+  const initialDraft = isDraftMatch ? draft : null;
+
+  const [file, setFile] = useState<File | null>(() => initialDraft?.file ?? null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(() => initialDraft?.previewUrl ?? null);
   const [pendingReplaceFile, setPendingReplaceFile] = useState<File | null>(null);
-  const [comment, setComment] = useState<string>('');
+  const [comment, setComment] = useState<string>(() => initialDraft?.comment ?? '');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [canRetry, setCanRetry] = useState<boolean>(false);
@@ -80,6 +96,45 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
    */
   const [open, setOpen] = useState<boolean>(true);
   const requestClose = () => setOpen(false);
+
+  // 인라인 공지 '자세히 보기' 이동 시 현재 입력 내용과 첨부 파일 보존 후 이동
+  const handleInlineNoticeDetail = () => {
+    if (!inlineNotice) return;
+    saveDraft({
+      challengeId: action.challengeId,
+      challengeTitle: action.challengeTitle,
+      verificationCriteria: action.verificationCriteria,
+      groupId: action.groupId,
+      recordId,
+      targetDate,
+      comment,
+      file,
+      previewUrl,
+    });
+    navigate(`/announcements/${inlineNotice.id}`);
+  };
+
+  const handleInlineNoticeCta = () => {
+    if (!inlineNotice) return;
+    saveDraft({
+      challengeId: action.challengeId,
+      challengeTitle: action.challengeTitle,
+      verificationCriteria: action.verificationCriteria,
+      groupId: action.groupId,
+      recordId,
+      targetDate,
+      comment,
+      file,
+      previewUrl,
+    });
+    void executeAnnouncementCta({
+      target: inlineNotice.ctaTarget,
+      announcementId: inlineNotice.id,
+      navigate,
+      showToast,
+      activeGroupId: action.groupId,
+    });
+  };
   const [createdVerification, setCreatedVerification] = useState<VerificationDetail | null>(null);
   const [postSuccessAction, setPostSuccessAction] = useState<'success' | 'share' | 'install_guide' | 'reday'>('success');
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
@@ -230,6 +285,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       }
 
       setCreatedVerification(savedVerification);
+      clearDraft();
       // 인증 저장 API가 실제로 성공한 뒤에만 completed를 기록한다(failed와 배타적).
       track('certification_completed', {
         ...certContext,
@@ -419,10 +475,13 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       disablePointerDismissal={isSubmitting}
       onOpenChange={setOpen}
       onOpenChangeComplete={(isOpen) => {
-        if (!isOpen) onClose();
+        if (!isOpen) {
+          clearDraft();
+          onClose();
+        }
       }}
       backdropClassName="bg-slate-900/45"
-      className="bg-white w-full max-w-app rounded-t-[26px] px-5 pt-2.5 pb-5 space-y-3.5 max-h-[92vh] overflow-y-auto"
+      className="bg-white w-full max-w-app rounded-t-[26px] px-5 pt-2.5 pb-5 flex flex-col gap-3.5 [&>*]:shrink-0 max-h-[92vh] overflow-y-auto"
     >
       <>
         <div className="w-10 h-[5px] rounded-[2.5px] bg-slate-300 mx-auto" aria-hidden="true" />
@@ -443,6 +502,18 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             <ScreenX className="size-[22px]" />
           </ModalClose>
         </div>
+
+        <NoticeTransition noticeKey={`announcement:${inlineNotice?.id ?? 'empty'}`}>
+          {inlineNotice && (
+            <InlineAnnouncementCard
+              announcement={inlineNotice}
+              onDismiss={dismissInlineNotice}
+              onDetail={handleInlineNoticeDetail}
+              onCtaClick={handleInlineNoticeCta}
+            />
+          )}
+        </NoticeTransition>
+
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="rounded-xl bg-blue-50 px-3 py-2.5 text-[13px] leading-[1.5] text-slate-600">
             <strong className="mr-1.5 font-bold text-slate-800">인증 기준</strong>

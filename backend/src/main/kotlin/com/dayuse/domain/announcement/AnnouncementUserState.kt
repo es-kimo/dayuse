@@ -39,9 +39,7 @@ import java.time.LocalDateTime
     ]
 )
 class AnnouncementUserState(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0L,
+    id: Long = 0L,
 
     @Column(
         name = "user_id",
@@ -76,6 +74,11 @@ class AnnouncementUserState(
     )
     var updatedAt: LocalDateTime = createdAt
 ) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = id
+        protected set
+
 
     val isRead: Boolean
         get() = readAt != null
