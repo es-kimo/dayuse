@@ -79,9 +79,9 @@ export interface ChallengePeriodInterval {
   completedCount: number;
   isAchieved: boolean;
   settlementStatus?: PeriodSettlementStatus | null;
-  missedCount?: number;
-  penaltyAmountPerMiss?: number;
-  totalPenaltyAmount?: number;
+  missedCount?: number | null;
+  penaltyAmountPerMiss?: number | null;
+  totalPenaltyAmount?: number | null;
   isSettled?: boolean;
 }
 
