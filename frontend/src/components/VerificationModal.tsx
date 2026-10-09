@@ -481,7 +481,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         }
       }}
       backdropClassName="bg-slate-900/45"
-      className="bg-white w-full max-w-app rounded-t-[26px] px-5 pt-2.5 pb-5 space-y-3.5 max-h-[92vh] overflow-y-auto"
+      className="bg-white w-full max-w-app rounded-t-[26px] px-5 pt-2.5 pb-5 flex flex-col gap-3.5 [&>*]:shrink-0 max-h-[92vh] overflow-y-auto"
     >
       <>
         <div className="w-10 h-[5px] rounded-[2.5px] bg-slate-300 mx-auto" aria-hidden="true" />

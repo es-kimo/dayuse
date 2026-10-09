@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, X } from 'lucide-react';
+import { Button } from '../dayu/ui';
 import type { AnnouncementUserItemResponse } from '../../types';
 
 interface InlineAnnouncementCardProps {
@@ -10,66 +11,40 @@ interface InlineAnnouncementCardProps {
 }
 
 export const InlineAnnouncementCard: React.FC<InlineAnnouncementCardProps> = ({
-  announcement,
-  onDismiss,
-  onDetail,
-  onCtaClick,
-}) => {
-  return (
-    <div
-      className="relative flex items-start gap-3 rounded-2xl border border-blue-200/80 bg-blue-50/70 p-3.5 text-slate-800"
-      aria-labelledby={`inline-notice-title-${announcement.id}`}
-    >
-      <div className="grid size-8 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-2xs">
-        <img
-          src="/assets/brand/expressions/dayu-default-blue.svg"
-          alt=""
-          className="size-5 brightness-0 invert"
-        />
+  announcement, onDismiss, onDetail, onCtaClick,
+}) => (
+  <aside
+    className="relative rounded-[18px] border border-primary/15 bg-primary-subtle p-4 text-ink"
+    aria-labelledby={`inline-notice-title-${announcement.id}`}
+  >
+    <div className="flex items-start gap-3 pr-7">
+      <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-white">
+        <img src="/assets/brand/expressions/dayu-default-blue.svg" alt="" className="size-7" />
       </div>
-
-      <div className="min-w-0 flex-1 pr-6">
-        <h4
-          id={`inline-notice-title-${announcement.id}`}
-          className="text-[13.5px] font-bold text-slate-900 leading-snug"
-        >
+      <div className="min-w-0 flex-1">
+        <h4 id={`inline-notice-title-${announcement.id}`} className="break-words text-body-sm font-bold leading-snug">
           {announcement.title}
         </h4>
-        <p className="mt-0.5 text-[12px] leading-relaxed text-slate-600 line-clamp-2">
+        <p className="mt-1.5 break-words text-caption leading-relaxed text-ink-secondary">
           {announcement.summary}
         </p>
-
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={onDetail}
-            className="inline-flex items-center gap-1 text-[11.5px] font-bold text-blue-700 hover:underline focus:outline-none"
-          >
-            자세히 보기
-            <ArrowRight className="size-3" />
-          </button>
-
-          {announcement.ctaLabel && (
-            <button
-              type="button"
-              onClick={onCtaClick}
-              className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-bold text-white shadow-2xs hover:bg-blue-700 focus:outline-none"
-            >
-              <span>{announcement.ctaLabel}</span>
-              <ArrowRight className="size-3" />
-            </button>
-          )}
-        </div>
       </div>
-
-      <button
-        type="button"
-        onClick={onDismiss}
-        className="absolute top-2.5 right-2.5 grid size-6 cursor-pointer place-items-center rounded-lg text-slate-400 transition-colors hover:bg-blue-100/70 hover:text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        aria-label="안내 닫기"
-      >
-        <X className="size-3.5" />
-      </button>
     </div>
-  );
-};
+
+    <div className="mt-4 flex flex-wrap gap-2 border-t border-primary/10 pt-3">
+      <Button type="button" variant="line" onClick={onDetail} className="min-w-32 flex-1 focus-ring !whitespace-normal">
+        자세히 보기
+      </Button>
+      {announcement.ctaLabel && (
+        <Button type="button" onClick={onCtaClick} className="min-w-32 flex-1 focus-ring !whitespace-normal">
+          <span className="min-w-0 break-words">{announcement.ctaLabel}</span>
+          <ArrowRight aria-hidden className="size-4 shrink-0" />
+        </Button>
+      )}
+    </div>
+
+    <button type="button" onClick={onDismiss} className="absolute right-1 top-1 grid size-11 place-items-center rounded-xl text-ink-muted transition-colors hover:bg-primary-muted focus-ring" aria-label="안내 닫기">
+      <X aria-hidden className="size-4" />
+    </button>
+  </aside>
+);
