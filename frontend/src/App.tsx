@@ -26,6 +26,8 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { PublicShareLandingPage } from "./pages/PublicShareLandingPage";
 import { TermsPage } from "./pages/TermsPage";
 import { TodayPage } from "./pages/TodayPage";
+import { AdminAnnouncementsPage } from "./pages/AdminAnnouncementsPage";
+import { AdminAnnouncementEditPage } from "./pages/AdminAnnouncementEditPage";
 import { preloadKakao } from "./utils/kakao";
 import { initPwaInstallTracking } from "./utils/pwaAnalytics";
 import { registerServiceWorker } from "./utils/webPush";
@@ -70,6 +72,9 @@ export const App: React.FC = () => {
               <Route path="/me" element={<ProfilePage />} />
               <Route path="/profile/avatar" element={<AvatarCustomPage />} />
               <Route path="/me/avatar" element={<AvatarCustomPage />} />
+              <Route path="/admin/announcements" element={<AdminAnnouncementsPage />} />
+              <Route path="/admin/announcements/new" element={<AdminAnnouncementEditPage />} />
+              <Route path="/admin/announcements/:id" element={<AdminAnnouncementEditPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/guide" element={<GuidePage />} />
