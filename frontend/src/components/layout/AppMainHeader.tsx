@@ -27,7 +27,7 @@ export const AppMainHeader: React.FC<AppMainHeaderProps> = ({
       leftAction={leftAction}
       rightAction={rightAction}
       border={border}
-      className={className}
+      className={`${border ? 'border-b border-slate-200' : ''} ${className}`}
     />
   );
 };

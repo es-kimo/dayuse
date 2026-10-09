@@ -28,6 +28,9 @@ import { TermsPage } from "./pages/TermsPage";
 import { TodayPage } from "./pages/TodayPage";
 import { AdminAnnouncementsPage } from "./pages/AdminAnnouncementsPage";
 import { AdminAnnouncementEditPage } from "./pages/AdminAnnouncementEditPage";
+import { AnnouncementsPage } from "./pages/AnnouncementsPage";
+import { AnnouncementDetailPage } from "./pages/AnnouncementDetailPage";
+import { AnnouncementNotificationProvider } from "./context/AnnouncementNotificationContext";
 import { preloadKakao } from "./utils/kakao";
 import { initPwaInstallTracking } from "./utils/pwaAnalytics";
 import { registerServiceWorker } from "./utils/webPush";
@@ -50,7 +53,8 @@ export const App: React.FC = () => {
           <PageMetaTracker />
           <ScrollToTop />
           <AuthProvider>
-            <Routes>
+            <AnnouncementNotificationProvider>
+              <Routes>
               <Route path="/" element={<Navigate to="/groups" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/oauth/callback/kakao" element={<KakaoCallbackPage />} />
@@ -72,6 +76,8 @@ export const App: React.FC = () => {
               <Route path="/me" element={<ProfilePage />} />
               <Route path="/profile/avatar" element={<AvatarCustomPage />} />
               <Route path="/me/avatar" element={<AvatarCustomPage />} />
+              <Route path="/announcements" element={<AnnouncementsPage />} />
+              <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
               <Route path="/admin/announcements" element={<AdminAnnouncementsPage />} />
               <Route path="/admin/announcements/new" element={<AdminAnnouncementEditPage />} />
               <Route path="/admin/announcements/:id" element={<AdminAnnouncementEditPage />} />
@@ -82,7 +88,8 @@ export const App: React.FC = () => {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="*" element={<Navigate to="/groups" replace />} />
             </Routes>
-          </AuthProvider>
+          </AnnouncementNotificationProvider>
+        </AuthProvider>
         </BrowserRouter>
       </ToastProvider>
     </ErrorBoundary>

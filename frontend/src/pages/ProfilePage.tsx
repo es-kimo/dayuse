@@ -9,10 +9,12 @@ import { AppMainHeader } from '../components/layout/AppMainHeader';
 import { IosInstallGuideModal } from '../components/IosInstallGuideModal';
 import { isStandalone, isIos } from '../utils/webPush';
 import { logPwaImpression, logPwaGuideOpen } from '../utils/pwaAnalytics';
-import { LogOut, Check, Loader2, Info, Bell, FileText, Shield, ChevronRight, Smartphone } from 'lucide-react';
+import { useAnnouncementNotification } from '../context/AnnouncementNotificationContext';
+import { LogOut, Check, Loader2, Info, Bell, FileText, Shield, ChevronRight, Smartphone, Megaphone } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateUserNickname, logout } = useAuth();
+  const { hasUnread } = useAnnouncementNotification();
   const navigate = useNavigate();
 
   const [nickname, setNickname] = useState<string>(user?.nickname || '');
@@ -125,6 +127,33 @@ export const ProfilePage: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => navigate('/announcements')}
+            className="flex w-full cursor-pointer items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="relative grid size-9 shrink-0 place-items-center rounded-[11px] bg-sky-50 text-sky-600">
+                <Megaphone className="w-4 h-4" />
+                {hasUnread && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white bg-red-500"
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-semibold text-slate-800">새로운 소식</span>
+                {hasUnread && (
+                  <span className="rounded-full bg-red-50 px-1.5 py-0.2 text-[11px] font-bold text-red-600">
+                    N
+                  </span>
+                )}
+              </div>
+            </div>
+            <ChevronRight className="size-4 shrink-0 text-slate-400" />
+          </button>
+
+          <button
+            type="button"
             onClick={() => navigate('/settings/notifications')}
             className="flex w-full cursor-pointer items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50"
           >
@@ -195,7 +224,7 @@ export const ProfilePage: React.FC = () => {
       </main>
 
       {/* 모바일 하단 탭 바 (AppTabBar) */}
-      <ScreenNav active="me" />
+      <ScreenNav active="me" announcementDot={hasUnread} />
 
       <IosInstallGuideModal
         isOpen={showInstallGuide}

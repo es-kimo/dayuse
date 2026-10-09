@@ -3,9 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 interface BottomNavProps {
   todayBadgeCount?: number;
+  announcementDot?: boolean;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({ todayBadgeCount = 0 }) => {
+export const BottomNav: React.FC<BottomNavProps> = ({
+  todayBadgeCount = 0,
+  announcementDot = false,
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -81,24 +85,35 @@ export const BottomNav: React.FC<BottomNavProps> = ({ todayBadgeCount = 0 }) => 
       <button
         type="button"
         onClick={() => navigate('/profile')}
-        className={`flex flex-col items-center justify-center gap-0.5 py-1 text-xs font-bold transition active:scale-95 cursor-pointer ${
+        className={`flex flex-col items-center justify-center gap-0.5 py-1 text-xs font-bold transition active:scale-95 cursor-pointer relative ${
           isProfile ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
         }`}
         aria-current={isProfile ? 'page' : undefined}
       >
-        <svg
-          className={`w-[22px] h-[22px] ${isProfile ? 'text-blue-600' : 'text-slate-400'}`}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
+        <div className="relative">
+          <svg
+            className={`w-[22px] h-[22px] ${isProfile ? 'text-blue-600' : 'text-slate-400'}`}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          {announcementDot && (
+            <>
+              <span
+                className="absolute -top-0.5 -right-0.5 size-2 rounded-full border border-white bg-red-500"
+                aria-hidden="true"
+              />
+              <span className="sr-only">새로운 소식 있음</span>
+            </>
+          )}
+        </div>
         <span>내 정보</span>
       </button>
     </nav>

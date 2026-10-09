@@ -144,3 +144,41 @@ export function parseAnnouncementBlocks(rawBody: string): BlockToken[] {
 
   return blocks;
 }
+
+/**
+ * 소식 게시 날짜 포맷 (예: "2026. 10. 09.")
+ */
+export function formatAnnouncementDate(isoString?: string | null): string {
+  if (!isoString) return '';
+  const datePart = isoString.split('T')[0];
+  if (!datePart) return '';
+  const [year, month, day] = datePart.split('-');
+  if (!year || !month || !day) return datePart;
+  return `${year}. ${month}. ${day}.`;
+}
+
+/**
+ * 소식 수정 시각 포맷 (예: "2026. 10. 09. 14:30 수정됨")
+ */
+export function formatAnnouncementUpdatedTime(
+  publishAt?: string | null,
+  updatedAt?: string | null
+): string | null {
+  if (!updatedAt) return null;
+  // 게시 시각과 수정 시각이 분 단위 이상 차이나는 경우에만 수정됨 표시
+  if (publishAt) {
+    const pubTime = new Date(publishAt).getTime();
+    const updTime = new Date(updatedAt).getTime();
+    if (!isNaN(pubTime) && !isNaN(updTime) && updTime - pubTime < 60 * 1000) {
+      return null;
+    }
+  }
+
+  const [datePart, timePartRaw] = updatedAt.split('T');
+  if (!datePart) return null;
+  const [year, month, day] = datePart.split('-');
+  const timePart = timePartRaw ? timePartRaw.substring(0, 5) : '';
+  const formattedTime = timePart ? ` ${timePart}` : '';
+  return `${year}. ${month}. ${day}.${formattedTime} 수정됨`;
+}
+

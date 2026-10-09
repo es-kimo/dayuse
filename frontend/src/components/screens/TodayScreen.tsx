@@ -5,8 +5,9 @@ import type { TodayAction } from '../../types';
 import { Screen, ScreenNav, screenAssets } from './Screen';
 import { AppHeader, HeaderIconButton } from '../layout/AppHeader';
 import { Button, Card, Chip, Notice, ProgressBar } from '../dayu/ui';
-import { Smartphone, X } from 'lucide-react';
+import { Smartphone, X, Megaphone } from 'lucide-react';
 import { IosInstallGuideModal } from '../IosInstallGuideModal';
+import { useAnnouncementNotification } from '../../context/AnnouncementNotificationContext';
 import { isStandalone, isIos } from '../../utils/webPush';
 import {
   logPwaImpression,
@@ -43,6 +44,7 @@ export function TodayScreen({
   onImage: (src: string, alt: string) => void;
 }) {
   const navigate = useNavigate();
+  const { hasUnread } = useAnnouncementNotification();
   const pending = actions.filter((a) => !a.isCompletedToday);
   const completed = actions.filter((a) => a.isCompletedToday);
 
@@ -65,9 +67,19 @@ export function TodayScreen({
         leftAction={<img className="mr-1 h-[26px] w-auto" src={screenAssets.symbol} alt="데이유즈" />}
         title="오늘"
         rightAction={
-          <HeaderIconButton onClick={() => navigate('/settings/notifications')} aria-label="알림 설정">
-            <Bell className="size-[22px]" />
-          </HeaderIconButton>
+          <div className="flex items-center gap-1">
+            <HeaderIconButton
+              onClick={() => navigate('/announcements')}
+              aria-label="새로운 소식"
+              dot={hasUnread}
+              dotLabel="새로운 소식 있음"
+            >
+              <Megaphone className="size-[20px]" />
+            </HeaderIconButton>
+            <HeaderIconButton onClick={() => navigate('/settings/notifications')} aria-label="알림 설정">
+              <Bell className="size-[22px]" />
+            </HeaderIconButton>
+          </div>
         }
       />
       <main className="flex min-h-0 flex-1 flex-col gap-[14px] overflow-y-auto px-4 pt-1 pb-screen-nav">
@@ -212,7 +224,7 @@ export function TodayScreen({
           </>
         )}
       </main>
-      <ScreenNav active="today" pending={pending.length} />
+      <ScreenNav active="today" pending={pending.length} announcementDot={hasUnread} />
 
       <IosInstallGuideModal
         isOpen={showInstallGuide}

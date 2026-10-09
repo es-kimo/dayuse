@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { parseInlineTokens, parseAnnouncementBlocks } from './announcementFormat';
+import {
+  parseInlineTokens,
+  parseAnnouncementBlocks,
+  formatAnnouncementDate,
+  formatAnnouncementUpdatedTime,
+} from './announcementFormat';
 
 describe('announcementFormat', () => {
   describe('parseInlineTokens', () => {
@@ -68,6 +73,31 @@ describe('announcementFormat', () => {
     it('빈 본문은 빈 배열을 반환한다', () => {
       expect(parseAnnouncementBlocks('')).toEqual([]);
       expect(parseAnnouncementBlocks('   \n  ')).toEqual([]);
+    });
+  });
+
+  describe('formatAnnouncementDate', () => {
+    it('ISO 날짜 문자열을 "YYYY. MM. DD." 형식으로 변환한다', () => {
+      expect(formatAnnouncementDate('2026-10-09T12:00:00')).toBe('2026. 10. 09.');
+      expect(formatAnnouncementDate(null)).toBe('');
+      expect(formatAnnouncementDate(undefined)).toBe('');
+    });
+  });
+
+  describe('formatAnnouncementUpdatedTime', () => {
+    it('게시 시각 대비 수정 시각이 존재하면 "YYYY. MM. DD. HH:mm 수정됨" 문자열을 반환한다', () => {
+      const publishAt = '2026-10-09T10:00:00';
+      const updatedAt = '2026-10-09T14:30:00';
+      expect(formatAnnouncementUpdatedTime(publishAt, updatedAt)).toBe('2026. 10. 09. 14:30 수정됨');
+    });
+
+    it('게시 시각과 수정 시각이 거의 같은 경우 null을 반환한다', () => {
+      const time = '2026-10-09T10:00:00';
+      expect(formatAnnouncementUpdatedTime(time, time)).toBeNull();
+    });
+
+    it('updatedAt이 없으면 null을 반환한다', () => {
+      expect(formatAnnouncementUpdatedTime('2026-10-09T10:00:00', null)).toBeNull();
     });
   });
 });

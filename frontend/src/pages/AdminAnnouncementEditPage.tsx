@@ -275,12 +275,12 @@ export const AdminAnnouncementEditPage: React.FC = () => {
             {/* 기본 콘텐츠 */}
             <Card className="space-y-4">
               <h3 className="text-[15px] font-bold text-ink border-b border-line pb-2">
-                기본 내용
+                어떤 소식을 전할까요?
               </h3>
 
               <div>
                 <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
-                  제목 (최대 40자) *
+                  소식 제목 *
                 </label>
                 <input
                   type="text"
@@ -288,7 +288,7 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                   disabled={isEnded}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="예: 간편한 클립보드 인증 이미지 붙여넣기 기능"
+                  placeholder="예: 이제 사진을 붙여넣어 인증해요"
                   className="w-full min-h-input rounded-xl border border-line bg-white px-3.5 py-2.5 text-[14px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                 />
                 <span className="mt-1 block text-right text-[11px] text-ink-muted">
@@ -298,7 +298,7 @@ export const AdminAnnouncementEditPage: React.FC = () => {
 
               <div>
                 <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
-                  요약 (최대 100자) *
+                  한 줄 요약 *
                 </label>
                 <textarea
                   rows={2}
@@ -306,7 +306,7 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                   disabled={isEnded}
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
-                  placeholder="홈 카드 및 목록 카드에 노출되는 한두 줄 요약입니다."
+                  placeholder="예: 복사한 사진을 인증 화면에 바로 붙여넣을 수 있어요."
                   className="w-full min-h-input rounded-xl border border-line bg-white px-3.5 py-2.5 text-[13.5px] focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                 />
                 <span className="mt-1 block text-right text-[11px] text-ink-muted">
@@ -316,10 +316,10 @@ export const AdminAnnouncementEditPage: React.FC = () => {
 
               <div>
                 <label className="block text-[12.5px] font-bold text-ink-secondary mb-1">
-                  본문 (최대 5,000자, 제한된 안전 서식 지원) *
+                  자세한 내용 *
                 </label>
                 <p className="text-[11.5px] text-ink-muted mb-2">
-                  지원 서식: 소제목(##, ###), 목록(-, *), 굵게(**텍스트**), 기울임(*텍스트*). HTML은 사용할 수 없어요.
+                  소제목은 ##, 핵심 내용은 - 로 시작해 보세요. 목록은 읽기 쉬운 카드로 보여요. (최대 5,000자)
                 </p>
                 <textarea
                   rows={8}
@@ -327,7 +327,7 @@ export const AdminAnnouncementEditPage: React.FC = () => {
                   disabled={isEnded}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
-                  placeholder={`## 새로운 변화\n더욱 간편하게 사진을 붙여넣으세요.\n\n- 모바일 및 웹 지원\n- 최대 5MB 파일`}
+                  placeholder={`## 무엇이 달라졌나요?\n- 복사한 사진을 바로 붙여넣을 수 있어요\n\n## 이렇게 해보세요\n- 사진을 복사하고 인증 화면을 열어 주세요\n- 입력창에 붙여넣으면 준비 끝!`}
                   className="w-full rounded-xl border border-line px-3.5 py-2.5 text-[13px] leading-relaxed focus:border-primary focus:ring-[3px] focus:ring-primary-muted focus:outline-none"
                 />
               </div>
@@ -532,8 +532,8 @@ export const AdminAnnouncementEditPage: React.FC = () => {
         {/* 탭 2: 미리보기 (무부작용 격리) */}
         {activeTab === 'preview' && (
           <div className="space-y-5">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              <span className="text-[12px] font-bold text-ink-muted mr-2 shrink-0">
+            <div className="grid grid-cols-2 gap-2">
+              <span className="col-span-2 text-label text-ink-muted mb-1">
                 노출 화면
               </span>
               {[
@@ -558,12 +558,12 @@ export const AdminAnnouncementEditPage: React.FC = () => {
               ))}
             </div>
 
-            <div className="bg-sunken p-2 rounded-[18px] border border-line">
+            <div className="rounded-[18px]">
               <AnnouncementPreview
                 data={previewData}
                 mode={previewMode}
                 onNavigateCta={(target) => {
-                  showToast(`[미리보기 격리] CTA 클릭: ${target || '미지정'} (실제 이동 없음)`);
+                  showToast(target ? '버튼을 누르면 연결한 화면으로 이동해요. 미리보기에서는 이동하지 않아요.' : '연결할 화면을 먼저 선택해 주세요.');
                 }}
               />
             </div>
