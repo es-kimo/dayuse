@@ -31,6 +31,7 @@ import { AdminAnnouncementEditPage } from "./pages/AdminAnnouncementEditPage";
 import { AnnouncementsPage } from "./pages/AnnouncementsPage";
 import { AnnouncementDetailPage } from "./pages/AnnouncementDetailPage";
 import { AnnouncementNotificationProvider } from "./context/AnnouncementNotificationContext";
+import { VerificationDraftProvider } from "./context/VerificationDraftContext";
 import { preloadKakao } from "./utils/kakao";
 import { initPwaInstallTracking } from "./utils/pwaAnalytics";
 import { registerServiceWorker } from "./utils/webPush";
@@ -54,7 +55,8 @@ export const App: React.FC = () => {
           <ScrollToTop />
           <AuthProvider>
             <AnnouncementNotificationProvider>
-              <Routes>
+              <VerificationDraftProvider>
+                <Routes>
               <Route path="/" element={<Navigate to="/groups" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/oauth/callback/kakao" element={<KakaoCallbackPage />} />
@@ -88,7 +90,8 @@ export const App: React.FC = () => {
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="*" element={<Navigate to="/groups" replace />} />
             </Routes>
-          </AnnouncementNotificationProvider>
+          </VerificationDraftProvider>
+        </AnnouncementNotificationProvider>
         </AuthProvider>
         </BrowserRouter>
       </ToastProvider>

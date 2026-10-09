@@ -9,6 +9,10 @@ import { Screen, ScreenAvatar, ScreenNav, screenAssets } from "./Screen";
 import { AppHeader, HeaderIconButton } from "../layout/AppHeader";
 import { Megaphone } from "lucide-react";
 import { useAnnouncementNotification } from "../../context/AnnouncementNotificationContext";
+import { usePlacementNotice } from "../../hooks/usePlacementNotice";
+import { HomeAnnouncementCard } from "../announcement/HomeAnnouncementCard";
+import { executeAnnouncementCta } from "../../utils/announcementCtaHandler";
+import { useToast } from "../../context/ToastContext";
 import { Button, Card, Chip, GroupIcon, RowText, Segmented, TextField } from "../dayu/ui";
 
 type Details = { group?: GroupDetail; challenges?: ChallengeSummary[] };
@@ -80,7 +84,9 @@ export function GroupsScreen({
     </form>
   );
 
-  const { hasUnread } = useAnnouncementNotification();
+  const { hasUnread, refreshUnreadDot } = useAnnouncementNotification();
+  const { showToast } = useToast();
+  const { notice: homeNotice, dismiss: dismissHomeNotice } = usePlacementNotice('HOME');
   const empty = !loading && !error && groups.length === 0;
 
   return (
@@ -112,6 +118,23 @@ export function GroupsScreen({
           empty ? "justify-center px-6 pt-6" : "px-4 pt-1"
         }`}
       >
+        {homeNotice && (
+          <HomeAnnouncementCard
+            announcement={homeNotice}
+            onDismiss={dismissHomeNotice}
+            onDetail={() => navigate(`/announcements/${homeNotice.id}`)}
+            onCtaClick={() => {
+              void executeAnnouncementCta({
+                target: homeNotice.ctaTarget,
+                announcementId: homeNotice.id,
+                navigate,
+                showToast,
+                onRefreshUnread: refreshUnreadDot,
+                userGroupCount: groups.length,
+              });
+            }}
+          />
+        )}
         {loading ? (
           <p className="py-12 text-center text-[13px] text-slate-500" role="status">
             모임 목록을 불러오는 중...

@@ -8,6 +8,10 @@ import { Button, Card, Chip, Notice, ProgressBar } from '../dayu/ui';
 import { Smartphone, X, Megaphone } from 'lucide-react';
 import { IosInstallGuideModal } from '../IosInstallGuideModal';
 import { useAnnouncementNotification } from '../../context/AnnouncementNotificationContext';
+import { usePlacementNotice } from '../../hooks/usePlacementNotice';
+import { HomeAnnouncementCard } from '../announcement/HomeAnnouncementCard';
+import { executeAnnouncementCta } from '../../utils/announcementCtaHandler';
+import { useToast } from '../../context/ToastContext';
 import { isStandalone, isIos } from '../../utils/webPush';
 import {
   logPwaImpression,
@@ -44,7 +48,9 @@ export function TodayScreen({
   onImage: (src: string, alt: string) => void;
 }) {
   const navigate = useNavigate();
-  const { hasUnread } = useAnnouncementNotification();
+  const { hasUnread, refreshUnreadDot } = useAnnouncementNotification();
+  const { showToast } = useToast();
+  const { notice: homeNotice, dismiss: dismissHomeNotice } = usePlacementNotice('HOME');
   const pending = actions.filter((a) => !a.isCompletedToday);
   const completed = actions.filter((a) => a.isCompletedToday);
 
@@ -128,6 +134,23 @@ export function TodayScreen({
             timeZone: 'Asia/Seoul',
           })}
         </p>
+
+        {homeNotice && (
+          <HomeAnnouncementCard
+            announcement={homeNotice}
+            onDismiss={dismissHomeNotice}
+            onDetail={() => navigate(`/announcements/${homeNotice.id}`)}
+            onCtaClick={() => {
+              void executeAnnouncementCta({
+                target: homeNotice.ctaTarget,
+                announcementId: homeNotice.id,
+                navigate,
+                showToast,
+                onRefreshUnread: refreshUnreadDot,
+              });
+            }}
+          />
+        )}
 
         {loading ? (
           <p className="py-12 text-center text-[13px] text-slate-500" role="status">

@@ -10,6 +10,8 @@ import { getUserAnnouncementDetail, markAnnouncementAsRead } from '../api/announ
 import { formatAnnouncementDate, formatAnnouncementUpdatedTime } from '../utils/announcementFormat';
 import { useAnnouncementNotification } from '../context/AnnouncementNotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { executeAnnouncementCta } from '../utils/announcementCtaHandler';
 import type { AnnouncementUserDetailResponse } from '../types';
 
 export const AnnouncementDetailPage: React.FC = () => {
@@ -18,6 +20,7 @@ export const AnnouncementDetailPage: React.FC = () => {
   const handleBack = useBackNavigation('/announcements');
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { refreshUnreadDot } = useAnnouncementNotification();
+  const { showToast } = useToast();
 
   const [announcement, setAnnouncement] = useState<AnnouncementUserDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,11 +74,14 @@ export const AnnouncementDetailPage: React.FC = () => {
   };
 
   const handleCtaClick = () => {
-    if (!announcement?.ctaPath) {
-      navigate('/groups');
-      return;
-    }
-    navigate(announcement.ctaPath);
+    if (!announcement) return;
+    void executeAnnouncementCta({
+      target: announcement.ctaTarget,
+      announcementId: announcement.id,
+      navigate,
+      showToast,
+      onRefreshUnread: refreshUnreadDot,
+    });
   };
 
   return (

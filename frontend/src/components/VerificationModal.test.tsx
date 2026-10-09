@@ -1,13 +1,23 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import { VerificationModal } from './VerificationModal';
+import { ToastProvider } from '../context/ToastContext';
+import { VerificationDraftProvider } from '../context/VerificationDraftContext';
+import { AnnouncementNotificationProvider } from '../context/AnnouncementNotificationContext';
 
 const mocks = vi.hoisted(() => ({ standalone: false, success: vi.fn(), guide: vi.fn() }));
-vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ user: { nickname: '테스터' } }) }));
+vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ user: { nickname: '테스터' }, isAuthenticated: true, isLoading: false }) }));
 vi.mock('../utils/pwaAnalytics', () => ({ logPwaImpression: vi.fn(), logPwaGuideOpen: mocks.guide }));
 vi.mock('../utils/webPush', () => ({ isStandalone: () => mocks.standalone, isIos: () => false }));
 vi.mock('./ShareCardModal', () => ({ ShareCardModal: () => <div>공유 카드 화면</div> }));
 vi.mock('./IosInstallGuideModal', () => ({ IosInstallGuideModal: () => <div>설치 안내 화면</div> }));
+vi.mock('../api/announcements', () => ({
+  getUnreadDotStatus: vi.fn().mockResolvedValue({ hasUnread: false, unreadNoticeCount: 0 }),
+  getPlacementNotice: vi.fn().mockResolvedValue({ placement: 'CERT_CREATE', announcement: null }),
+  markAnnouncementAsDismissed: vi.fn().mockResolvedValue({}),
+  markAnnouncementAsRead: vi.fn().mockResolvedValue({}),
+}));
 vi.mock('../api/verifications', () => ({ verificationsApi: {
   getPresignedUrl: vi.fn().mockResolvedValue({ presignedUrl: 'https://example.com/upload', imageKey: 'image.png' }),
   uploadToS3: vi.fn().mockResolvedValue(undefined),
@@ -15,7 +25,17 @@ vi.mock('../api/verifications', () => ({ verificationsApi: {
 } }));
 
 async function completeVerification() {
-  const { container } = render(<VerificationModal action={{ challengeId: 1, challengeTitle: '매일 운동하기' }} onClose={vi.fn()} onSuccess={mocks.success} />);
+  const { container } = render(
+    <MemoryRouter>
+      <ToastProvider>
+        <AnnouncementNotificationProvider>
+          <VerificationDraftProvider>
+            <VerificationModal action={{ challengeId: 1, challengeTitle: '매일 운동하기' }} onClose={vi.fn()} onSuccess={mocks.success} />
+          </VerificationDraftProvider>
+        </AnnouncementNotificationProvider>
+      </ToastProvider>
+    </MemoryRouter>
+  );
   await screen.findByText('오늘 사진 인증');
   const input = document.querySelector('input[type="file"]')!;
   fireEvent.change(input, { target: { files: [new File(['image'], 'test.png', { type: 'image/png' })] } });
