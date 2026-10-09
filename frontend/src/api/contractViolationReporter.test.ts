@@ -72,15 +72,13 @@ describe('reportContractViolation', () => {
     expect(() => reportContractViolation(report)).not.toThrow();
   });
 
-  it('전송 수단이 reject해도 unhandled rejection을 남기지 않는다', async () => {
-    const unhandled = vi.fn();
-    process.on('unhandledRejection', unhandled);
-    setContractViolationSink(() => Promise.reject(new Error('network down')));
+  it('전송 수단이 reject해도 rejection을 처리한다', () => {
+    const rejected = Promise.reject(new Error('network down'));
+    const catchSpy = vi.spyOn(rejected, 'catch');
+    setContractViolationSink(() => rejected);
 
     reportContractViolation(report);
-    await new Promise((resolve) => setTimeout(resolve, 0));
 
-    process.off('unhandledRejection', unhandled);
-    expect(unhandled).not.toHaveBeenCalled();
+    expect(catchSpy).toHaveBeenCalledTimes(1);
   });
 });
