@@ -762,3 +762,140 @@ export interface PublicShareCardResponse {
   actualVerifierNickname?: string | null;
   createdAt: string;
 }
+
+export type AnnouncementStatus = "DRAFT" | "PUBLISHED" | "ENDED";
+
+export type AnnouncementDisplayPhase =
+  | "DRAFT"
+  | "SCHEDULED"
+  | "ACTIVE_NOTICE"
+  | "NOTICE_EXPIRED"
+  | "ENDED";
+
+export type AnnouncementPlacement = "HOME" | "CERT_CREATE";
+
+export type AnnouncementActionTarget =
+  | "HOME"
+  | "CERT_CREATE"
+  | "REDAY_HISTORY"
+  | "GROUP_CREATE"
+  | "ANNOUNCEMENT_LIST"
+  | "MY_PAGE";
+
+export type AnnouncementFeatureConditionType =
+  | "ALL_USERS"
+  | "EXPERIMENT_PARTICIPANT"
+  | "EXPERIMENT_VARIANT_B";
+
+export interface AnnouncementAdminResponse {
+  id: number;
+  title: string;
+  summary: string;
+  body: string;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  ctaLabel?: string | null;
+  ctaTarget?: AnnouncementActionTarget | null;
+  ctaPath?: string | null;
+  placement?: AnnouncementPlacement | null;
+  homeVisible: boolean;
+  featureConditionType: AnnouncementFeatureConditionType;
+  featureKey?: string | null;
+  status: AnnouncementStatus;
+  displayPhase: AnnouncementDisplayPhase;
+  publishAt?: string | null;
+  noticeEndsAt?: string | null;
+  endedAt?: string | null;
+  createdBy: number;
+  updatedBy: number;
+  publishedBy?: number | null;
+  endedBy?: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnnouncementUpsertRequest {
+  title: string;
+  summary: string;
+  body: string;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  ctaLabel?: string | null;
+  ctaTarget?: AnnouncementActionTarget | null;
+  placement?: AnnouncementPlacement | null;
+  homeVisible?: boolean;
+  featureConditionType?: AnnouncementFeatureConditionType;
+  featureKey?: string | null;
+  publishAt?: string | null;
+  noticeEndsAt?: string | null;
+}
+
+export interface AnnouncementPublishRequest {
+  publishAt?: string | null;
+  noticeEndsAt?: string | null;
+}
+
+export interface AnnouncementUserItemResponse {
+  id: number;
+  title: string;
+  summary: string;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  ctaLabel?: string | null;
+  ctaTarget?: AnnouncementActionTarget | null;
+  ctaPath?: string | null;
+  placement?: AnnouncementPlacement | null;
+  homeVisible: boolean;
+  featureKey?: string | null;
+  displayPhase: AnnouncementDisplayPhase;
+  publishAt?: string | null;
+  noticeEndsAt?: string | null;
+  updatedAt: string;
+  isRead: boolean;
+  readAt?: string | null;
+  isDismissed: boolean;
+  dismissedAt?: string | null;
+}
+
+export interface AnnouncementUserDetailResponse {
+  id: number;
+  title: string;
+  summary: string;
+  body: string;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  ctaLabel?: string | null;
+  ctaTarget?: AnnouncementActionTarget | null;
+  ctaPath?: string | null;
+  placement?: AnnouncementPlacement | null;
+  homeVisible: boolean;
+  featureKey?: string | null;
+  displayPhase: AnnouncementDisplayPhase;
+  publishAt?: string | null;
+  noticeEndsAt?: string | null;
+  updatedAt: string;
+  isRead: boolean;
+  readAt?: string | null;
+  isDismissed: boolean;
+  dismissedAt?: string | null;
+}
+
+export interface AnnouncementUserStateResponse {
+  announcementId: number;
+  userId: number;
+  isRead: boolean;
+  readAt?: string | null;
+  isDismissed: boolean;
+  dismissedAt?: string | null;
+}
+
+export interface AnnouncementUnreadDotResponse {
+  hasUnread: boolean;
+  unreadNoticeCount: number;
+}
+
+export interface AnnouncementPlacementNoticeResponse {
+  placement: AnnouncementPlacement;
+  announcement?: AnnouncementUserItemResponse | null;
+}
+
