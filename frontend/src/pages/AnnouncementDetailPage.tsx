@@ -12,6 +12,7 @@ import { useAnnouncementNotification } from '../context/AnnouncementNotification
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { executeAnnouncementCta } from '../utils/announcementCtaHandler';
+import { trackAnnouncementOpened } from '../utils/announcementTracking';
 import type { AnnouncementUserDetailResponse } from '../types';
 
 export const AnnouncementDetailPage: React.FC = () => {
@@ -49,7 +50,8 @@ export const AnnouncementDetailPage: React.FC = () => {
       const data = await getUserAnnouncementDetail(targetId, true);
       setAnnouncement(data);
 
-      // 상세 진입 성공 시 미확인 점 갱신
+      // 상세 진입 성공 시 열람 이벤트 기록 및 미확인 점 갱신 (F10)
+      trackAnnouncementOpened(data.id, data.placement, data.featureKey);
       void refreshUnreadDot();
     } catch (err: any) {
       const status = err?.response?.status;
@@ -69,6 +71,8 @@ export const AnnouncementDetailPage: React.FC = () => {
     void executeAnnouncementCta({
       target: announcement.ctaTarget,
       announcementId: announcement.id,
+      placement: announcement.placement,
+      featureKey: announcement.featureKey,
       navigate,
       showToast,
       onRefreshUnread: refreshUnreadDot,

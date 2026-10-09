@@ -32,7 +32,12 @@ export type EventName =
   | 'ad_unavailable'
   | 'reward_granted'
   | 'recovery_ticket_granted'
-  | 'recovery_ticket_used';
+  | 'recovery_ticket_used'
+  // v0.12 F10: 공지 분석 이벤트
+  | 'announcement_impression'
+  | 'announcement_opened'
+  | 'announcement_dismissed'
+  | 'announcement_cta_clicked';
 
 /**
  * 전환 및 행동 이벤트 `properties`에 연결되는 Experiment Context 구조 (v0.10 F06)
@@ -40,6 +45,17 @@ export type EventName =
 export interface ExperimentContextPayload {
   experimentKey: string;
   variant: ExperimentVariant;
+}
+
+/**
+ * 실행 버튼(CTA) 클릭으로 이어진 현재 작업에 유지되는 소식 출처 컨텍스트 (v0.12 F10)
+ */
+export interface AnnouncementAttributionContext {
+  sourceAnnouncementId: number;
+  placement?: string | null;
+  featureKey?: string | null;
+  destinationTarget?: string | null;
+  attachedAt?: string;
 }
 
 /** 백엔드 검증 기준: 값은 원시 타입(String, Number, Boolean), null 및 표준 ExperimentContextPayload만 허용 */

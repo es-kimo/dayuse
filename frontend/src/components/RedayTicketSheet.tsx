@@ -23,6 +23,7 @@ import { useExperimentExposure } from '../hooks/useExperimentExposure';
 import { shouldRecordExposure } from '../utils/experiment';
 import { REDAY_GUIDE_COPY_EXPERIMENT, resolveRedayGuideCopy } from '../constants/experiments';
 import { track } from '../utils/tracker';
+import { consumeAnnouncementAttribution } from '../utils/announcementAttribution';
 import { formatMonthDay } from '../utils/date';
 import {
   classifyAdFailure,
@@ -107,12 +108,12 @@ export const RedayTicketSheet: React.FC<RedayTicketSheetProps> = ({
       startedRef.current = true;
       track(
         'recovery_started',
-        {
+        consumeAnnouncementAttribution({
           dailyRecordId,
           challengeId: eligibility?.challengeId ?? null,
           entry,
           availableTicketCount,
-        },
+        }),
         experimentContext
       );
     },

@@ -29,7 +29,11 @@ class ProductEventTest @Autowired constructor(
             "challenge_created",
             "challenge_created_reday_allowed",
             "challenge_joined",
-            "share_clicked"
+            "share_clicked",
+            "announcement_impression",
+            "announcement_opened",
+            "announcement_dismissed",
+            "announcement_cta_clicked"
         ]
     )
     @DisplayName("표준 이벤트는 모두 유효한 이벤트 이름으로 생성 및 저장된다")

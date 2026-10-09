@@ -28,7 +28,9 @@ export function NoticeTransition({ children, noticeKey, gap = 14 }: {
     let frame = 0;
     let nextFrame = 0;
     let removal: ReturnType<typeof setTimeout> | undefined;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const reduced = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)')
+      : { matches: false };
     const synchronize = () => {
       cancelAnimationFrame(frame);
       cancelAnimationFrame(nextFrame);
@@ -63,12 +65,16 @@ export function NoticeTransition({ children, noticeKey, gap = 14 }: {
       }
     };
     synchronize();
-    reduced.addEventListener('change', synchronize);
+    if ('addEventListener' in reduced && typeof reduced.addEventListener === 'function') {
+      reduced.addEventListener('change', synchronize);
+    }
     return () => {
       cancelAnimationFrame(frame);
       cancelAnimationFrame(nextFrame);
       clearTimeout(removal);
-      reduced.removeEventListener('change', synchronize);
+      if ('removeEventListener' in reduced && typeof reduced.removeEventListener === 'function') {
+        reduced.removeEventListener('change', synchronize);
+      }
     };
   }, [children, noticeKey]);
 

@@ -129,6 +129,8 @@ export function GroupsScreen({
                 void executeAnnouncementCta({
                   target: homeNotice.ctaTarget,
                   announcementId: homeNotice.id,
+                  placement: 'HOME',
+                  featureKey: homeNotice.featureKey,
                   navigate,
                   showToast,
                   onRefreshUnread: refreshUnreadDot,

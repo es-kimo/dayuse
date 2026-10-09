@@ -36,6 +36,8 @@ describe('executeAnnouncementCta (F08)', () => {
     const success = await executeAnnouncementCta({
       target: 'HOME',
       announcementId: 10,
+      placement: 'HOME',
+      featureKey: 'reday',
       navigate,
       showToast,
       onRefreshUnread,

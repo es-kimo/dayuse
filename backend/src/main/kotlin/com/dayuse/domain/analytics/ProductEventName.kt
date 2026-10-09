@@ -64,7 +64,21 @@ enum class ProductEventName(val value: String) {
     RECOVERY_TICKET_GRANTED("recovery_ticket_granted"),
 
     /** 리데이 티켓 소비. 티켓 1장당 1회. */
-    RECOVERY_TICKET_USED("recovery_ticket_used");
+    RECOVERY_TICKET_USED("recovery_ticket_used"),
+
+    // ── v0.12 F10: 공지 분석 이벤트 ────────────────────────────────────
+
+    /** 홈 카드 또는 인라인 안내가 실제 화면에 표시될 때 기록 (동일 화면 방문 내 중복 방지). */
+    ANNOUNCEMENT_IMPRESSION("announcement_impression"),
+
+    /** 사용자가 소식 상세 콘텐츠를 정상적으로 열람했을 때 기록. */
+    ANNOUNCEMENT_OPENED("announcement_opened"),
+
+    /** 사용자가 안내를 닫았을 때 기록. */
+    ANNOUNCEMENT_DISMISSED("announcement_dismissed"),
+
+    /** 사용자가 안내 내 실행(CTA) 버튼을 눌렀을 때 기록. */
+    ANNOUNCEMENT_CTA_CLICKED("announcement_cta_clicked");
 
     companion object {
         private val SNAKE_CASE_REGEX = Regex("^[a-z][a-z0-9_]*$")

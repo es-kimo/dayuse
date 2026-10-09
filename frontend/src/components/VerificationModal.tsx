@@ -35,6 +35,7 @@ import { useVerificationDraft } from '../context/VerificationDraftContext';
 import { usePlacementNotice } from '../hooks/usePlacementNotice';
 import { InlineAnnouncementCard } from './announcement/InlineAnnouncementCard';
 import { executeAnnouncementCta } from '../utils/announcementCtaHandler';
+import { clearAnnouncementAttribution, consumeAnnouncementAttribution } from '../utils/announcementAttribution';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -130,6 +131,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
     void executeAnnouncementCta({
       target: inlineNotice.ctaTarget,
       announcementId: inlineNotice.id,
+      placement: 'CERT_CREATE',
+      featureKey: inlineNotice.featureKey,
       navigate,
       showToast,
       activeGroupId: action.groupId,
@@ -287,10 +290,11 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       setCreatedVerification(savedVerification);
       clearDraft();
       // 인증 저장 API가 실제로 성공한 뒤에만 completed를 기록한다(failed와 배타적).
-      track('certification_completed', {
+      // 소식 CTA 클릭으로 이어진 인증 성공인 경우 출처를 함께 기록하고 즉시 해제한다. (F10)
+      track('certification_completed', consumeAnnouncementAttribution({
         ...certContext,
         verificationId: savedVerification.id,
-      });
+      }));
     } catch (err: any) {
       console.error('인증 등록 실패:', err);
       const msg =
@@ -477,6 +481,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       onOpenChangeComplete={(isOpen) => {
         if (!isOpen) {
           clearDraft();
+          clearAnnouncementAttribution();
           onClose();
         }
       }}

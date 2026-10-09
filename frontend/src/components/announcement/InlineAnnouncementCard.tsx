@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ArrowRight, X } from 'lucide-react';
 import { Button } from '../dayu/ui';
 import type { AnnouncementUserItemResponse } from '../../types';
+import { trackAnnouncementImpression } from '../../utils/announcementTracking';
 
 interface InlineAnnouncementCardProps {
   announcement: AnnouncementUserItemResponse;
@@ -12,11 +13,20 @@ interface InlineAnnouncementCardProps {
 
 export const InlineAnnouncementCard: React.FC<InlineAnnouncementCardProps> = ({
   announcement, onDismiss, onDetail, onCtaClick,
-}) => (
-  <aside
-    className="relative rounded-[18px] border border-primary/15 bg-primary-subtle p-4 text-ink"
-    aria-labelledby={`inline-notice-title-${announcement.id}`}
-  >
+}) => {
+  useEffect(() => {
+    trackAnnouncementImpression(
+      announcement.id,
+      announcement.placement ?? 'CERT_CREATE',
+      announcement.featureKey
+    );
+  }, [announcement.id, announcement.placement, announcement.featureKey]);
+
+  return (
+    <aside
+      className="relative rounded-[18px] border border-primary/15 bg-primary-subtle p-4 text-ink"
+      aria-labelledby={`inline-notice-title-${announcement.id}`}
+    >
     <div className="flex items-start gap-3 pr-7">
       <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-white">
         <img src="/assets/brand/expressions/dayu-default-blue.svg" alt="" className="size-7" />
@@ -47,4 +57,5 @@ export const InlineAnnouncementCard: React.FC<InlineAnnouncementCardProps> = ({
       <X aria-hidden className="size-4" />
     </button>
   </aside>
-);
+  );
+};
