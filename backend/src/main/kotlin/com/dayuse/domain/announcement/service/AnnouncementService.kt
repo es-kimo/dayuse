@@ -55,7 +55,10 @@ class AnnouncementService(
             now = now
         )
         val saved = announcementRepository.save(announcement)
-        return AnnouncementAdminResponse.from(saved, now)
+        return AnnouncementAdminResponse.from(
+            saved,
+            now
+        )
     }
 
     @Transactional
@@ -83,7 +86,10 @@ class AnnouncementService(
             noticeEndsAt = request.noticeEndsAt ?: announcement.noticeEndsAt,
             now = now
         )
-        return AnnouncementAdminResponse.from(announcement, now)
+        return AnnouncementAdminResponse.from(
+            announcement,
+            now
+        )
     }
 
     @Transactional
@@ -100,7 +106,10 @@ class AnnouncementService(
             requestedNoticeEndsAt = request.noticeEndsAt,
             now = now
         )
-        return AnnouncementAdminResponse.from(announcement, now)
+        return AnnouncementAdminResponse.from(
+            announcement,
+            now
+        )
     }
 
     @Transactional
@@ -110,8 +119,14 @@ class AnnouncementService(
         now: LocalDateTime = DateTimeUtils.nowKst()
     ): AnnouncementAdminResponse {
         val announcement = findAnnouncementOrThrow(announcementId)
-        announcement.end(actorId = actorId, now = now)
-        return AnnouncementAdminResponse.from(announcement, now)
+        announcement.end(
+            actorId = actorId,
+            now = now
+        )
+        return AnnouncementAdminResponse.from(
+            announcement,
+            now
+        )
     }
 
     @Transactional(readOnly = true)
@@ -120,7 +135,10 @@ class AnnouncementService(
         now: LocalDateTime = DateTimeUtils.nowKst()
     ): AnnouncementAdminResponse {
         val announcement = findAnnouncementOrThrow(announcementId)
-        return AnnouncementAdminResponse.from(announcement, now)
+        return AnnouncementAdminResponse.from(
+            announcement,
+            now
+        )
     }
 
     @Transactional(readOnly = true)
@@ -128,7 +146,12 @@ class AnnouncementService(
         now: LocalDateTime = DateTimeUtils.nowKst()
     ): List<AnnouncementAdminResponse> {
         return announcementRepository.findAllByOrderByCreatedAtDescIdDesc()
-            .map { AnnouncementAdminResponse.from(it, now) }
+            .map {
+                AnnouncementAdminResponse.from(
+                    it,
+                    now
+                )
+            }
     }
 
     /**
@@ -148,14 +171,19 @@ class AnnouncementService(
         val visibleAnnouncements = findPublishedAnnouncementsSorted()
             .filter { announcement ->
                 announcement.isVisibleInListAndDetail(now) &&
-                    featureEligibilityEvaluator.isEligible(userId, announcement)
+                        featureEligibilityEvaluator.isEligible(
+                            userId,
+                            announcement
+                        )
             }
 
         if (visibleAnnouncements.isEmpty()) {
             return emptyList()
         }
 
-        val stateByAnnouncementId = loadUserStateMap(userId, visibleAnnouncements.map { it.id })
+        val stateByAnnouncementId = loadUserStateMap(
+            userId,
+            visibleAnnouncements.map { it.id })
         return visibleAnnouncements.map { announcement ->
             AnnouncementUserItemResponse.from(
                 announcement = announcement,
@@ -187,9 +215,16 @@ class AnnouncementService(
         )
 
         val userState = if (markAsReadOnOpen) {
-            upsertReadState(userId = userId, announcementId = announcement.id, now = now)
+            upsertReadState(
+                userId = userId,
+                announcementId = announcement.id,
+                now = now
+            )
         } else {
-            announcementUserStateRepository.findByUserIdAndAnnouncementId(userId, announcement.id)
+            announcementUserStateRepository.findByUserIdAndAnnouncementId(
+                userId,
+                announcement.id
+            )
         }
 
         return AnnouncementUserDetailResponse.from(
@@ -212,13 +247,34 @@ class AnnouncementService(
         userId: Long,
         now: LocalDateTime = DateTimeUtils.nowKst()
     ): AnnouncementUnreadDotResponse {
-        // TODO [사용자 미션 3-2]: 새로운 소식 진입점의 미확인 점(Dot) 표시 여부를 판정하세요.
-        // 조건:
-        // 1) findPublishedAnnouncementsSorted() 중에서 현재 안내 기간 내(isWithinActiveNoticeWindow(now))이고
-        //    featureEligibilityEvaluator.isEligible(userId, announcement)를 충족하는 후보를 추립니다.
-        // 2) loadUserStateMap(userId, ...)으로 사용자 상태를 조회한 뒤,
-        //    아직 읽지 않았고(!isRead) 닫지도 않은(!isDismissed) 소식의 개수를 세어 반환합니다.
-        return AnnouncementUnreadDotResponse(hasUnread = false, unreadNoticeCount = 0)
+        val activeCandidates = findPublishedAnnouncementsSorted().filter { announcement ->
+            announcement.isWithinActiveNoticeWindow(now) && featureEligibilityEvaluator.isEligible(
+                userId,
+                announcement
+            )
+        }
+
+        if (activeCandidates.isEmpty()) {
+            return AnnouncementUnreadDotResponse(
+                hasUnread = false,
+                unreadNoticeCount = 0
+            )
+        }
+
+        val stateByAnnouncementId = loadUserStateMap(
+            userId,
+            activeCandidates.map { it.id })
+        val unreadAndUndismissedCount = activeCandidates.count { announcement ->
+            val state = stateByAnnouncementId[announcement.id]
+            val isRead = state?.isRead ?: false
+            val isDismissed = state?.isDismissed ?: false
+            !isRead && !isDismissed
+        }
+
+        return AnnouncementUnreadDotResponse(
+            hasUnread = unreadAndUndismissedCount > 0,
+            unreadNoticeCount = unreadAndUndismissedCount
+        )
     }
 
     /**
@@ -237,14 +293,44 @@ class AnnouncementService(
         placement: AnnouncementPlacement,
         now: LocalDateTime = DateTimeUtils.nowKst()
     ): AnnouncementPlacementNoticeResponse {
-        // TODO [사용자 미션 3-3]: 요청한 화면 위치(placement)에 노출할 적격 안내 소식을 최대 1건 선택하세요.
-        // 조건:
-        // 1) findPublishedAnnouncementsSorted() (이미 publishAt DESC, id DESC 정렬됨) 중에서
-        //    announcement.isActiveForPlacement(placement, now) 및 featureEligibilityEvaluator.isEligible(userId, announcement)를 만족하는 후보를 필터링합니다.
-        // 2) 사용자 상태(loadUserStateMap)에서 미열람(!isRead) && 미닫기(!isDismissed)인 첫 번째(firstOrNull) 소식을 선택해 반환합니다.
+        val placementCandidates = findPublishedAnnouncementsSorted()
+            .filter { announcement ->
+                announcement.isActiveForPlacement(
+                    placement,
+                    now
+                ) &&
+                        featureEligibilityEvaluator.isEligible(
+                            userId,
+                            announcement
+                        )
+            }
+
+        if (placementCandidates.isEmpty()) {
+            return AnnouncementPlacementNoticeResponse(
+                placement = placement,
+                announcement = null
+            )
+        }
+        
+        val stateByAnnouncementId = loadUserStateMap(
+            userId,
+            placementCandidates.map { it.id })
+        val selected = placementCandidates.firstOrNull { announcement ->
+            val state = stateByAnnouncementId[announcement.id]
+            val isRead = state?.isRead ?: false
+            val isDismissed = state?.isDismissed ?: false
+            !isRead && !isDismissed
+        }
+
         return AnnouncementPlacementNoticeResponse(
             placement = placement,
-            announcement = null
+            announcement = selected?.let {
+                AnnouncementUserItemResponse.from(
+                    announcement = it,
+                    userState = stateByAnnouncementId[it.id],
+                    now = now
+                )
+            }
         )
     }
 
@@ -262,7 +348,11 @@ class AnnouncementService(
             announcementId = announcementId,
             now = now
         )
-        val state = upsertReadState(userId = userId, announcementId = announcement.id, now = now)
+        val state = upsertReadState(
+            userId = userId,
+            announcementId = announcement.id,
+            now = now
+        )
         return AnnouncementUserStateResponse.from(state)
     }
 
@@ -283,7 +373,11 @@ class AnnouncementService(
             announcementId = announcementId,
             now = now
         )
-        val state = upsertDismissedState(userId = userId, announcementId = announcement.id, now = now)
+        val state = upsertDismissedState(
+            userId = userId,
+            announcementId = announcement.id,
+            now = now
+        )
         return AnnouncementUserStateResponse.from(state)
     }
 
@@ -292,7 +386,10 @@ class AnnouncementService(
         announcementId: Long,
         now: LocalDateTime
     ): AnnouncementUserState {
-        val existing = announcementUserStateRepository.findByUserIdAndAnnouncementId(userId, announcementId)
+        val existing = announcementUserStateRepository.findByUserIdAndAnnouncementId(
+            userId,
+            announcementId
+        )
         if (existing != null) {
             existing.markRead(now)
             return existing
@@ -310,7 +407,10 @@ class AnnouncementService(
                 )
             )
         } catch (ex: DataIntegrityViolationException) {
-            val concurrent = announcementUserStateRepository.findByUserIdAndAnnouncementId(userId, announcementId)
+            val concurrent = announcementUserStateRepository.findByUserIdAndAnnouncementId(
+                userId,
+                announcementId
+            )
                 ?: throw ex
             concurrent.markRead(now)
             concurrent
@@ -322,7 +422,10 @@ class AnnouncementService(
         announcementId: Long,
         now: LocalDateTime
     ): AnnouncementUserState {
-        val existing = announcementUserStateRepository.findByUserIdAndAnnouncementId(userId, announcementId)
+        val existing = announcementUserStateRepository.findByUserIdAndAnnouncementId(
+            userId,
+            announcementId
+        )
         if (existing != null) {
             existing.markDismissed(now)
             return existing
@@ -340,7 +443,10 @@ class AnnouncementService(
                 )
             )
         } catch (ex: DataIntegrityViolationException) {
-            val concurrent = announcementUserStateRepository.findByUserIdAndAnnouncementId(userId, announcementId)
+            val concurrent = announcementUserStateRepository.findByUserIdAndAnnouncementId(
+                userId,
+                announcementId
+            )
                 ?: throw ex
             concurrent.markDismissed(now)
             concurrent
@@ -364,7 +470,10 @@ class AnnouncementService(
             return emptyMap()
         }
         return announcementUserStateRepository
-            .findAllByUserIdAndAnnouncementIdIn(userId, announcementIds)
+            .findAllByUserIdAndAnnouncementIdIn(
+                userId,
+                announcementIds
+            )
             .associateBy { it.announcementId }
     }
 
@@ -384,7 +493,11 @@ class AnnouncementService(
         if (!announcement.isVisibleInListAndDetail(now)) {
             throw ResourceNotFoundException("더 이상 제공되지 않거나 열람할 수 없는 소식입니다: id=$announcementId")
         }
-        if (!featureEligibilityEvaluator.isEligible(userId, announcement)) {
+        if (!featureEligibilityEvaluator.isEligible(
+                userId,
+                announcement
+            )
+        ) {
             throw ResourceNotFoundException("현재 사용할 수 없는 기능에 대한 소식입니다: id=$announcementId")
         }
         return announcement

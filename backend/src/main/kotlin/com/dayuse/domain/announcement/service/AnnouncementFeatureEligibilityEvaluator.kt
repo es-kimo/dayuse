@@ -23,7 +23,10 @@ class AnnouncementFeatureEligibilityEvaluator(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun isEligible(userId: Long, announcement: Announcement): Boolean {
+    fun isEligible(
+        userId: Long,
+        announcement: Announcement
+    ): Boolean {
         return isEligible(
             userId = userId,
             conditionType = announcement.featureConditionType,
@@ -40,14 +43,38 @@ class AnnouncementFeatureEligibilityEvaluator(
             return false
         }
 
-        // TODO [사용자 미션 3-1]: 기능 제공 조건(ALL_USERS / EXPERIMENT_PARTICIPANT / EXPERIMENT_VARIANT_B)을 판정하고,
-        // featureKey 누락·미존재/비활성 실험·예외 발생 시 조건부 소식을 숨기는 Fail-Safe(false 반환)를 구현하세요.
-        // - ALL_USERS 이면 항상 true
-        // - 조건부 소식이면 experimentService.assignVariant(cleanedKey, userId) 결과를 위임받아 검증합니다.
-        // - assignment.isFallback 이거나 !assignment.participating 이면 false
-        // - EXPERIMENT_PARTICIPANT -> assignment.participating
-        // - EXPERIMENT_VARIANT_B -> assignment.participating && assignment.variant == ExperimentVariant.B
-        // - 판정 중 예외가 발생하면 로그를 남기고 false를 반환하여 전체 사용자용 소식과 핵심 서비스를 보호하세요.
-        return false
+        if (conditionType == AnnouncementFeatureConditionType.ALL_USERS) {
+            return true
+        }
+
+        val cleanedKey = featureKey?.trim()?.takeIf { it.isNotEmpty() } ?: return false
+        val service = experimentService ?: return false
+
+        return try {
+            val assignment = service.assignVariant(
+                experimentKey = cleanedKey,
+                userId = userId
+            )
+            if (assignment.isFallback || !assignment.participating) {
+                return false
+            }
+
+            when (conditionType) {
+                AnnouncementFeatureConditionType.ALL_USERS -> true
+                AnnouncementFeatureConditionType.EXPERIMENT_PARTICIPANT -> assignment.participating
+                AnnouncementFeatureConditionType.EXPERIMENT_VARIANT_B -> {
+                    assignment.participating && assignment.variant == ExperimentVariant.B
+                }
+            }
+        } catch (ex: Exception) {
+            log.warn(
+                "Failed to evaluate feature eligibility for conditionType='{}', featureKey='{}', userId='{}'. Hiding conditional announcement safely.",
+                conditionType,
+                cleanedKey,
+                userId,
+                ex
+            )
+            false
+        }
     }
 }

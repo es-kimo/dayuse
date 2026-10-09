@@ -46,44 +46,85 @@ class Announcement(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0L,
 
-    @Column(name = "title", nullable = false, length = MAX_TITLE_LENGTH)
+    @Column(
+        name = "title",
+        nullable = false,
+        length = MAX_TITLE_LENGTH
+    )
     var title: String,
 
-    @Column(name = "summary", nullable = false, length = MAX_SUMMARY_LENGTH)
+    @Column(
+        name = "summary",
+        nullable = false,
+        length = MAX_SUMMARY_LENGTH
+    )
     var summary: String,
 
-    @Column(name = "body", nullable = false, columnDefinition = "TEXT")
+    @Column(
+        name = "body",
+        nullable = false,
+        columnDefinition = "TEXT"
+    )
     var body: String,
 
-    @Column(name = "image_url", length = 500)
+    @Column(
+        name = "image_url",
+        length = 500
+    )
     var imageUrl: String? = null,
 
-    @Column(name = "image_alt", length = MAX_IMAGE_ALT_LENGTH)
+    @Column(
+        name = "image_alt",
+        length = MAX_IMAGE_ALT_LENGTH
+    )
     var imageAlt: String? = null,
 
-    @Column(name = "cta_label", length = MAX_CTA_LABEL_LENGTH)
+    @Column(
+        name = "cta_label",
+        length = MAX_CTA_LABEL_LENGTH
+    )
     var ctaLabel: String? = null,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "cta_target", length = 40)
+    @Column(
+        name = "cta_target",
+        length = 40
+    )
     var ctaTarget: AnnouncementActionTarget? = null,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "placement", length = 40)
+    @Column(
+        name = "placement",
+        length = 40
+    )
     var placement: AnnouncementPlacement? = null,
 
-    @Column(name = "home_visible", nullable = false)
+    @Column(
+        name = "home_visible",
+        nullable = false
+    )
     var homeVisible: Boolean = false,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "feature_condition_type", nullable = false, length = 40)
+    @Column(
+        name = "feature_condition_type",
+        nullable = false,
+        length = 40
+    )
     var featureConditionType: AnnouncementFeatureConditionType = AnnouncementFeatureConditionType.ALL_USERS,
 
-    @Column(name = "feature_key", length = MAX_FEATURE_KEY_LENGTH)
+    @Column(
+        name = "feature_key",
+        length = MAX_FEATURE_KEY_LENGTH
+    )
     var featureKey: String? = null,
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(
+        name = "status",
+        nullable = false,
+        length = 20
+    )
     var status: AnnouncementStatus = AnnouncementStatus.DRAFT,
 
     @Column(name = "publish_at")
@@ -95,10 +136,17 @@ class Announcement(
     @Column(name = "ended_at")
     var endedAt: LocalDateTime? = null,
 
-    @Column(name = "created_by", nullable = false, updatable = false)
+    @Column(
+        name = "created_by",
+        nullable = false,
+        updatable = false
+    )
     val createdBy: Long,
 
-    @Column(name = "updated_by", nullable = false)
+    @Column(
+        name = "updated_by",
+        nullable = false
+    )
     var updatedBy: Long,
 
     @Column(name = "published_by")
@@ -107,10 +155,17 @@ class Announcement(
     @Column(name = "ended_by")
     var endedBy: Long? = null,
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(
+        name = "created_at",
+        nullable = false,
+        updatable = false
+    )
     val createdAt: LocalDateTime = DateTimeUtils.nowKst(),
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(
+        name = "updated_at",
+        nullable = false
+    )
     var updatedAt: LocalDateTime = createdAt
 ) {
 
@@ -125,15 +180,19 @@ class Announcement(
      *   - `now >= noticeEndsAt` -> [AnnouncementDisplayPhase.NOTICE_EXPIRED] (홈/인라인/미확인 점 중단, 목록/상세는 유지)
      */
     fun resolveDisplayPhase(now: LocalDateTime = DateTimeUtils.nowKst()): AnnouncementDisplayPhase {
-        // TODO [사용자 미션 1-1]: 저장 상태(status)와 서버 KST 시각(now, publishAt, noticeEndsAt)을 바탕으로
-        // 파생 노출 단계(AnnouncementDisplayPhase)를 판정하세요.
-        // - DRAFT -> DRAFT
-        // - ENDED -> ENDED
-        // - PUBLISHED 상태일 때:
-        //   1) publishAt이 null이거나 now < publishAt 이면 SCHEDULED
-        //   2) publishAt <= now < noticeEndsAt 이면 ACTIVE_NOTICE (안내 기간 중)
-        //   3) now >= noticeEndsAt 이면 NOTICE_EXPIRED (안내 기간 종료: 홈/인라인/미확인 점은 중단하되 목록/상세는 유지)
-        return AnnouncementDisplayPhase.DRAFT
+        return when (status) {
+            AnnouncementStatus.DRAFT -> AnnouncementDisplayPhase.DRAFT
+            AnnouncementStatus.ENDED -> AnnouncementDisplayPhase.ENDED
+            AnnouncementStatus.PUBLISHED -> {
+                val currentPublishAt = publishAt ?: return AnnouncementDisplayPhase.SCHEDULED
+                val currentNoticeEndsAt = noticeEndsAt ?: currentPublishAt.plusDays(DEFAULT_NOTICE_DURATION_DAYS)
+                when {
+                    now.isBefore(currentPublishAt) -> AnnouncementDisplayPhase.SCHEDULED
+                    now.isBefore(currentNoticeEndsAt) -> AnnouncementDisplayPhase.ACTIVE_NOTICE
+                    else -> AnnouncementDisplayPhase.NOTICE_EXPIRED
+                }
+            }
+        }
     }
 
     /**
@@ -182,12 +241,25 @@ class Announcement(
         now: LocalDateTime = DateTimeUtils.nowKst()
     ) {
         requireValidActor(actorId)
-        // TODO [사용자 미션 1-2]: 소식 게시/예약 상태 전이 및 안내 기간 검증 로직을 구현하세요.
-        // 1) 이미 ENDED 상태인 소식은 재게시할 수 없으므로 BadRequestException을 던집니다.
-        // 2) effectivePublishAt(requestedPublishAt ?: publishAt ?: now)과
-        //    effectiveNoticeEndsAt(requestedNoticeEndsAt ?: noticeEndsAt ?: effectivePublishAt.plusDays(DEFAULT_NOTICE_DURATION_DAYS))을 계산합니다.
-        // 3) validateScheduleWindow(effectivePublishAt, effectiveNoticeEndsAt)로 noticeEndsAt > publishAt 조건을 검증합니다.
-        // 4) status = PUBLISHED, publishAt, noticeEndsAt, publishedBy = actorId, updatedBy = actorId, updatedAt = now 를 갱신합니다.
+        if (status == AnnouncementStatus.ENDED) {
+            throw BadRequestException("이미 게시 종료(ENDED)된 소식은 다시 게시할 수 없습니다: id=$id")
+        }
+
+        val effectivePublishAt = requestedPublishAt ?: publishAt ?: now
+        val effectiveNoticeEndsAt =
+            requestedNoticeEndsAt ?: noticeEndsAt ?: effectivePublishAt.plusDays(DEFAULT_NOTICE_DURATION_DAYS)
+
+        validateScheduleWindow(
+            effectivePublishAt,
+            effectiveNoticeEndsAt
+        )
+
+        this.status = AnnouncementStatus.PUBLISHED
+        this.publishAt = effectivePublishAt
+        this.noticeEndsAt = effectiveNoticeEndsAt
+        this.publishedBy = actorId
+        this.updatedBy = actorId
+        this.updatedAt = now
     }
 
     /**
@@ -201,9 +273,23 @@ class Announcement(
         now: LocalDateTime = DateTimeUtils.nowKst()
     ) {
         requireValidActor(actorId)
-        // TODO [사용자 미션 1-3]: 소식 게시 종료(ENDED) 상태 전이를 구현하세요.
-        // - DRAFT 또는 이미 ENDED 상태이면 BadRequestException을 던집니다.
-        // - PUBLISHED 상태이면 status = ENDED, endedAt = now, endedBy = actorId, updatedBy = actorId, updatedAt = now 를 기록합니다.
+        when (status) {
+            AnnouncementStatus.DRAFT -> {
+                throw BadRequestException("초안(DRAFT) 상태의 소식은 게시 종료(ENDED)할 수 없습니다: id=$id")
+            }
+
+            AnnouncementStatus.ENDED -> {
+                throw BadRequestException("이미 게시 종료(ENDED)된 소식입니다: id=$id")
+            }
+
+            AnnouncementStatus.PUBLISHED -> {
+                this.status = AnnouncementStatus.ENDED
+                this.endedAt = now
+                this.endedBy = actorId
+                this.updatedBy = actorId
+                this.updatedAt = now
+            }
+        }
     }
 
     /**
@@ -237,10 +323,19 @@ class Announcement(
         val validatedTitle = validateTitle(title)
         val validatedSummary = validateSummary(summary)
         val validatedBody = validateSafeBody(body)
-        val (validatedImageUrl, validatedImageAlt) = validateImage(imageUrl, imageAlt)
-        val (validatedCtaLabel, validatedCtaTarget) = validateCta(ctaLabel, ctaTarget)
+        val (validatedImageUrl, validatedImageAlt) = validateImage(
+            imageUrl,
+            imageAlt
+        )
+        val (validatedCtaLabel, validatedCtaTarget) = validateCta(
+            ctaLabel,
+            ctaTarget
+        )
         val validatedPlacement = validatePlacement(placement)
-        val validatedFeatureKey = validateFeatureCondition(featureConditionType, featureKey)
+        val validatedFeatureKey = validateFeatureCondition(
+            featureConditionType,
+            featureKey
+        )
 
         val effectivePublishAt = publishAt
         val effectiveNoticeEndsAt = when {
@@ -253,7 +348,10 @@ class Announcement(
             throw BadRequestException("게시(PUBLISHED) 상태의 소식은 게시 시각(publishAt)이 필수입니다.")
         }
         if (effectivePublishAt != null && effectiveNoticeEndsAt != null) {
-            validateScheduleWindow(effectivePublishAt, effectiveNoticeEndsAt)
+            validateScheduleWindow(
+                effectivePublishAt,
+                effectiveNoticeEndsAt
+            )
         } else if (effectivePublishAt == null && effectiveNoticeEndsAt != null) {
             throw BadRequestException("안내 종료 시각(noticeEndsAt)을 지정하려면 게시 시각(publishAt)도 함께 지정해야 합니다.")
         }
@@ -284,7 +382,11 @@ class Announcement(
         const val MAX_FEATURE_KEY_LENGTH = 64
         const val DEFAULT_NOTICE_DURATION_DAYS = 14L
 
-        private val FORBIDDEN_CTA_LABELS = setOf("확인", "ok", "okay")
+        private val FORBIDDEN_CTA_LABELS = setOf(
+            "확인",
+            "ok",
+            "okay"
+        )
         private val DANGEROUS_HTML_TAG_REGEX = Regex(
             "<\\s*/?\\s*(script|iframe|object|embed|style|link|meta|form|input|button|svg|math)\\b",
             RegexOption.IGNORE_CASE
@@ -298,7 +400,10 @@ class Announcement(
             RegexOption.IGNORE_CASE
         )
         private val RAW_HTML_TAG_REGEX = Regex("<\\s*/?\\s*[a-zA-Z][^>]*>")
-        private val EXTERNAL_MARKDOWN_LINK_REGEX = Regex("\\[[^\\]]*]\\(\\s*(https?:|//|javascript:|data:)", RegexOption.IGNORE_CASE)
+        private val EXTERNAL_MARKDOWN_LINK_REGEX = Regex(
+            "\\[[^\\]]*]\\(\\s*(https?:|//|javascript:|data:)",
+            RegexOption.IGNORE_CASE
+        )
 
         fun createDraft(
             actorId: Long,
@@ -321,22 +426,37 @@ class Announcement(
             val validatedTitle = validateTitle(title)
             val validatedSummary = validateSummary(summary)
             val validatedBody = validateSafeBody(body)
-            val (validatedImageUrl, validatedImageAlt) = validateImage(imageUrl, imageAlt)
-            val (validatedCtaLabel, validatedCtaTarget) = validateCta(ctaLabel, ctaTarget)
+            val (validatedImageUrl, validatedImageAlt) = validateImage(
+                imageUrl,
+                imageAlt
+            )
+            val (validatedCtaLabel, validatedCtaTarget) = validateCta(
+                ctaLabel,
+                ctaTarget
+            )
             val validatedPlacement = validatePlacement(placement)
-            val validatedFeatureKey = validateFeatureCondition(featureConditionType, featureKey)
+            val validatedFeatureKey = validateFeatureCondition(
+                featureConditionType,
+                featureKey
+            )
 
             val resolvedNoticeEndsAt = when {
                 noticeEndsAt != null && publishAt != null -> {
-                    validateScheduleWindow(publishAt, noticeEndsAt)
+                    validateScheduleWindow(
+                        publishAt,
+                        noticeEndsAt
+                    )
                     noticeEndsAt
                 }
+
                 noticeEndsAt != null && publishAt == null -> {
                     throw BadRequestException("안내 종료 시각(noticeEndsAt)을 지정하려면 게시 시각(publishAt)도 함께 지정해야 합니다.")
                 }
+
                 noticeEndsAt == null && publishAt != null -> {
                     publishAt.plusDays(DEFAULT_NOTICE_DURATION_DAYS)
                 }
+
                 else -> null
             }
 
@@ -412,7 +532,10 @@ class Announcement(
             return trimmed
         }
 
-        fun validateImage(rawImageUrl: String?, rawImageAlt: String?): Pair<String?, String?> {
+        fun validateImage(
+            rawImageUrl: String?,
+            rawImageAlt: String?
+        ): Pair<String?, String?> {
             val cleanedUrl = rawImageUrl?.trim()?.takeIf { it.isNotEmpty() }
             val cleanedAlt = rawImageAlt?.trim()?.takeIf { it.isNotEmpty() }
 
@@ -421,9 +544,18 @@ class Announcement(
             }
 
             if (
-                cleanedUrl.startsWith("javascript:", ignoreCase = true) ||
-                cleanedUrl.startsWith("data:", ignoreCase = true) ||
-                cleanedUrl.startsWith("vbscript:", ignoreCase = true) ||
+                cleanedUrl.startsWith(
+                    "javascript:",
+                    ignoreCase = true
+                ) ||
+                cleanedUrl.startsWith(
+                    "data:",
+                    ignoreCase = true
+                ) ||
+                cleanedUrl.startsWith(
+                    "vbscript:",
+                    ignoreCase = true
+                ) ||
                 (!cleanedUrl.startsWith("/") && !cleanedUrl.startsWith("https://") && !cleanedUrl.startsWith("http://localhost"))
             ) {
                 throw BadRequestException("대표 이미지 URL은 허용된 경로(/... 또는 안전한 이미지 URL)여야 합니다.")
@@ -489,11 +621,14 @@ class Announcement(
             return cleanedKey
         }
 
-        fun validateScheduleWindow(publishAt: LocalDateTime, noticeEndsAt: LocalDateTime) {
+        fun validateScheduleWindow(
+            publishAt: LocalDateTime,
+            noticeEndsAt: LocalDateTime
+        ) {
             if (!noticeEndsAt.isAfter(publishAt)) {
                 throw BadRequestException(
                     "안내 종료 시각(noticeEndsAt)은 게시 시각(publishAt) 이후여야 합니다. " +
-                        "(publishAt=$publishAt, noticeEndsAt=$noticeEndsAt)"
+                            "(publishAt=$publishAt, noticeEndsAt=$noticeEndsAt)"
                 )
             }
         }
