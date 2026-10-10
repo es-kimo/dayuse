@@ -46,11 +46,7 @@ object ChallengeResultCalculator {
      * - 리데이 사용 가능 기간 때문에 결과 확정을 지연시키지 않음
      */
     fun calculateFinalConfirmationDeadline(challenge: Challenge): LocalDateTime {
-        // TODO [사용자 미션 1-1]: 마지막 인증 인정 기한 산정 (KST 기준)
-        // - 매일 각자하기: 마지막 수행일(endDate) 익일 오전 09:00 KST
-        // - 주 N회 각자하기: 마지막 집계 구간 종료일(endDate) 익일 오전 09:00 KST
-        // - 리데이 사용 가능 기간 때문에 결과 확정을 지연시키지 않음
-        throw NotImplementedError("사용자 미션 1-1 구현 필요")
+        return challenge.endDate.plusDays(1).atTime(9, 0)
     }
 
     /**
@@ -63,11 +59,14 @@ object ChallengeResultCalculator {
         challenge: Challenge,
         now: LocalDateTime = DateTimeUtils.nowKst()
     ): ChallengeResultStatus {
-        // TODO [사용자 미션 1-2]: 운영 종료 시점 및 인정 기한 기반 결과 상태 판정
-        // - 1) 중단된 챌린지: ChallengeResultStatus.ABORTED
-        // - 2) 최종 마감 인정 기한(calculateFinalConfirmationDeadline) 경과 시: ChallengeResultStatus.CONFIRMED
-        // - 3) 그 외: ChallengeResultStatus.PROVISIONAL
-        throw NotImplementedError("사용자 미션 1-2 구현 필요")
+        if (challenge.isAborted()) {
+            return ChallengeResultStatus.ABORTED
+        }
+        val finalDeadline = calculateFinalConfirmationDeadline(challenge)
+        if (!now.isBefore(finalDeadline)) {
+            return ChallengeResultStatus.CONFIRMED
+        }
+        return ChallengeResultStatus.PROVISIONAL
     }
 
     /**
@@ -122,13 +121,109 @@ object ChallengeResultCalculator {
         dailyRecords: List<DailyRecord>,
         status: ChallengeResultStatus
     ): ChallengeCalculationResult {
-        // TODO [사용자 미션 2]: 각자하기(INDIVIDUAL) 유형별 목표 및 인정 횟수 산정 엔진 구현
-        // 1) 지각(isLate == true) 및 리데이(dailyRecord.redayApplied == true) 인증은 코인/집계 인정 수행에서 제외
-        // 2) 개인 참가 기간(participant.startDate .. challenge.endDate) 내 유효 인증만 집계
-        // 3) 매일형: 참가 시작일부터 종료일까지의 일수(T) 및 일치 여부(C == T)로 완주 판정 (중단 시 abortDate 고려)
-        // 4) 주 N회형: ChallengePeriodCalculator를 활용하여 7일 구간별 초과 수행 상계 불가(effectiveCompletedCount) 집계
-        // 5) 달성률: T=0 방어(null) 및 C == T 일치 완주 여부 산정
-        throw NotImplementedError("사용자 미션 2 구현 필요")
+        val isAborted = (status == ChallengeResultStatus.ABORTED)
+        val abortDate = challenge.abortedAt?.toLocalDate()
+
+        val redayAppliedRecordKeys = dailyRecords
+            .filter { it.redayApplied }
+            .map { it.userId to it.date }
+            .toSet()
+
+        val participantResults = participants.map { participant ->
+            val userVerifications = verifications.filter { it.userId == participant.userId }
+            val actualSubmissions = userVerifications.filter {
+                it.targetDate >= participant.startDate && it.targetDate <= challenge.endDate
+            }.size
+
+            val validVerifications = userVerifications.filter { v ->
+                v.targetDate >= participant.startDate &&
+                v.targetDate <= challenge.endDate &&
+                !v.isLate &&
+                !redayAppliedRecordKeys.contains(participant.userId to v.targetDate)
+            }
+            val validDates = validVerifications.map { it.targetDate }.toSet()
+
+            when (challenge.periodType) {
+                PeriodType.DAILY -> {
+                    val effectiveEnd = if (isAborted && abortDate != null) {
+                        minOf(challenge.endDate, abortDate.minusDays(1))
+                    } else {
+                        challenge.endDate
+                    }
+
+                    val target = if (effectiveEnd < participant.startDate) {
+                        0
+                    } else {
+                        (ChronoUnit.DAYS.between(participant.startDate, effectiveEnd).toInt() + 1).coerceAtLeast(0)
+                    }
+
+                    val completed = validDates.count { date ->
+                        date in participant.startDate..effectiveEnd
+                    }
+
+                    val rate = calculateAchievementRate(completed, target)
+                    val isSuccess = !isAborted && target > 0 && completed == target
+
+                    ParticipantCalculationResult(
+                        participantId = participant.id,
+                        userId = participant.userId,
+                        participantStartDate = participant.startDate,
+                        targetCount = target,
+                        completedCount = completed,
+                        contributionCount = completed,
+                        actualSubmissionCount = actualSubmissions,
+                        achievementRate = rate,
+                        isSuccess = isSuccess
+                    )
+                }
+
+                PeriodType.WEEKLY_N -> {
+                    val periodCalc = ChallengePeriodCalculator.calculate(
+                        challengeStartDate = challenge.startDate,
+                        challengeEndDate = challenge.endDate,
+                        participantStartDate = participant.startDate,
+                        periodType = challenge.periodType,
+                        targetFrequency = challenge.targetFrequency,
+                        completedDates = validDates,
+                        today = challenge.endDate,
+                        executionType = ExecutionType.INDIVIDUAL,
+                        abortedDate = abortDate
+                    )
+
+                    val target = periodCalc.totalTargetCount
+                    val completed = periodCalc.totalCompletedCount
+                    val rate = calculateAchievementRate(completed, target)
+                    val isSuccess = !isAborted && target > 0 && completed == target
+
+                    ParticipantCalculationResult(
+                        participantId = participant.id,
+                        userId = participant.userId,
+                        participantStartDate = participant.startDate,
+                        targetCount = target,
+                        completedCount = completed,
+                        contributionCount = completed,
+                        actualSubmissionCount = actualSubmissions,
+                        achievementRate = rate,
+                        isSuccess = isSuccess
+                    )
+                }
+            }
+        }
+
+        val totalTarget = participantResults.sumOf { it.targetCount }
+        val totalCompleted = participantResults.sumOf { it.completedCount }
+        val totalRate = calculateAchievementRate(totalCompleted, totalTarget)
+        val overallSuccess = !isAborted && totalTarget > 0 && totalCompleted == totalTarget
+
+        return ChallengeCalculationResult(
+            status = status,
+            policyVersion = CURRENT_POLICY_VERSION,
+            totalTargetCount = totalTarget,
+            totalCompletedCount = totalCompleted,
+            achievementRate = totalRate,
+            isSuccess = overallSuccess,
+            participants = participantResults
+        )
     }
 
     /**
@@ -143,12 +238,108 @@ object ChallengeResultCalculator {
         verifications: List<Verification>,
         status: ChallengeResultStatus
     ): ChallengeCalculationResult {
-        // TODO [사용자 미션 3]: 함께하기(TOGETHER) 공동 의무별 최초 1인 기여자 판정 및 달성률/기여 분리 집계
-        // 1) 지각 인증(isLate == true) 제외
-        // 2) 공동 의무 1개당(매일형: targetDate별 최초 등록자 1명, 주 N회형: 구간 목표 N회 슬롯) 최초 유효 인증 수행자 1명만 코인용 기여자로 인정
-        // 3) 동일 일자 후순위 인증자는 실제 제출 횟수(actualSubmissionCount)에는 반영하되 기여 횟수/공동 완료수에서는 제외
-        // 4) 주간 초과 수행 방지: 주 N회 구간 목표치까지만 공동 및 개인 기여로 인정
-        // 5) 공동 목표 달성률과 각 참가자의 개인 기여 횟수(contributionCount) 분리 집계
-        throw NotImplementedError("사용자 미션 3 구현 필요")
+        val isAborted = (status == ChallengeResultStatus.ABORTED)
+        val abortDate = challenge.abortedAt?.toLocalDate()
+
+        val validSubmissions = verifications
+            .filter { v ->
+                !v.isLate &&
+                v.targetDate >= challenge.startDate &&
+                v.targetDate <= challenge.endDate &&
+                (!isAborted || abortDate == null || v.targetDate < abortDate)
+            }
+            .sortedWith(compareBy({ it.targetDate }, { it.createdAt }, { it.id }))
+
+        // 의무별 최초 1인 기여자 판정
+        // 날짜별로 가장 먼저 등록된 유효 인증자 1명 선정
+        val firstEarliestPerDate = linkedMapOf<LocalDate, Verification>()
+        for (v in validSubmissions) {
+            if (!firstEarliestPerDate.containsKey(v.targetDate)) {
+                firstEarliestPerDate[v.targetDate] = v
+            }
+        }
+
+        val (totalTarget, creditedVerifications) = when (challenge.periodType) {
+            PeriodType.DAILY -> {
+                val effectiveEnd = if (isAborted && abortDate != null) {
+                    minOf(challenge.endDate, abortDate.minusDays(1))
+                } else {
+                    challenge.endDate
+                }
+                val target = if (effectiveEnd < challenge.startDate) {
+                    0
+                } else {
+                    (ChronoUnit.DAYS.between(challenge.startDate, effectiveEnd).toInt() + 1).coerceAtLeast(0)
+                }
+                val credited = firstEarliestPerDate.values.filter { it.targetDate in challenge.startDate..effectiveEnd }
+                target to credited
+            }
+
+            PeriodType.WEEKLY_N -> {
+                val dates = firstEarliestPerDate.keys
+                val periodCalc = ChallengePeriodCalculator.calculate(
+                    challengeStartDate = challenge.startDate,
+                    challengeEndDate = challenge.endDate,
+                    participantStartDate = challenge.startDate,
+                    periodType = challenge.periodType,
+                    targetFrequency = challenge.targetFrequency,
+                    completedDates = dates,
+                    today = challenge.endDate,
+                    executionType = ExecutionType.TOGETHER,
+                    abortedDate = abortDate
+                )
+
+                // 주간 초과 수행 상계 불가: 각 구간별 targetCount 한도 내에서 날짜별 최초 인증 건만 인정
+                val credited = mutableListOf<Verification>()
+                for (interval in periodCalc.intervals) {
+                    val intervalVerifications = firstEarliestPerDate.values
+                        .filter { it.targetDate in interval.startDate..interval.endDate }
+                        .sortedBy { it.targetDate }
+                        .take(interval.targetCount) // 구간 목표치까지만 코인/집계 기여로 인정
+                    credited.addAll(intervalVerifications)
+                }
+
+                periodCalc.totalTargetCount to credited
+            }
+        }
+
+        val totalCompleted = creditedVerifications.size
+        val totalRate = calculateAchievementRate(totalCompleted, totalTarget)
+        val overallSuccess = !isAborted && totalTarget > 0 && totalCompleted == totalTarget
+
+        // 각 참가자별 기여 횟수 및 실제 제출 횟수 산정
+        val contributionByUser = creditedVerifications.groupingBy { it.userId }.eachCount()
+
+        val participantResults = participants.map { participant ->
+            val userAllSubmissions = verifications.filter {
+                it.userId == participant.userId &&
+                it.targetDate >= participant.startDate &&
+                it.targetDate <= challenge.endDate
+            }.size
+
+            val contribution = contributionByUser[participant.userId] ?: 0
+
+            ParticipantCalculationResult(
+                participantId = participant.id,
+                userId = participant.userId,
+                participantStartDate = participant.startDate,
+                targetCount = totalTarget,
+                completedCount = totalCompleted,
+                contributionCount = contribution,
+                actualSubmissionCount = userAllSubmissions,
+                achievementRate = totalRate,
+                isSuccess = overallSuccess
+            )
+        }
+
+        return ChallengeCalculationResult(
+            status = status,
+            policyVersion = CURRENT_POLICY_VERSION,
+            totalTargetCount = totalTarget,
+            totalCompletedCount = totalCompleted,
+            achievementRate = totalRate,
+            isSuccess = overallSuccess,
+            participants = participantResults
+        )
     }
 }
