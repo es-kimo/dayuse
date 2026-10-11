@@ -1,0 +1,153 @@
+<title>데이유즈 코인</title>
+<style>
+:root{--bg:#F1F5F9;--panel:#FFFFFF;--ink:#1E293B;--ink2:#64748B;--line:#E2E8F0;--accent:#2563EB;--accent-ink:#FFFFFF;--chip:#EFF6FF;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1222;--panel:#0F172A;--ink:#E2E8F0;--ink2:#94A3B8;--line:#1E293B;--accent:#3B82F6;--chip:#172554;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0B1222;--panel:#0F172A;--ink:#E2E8F0;--ink2:#94A3B8;--line:#1E293B;--accent:#3B82F6;--chip:#172554;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif}
+.wrap{min-height:100%;display:grid;grid-template-rows:auto 1fr auto;padding-inline:16px}
+header{max-width:960px;width:100%;margin:0 auto;padding-block:20px 8px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-0.02em}
+header p{margin:4px 0 0;font-size:13.5px;color:var(--ink2)}
+.result{font-size:14px;font-weight:700;padding:8px 12px;border-radius:10px;background:var(--chip);color:var(--accent);min-width:120px;text-align:center}
+.stage{position:relative;max-width:960px;width:100%;margin:0 auto;min-height:420px;border-radius:24px;overflow:hidden;background:var(--panel);border:1px solid var(--line);touch-action:none}
+canvas{display:block;width:100%;height:100%;cursor:grab}
+canvas:active{cursor:grabbing}
+.hint{position:absolute;left:16px;bottom:14px;font-size:12px;color:var(--ink2);pointer-events:none}
+.loading{position:absolute;inset:0;display:grid;place-items:center;font-size:14px;color:var(--ink2)}
+.bar{max-width:960px;width:100%;margin:0 auto;padding-block:14px 24px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.bar button{height:42px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:700 14px/1 inherit;font-family:inherit;cursor:pointer}
+.bar button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.bar button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar .sep{width:1px;background:var(--line);margin:4px 4px}
+@media (max-width:560px){.stage{min-height:360px}.bar button{flex:1 1 auto}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+
+<div class="wrap">
+  <header>
+    <div><h1>데이유즈 코인</h1><p>금속 테두리 · 파란 에나멜 · 앞면 데이유 / 뒷면 데이유즈 · 톱니 옆면</p></div>
+    <div class="result" id="result" aria-live="polite">드래그해서 돌려 보세요</div>
+  </header>
+  <div class="stage" id="stage"><div class="loading" id="loading">코인 불러오는 중…</div><span class="hint">드래그: 회전 · 휠/핀치: 확대</span></div>
+  <div class="bar">
+    <button class="primary" id="toss">튕기기</button>
+    <button id="spin">세워서 돌리기</button>
+    <button id="flip">뒤집기</button>
+    <span class="sep" aria-hidden="true"></span>
+    <button id="front">앞면</button>
+    <button id="back">뒷면</button>
+    <button id="edge">옆면</button>
+    <button id="tilt">비스듬히</button>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const stage=document.getElementById('stage'), result=document.getElementById('result');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+stage.prepend(renderer.domElement);
+
+const scene=new THREE.Scene();
+const pmrem=new THREE.PMREMGenerator(renderer);
+scene.environment=pmrem.fromScene(new RoomEnvironment(),0.04).texture;
+const camera=new THREE.PerspectiveCamera(30,1,0.01,50);
+camera.position.set(0,0.35,2.6);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.minDistance=1.2; controls.maxDistance=5; controls.target.set(0,0.1,0);
+
+const key=new THREE.DirectionalLight(0xffffff,1.6); key.position.set(1.5,3,2); key.castShadow=true;
+key.shadow.mapSize.set(1024,1024); key.shadow.camera.left=-1.5; key.shadow.camera.right=1.5; key.shadow.camera.top=1.5; key.shadow.camera.bottom=-1.5; key.shadow.radius=6;
+scene.add(key); scene.add(new THREE.AmbientLight(0xffffff,0.35));
+const fill=new THREE.DirectionalLight(0xfff4e0,0.9); fill.position.set(-2,1,3); scene.add(fill);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(8,8),new THREE.ShadowMaterial({opacity:0.18}));
+ground.rotation.x=-Math.PI/2; ground.position.y=-0.52; ground.receiveShadow=true; scene.add(ground);
+const FLOOR=-0.52, HALF=0.5;   // coin radius 0.5, thickness ~0.11
+
+// pivot: position = coin centre; quaternion = orientation (coin faces along local ±Z)
+const pivot=new THREE.Group(); scene.add(pivot);
+new GLTFLoader().load('dayuse-coin.glb',g=>{
+  g.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.material.envMapIntensity=o.material.metalness>0.5?1.7:1.0;}});
+  pivot.add(g.scene); document.getElementById('loading').remove(); window.__coinReady=true;
+},undefined,()=>{document.getElementById('loading').textContent='코인 파일을 불러오지 못했어요';});
+
+function resize(){const w=stage.clientWidth,h=Math.max(stage.clientHeight,360);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(stage); resize();
+
+// ---- motion ----
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let anim=null; // {update(dt) -> bool done}
+const q=(x,y,z)=>new THREE.Quaternion().setFromEuler(new THREE.Euler(x,y,z,'XYZ'));
+const POSE={front:q(0,0,0), back:q(0,Math.PI,0), edge:q(0,Math.PI/2,0), tilt:q(-0.5,0.6,0.1)};
+function goTo(target,pos=new THREE.Vector3(0,0.1,0),dur=0.7,label){
+  const q0=pivot.quaternion.clone(), p0=pivot.position.clone(); let t=0;
+  anim={update(dt){t=Math.min(1,t+dt/(reduce?0.01:dur)); const e=1-Math.pow(1-t,3);
+    pivot.quaternion.slerpQuaternions(q0,target,e); pivot.position.lerpVectors(p0,pos,e); return t>=1;}};
+  if(label) result.textContent=label;
+}
+function spin(){ // stand on edge and spin around vertical axis, slowing down
+  goTo(POSE.edge,new THREE.Vector3(0,FLOOR+HALF,0),0.4);
+  const after=anim; let w=18, ang=0;
+  anim={update(dt){ if(!after.done&&!after.update(dt)) return false; after.done=true;
+    ang+=w*dt; w*=Math.pow(0.55,dt); pivot.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),ang).multiply(POSE.edge));
+    if(w<0.6){ goTo(POSE.tilt,new THREE.Vector3(0,0.1,0),0.8,'빙그르르'); } return false; }};
+  result.textContent='돌아가는 중…';
+}
+function flip(){ // half turn around X in place
+  const q0=pivot.quaternion.clone(); let t=0; const p0=pivot.position.clone();
+  anim={update(dt){t=Math.min(1,t+dt/0.6); const e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+    pivot.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI*e).multiply(q0));
+    pivot.position.set(p0.x,p0.y+Math.sin(Math.PI*t)*0.35,p0.z); return t>=1;}};
+}
+function toss(){ // vertical throw, tumble around a tilted axis, bounce on the floor, settle flat
+  const heads=Math.random()<0.5;
+  const axis=new THREE.Vector3(1,0,(Math.random()-.5)*0.4).normalize();
+  let y=FLOOR+0.06, v=4.2, rot=0, w=22+Math.random()*6, bounces=0, settle=null;
+  const g=-9.8, lie=heads?q(-Math.PI/2,0,0):q(Math.PI/2,0,Math.PI); // lying flat: face up = front (heads)
+  result.textContent='휙!';
+  anim={update(dt){
+    if(settle) return settle.update(dt);
+    v+=g*dt; y+=v*dt; rot+=w*dt;
+    pivot.position.set(0,y,0);
+    pivot.quaternion.copy(new THREE.Quaternion().setFromAxisAngle(axis,rot).multiply(lie));
+    if(y<FLOOR+0.06&&v<0){ y=FLOOR+0.06; v=-v*0.38; w*=0.45; bounces++;
+      if(bounces>=3||v<0.6){ // wobble down to flat
+        const q0=pivot.quaternion.clone(); let t=0;
+        settle={update(dt){t=Math.min(1,t+dt/0.55); const e=1-Math.pow(1-t,3);
+          const wob=Math.sin(t*Math.PI*5)*(1-t)*0.12;
+          pivot.quaternion.slerpQuaternions(q0,lie,e).multiply(q(wob,0,wob*0.6));
+          pivot.position.set(0,FLOOR+0.06,0);
+          if(t>=1){result.textContent=heads?'앞면! 데이유가 나왔어요':'뒷면! 데이유즈가 나왔어요';return true;} return false;}};
+      }
+    }
+    return false;
+  }};
+}
+document.getElementById('toss').onclick=toss;
+document.getElementById('spin').onclick=spin;
+document.getElementById('flip').onclick=flip;
+document.getElementById('front').onclick=()=>goTo(POSE.front,undefined,undefined,'앞면 · 데이유');
+document.getElementById('back').onclick=()=>goTo(POSE.back,undefined,undefined,'뒷면 · 데이유즈');
+document.getElementById('edge').onclick=()=>goTo(POSE.edge,undefined,undefined,'옆면 · 톱니 테두리');
+document.getElementById('tilt').onclick=()=>goTo(POSE.tilt,undefined,undefined,'비스듬히');
+pivot.quaternion.copy(POSE.tilt); pivot.position.set(0,0.1,0);
+
+// gentle idle sway when nothing else runs
+let last=performance.now(), idle=0;
+window.__hideGround=()=>{ground.visible=false;};
+window.__setPose=(name)=>{anim=null;pivot.quaternion.copy(POSE[name]);pivot.position.set(0,0.1,0);};
+window.__setEuler=(x,y,z)=>{anim=null;pivot.quaternion.copy(q(x,y,z));pivot.position.set(0,0.1,0);};
+function loop(now){const dt=Math.min(0.033,(now-last)/1000); last=now;
+  if(anim){ if(anim.update(dt)) anim=null; }
+  controls.update(); renderer.render(scene,camera); requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+</script>
