@@ -20,39 +20,21 @@ export const HomeUnconfirmedCard: React.FC<HomeUnconfirmedCardProps> = ({
   }
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      className="w-full text-left bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100/70 border border-emerald-200/90 rounded-2xl p-4 shadow-xs transition-all active:scale-[0.99] hover:shadow-md cursor-pointer"
+      className="focus-ring flex w-full cursor-pointer items-center gap-3 rounded-[18px] border border-blue-100 bg-blue-50 p-4 text-left transition-colors hover:bg-blue-100"
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
-            <Trophy className="w-5 h-5 text-emerald-600" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[14px] font-bold text-gray-900 tracking-tight">
-                종료된 챌린지 결과 확인
-              </span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-600 text-white">
-                {unacknowledgedCount}건
-              </span>
-            </div>
-            <p className="text-xs text-gray-600 mt-0.5">
-              도전 결과를 살펴보고 코인 보상을 확인하세요
-            </p>
-          </div>
-        </div>
-        <ChevronRight className="w-5 h-5 text-gray-400 shrink-0" />
-      </div>
-    </div>
+      <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-white text-blue-600">
+        <Trophy className="size-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[14.5px] font-bold tracking-[-0.01em] text-slate-800">
+          확인할 챌린지 결과 {unacknowledgedCount}건
+        </span>
+        <span className="mt-0.5 block text-[13px] text-slate-500">나의 도전과 받은 코인을 확인해요</span>
+      </span>
+      <ChevronRight aria-hidden="true" className="size-[22px] shrink-0 text-slate-400" />
+    </button>
   );
 };

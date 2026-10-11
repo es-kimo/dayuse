@@ -1,5 +1,7 @@
+import { BottomSheet, BottomSheetTitle, BottomSheetDescription, BottomSheetClose } from '../ui/BottomSheet';
+import { SheetGrab, Chip } from '../dayu/ui';
 import React, { useState, useMemo } from 'react';
-import { X, Trophy, CheckCircle2, Coins, Clock } from 'lucide-react';
+import { X, CheckCircle2, Coins, Clock } from 'lucide-react';
 import type { EndedChallengeSummaryItem } from '../../types';
 
 export interface EndedChallengesModalProps {
@@ -34,44 +36,44 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
     }
   }, [items, filterTab]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
-      <div className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl max-h-[85vh] flex flex-col shadow-xl overflow-hidden">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-base font-bold text-gray-900">종료된 챌린지 결과</h2>
+    <BottomSheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <>
+        <div className="shrink-0 px-5 pt-2.5 pb-4">
+          <SheetGrab />
+          <div className="mt-3.5 flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <BottomSheetTitle className="text-[19px] font-extrabold text-slate-800">종료된 챌린지</BottomSheetTitle>
+              <BottomSheetDescription className="mt-1 text-[13px] text-slate-500">함께한 도전의 결과를 확인해요.</BottomSheetDescription>
+            </div>
+            <BottomSheetClose aria-label="닫기" className="focus-ring grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-600 transition-colors hover:bg-slate-100">
+              <X className="size-[22px]" aria-hidden="true" />
+            </BottomSheetClose>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label="닫기"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* 탭 필터 (F04: 진행 중/종료/확인완료 상태별 탭 및 필터링) */}
-        <div className="flex border-b border-gray-100 px-4 bg-gray-50/60 text-xs font-semibold">
+        <div className="mx-5 mb-4 flex shrink-0 gap-1 rounded-xl bg-slate-100 p-1 text-[13px] font-bold">
           <button
+            type="button"
+            aria-pressed={filterTab === 'ALL'}
             onClick={() => setFilterTab('ALL')}
-            className={`py-2.5 px-3 border-b-2 transition-colors cursor-pointer ${
+            className={`focus-ring min-h-11 flex-1 rounded-lg px-1 transition-colors cursor-pointer ${
               filterTab === 'ALL'
-                ? 'border-emerald-600 text-emerald-700 font-bold'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-blue-600 shadow-2xs'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             전체 ({items.length})
           </button>
           <button
+            type="button"
+            aria-pressed={filterTab === 'UNACKNOWLEDGED'}
             onClick={() => setFilterTab('UNACKNOWLEDGED')}
-            className={`py-2.5 px-3 border-b-2 transition-colors cursor-pointer ${
+            className={`focus-ring min-h-11 flex-1 rounded-lg px-1 transition-colors cursor-pointer ${
               filterTab === 'UNACKNOWLEDGED'
-                ? 'border-emerald-600 text-emerald-700 font-bold'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-blue-600 shadow-2xs'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             확인 필요 (
@@ -79,11 +81,13 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
             )
           </button>
           <button
+            type="button"
+            aria-pressed={filterTab === 'ACKNOWLEDGED'}
             onClick={() => setFilterTab('ACKNOWLEDGED')}
-            className={`py-2.5 px-3 border-b-2 transition-colors cursor-pointer ${
+            className={`focus-ring min-h-11 flex-1 rounded-lg px-1 transition-colors cursor-pointer ${
               filterTab === 'ACKNOWLEDGED'
-                ? 'border-emerald-600 text-emerald-700 font-bold'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-blue-600 shadow-2xs'
+                : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             확인 완료 ({items.filter((it) => it.isAcknowledged && !it.isRevised).length})
@@ -91,10 +95,10 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
         </div>
 
         {/* 목록 */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 space-y-3">
           {filteredItems.length === 0 ? (
-            <div className="text-center py-10 text-gray-400 text-xs space-y-3">
-              <p>해당하는 챌린지가 없습니다.</p>
+            <div className="text-center py-10 text-slate-400 text-[13px] space-y-3">
+              <p>아직 이 목록에 챌린지가 없어요.</p>
               {onSeedSamples && (
                 <button
                   type="button"
@@ -107,7 +111,7 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
                       setIsSeeding(false);
                     }
                   }}
-                  className="px-3.5 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold hover:bg-emerald-100 transition-colors cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 text-[13px] font-bold hover:bg-blue-100 transition-colors cursor-pointer"
                 >
                   {isSeeding ? '데이터 생성 중...' : '🧪 테스트용 종료 데이터 넣기 (4건)'}
                 </button>
@@ -118,31 +122,24 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
               const isUnack = (!item.isAcknowledged || item.isRevised) && item.status !== 'PROVISIONAL';
 
               return (
-                <div
+                <button
                   key={item.challengeId}
-                  role="button"
-                  tabIndex={0}
+                  type="button"
                   onClick={() => onSelectChallenge(item)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onSelectChallenge(item);
-                    }
-                  }}
-                  className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  className={`focus-ring w-full text-left p-4 rounded-[18px] border transition-colors cursor-pointer ${
                     isUnack
-                      ? 'border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50/70 shadow-2xs'
-                      : 'border-gray-100 bg-white hover:bg-gray-50/80'
+                      ? 'border-blue-100 bg-blue-50 hover:bg-blue-100'
+                      : 'border-slate-200 bg-white hover:bg-slate-50/80'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div>
+                    <div className="min-w-0">
                       {item.groupName && (
-                        <span className="text-[11px] font-medium text-gray-500 mb-0.5 block">
+                        <span className="text-xs font-medium text-slate-500 mb-0.5 block">
                           {item.groupName}
                         </span>
                       )}
-                      <h4 className="text-sm font-bold text-gray-900 leading-snug">
+                      <h4 className="text-[15px] font-bold text-slate-800 leading-snug break-words">
                         {item.challengeTitle}
                       </h4>
                     </div>
@@ -150,31 +147,23 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
                     {/* 배지 */}
                     <div className="shrink-0 flex items-center gap-1">
                       {item.status === 'PROVISIONAL' ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600 inline-flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> 잠정 집계
-                        </span>
+                        <Chip><Clock className="size-3" /> 집계 중</Chip>
                       ) : item.isRevised ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">
-                          결과 수정됨
-                        </span>
+                        <Chip tone="warn">결과 수정됨</Chip>
                       ) : item.isAcknowledged ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500 inline-flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" /> 확인완료
-                        </span>
+                        <Chip><CheckCircle2 className="size-3" /> 확인 완료</Chip>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-600 text-white">
-                          확인 필요
-                        </span>
+                        <Chip tone="blue">확인 필요</Chip>
                       )}
                     </div>
                   </div>
 
-                  <div className="mt-2.5 flex items-center justify-between text-xs text-gray-500">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-[13px] text-slate-500">
                     <span className="tabular-nums">
                       {item.startDate} ~ {item.endDate}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium text-slate-700">
                         {item.completedCount} / {item.targetCount}회
                         {item.achievementRate != null && ` (${Math.round(item.achievementRate)}%)`}
                       </span>
@@ -186,7 +175,7 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
                       )}
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })
           )}
@@ -194,8 +183,8 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
 
         {/* 푸터 보조 액션 */}
         {onSeedSamples && (
-          <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-[11px] text-gray-400">개발/테스트용 빠른 시드</span>
+          <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+            <span className="text-xs text-slate-400">개발/테스트용 빠른 시드</span>
             <button
               type="button"
               disabled={isSeeding}
@@ -207,13 +196,13 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
                   setIsSeeding(false);
                 }
               }}
-              className="text-[11px] text-emerald-700 hover:text-emerald-800 font-bold underline cursor-pointer"
+              className="text-xs text-blue-700 hover:text-blue-800 font-bold underline cursor-pointer"
             >
               {isSeeding ? '데이터 생성 중...' : '+ 테스트용 종료 데이터 4건 추가'}
             </button>
           </div>
         )}
-      </div>
-    </div>
+      </>
+    </BottomSheet>
   );
 };
