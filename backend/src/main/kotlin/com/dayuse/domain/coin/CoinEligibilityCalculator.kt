@@ -42,50 +42,16 @@ object CoinEligibilityCalculator {
         candidates: List<CandidateVerification>,
         now: LocalDateTime = DateTimeUtils.nowKst()
     ): FilterResult {
-        val rejectedDates = mutableMapOf<LocalDate, CoinRejectionReason>()
-        val todayKst = now.toLocalDate()
-
-        if (context.challengeStatus != ChallengeResultStatus.CONFIRMED) {
-            candidates.forEach { candidate ->
-                rejectedDates.putIfAbsent(candidate.targetDate, CoinRejectionReason.CHALLENGE_NOT_CONFIRMED)
-            }
-            return FilterResult(emptyList(), rejectedDates)
-        }
-
-        val validCandidates = mutableListOf<CandidateVerification>()
-
-        for (candidate in candidates) {
-            val targetDate = candidate.targetDate
-            val submittedDate = candidate.submittedAt.toLocalDate()
-
-            when {
-                // 미래 날짜 방어 (기기 시계 조작 배제, 서버 KST 접수 시각 기준)
-                targetDate > todayKst || targetDate > submittedDate || candidate.submittedAt > now -> {
-                    rejectedDates.putIfAbsent(targetDate, CoinRejectionReason.FUTURE_DATE)
-                }
-                // 계정 생성 이전 날짜 방어
-                targetDate < context.userCreatedAt.toLocalDate() -> {
-                    rejectedDates.putIfAbsent(targetDate, CoinRejectionReason.BEFORE_USER_CREATED)
-                }
-                // 참가 효력 발생 이전 날짜 방어
-                targetDate < context.participantStartDate -> {
-                    rejectedDates.putIfAbsent(targetDate, CoinRejectionReason.BEFORE_PARTICIPANT_JOINED)
-                }
-                // 지각 인증 배제 (코인 발행 불가)
-                candidate.isLate -> {
-                    rejectedDates.putIfAbsent(targetDate, CoinRejectionReason.LATE_VERIFICATION)
-                }
-                // 리데이 티켓 적용 건 배제
-                candidate.isRedayApplied -> {
-                    rejectedDates.putIfAbsent(targetDate, CoinRejectionReason.REDAY_APPLIED)
-                }
-                else -> {
-                    validCandidates.add(candidate)
-                }
-            }
-        }
-
-        return FilterResult(validCandidates, rejectedDates)
+        // TODO [사용자 미션 1]: 부정 적립 기초 방어 (F11, 5.3.7)
+        // 1. context.challengeStatus가 CONFIRMED가 아닌 경우 모든 후보를 CHALLENGE_NOT_CONFIRMED로 거절하고 emptyList() 반환
+        // 2. 각 candidate에 대해 아래 조건 순차 검사 후 탈락 사유를 rejectedDates에 기록:
+        //    - 미래 날짜 (targetDate > todayKst || targetDate > submittedDate || candidate.submittedAt > now) -> FUTURE_DATE
+        //    - 계정 생성 이전 날짜 (targetDate < context.userCreatedAt.toLocalDate()) -> BEFORE_USER_CREATED
+        //    - 참가 효력 발생 이전 날짜 (targetDate < context.participantStartDate) -> BEFORE_PARTICIPANT_JOINED
+        //    - 지각 인증 (candidate.isLate) -> LATE_VERIFICATION
+        //    - 리데이 티켓 적용 (candidate.isRedayApplied) -> REDAY_APPLIED
+        // 3. 모든 조건을 통과한 후보만 validCandidates에 담아 FilterResult(validCandidates, rejectedDates)로 반환
+        return FilterResult(emptyList(), emptyMap())
     }
 
     /**
@@ -97,32 +63,14 @@ object CoinEligibilityCalculator {
         validCandidates: List<CandidateVerification>,
         existingAwardedCoinsByDate: Map<LocalDate, Int>
     ): DailyCapResult {
-        val cappedDates = mutableSetOf<LocalDate>()
-        val alreadyGrantedRejections = mutableMapOf<LocalDate, CoinRejectionReason>()
-        val newCandidateDates = mutableListOf<LocalDate>()
-
-        // 날짜별 그룹화하여 최초 1건만 후보로 취합하고, 동일 날짜 중복 제출 건은 캡(중복) 처리
-        val groupedByDate = validCandidates.groupBy { it.targetDate }
-
-        for ((date, submissions) in groupedByDate) {
-            if (submissions.size > 1) {
-                cappedDates.add(date)
-            }
-
-            val existingCoins = existingAwardedCoinsByDate[date] ?: 0
-            if (existingCoins >= CoinPolicy.DAILY_COIN_CAP) {
-                alreadyGrantedRejections[date] = CoinRejectionReason.ALREADY_GRANTED
-                cappedDates.add(date)
-            } else {
-                newCandidateDates.add(date)
-            }
-        }
-
-        return DailyCapResult(
-            newCandidateDates = newCandidateDates.sorted(),
-            cappedDates = cappedDates,
-            alreadyGrantedRejections = alreadyGrantedRejections
-        )
+        // TODO [사용자 미션 2]: 동일 날짜 10코인 캡 적용 및 중복 제거 (F05, 5.3.1, 5.3.2)
+        // 1. validCandidates를 targetDate 기준으로 그룹화(또는 distinct)합니다.
+        //    - 동일 날짜에 2건 이상 제출된 경우 cappedDates에 해당 날짜를 추가합니다.
+        // 2. 각 날짜에 대해 existingAwardedCoinsByDate에 이미 10코인 이상 지급되었는지 확인합니다:
+        //    - 이미 10코인 이상 지급된 경우: alreadyGrantedRejections에 ALREADY_GRANTED를 기록하고 cappedDates에 추가
+        //    - 아직 10코인 미만인 경우: newCandidateDates에 추가
+        // 3. newCandidateDates(정렬됨), cappedDates, alreadyGrantedRejections를 담아 DailyCapResult로 반환
+        return DailyCapResult(emptyList(), emptySet(), emptyMap())
     }
 
     /**
@@ -134,45 +82,16 @@ object CoinEligibilityCalculator {
         candidateDates: List<LocalDate>,
         existingAwardedCoinsByDate: Map<LocalDate, Int>
     ): WindowCapResult {
-        val eligibleDates = mutableSetOf<LocalDate>()
-        val windowCapRejections = mutableMapOf<LocalDate, CoinRejectionReason>()
-        val runningCoinsByDate = existingAwardedCoinsByDate.toMutableMap()
-
-        for (targetDate in candidateDates.sorted()) {
-            val exceeds30Days = isExceedingWindowCap(
-                targetDate = targetDate,
-                currentCoinsByDate = runningCoinsByDate,
-                windowDays = CoinPolicy.WINDOW_30_DAYS,
-                maxCoins = CoinPolicy.MAX_COINS_30_DAYS,
-                coinsToAdd = CoinPolicy.DAILY_COIN_CAP
-            )
-
-            if (exceeds30Days) {
-                windowCapRejections[targetDate] = CoinRejectionReason.EXCEEDS_30_DAY_CAP
-                continue
-            }
-
-            val exceeds365Days = isExceedingWindowCap(
-                targetDate = targetDate,
-                currentCoinsByDate = runningCoinsByDate,
-                windowDays = CoinPolicy.WINDOW_365_DAYS,
-                maxCoins = CoinPolicy.MAX_COINS_365_DAYS,
-                coinsToAdd = CoinPolicy.DAILY_COIN_CAP
-            )
-
-            if (exceeds365Days) {
-                windowCapRejections[targetDate] = CoinRejectionReason.EXCEEDS_365_DAY_CAP
-                continue
-            }
-
-            eligibleDates.add(targetDate)
-            runningCoinsByDate[targetDate] = (runningCoinsByDate[targetDate] ?: 0) + CoinPolicy.DAILY_COIN_CAP
-        }
-
-        return WindowCapResult(
-            eligibleDates = eligibleDates,
-            windowCapRejections = windowCapRejections
-        )
+        // TODO [사용자 미션 3]: 30일(300코인) / 365일(3,650코인) 수행일 기준 상한 검증 (F11, 5.3.3)
+        // 1. candidateDates를 오름차순으로 정렬하여 순회합니다.
+        // 2. runningCoinsByDate(기존 지급 코인 복사본)를 기준으로:
+        //    - isExceedingWindowCap(targetDate, ..., WINDOW_30_DAYS, MAX_COINS_30_DAYS, DAILY_COIN_CAP) 확인
+        //      -> 초과 시 windowCapRejections에 EXCEEDS_30_DAY_CAP 기록
+        //    - isExceedingWindowCap(targetDate, ..., WINDOW_365_DAYS, MAX_COINS_365_DAYS, DAILY_COIN_CAP) 확인
+        //      -> 초과 시 windowCapRejections에 EXCEEDS_365_DAY_CAP 기록
+        //    - 통과 시 eligibleDates에 추가하고 runningCoinsByDate[targetDate]에 DAILY_COIN_CAP 누적
+        // 3. WindowCapResult(eligibleDates, windowCapRejections) 반환
+        return WindowCapResult(emptySet(), emptyMap())
     }
 
     /**
@@ -185,30 +104,10 @@ object CoinEligibilityCalculator {
         maxCoins: Int,
         coinsToAdd: Int
     ): Boolean {
-        // targetDate를 포함하는 윈도우 [w, w + windowDays - 1]의 시작일 w 범위: [targetDate - windowDays + 1, targetDate]
-        val earliestWindowStart = targetDate.minusDays(windowDays - 1)
-
-        // 관심 구간 내의 코인 데이터만 필터링하여 불필요한 반복 최소화
-        val relevantCoins = currentCoinsByDate.filter { (date, _) ->
-            date in earliestWindowStart..targetDate.plusDays(windowDays - 1)
-        }
-
-        for (offset in 0 until windowDays) {
-            val windowStart = earliestWindowStart.plusDays(offset)
-            val windowEnd = windowStart.plusDays(windowDays - 1)
-
-            var windowSum = coinsToAdd
-            for ((date, coins) in relevantCoins) {
-                if (date in windowStart..windowEnd) {
-                    windowSum += coins
-                }
-            }
-
-            if (windowSum > maxCoins) {
-                return true
-            }
-        }
-
+        // TODO [사용자 미션 3-부속]: 특정 날짜를 포함하는 모든 연속된 windowDays 기간의 코인 합계가 maxCoins를 초과하는지 검사
+        // 1. targetDate를 포함하는 슬라이딩 윈도우 [w, w + windowDays - 1]의 시작일 w 범위는 [targetDate - windowDays + 1 .. targetDate] (총 windowDays개 윈도우)
+        // 2. 각 윈도우 구간 내에 존재하는 코인들의 합 + coinsToAdd가 maxCoins를 초과하면 true 반환
+        // 3. 모든 윈도우에서 초과하지 않으면 false 반환
         return false
     }
 
