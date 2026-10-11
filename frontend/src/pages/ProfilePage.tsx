@@ -55,7 +55,7 @@ export const ProfilePage: React.FC = () => {
   return (
     <div className="relative mx-auto flex min-h-dvh max-w-app flex-col bg-slate-50 font-sans text-slate-800">
       {/* 상단 바 */}
-      <AppMainHeader title="내 정보" />
+      <AppMainHeader title="내 정보" border={false} />
 
       <main className="flex flex-1 flex-col gap-[14px] px-4 pt-1 pb-screen-nav">
         {/* 프로필 아바타 영역 (ProfileHeader) */}
@@ -195,7 +195,7 @@ export const ProfilePage: React.FC = () => {
               <div className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-indigo-50 text-indigo-600">
                 <Info className="w-4 h-4" />
               </div>
-              <span className="text-[15px] font-semibold text-slate-800">dayuse 소개</span>
+              <span className="text-[15px] font-semibold text-slate-800">데이유즈 소개</span>
             </div>
             <ChevronRight className="size-4 shrink-0 text-slate-400" />
           </button>
