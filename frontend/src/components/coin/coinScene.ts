@@ -10,7 +10,7 @@ export interface CoinScene {
   dispose: () => void;
 }
 
-export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward', initial: CoinMotion): CoinScene {
+export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward', initial: CoinMotion, onReady?: (available: boolean) => void): CoinScene {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio * 1.5, 3));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -36,6 +36,8 @@ export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward',
   const rest = new THREE.Quaternion().setFromEuler(new THREE.Euler(variant === 'reward' ? 0 : 0.04, -0.1, 0));
   const axis = new THREE.Vector3(0, 1, 0);
   const turn = new THREE.Quaternion();
+  const lean = new THREE.Quaternion();
+  const forward = new THREE.Vector3(0, 0, 1);
   let model: THREE.Group | null = null;
   let disposed = false;
   let frame = 0;
@@ -43,6 +45,7 @@ export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward',
   let elapsed = 0;
   let last: number | null = null;
   let visible = true;
+  let readyNotified = false;
 
   const disposeModel = (group: THREE.Group) => {
     const geometries = new Set<THREE.BufferGeometry>();
@@ -60,10 +63,15 @@ export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward',
   const render = () => {
     const pose = sampleCoinMotion(motion, elapsed);
     pivot.position.y = pose.height;
+    pivot.scale.setScalar(pose.scale);
     turn.setFromAxisAngle(axis, pose.angle);
-    pivot.quaternion.copy(turn).multiply(rest);
+    pivot.quaternion.copy(turn).multiply(rest).multiply(lean.setFromAxisAngle(forward, pose.roll));
     renderer.render(scene, camera);
     if (model) host.dataset.ready = '';
+    if (model && !readyNotified) {
+      readyNotified = true;
+      onReady?.(true);
+    }
     return pose.done;
   };
   const tick = (now: number) => {
@@ -121,6 +129,7 @@ export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward',
     if (disposed) return;
     console.error('데이유즈 코인 3D 표시 실패. 정지 이미지로 표시합니다.', error);
     dispose();
+    onReady?.(false);
   };
   const contextLost = (event: Event) => { event.preventDefault(); fail(new Error('WebGL context lost')); };
   renderer.domElement.addEventListener('webglcontextlost', contextLost);
@@ -142,6 +151,7 @@ export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward',
       motion = next;
       elapsed = 0;
       last = null;
+      readyNotified = false;
       wake();
     },
     dispose,
