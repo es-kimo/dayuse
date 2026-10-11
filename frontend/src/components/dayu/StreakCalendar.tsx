@@ -1,4 +1,4 @@
-import { Ticket } from 'lucide-react';
+import { RedayTicket } from '../brand/RedayTicket';
 
 export type DayStatus = "done" | "miss" | "wait" | "future" | "none";
 
@@ -51,11 +51,11 @@ export function StreakCalendar({ year, month, statusOf, today, redayOf, onStartR
                 aria-label={`${month}월 ${d}일 리데이 사용하기`}
                 className="absolute inset-0 z-[2] rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
                 <span className="absolute bottom-0 right-0 grid size-5 place-items-center rounded-[7px] border border-blue-200 bg-white text-blue-600 shadow-sm">
-                  <Ticket className="size-3.5" />
+                  <RedayTicket size={18} />
                 </span>
               </button>
             )}
-            {reday === 'applied' && <span aria-hidden="true" className="absolute bottom-0 right-0 z-[2] grid size-5 place-items-center rounded-[7px] bg-slate-100 text-slate-500"><Ticket className="size-3.5" /></span>}
+            {reday === 'applied' && <span aria-hidden="true" className="absolute bottom-0 right-0 z-[2] grid size-5 place-items-center rounded-[7px] bg-slate-100"><RedayTicket used size={18} /></span>}
           </div>
         );
       })}

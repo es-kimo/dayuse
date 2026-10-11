@@ -1,4 +1,5 @@
 import React from "react";
+import { CoinBalanceBadge } from "./CoinBalanceBadge";
 import { ArrowLeft } from "lucide-react";
 
 export interface AppHeaderProps {
@@ -69,6 +70,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       >
         {title}
       </h1>
+
+      {variant === "main" && <CoinBalanceBadge />}
 
       {/* 우측 액션 */}
       {rightAction && <div className="flex shrink-0 items-center gap-1">{rightAction}</div>}

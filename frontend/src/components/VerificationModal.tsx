@@ -1,4 +1,5 @@
 import { NoticeTransition } from './announcement/NoticeTransition';
+import { RedayTicket } from './brand/RedayTicket';
 import { Camera as ScreenCamera, ImageIcon as ScreenImageIcon, Clipboard as ScreenClipboard, X as ScreenX } from './screens/ScreenIcons';
 import React, { useState, useRef, useEffect } from 'react';
 import { verificationsApi } from '../api/verifications';
@@ -24,8 +25,7 @@ import {
   Trash2,
   Smartphone,
   ChevronRight,
-  Ticket,
-} from 'lucide-react';
+  } from 'lucide-react';
 import { Dayu } from './dayu/DayuAvatar';
 import { Button } from './dayu/ui';
 import { IosInstallGuideModal } from './IosInstallGuideModal';
@@ -422,7 +422,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 setOpen(false);
               }}
             >
-              <Ticket className="size-4 shrink-0" />
+              <RedayTicket size={20} className="shrink-0" />
               리데이 티켓으로 벌금 면제하기
             </Button>
           )}

@@ -899,3 +899,75 @@ export interface AnnouncementPlacementNoticeResponse {
   announcement?: AnnouncementUserItemResponse | null;
 }
 
+export type ChallengeResultStatus = 'PROVISIONAL' | 'CONFIRMED' | 'ABORTED';
+
+export interface ChallengeParticipantResult {
+  id: number;
+  challengeParticipantId: number;
+  userId: number;
+  participantStartDate: string;
+  targetCount: number;
+  completedCount: number;
+  contributionCount: number;
+  actualSubmissionCount: number;
+  achievementRate: number | null;
+  isSuccess: boolean;
+  acknowledgedAt?: string | null;
+  isAcknowledged: boolean;
+  isRevised: boolean;
+  lateCount: number;
+  coinRewardCount: number;
+  coinExcludedDaysCount: number;
+  coinGrantStatus: 'NONE' | 'PENDING' | 'GRANTED';
+}
+
+export interface ChallengeResultDetail {
+  id: number;
+  challengeId: number;
+  groupId: number;
+  status: ChallengeResultStatus;
+  policyVersion: string;
+  executionType: ExecutionType;
+  periodType: PeriodType;
+  startDate: string;
+  endDate: string;
+  totalTargetCount: number;
+  totalCompletedCount: number;
+  achievementRate: number | null;
+  isSuccess: boolean;
+  abortedAt?: string | null;
+  abortReason?: string | null;
+  provisionalAt?: string | null;
+  confirmedAt?: string | null;
+  revision: number;
+  participants: ChallengeParticipantResult[];
+}
+
+export interface EndedChallengeSummaryItem {
+  challengeId: number;
+  groupId: number;
+  groupName: string;
+  challengeTitle: string;
+  status: ChallengeResultStatus;
+  executionType: ExecutionType;
+  periodType: PeriodType;
+  startDate: string;
+  endDate: string;
+  targetCount: number;
+  completedCount: number;
+  achievementRate: number | null;
+  isSuccess: boolean;
+  isAcknowledged: boolean;
+  isRevised: boolean;
+  acknowledgedAt?: string | null;
+  abortedAt?: string | null;
+  abortReason?: string | null;
+  coinRewardCount: number;
+  coinGrantStatus: 'NONE' | 'PENDING' | 'GRANTED';
+}
+
+export interface EndedChallengesSummaryResponse {
+  unacknowledgedCount: number;
+  items: EndedChallengeSummaryItem[];
+}
+

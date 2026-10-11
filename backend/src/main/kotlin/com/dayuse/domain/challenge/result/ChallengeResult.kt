@@ -80,12 +80,19 @@ class ChallengeResult(
     var provisionalAt: LocalDateTime? = null,
 
     @Column(nullable = true)
-    var confirmedAt: LocalDateTime? = null
+    var confirmedAt: LocalDateTime? = null,
+
+    @Column(nullable = false)
+    var revision: Int = 1
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = id
         protected set
+
+    fun revise() {
+        this.revision++
+    }
 
     fun updateMetrics(
         status: ChallengeResultStatus,

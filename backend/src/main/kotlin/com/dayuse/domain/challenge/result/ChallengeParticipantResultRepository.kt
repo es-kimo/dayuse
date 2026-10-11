@@ -8,6 +8,7 @@ import java.util.Optional
 interface ChallengeParticipantResultRepository : JpaRepository<ChallengeParticipantResult, Long> {
     fun findAllByChallengeResultId(challengeResultId: Long): List<ChallengeParticipantResult>
     fun findAllByChallengeId(challengeId: Long): List<ChallengeParticipantResult>
+    fun findAllByUserId(userId: Long): List<ChallengeParticipantResult>
     fun findByChallengeIdAndUserId(challengeId: Long, userId: Long): Optional<ChallengeParticipantResult>
     fun deleteAllByChallengeId(challengeId: Long)
 }

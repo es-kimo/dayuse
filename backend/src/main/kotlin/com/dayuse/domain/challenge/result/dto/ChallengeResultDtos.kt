@@ -18,10 +18,24 @@ data class ChallengeParticipantResultResponse(
     val contributionCount: Int,
     val actualSubmissionCount: Int,
     val achievementRate: Double?,
-    val isSuccess: Boolean
+    val isSuccess: Boolean,
+    val acknowledgedAt: LocalDateTime? = null,
+    val isAcknowledged: Boolean = false,
+    val isRevised: Boolean = false,
+    val lateCount: Int = 0,
+    val coinRewardCount: Int = 0,
+    val coinExcludedDaysCount: Int = 0,
+    val coinGrantStatus: String = "NONE"
 ) {
     companion object {
-        fun from(entity: ChallengeParticipantResult): ChallengeParticipantResultResponse {
+        fun from(
+            entity: ChallengeParticipantResult,
+            currentRevision: Int = 1,
+            lateCount: Int = 0,
+            coinRewardCount: Int = 0,
+            coinExcludedDaysCount: Int = 0,
+            coinGrantStatus: String = "NONE"
+        ): ChallengeParticipantResultResponse {
             return ChallengeParticipantResultResponse(
                 id = entity.id,
                 challengeParticipantId = entity.challengeParticipantId,
@@ -32,7 +46,14 @@ data class ChallengeParticipantResultResponse(
                 contributionCount = entity.contributionCount,
                 actualSubmissionCount = entity.actualSubmissionCount,
                 achievementRate = entity.achievementRate,
-                isSuccess = entity.isSuccess
+                isSuccess = entity.isSuccess,
+                acknowledgedAt = entity.acknowledgedAt,
+                isAcknowledged = entity.isAcknowledged(currentRevision),
+                isRevised = entity.isRevised(currentRevision),
+                lateCount = lateCount,
+                coinRewardCount = coinRewardCount,
+                coinExcludedDaysCount = coinExcludedDaysCount,
+                coinGrantStatus = coinGrantStatus
             )
         }
     }
@@ -56,12 +77,17 @@ data class ChallengeResultResponse(
     val abortReason: String?,
     val provisionalAt: LocalDateTime?,
     val confirmedAt: LocalDateTime?,
+    val revision: Int = 1,
     val participants: List<ChallengeParticipantResultResponse>
 ) {
     companion object {
         fun of(
             result: ChallengeResult,
-            participants: List<ChallengeParticipantResult>
+            participants: List<ChallengeParticipantResult>,
+            lateCountMap: Map<Long, Int> = emptyMap(),
+            coinRewardMap: Map<Long, Int> = emptyMap(),
+            coinExclusionMap: Map<Long, Int> = emptyMap(),
+            coinStatusMap: Map<Long, String> = emptyMap()
         ): ChallengeResultResponse {
             return ChallengeResultResponse(
                 id = result.id,
@@ -81,8 +107,46 @@ data class ChallengeResultResponse(
                 abortReason = result.abortReason,
                 provisionalAt = result.provisionalAt,
                 confirmedAt = result.confirmedAt,
-                participants = participants.map { ChallengeParticipantResultResponse.from(it) }
+                revision = result.revision,
+                participants = participants.map {
+                    ChallengeParticipantResultResponse.from(
+                        entity = it,
+                        currentRevision = result.revision,
+                        lateCount = lateCountMap[it.userId] ?: 0,
+                        coinRewardCount = coinRewardMap[it.userId] ?: 0,
+                        coinExcludedDaysCount = coinExclusionMap[it.userId] ?: 0,
+                        coinGrantStatus = coinStatusMap[it.userId] ?: "NONE"
+                    )
+                }
             )
         }
     }
 }
+
+data class EndedChallengeSummaryItem(
+    val challengeId: Long,
+    val groupId: Long,
+    val groupName: String,
+    val challengeTitle: String,
+    val status: ChallengeResultStatus,
+    val executionType: ExecutionType,
+    val periodType: PeriodType,
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val targetCount: Int,
+    val completedCount: Int,
+    val achievementRate: Double?,
+    val isSuccess: Boolean,
+    val isAcknowledged: Boolean,
+    val isRevised: Boolean,
+    val acknowledgedAt: LocalDateTime?,
+    val abortedAt: LocalDateTime?,
+    val abortReason: String?,
+    val coinRewardCount: Int = 0,
+    val coinGrantStatus: String = "NONE"
+)
+
+data class EndedChallengesSummaryResponse(
+    val unacknowledgedCount: Int,
+    val items: List<EndedChallengeSummaryItem>
+)
