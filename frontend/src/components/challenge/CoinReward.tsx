@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
+import { DayuseCoin } from '../coin/DayuseCoin';
 import './coinReward.css';
 
 /** The amount is an already-granted reward, never an optimistic wallet balance. */
@@ -37,9 +38,9 @@ export function CoinReward({ amount, animate }: { amount: number; animate: boole
             '--y': `${Math.sin(i * Math.PI / 6) * 92}px`,
             '--delay': `${400 + i * 45}ms`,
             '--spin': `${i % 2 ? -280 : 280}deg`,
-          } as CSSProperties}><span className="coin-reward__mini">D</span></span>
+          } as CSSProperties}><DayuseCoin className="coin-reward__mini" /></span>
         ))}
-        <div className="coin-reward__coin"><span>D<span className="coin-reward__star">✦</span></span></div>
+        <DayuseCoin variant="reward" motion={animate ? 'toss' : 'still'} />
         <div className="coin-reward__shadow" />
       </div>
       <p className="coin-reward__amount" aria-label={`${amount.toLocaleString()} 코인 적립 완료`}>

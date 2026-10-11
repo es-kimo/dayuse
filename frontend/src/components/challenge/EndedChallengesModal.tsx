@@ -1,7 +1,8 @@
 import { BottomSheet, BottomSheetTitle, BottomSheetDescription, BottomSheetClose } from '../ui/BottomSheet';
 import { SheetGrab, Chip } from '../dayu/ui';
 import React, { useState } from 'react';
-import { X, CheckCircle2, Coins, Clock } from 'lucide-react';
+import { X, CheckCircle2, Clock } from 'lucide-react';
+import { DayuseCoin } from '../coin/DayuseCoin';
 import type { EndedChallengeSummaryItem } from '../../types';
 
 export interface EndedChallengesModalProps {
@@ -87,7 +88,7 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
 
                   {item.coinGrantStatus === 'GRANTED' && item.coinRewardCount > 0 && (
                     <span className="mt-3 inline-flex items-center gap-1 text-[14px] font-bold text-amber-700">
-                      <Coins className="size-4" /> +{item.coinRewardCount.toLocaleString()} 코인
+                      <DayuseCoin /> +{item.coinRewardCount.toLocaleString()} 코인
                     </span>
                   )}
                 </button>

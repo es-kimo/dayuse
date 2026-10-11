@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+  <meta charset="utf-8" /><link rel="stylesheet" href="/src/components/challenge/coinReward.css" /><style>
+    body {
+      font: 16px sans-serif;
+      margin: 32px;
+    }
+    main {
+      display: flex;
+      gap: 50px;
+    }
+    section {
+      width: 320px;
+    }
+    pre {
+      white-space: pre-wrap;
+    }
+  </style>
+  <h1>코인 모션 진단</h1>
+  <button onclick="sample(0)">0ms</button
+  ><button onclick="sample(300)">300ms</button
+  ><button onclick="sample(800)">800ms</button
+  ><button onclick="sample(1200)">1200ms</button>
+  <main>
+    <section>
+      <h2>현재 모션 두 개</h2>
+      <div class="coin-reward coin-reward--animated">
+        <div class="coin-reward__stage">
+          <div class="coin-reward__coin" id="combined">
+            <img src="/@fs/Users/kihyun/orgs/personal/dayuse/brand/dayuse-coin/renders/coin-tilt.png" />
+          </div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>착지 모션만 비교</h2>
+      <div class="coin-reward coin-reward--animated">
+        <div class="coin-reward__stage">
+          <div
+            class="coin-reward__coin"
+            id="single"
+            style="animation: dayu-coin-land 900ms cubic-bezier(0.2, 0.75, 0.2, 1) both"
+          >
+            <img src="/@fs/Users/kihyun/orgs/personal/dayuse/brand/dayuse-coin/renders/coin-tilt.png" />
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <pre id="output"></pre>
+  <script>
+    function sample(time) {
+      for (const a of document.getAnimations()) {
+        a.pause();
+        a.currentTime = time;
+      }
+      requestAnimationFrame(() => {
+        output.textContent = JSON.stringify(
+          {
+            time,
+            reduced: matchMedia("(prefers-reduced-motion: reduce)").matches,
+            coins: ["combined", "single"].map((id) => {
+              const e = document.getElementById(id);
+              return {
+                id,
+                transform: getComputedStyle(e).transform,
+                opacity: getComputedStyle(e).opacity,
+                imageLoaded: e.querySelector("img").complete,
+                animations: e.getAnimations().map((a) => ({ name: a.animationName, currentTime: a.currentTime })),
+              };
+            }),
+          },
+          null,
+          2,
+        );
+      });
+    }
+    requestAnimationFrame(() => sample(300));
+  </script>
+</html>
