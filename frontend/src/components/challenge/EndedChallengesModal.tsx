@@ -1,6 +1,6 @@
 import { BottomSheet, BottomSheetTitle, BottomSheetDescription, BottomSheetClose } from '../ui/BottomSheet';
 import { SheetGrab, Chip } from '../dayu/ui';
-import React, { useState } from 'react';
+import React from 'react';
 import { X, CheckCircle2, Clock } from 'lucide-react';
 import { DayuseCoin } from '../coin/DayuseCoin';
 import type { EndedChallengeSummaryItem } from '../../types';
@@ -10,7 +10,6 @@ export interface EndedChallengesModalProps {
   onClose: () => void;
   items: EndedChallengeSummaryItem[];
   onSelectChallenge: (item: EndedChallengeSummaryItem) => void;
-  onSeedSamples?: () => Promise<void>;
 }
 
 export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
@@ -18,9 +17,7 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
   onClose,
   items,
   onSelectChallenge,
-  onSeedSamples,
 }) => {
-  const [isSeeding, setIsSeeding] = useState<boolean>(false);
 
   return (
     <BottomSheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -96,28 +93,6 @@ export const EndedChallengesModal: React.FC<EndedChallengesModalProps> = ({
             })
           )}
         </div>
-
-        {/* 푸터 보조 액션 */}
-        {onSeedSamples && (
-          <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs text-slate-400">개발/테스트용 빠른 시드</span>
-            <button
-              type="button"
-              disabled={isSeeding}
-              onClick={async () => {
-                try {
-                  setIsSeeding(true);
-                  await onSeedSamples();
-                } finally {
-                  setIsSeeding(false);
-                }
-              }}
-              className="text-xs text-blue-700 hover:text-blue-800 font-bold underline cursor-pointer"
-            >
-              {isSeeding ? '데이터 생성 중...' : '+ 테스트용 종료 데이터 4건 추가'}
-            </button>
-          </div>
-        )}
       </>
     </BottomSheet>
   );

@@ -138,13 +138,10 @@ export const ChallengeResultModal: React.FC<ChallengeResultModalProps> = ({
             다음 챌린지 시작하기 <ArrowRight className="size-4" />
           </Button>
           {granted && (
-            <Button type="button" variant="ghost" className="focus-ring w-full text-amber-700 hover:text-amber-800" onClick={() => handleAction('VIEW_COIN', '/rewards?tab=coins')}>
+            <Button type="button" variant="ghost" className="focus-ring w-full text-amber-700 hover:text-amber-800" onClick={() => handleAction('VIEW_COIN', '/coins')}>
               내 코인 보기
             </Button>
           )}
-          <Button type="button" variant="ghost" className="focus-ring w-full text-slate-600" onClick={() => handleAction('SETTLEMENT', `/groups/${groupId}/settlements`)}>
-            정산 확인하러 가기
-          </Button>
         </div>
       )}
     </BottomSheet>
