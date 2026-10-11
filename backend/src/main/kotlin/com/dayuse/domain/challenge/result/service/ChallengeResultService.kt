@@ -12,10 +12,13 @@ import com.dayuse.domain.challenge.result.dto.ChallengeResultResponse
 import com.dayuse.domain.dailyrecord.DailyRecordRepository
 import com.dayuse.domain.group.GroupMemberRepository
 import com.dayuse.domain.verification.VerificationRepository
+import com.dayuse.domain.coin.service.CoinEligibilityService
+import com.dayuse.domain.coin.service.CoinTransactionService
 import com.dayuse.global.exception.BadRequestException
 import com.dayuse.global.exception.ForbiddenException
 import com.dayuse.global.exception.ResourceNotFoundException
 import com.dayuse.global.util.DateTimeUtils
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -29,8 +32,12 @@ class ChallengeResultService(
     private val challengeParticipantResultRepository: ChallengeParticipantResultRepository,
     private val verificationRepository: VerificationRepository,
     private val dailyRecordRepository: DailyRecordRepository,
-    private val groupMemberRepository: GroupMemberRepository
+    private val groupMemberRepository: GroupMemberRepository,
+    private val coinEligibilityService: CoinEligibilityService? = null,
+    private val coinTransactionService: CoinTransactionService? = null
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
 
     /**
      * 특정 챌린지의 종료 결과를 집계하고 저장/갱신합니다.
@@ -126,6 +133,25 @@ class ChallengeResultService(
                         isSuccess = partCalc.isSuccess
                     )
                 )
+            }
+        }
+
+        // F06, 5.4: 결과 화면을 열지 않아도 확정 시 적격 코인 백그라운드 자동 지급
+        if (challengeResult.status == ChallengeResultStatus.CONFIRMED && coinEligibilityService != null && coinTransactionService != null) {
+            try {
+                val eligibilityMap = coinEligibilityService.calculateEligibilityForAllParticipants(challengeId, emptyMap(), now)
+                for ((userId, eligibility) in eligibilityMap) {
+                    if (eligibility.eligibleDates.isNotEmpty()) {
+                        coinTransactionService.grantCoins(
+                            userId = userId,
+                            challengeId = challengeId,
+                            eligibleDates = eligibility.eligibleDates,
+                            now = now
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                log.error("[ChallengeResultService] Failed to auto-grant coins for challenge $challengeId", e)
             }
         }
 
