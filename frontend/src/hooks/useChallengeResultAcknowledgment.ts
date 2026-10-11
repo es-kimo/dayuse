@@ -41,17 +41,46 @@ export function useChallengeResultAcknowledgment({
   const completedCount = myParticipantResult?.completedCount ?? 0;
   const targetCount = myParticipantResult?.targetCount ?? 0;
 
-  // TODO [사용자 미션 2-1]: 축하 효과 조건 판정 (shouldCelebrate)
-  // 조건: 확정(CONFIRMED) 상태이면서 목표를 완주(isSuccess || (targetCount > 0 && completedCount >= targetCount))했고,
-  //       결과 수정 재확인 건이 아니며(!isRevised), OS 동작 줄이기(!prefersReduced)인 경우에만 true
-  const shouldCelebrate = false;
+  // 축하 효과 조건: 성공 완주 && 결과 수정 건이 아님 && 동작 줄이기 비활성화 && 확정 상태
+  const prefersReduced = checkPrefersReducedMotion();
+  const isGoalAchieved = isSuccess || (targetCount > 0 && completedCount >= targetCount);
+  const shouldCelebrate = status === 'CONFIRMED' && isGoalAchieved && !isRevised && !prefersReduced;
 
   useEffect(() => {
-    // TODO [사용자 미션 2-2]: 확정 결과 열람 시 계정별 확인 상태 기록 및 전이 트리거 (F02, 5.5)
-    // 1. result 또는 myParticipantResult가 없으면 바로 리턴
-    // 2. 잠정(PROVISIONAL) 결과이거나, 이미 확인 완료되었고 수정되지 않은 경우(!isRevised) API 호출 유보
-    // 3. 중복 호출 방지(hasCalledRef.current) 처리 후 challengeResultApi.acknowledgeResult(groupId, challengeId) 호출
-    // 4. API 응답 성공 시 onAcknowledged 콜백 호출
+    // 잠정(PROVISIONAL) 결과이거나 이미 확인 완료되었고 수정되지 않은 경우 API 호출 유보
+    if (!result || !myParticipantResult) return;
+    if (!isConfirmedOrAborted) return;
+    if (isAlreadyAck && !isRevised) return;
+    if (hasCalledRef.current) return;
+
+    hasCalledRef.current = true;
+    let isMounted = true;
+
+    async function recordAcknowledgment() {
+      try {
+        setIsAcknowledging(true);
+        setAcknowledgmentError(null);
+        const updated = await challengeResultApi.acknowledgeResult(groupId, challengeId);
+        if (isMounted) {
+          onAcknowledged?.(updated);
+        }
+      } catch (err: unknown) {
+        if (isMounted) {
+          const msg = err instanceof Error ? err.message : '확인 상태 기록에 실패했습니다.';
+          setAcknowledgmentError(msg);
+        }
+      } finally {
+        if (isMounted) {
+          setIsAcknowledging(false);
+        }
+      }
+    }
+
+    recordAcknowledgment();
+
+    return () => {
+      isMounted = false;
+    };
   }, [groupId, challengeId, result, myParticipantResult, isConfirmedOrAborted, isAlreadyAck, isRevised, onAcknowledged]);
 
   return {
