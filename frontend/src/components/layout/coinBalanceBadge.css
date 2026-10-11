@@ -1,10 +1,59 @@
-.coin-wallet { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 64px; padding: 0 8px; flex-shrink: 0; border: 0; border-radius: 12px; background: transparent; cursor: pointer; transition: background 180ms ease; }
-@media (hover: hover) { .coin-wallet:hover { background: #0f172a05; } }
-.coin-wallet:active { background: #0f172a09; }
-.coin-wallet__content { display: inline-flex; align-items: center; gap: 4px; }
-.coin-wallet__amount { min-width: 3ch; text-align: right; font-size: 14px; line-height: 1; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: #475569; white-space: nowrap; animation: dayu-wallet-update 220ms ease-out; }
-@keyframes dayu-wallet-update { from { opacity: .55; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
+.coin-wallet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 64px;
+  padding: 0 8px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 180ms ease;
+}
+@media (hover: hover) {
+  .coin-wallet:hover {
+    background: #0f172a05;
+  }
+}
+.coin-wallet:active {
+  background: #0f172a09;
+}
+.coin-wallet__content {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.coin-wallet__amount {
+  min-width: 3ch;
+  text-align: right;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #475569;
+  white-space: nowrap;
+  animation: dayu-wallet-update 220ms ease-out;
+}
+@keyframes dayu-wallet-update {
+  from {
+    opacity: 0.55;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .coin-wallet, .coin-wallet * { animation: none !important; transition: none !important; }
-  .coin-wallet:active { transform: none; }
+  .coin-wallet,
+  .coin-wallet * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .coin-wallet:active {
+    transform: none;
+  }
 }
