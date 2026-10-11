@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Loader2, PauseCircle, RotateCcw, Ticket } from 'lucide-react';
+import { RedayTicket } from './brand/RedayTicket';
+import { Loader2, PauseCircle, RotateCcw } from 'lucide-react';
 import { Modal, ModalClose, ModalDescription, ModalTitle } from './ui/Modal';
 import { Button, Help, ProgressBar } from './dayu/ui';
 import { DayuExpression } from './brand/DayuExpression';
@@ -154,7 +155,7 @@ export const RedayAdModal: React.FC<RedayAdModalProps> = ({
       <div className="flex items-center justify-between gap-3">
         <ModalTitle className="text-[19px] font-extrabold tracking-[-0.02em] text-slate-800">리데이 티켓 받기</ModalTitle>
         <div className="flex items-center gap-2">
-          <span className="inline-flex h-9 items-center gap-1.5 rounded-full bg-blue-50 px-3 text-[13px] font-extrabold text-blue-600"><Ticket className="size-4 -rotate-12" />보상 +1장</span>
+          <span className="inline-flex h-9 items-center gap-1.5 rounded-full bg-blue-50 px-3 text-[13px] font-extrabold text-blue-600"><RedayTicket size={20} />보상 +1장</span>
           <ModalClose aria-label="닫기" className="grid size-9 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"><ScreenX className="size-5" /></ModalClose>
         </div>
       </div>

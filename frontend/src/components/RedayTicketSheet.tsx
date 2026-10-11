@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { RedayTicket } from './brand/RedayTicket';
 import {
   AlertCircle,
   Clock,
   Loader2,
   RotateCcw,
-  Ticket,
-} from 'lucide-react';
+  } from 'lucide-react';
 import {
   BottomSheet,
   BottomSheetClose,
@@ -173,7 +173,7 @@ export const RedayTicketSheet: React.FC<RedayTicketSheetProps> = ({
                   className="flex h-10 items-center gap-2 rounded-full border border-blue-100 bg-blue-50 py-1 pl-1 pr-3.5 shadow-[0_2px_0_0_#DBEAFE]"
                 >
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-sm">
-                    <Ticket className="size-[18px] -rotate-12" />
+                    <RedayTicket size={20} />
                   </span>
                   <span className="text-[11px] font-bold text-blue-600">보유</span>
                   <span className="text-[18px] font-extrabold tabular-nums leading-none text-slate-800">
@@ -251,7 +251,7 @@ export const RedayTicketSheet: React.FC<RedayTicketSheetProps> = ({
                   <>
                     {grantedTicketId !== null && (
                       <p role="status" className="flex items-center justify-center gap-1.5 text-[13px] font-bold text-blue-600">
-                        <Ticket className="size-4" />
+                        <RedayTicket size={20} />
                         티켓 +1장 · 아래에서 사용하세요
                       </p>
                     )}
@@ -279,7 +279,7 @@ export const RedayTicketSheet: React.FC<RedayTicketSheetProps> = ({
               </Button>
             ) : availableTicketCount > 0 || grantedTicketId !== null ? (
               <Button size="lg" className="w-full" onClick={handleUseTicket} disabled={applying}>
-                {applying ? <Loader2 className="size-4 animate-spin" /> : <Ticket className="size-4" />}
+                {applying ? <Loader2 className="size-4 animate-spin" /> : <RedayTicket size={20} />}
                 티켓 1장 사용하기
               </Button>
             ) : (

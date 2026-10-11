@@ -1,8 +1,9 @@
 import { streakAfterToday } from '../utils/streak';
+import { RedayTicket } from './brand/RedayTicket';
 import React, { useMemo, useState } from 'react';
 import type { ChallengeDetail, CalendarDailyRecordItem } from '../types';
 import { StreakCalendar, StreakLegend, type DayStatus } from './dayu/StreakCalendar';
-import { ChevronLeft, ChevronRight, Ticket } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRedayDeadlineTimer } from '../hooks/useRedayDeadlineTimer';
 import { pickRedayUsableRecords, formatRedayRemaining, calculateRemainingSeconds } from '../utils/reday';
 import { shiftCalendarMonth, recordCalendarStatus } from '../utils/recordCalendar';
@@ -108,12 +109,12 @@ export const MyRecordCard: React.FC<MyRecordCardProps> = ({
           if (nextReday.date.slice(0, 7) !== displayedMonth) setSelectedMonth(nextReday.date.slice(0, 7));
           else if (calculateRemainingSeconds(nextReday.redayDeadline) > 0) onStartReday?.(nextReday.id);
         }} className="flex items-center gap-2 text-left text-[12.5px] text-blue-600">
-          <Ticket className="size-4 shrink-0" />
+          <RedayTicket size={20} className="shrink-0" />
           <span>{Number(nextReday.date.slice(5, 7))}/{Number(nextReday.date.slice(8))} 리데이 가능 · {formatRedayRemaining(calculateRemainingSeconds(nextReday.redayDeadline))}{nextReday.date.slice(0, 7) !== displayedMonth ? ' · 날짜 보기' : ' · 사용하기'}</span>
           <ChevronRight className="ml-auto size-4 shrink-0" />
         </button>
       )}
-      {myRecords.some((record) => record.date.startsWith(displayedMonth) && record.redayApplied) && <p className="flex items-center gap-1.5 text-[12.5px] text-slate-500"><Ticket className="size-3.5" />회색 티켓은 리데이 사용 완료 · 지각 기록은 유지돼요.</p>}
+      {myRecords.some((record) => record.date.startsWith(displayedMonth) && record.redayApplied) && <p className="flex items-center gap-1.5 text-[12.5px] text-slate-500"><RedayTicket size={18} />회색 티켓은 리데이 사용 완료 · 지각 기록은 유지돼요.</p>}
 
       {/* Footer: Legend & Next streak hint */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3.5 text-xs">

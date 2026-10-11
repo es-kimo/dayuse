@@ -1,5 +1,6 @@
 import React from 'react';
-import { ChevronRight, Ticket } from 'lucide-react';
+import { RedayTicket } from './brand/RedayTicket';
+import { ChevronRight } from 'lucide-react';
 import { Card } from './dayu/ui';
 import { useRedayDeadlineTimer } from '../hooks/useRedayDeadlineTimer';
 import { formatMonthDay } from '../utils/date';
@@ -76,7 +77,7 @@ export const RedayActionCard: React.FC<RedayActionCardProps> = ({ items, onStart
   return (
     <Card className="flex flex-col gap-3.5">
       <h3 className="flex items-center gap-1.5 text-[14px] font-bold text-slate-800">
-        <Ticket aria-hidden="true" className="size-4 text-blue-600" />
+        <RedayTicket size={20} className="text-blue-600" />
         리데이 <span className="text-blue-600">{availableItems.length}</span>
       </h3>
       <div className="flex flex-col divide-y divide-slate-100">
