@@ -32,7 +32,7 @@ export const HomeUnconfirmedCard: React.FC<HomeUnconfirmedCardProps> = ({
         <span className="block text-[14.5px] font-bold tracking-[-0.01em] text-slate-800">
           확인할 챌린지 결과 {unacknowledgedCount}건
         </span>
-        <span className="mt-0.5 block text-[13px] text-slate-500">나의 도전과 받은 코인을 확인해요</span>
+        <span className="mt-0.5 block text-[13px] text-slate-500">도전 끝! 어떤 보상이 기다릴까요?</span>
       </span>
       <ChevronRight aria-hidden="true" className="size-[22px] shrink-0 text-slate-400" />
     </button>
