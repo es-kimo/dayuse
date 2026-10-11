@@ -780,7 +780,9 @@ export type AnnouncementActionTarget =
   | "REDAY_HISTORY"
   | "GROUP_CREATE"
   | "ANNOUNCEMENT_LIST"
-  | "MY_PAGE";
+  | "MY_PAGE"
+  | "COIN_BALANCE"
+  | "COIN";
 
 export type AnnouncementFeatureConditionType =
   | "ALL_USERS"

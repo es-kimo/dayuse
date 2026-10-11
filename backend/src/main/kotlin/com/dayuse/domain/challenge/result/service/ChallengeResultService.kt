@@ -43,7 +43,8 @@ class ChallengeResultService(
     private val groupRepository: GroupRepository? = null,
     private val coinTransactionRepository: CoinTransactionRepository? = null,
     private val coinEligibilityService: CoinEligibilityService? = null,
-    private val coinTransactionService: CoinTransactionService? = null
+    private val coinTransactionService: CoinTransactionService? = null,
+    private val challengeAnalyticsRecorder: com.dayuse.domain.analytics.service.ChallengeAnalyticsRecorder? = null
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -308,6 +309,16 @@ class ChallengeResultService(
             coinReward > 0 -> "GRANTED"
             else -> "NONE"
         }
+
+        challengeAnalyticsRecorder?.challengeResultAcknowledged(
+            userId = userId,
+            challengeId = challengeId,
+            groupId = groupId,
+            revision = challengeResult.revision,
+            lateCount = lateCount,
+            coinRewardCount = coinReward,
+            coinGrantStatus = coinStatus
+        )
 
         return ChallengeParticipantResultResponse.from(
             entity = participantResult,

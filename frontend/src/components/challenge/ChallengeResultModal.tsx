@@ -9,6 +9,7 @@ import { challengeResultApi } from '../../api/challengeResult';
 import { useAuth } from '../../context/AuthContext';
 import { useChallengeResultAcknowledgment } from '../../hooks/useChallengeResultAcknowledgment';
 import type { ChallengeResultDetail, ChallengeParticipantResult } from '../../types';
+import { track } from '../../utils/tracker';
 
 export interface ChallengeResultModalProps {
   isOpen: boolean;
@@ -41,12 +42,22 @@ export const ChallengeResultModal: React.FC<ChallengeResultModalProps> = ({
         setLoading(true);
         setError(null);
         const data = await challengeResultApi.getResult(groupId, challengeId);
-        if (isMounted) {
-          setResult(data);
-          const mine = data.participants.find((p) => p.userId === user?.id);
-          setAnimateReward(data.status === 'CONFIRMED' && mine?.coinGrantStatus === 'GRANTED'
-            && mine.coinRewardCount > 0 && !mine.isAcknowledged && !mine.isRevised);
-        }
+          if (isMounted) {
+            setResult(data);
+            const mine = data.participants.find((p) => p.userId === user?.id);
+            setAnimateReward(data.status === 'CONFIRMED' && mine?.coinGrantStatus === 'GRANTED'
+              && mine.coinRewardCount > 0 && !mine.isAcknowledged && !mine.isRevised);
+
+            track('challenge_result_viewed', {
+              challengeId,
+              groupId,
+              status: data.status,
+              isSuccess: mine?.isSuccess ?? false,
+              achievementRate: mine?.achievementRate != null ? Math.round(mine.achievementRate) : null,
+              coinGrantStatus: mine?.coinGrantStatus ?? 'NONE',
+              coinRewardCount: mine?.coinRewardCount ?? 0,
+            });
+          }
       } catch (err: unknown) {
         if (isMounted) {
           const msg = err instanceof Error ? err.message : '결과를 불러오지 못했습니다.';
@@ -90,6 +101,15 @@ export const ChallengeResultModal: React.FC<ChallengeResultModalProps> = ({
     onClose();
   };
   const go = (path: string) => { close(); navigate(path); };
+  const handleAction = (action: string, path: string) => {
+    track('challenge_result_action_clicked', {
+      challengeId,
+      groupId,
+      action,
+      destinationPath: path,
+    });
+    go(path);
+  };
 
   return (
     <BottomSheet open={isOpen} onOpenChange={(open) => !open && close()}>
@@ -114,10 +134,17 @@ export const ChallengeResultModal: React.FC<ChallengeResultModalProps> = ({
       </div>
       {!loading && !error && result && (
         <div className="shrink-0 space-y-2 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-          <Button type="button" className="focus-ring w-full" onClick={() => go(`/groups/${groupId}/challenges/new`)}>
+          <Button type="button" className="focus-ring w-full" onClick={() => handleAction('NEW_CHALLENGE', `/groups/${groupId}/challenges/new`)}>
             다음 챌린지 시작하기 <ArrowRight className="size-4" />
           </Button>
-
+          {granted && (
+            <Button type="button" variant="ghost" className="focus-ring w-full text-amber-700 hover:text-amber-800" onClick={() => handleAction('VIEW_COIN', '/coins')}>
+              내 코인 보기
+            </Button>
+          )}
+          <Button type="button" variant="ghost" className="focus-ring w-full text-slate-600" onClick={() => handleAction('SETTLEMENT', `/groups/${groupId}/settlements`)}>
+            정산 확인하러 가기
+          </Button>
         </div>
       )}
     </BottomSheet>

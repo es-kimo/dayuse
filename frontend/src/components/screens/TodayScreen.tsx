@@ -26,6 +26,7 @@ import { ChallengeResultModal } from '../challenge/ChallengeResultModal';
 import { useEndedChallengesSummary } from '../../hooks/useEndedChallengesSummary';
 import { challengeResultApi } from '../../api/challengeResult';
 import type { EndedChallengeSummaryItem } from '../../types';
+import { track } from '../../utils/tracker';
 
 /** 섹션 제목 줄. 인증 대기(amber)와 완료(emerald)는 글자색까지 상태를 따른다. */
 function StatusHead({ tone, icon, title, count }: { tone: 'warn' | 'ok'; icon: React.ReactNode; title: string; count: number }) {
@@ -84,6 +85,14 @@ export function TodayScreen({
       logPwaImpression('today_banner');
     }
   }, [canShowBanner]);
+
+  useEffect(() => {
+    if (unacknowledgedCount > 0) {
+      track('challenge_result_notice_viewed', {
+        unacknowledgedCount,
+      });
+    }
+  }, [unacknowledgedCount]);
 
   return (
     <Screen>

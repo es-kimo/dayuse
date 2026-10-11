@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DayuseCoin } from '../coin/DayuseCoin';
 import { RedayTicket } from '../brand/RedayTicket';
 import { getMyCoinBalance } from '../../api/coin';
@@ -13,6 +14,7 @@ export function CoinBalanceBadge() {
 }
 
 function WalletBalance() {
+  const navigate = useNavigate();
   const [balance, setBalance] = useState<number | null>(null);
   const [tickets, setTickets] = useState<number | null>(null);
   const [unavailable, setUnavailable] = useState(false);
@@ -63,7 +65,7 @@ function WalletBalance() {
 
   return (
     <button type="button" className="coin-wallet focus-ring inline-flex h-9 min-w-16 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-0 transition-[background] duration-180 ease-[ease] hover:bg-slate-50 active:bg-slate-100 motion-reduce:transition-none motion-reduce:[&_*]:animate-none! motion-reduce:[&_*]:transition-none!" aria-label={label} title={label}
-      onClick={() => { setBump((value) => value + 1); refreshRef.current(); }}>
+      onClick={() => { setBump((value) => value + 1); refreshRef.current(); navigate('/coins'); }}>
       <span className="coin-wallet__content inline-flex items-center gap-0.5">
         <DayuseCoin variant="header" motion={bump ? 'tilt' : 'still'} trigger={bump} />
         <span key={amount} aria-hidden="true" className="coin-wallet__amount min-w-[3ch] animate-[dayu-wallet-update_220ms_ease-out] text-right text-sm leading-none font-bold tracking-[-0.02em] whitespace-nowrap text-[#475569] tabular-nums">{unavailable ? '—' : amount}</span>

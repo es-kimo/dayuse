@@ -30,6 +30,7 @@ import { AdminAnnouncementsPage } from "./pages/AdminAnnouncementsPage";
 import { AdminAnnouncementEditPage } from "./pages/AdminAnnouncementEditPage";
 import { AnnouncementsPage } from "./pages/AnnouncementsPage";
 import { AnnouncementDetailPage } from "./pages/AnnouncementDetailPage";
+import { CoinPage } from "./pages/CoinPage";
 import { AnnouncementNotificationProvider } from "./context/AnnouncementNotificationContext";
 import { VerificationDraftProvider } from "./context/VerificationDraftContext";
 import { preloadKakao } from "./utils/kakao";
@@ -78,6 +79,8 @@ export const App: React.FC = () => {
               <Route path="/me" element={<ProfilePage />} />
               <Route path="/profile/avatar" element={<AvatarCustomPage />} />
               <Route path="/me/avatar" element={<AvatarCustomPage />} />
+              <Route path="/coins" element={<CoinPage />} />
+              <Route path="/me/coins" element={<CoinPage />} />
               <Route path="/announcements" element={<AnnouncementsPage />} />
               <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
               <Route path="/admin/announcements" element={<AdminAnnouncementsPage />} />

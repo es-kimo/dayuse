@@ -77,6 +77,11 @@ export async function executeAnnouncementCta(ctx: AnnouncementCtaContext): Promi
       destinationPath = '/profile';
       break;
 
+    case 'COIN_BALANCE':
+    case 'COIN':
+      destinationPath = '/coins';
+      break;
+
     default:
       showToast('현재 사용할 수 없는 기능이에요', 'warning');
       return false;

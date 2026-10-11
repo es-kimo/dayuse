@@ -254,6 +254,34 @@ class AnnouncementDataSeeder(
                 autoPublish = true,
                 daysAgo = 8,
                 durationDays = 30
+            ),
+
+            // 8. v0.13 코인 런칭 안내 새소식 (홈 화면 및 새소식 목록 노출)
+            AnnouncementSeedItem(
+                upsertRequest = AnnouncementUpsertRequest(
+                    title = "끝낸 챌린지, 결과와 코인으로 돌아봐요",
+                    summary = "챌린지가 끝나면 내 실천을 돌아보고 코인을 받아요. 홈에서 종료 결과를 확인해 보세요.",
+                    body = """
+## 챌린지가 끝나면 내 실천을 돌아보고 코인을 받아요
+도전 기간 동안 열심히 달려온 여러분을 위해 **챌린지 종료 결과와 코인 리워드**가 오픈되었습니다!
+
+- **결과 확인 위치**: 홈 화면의 '종료된 챌린지' 카드 및 새로운 소식에서 언제든 내 최종 달성 결과를 확인할 수 있습니다.
+- **인정 날짜당 10코인**: 챌린지 목표를 성실히 실천한 인정 날짜 1일당 **10 코인**이 자동으로 지급됩니다.
+- **늦은 인증(지각) 차이 안내**: 정규 인증 시간 내의 실천만 코인으로 인정되며, 지각 인증은 연속 실천(스트릭)과 벌금 면제(리데이) 용도로만 인정됩니다.
+- **적립 전용 (소비 추후 오픈)**: 현재는 데이유즈 굿즈 교환을 위한 코인 적립 기간입니다. 티셔츠(3,600코인), 후디(7,200코인) 교환 기능은 추후 굿즈 스토어와 함께 오픈될 예정입니다.
+- **과거 소급 불가 원칙**: v0.13 기능 출시 이후 종료된 챌린지부터 적립되며, 이전 완료된 과거 챌린지에는 소급 적용되지 않습니다.
+- **보류 및 이상 거래 문의**: 비정상적인 기록이나 시스템 이상으로 보류(HOLD)된 코인은 관리자 검토 후 순차적으로 정상 지급 처리됩니다.
+                    """.trimIndent(),
+                    imageUrl = null,
+                    imageAlt = null,
+                    ctaLabel = "내 코인 보기",
+                    ctaTarget = AnnouncementActionTarget.COIN_BALANCE,
+                    placement = null,
+                    homeVisible = true
+                ),
+                autoPublish = true,
+                daysAgo = 0,
+                durationDays = 30
             )
         )
     }
