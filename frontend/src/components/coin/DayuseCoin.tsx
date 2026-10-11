@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import coinFront from '../../../../brand/dayuse-coin/renders/coin-front.png';
-import coinTilt from '../../../../brand/dayuse-coin/renders/coin-tilt.png';
 import type { CoinMotion } from './coinMotion';
 import type { CoinScene } from './coinScene';
 import './dayuseCoin.css';
@@ -51,7 +50,7 @@ export function DayuseCoin({
 
   return (
     <span ref={host} className={`dayuse-coin dayuse-coin--${variant} ${className}`} aria-hidden="true">
-      <img src={variant === 'reward' ? coinTilt : coinFront} alt="" draggable={false} />
+      <img src={coinFront} alt="" draggable={false} />
     </span>
   );
 }

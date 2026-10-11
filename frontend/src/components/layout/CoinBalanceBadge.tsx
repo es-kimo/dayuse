@@ -57,9 +57,9 @@ function WalletBalance() {
   return (
     <button type="button" className="coin-wallet focus-ring" aria-label={label} title={label}
       onClick={() => { setBump((value) => value + 1); refreshRef.current(); }}>
-      <span className={`coin-wallet__content ${bump ? 'coin-wallet__content--bump' : ''}`}>
-        <DayuseCoin variant="header" motion={bump ? 'flip' : 'still'} trigger={bump} />
-        <span key={bump} aria-hidden="true" className="coin-wallet__amount">{unavailable ? '—' : amount}</span>
+      <span className="coin-wallet__content">
+        <DayuseCoin variant="header" motion={bump ? 'tilt' : 'still'} trigger={bump} />
+        <span key={amount} aria-hidden="true" className="coin-wallet__amount">{unavailable ? '—' : amount}</span>
       </span>
     </button>
   );

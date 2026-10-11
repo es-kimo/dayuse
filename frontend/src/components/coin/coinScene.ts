@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import modelUrl from '../../../../brand/dayuse-coin/dayuse-coin.glb?url';
 import { sampleCoinMotion, type CoinMotion } from './coinMotion';
+import { prepareCoinModel } from './coinModel';
 
 export interface CoinScene {
   play: (motion: CoinMotion) => void;
@@ -11,29 +12,29 @@ export interface CoinScene {
 
 export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward', initial: CoinMotion): CoinScene {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio * 1.5, 3));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 20);
-  camera.position.set(0, variant === 'reward' ? 0.36 : 0, 4);
+  camera.position.set(0, 0, 4);
   const pivot = new THREE.Group();
   scene.add(pivot);
-  const environment = new RoomEnvironment();
+  const environment = new RoomEnvironment(renderer);
   const pmrem = new THREE.PMREMGenerator(renderer);
-  const target = pmrem.fromScene(environment, 0.04);
+  const target = pmrem.fromScene(environment, 0.12);
   environment.dispose();
   pmrem.dispose();
   scene.environment = target.texture;
-  const key = new THREE.DirectionalLight(0xffffff, 1.6);
-  key.position.set(1.5, 3, 2);
-  const fill = new THREE.DirectionalLight(0xfff4e0, 0.9);
-  fill.position.set(-2, 1, 3);
+  const key = new THREE.DirectionalLight(0xffffff, 2);
+  key.position.set(-2, 3, 5);
+  const fill = new THREE.DirectionalLight(0xfff8eb, 1.4);
+  fill.position.set(3, 1, 5);
   scene.add(key, fill, new THREE.AmbientLight(0xffffff, 0.35));
 
-  const rest = new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.18, 0.32, -0.12));
-  const axis = new THREE.Vector3(variant === 'reward' ? 1 : 0, variant === 'reward' ? 0.15 : 1, 0.12).normalize();
+  const rest = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.04, -0.1, 0));
+  const axis = new THREE.Vector3(0, 1, 0);
   const turn = new THREE.Quaternion();
   let model: THREE.Group | null = null;
   let disposed = false;
@@ -61,7 +62,6 @@ export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward',
     pivot.position.y = pose.height;
     turn.setFromAxisAngle(axis, pose.angle);
     pivot.quaternion.copy(turn).multiply(rest);
-    if (motion === 'toss') pivot.quaternion.slerp(rest, pose.settle);
     renderer.render(scene, camera);
     if (model) host.dataset.ready = '';
     return pose.done;
@@ -93,7 +93,7 @@ export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward',
     const width = host.clientWidth;
     const height = host.clientHeight;
     if (!width || !height) return;
-    const halfHeight = variant === 'reward' ? 0.95 : 0.65;
+    const halfHeight = variant === 'reward' ? 0.85 : 0.58;
     camera.left = -halfHeight * width / height;
     camera.right = -camera.left;
     camera.top = halfHeight;
@@ -131,17 +131,19 @@ export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward',
   new GLTFLoader().load(modelUrl, (gltf) => {
     if (disposed) { disposeModel(gltf.scene); return; }
     model = gltf.scene;
-    model.traverse((object) => {
-      if (object instanceof THREE.Mesh && object.material instanceof THREE.MeshStandardMaterial) {
-        object.material.envMapIntensity = object.material.metalness > 0.5 ? 1.7 : 1;
-      }
-    });
+    prepareCoinModel(model);
     pivot.add(model);
     wake();
   }, undefined, fail);
 
   return {
-    play(next) { motion = next; elapsed = 0; last = null; wake(); },
+    play(next) {
+      if (next === motion && !sampleCoinMotion(motion, elapsed).done) return;
+      motion = next;
+      elapsed = 0;
+      last = null;
+      wake();
+    },
     dispose,
   };
 }

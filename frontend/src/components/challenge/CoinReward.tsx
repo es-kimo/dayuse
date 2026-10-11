@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import { DayuseCoin } from '../coin/DayuseCoin';
 import './coinReward.css';
 
@@ -14,7 +14,7 @@ export function CoinReward({ amount, animate }: { amount: number; animate: boole
       setDisplayAmount(amount);
     };
     const tick = (now: number) => {
-      const progress = Math.max(0, Math.min(1, (now - start - 650) / 1250));
+      const progress = Math.max(0, Math.min(1, (now - start - 900) / 1300));
       setDisplayAmount(Math.round(amount * (1 - (1 - progress) ** 3)));
       if (progress < 1) frame = requestAnimationFrame(tick);
     };
@@ -32,15 +32,7 @@ export function CoinReward({ amount, animate }: { amount: number; animate: boole
       <div className="coin-reward__stage" aria-hidden="true">
         <div className="coin-reward__halo" />
         <div className="coin-reward__ring" />
-        {animate && Array.from({ length: 12 }, (_, i) => (
-          <span key={i} className="coin-reward__particle" style={{
-            '--x': `${Math.cos(i * Math.PI / 6) * (i % 2 ? 128 : 102)}px`,
-            '--y': `${Math.sin(i * Math.PI / 6) * 92}px`,
-            '--delay': `${400 + i * 45}ms`,
-            '--spin': `${i % 2 ? -280 : 280}deg`,
-          } as CSSProperties}><DayuseCoin className="coin-reward__mini" /></span>
-        ))}
-        <DayuseCoin variant="reward" motion={animate ? 'toss' : 'still'} />
+        <DayuseCoin variant="reward" motion={animate ? 'reveal' : 'still'} />
         <div className="coin-reward__shadow" />
       </div>
       <p className="coin-reward__amount" aria-label={`${amount.toLocaleString()} 코인 적립 완료`}>

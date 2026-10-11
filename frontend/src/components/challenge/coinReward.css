@@ -1,20 +1,14 @@
 .coin-reward { text-align: center; }
-.coin-reward__stage { position: relative; height: 220px; display: grid; place-items: center; isolation: isolate; }
-.coin-reward__halo { position: absolute; width: 250px; height: 210px; border-radius: 50%; background: radial-gradient(ellipse, #fff1ad 0%, #fff8df 40%, transparent 70%); z-index: -1; }
-.coin-reward__shadow { position: absolute; bottom: 6px; width: 88px; height: 12px; background: #cf9c3030; border-radius: 50%; filter: blur(5px); z-index: -1; }
-.coin-reward__ring { position: absolute; width: 112px; height: 112px; border: 2px solid #f7ca50; border-radius: 50%; opacity: 0; }
-.coin-reward__particle { position: absolute; left: calc(50% - 12px); top: calc(50% - 12px); opacity: 0; }
-.coin-reward__particle .coin-reward__mini { display: block; width: 24px; height: 24px; }
+.coin-reward__stage { position: relative; height: 240px; display: grid; place-items: center; isolation: isolate; }
+.coin-reward__halo { position: absolute; width: 240px; height: 200px; border-radius: 50%; background: radial-gradient(ellipse, #fff3d6 0%, #fffbf0 42%, transparent 72%); z-index: -1; }
+.coin-reward__shadow { position: absolute; bottom: 12%; width: 68px; height: 8px; background: #b48b3420; border-radius: 50%; filter: blur(5px); z-index: -1; }
+.coin-reward__ring { position: absolute; width: 152px; height: 152px; border: 1px solid #e8ce8c; border-radius: 50%; opacity: 0; z-index: -1; }
 .coin-reward__amount { color: #1e293b; font-size: clamp(38px, 12vw, 54px); line-height: 1.15; font-weight: 900; letter-spacing: -.055em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .coin-reward__unit { font-size: 22px; letter-spacing: -.03em; }
-.coin-reward--animated .coin-reward__ring { animation: dayu-reward-ring 900ms 450ms ease-out both; }
-.coin-reward--animated .coin-reward__particle { animation: dayu-coin-collect 1450ms var(--delay) cubic-bezier(.2,.65,.3,1) both; }
-.coin-reward--animated .coin-reward__amount { animation: dayu-reward-total 550ms 1700ms ease-out both; }
-@keyframes dayu-reward-ring { 0% { opacity: .7; transform: scale(.5); } 100% { opacity: 0; transform: scale(2.5); } }
-@keyframes dayu-coin-collect { 0% { opacity: 0; transform: translate(0,0) scale(.3); } 25% { opacity: 1; transform: translate(var(--x),var(--y)) rotate(var(--spin)) scale(1); } 50% { opacity: 1; transform: translate(var(--x),var(--y)) rotate(var(--spin)); } 100% { opacity: 0; transform: translate(0,128px) rotate(0) scale(.25); } }
-@keyframes dayu-reward-total { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.09); color: #b7790b; } }
+.coin-reward--animated .coin-reward__ring { animation: dayu-reward-ring 1400ms 800ms ease-out both; }
+@keyframes dayu-reward-ring { 0% { opacity: 0; transform: scale(.95); } 25% { opacity: .35; } 100% { opacity: 0; transform: scale(1.35); } }
 @media (prefers-reduced-motion: reduce) {
   .coin-reward--animated *, .coin-reward--animated *::before { animation: none !important; }
-  .coin-reward__particle, .coin-reward__ring { display: none; }
+  .coin-reward__ring { display: none; }
 }
-@media (max-height: 650px) { .coin-reward__stage { height: 170px; } }
+@media (max-height: 650px) { .coin-reward__stage { height: 180px; } }
