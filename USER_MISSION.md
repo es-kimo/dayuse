@@ -1,70 +1,72 @@
-# 🎯 사용자 핵심 학습 미션 가이드 (#127: 소식 데이터·게시·노출 정책)
+# 🎯 사용자 핵심 학습 미션 가이드 (#149: 종료 안내·결과 화면·다음 행동)
 
-이 문서는 **[v0.12] 01. 소식 데이터·게시·노출 정책 (F05~F06, 시각·상태·권한)** 이슈의 핵심 학습 포인트를 직접 구현하고 검증하기 위한 가이드입니다.
+이 문서는 **[v0.13] 04. 종료 안내·결과 화면·다음 행동 (F02~F04·F08, 모바일·접근성)** 이슈의 핵심 학습 포인트를 직접 구현하고 검증하기 위한 가이드입니다.
 
-> 💡 **빠른 빈칸 위치 확인**:
-> 터미널에서 `git diff HEAD~1`을 실행하면, 어떤 파일의 어느 라인을 채워 넣어야 하는지(그리고 이전 커밋의 레퍼런스 구현은 무엇인지) 한눈에 비교할 수 있습니다.
+> 💡 **빠른 빈칸 위치 및 정답 비교 확인**:
+> 터미널에서 `git diff HEAD~1`을 실행하면 어떤 파일의 어느 라인을 채워 넣어야 하는지(그리고 이전 커밋의 레퍼런스 구현은 무엇인지) 한눈에 확인할 수 있습니다.
+
+---
+
+## 📌 핵심 학습 목표 및 배경
+
+1. **결과 확인 상태(`acknowledged`) 전이 모델**:
+   - 운영 기간 종료 직후의 잠정 결과(`PROVISIONAL`)를 열람했을 때는 확인 처리를 유보해야 합니다.
+   - 확정 결과(`CONFIRMED`) 또는 중단 결과(`ABORTED`) 상세를 정상 열람했을 때만 계정별 확인 상태(`acknowledged`)를 기록합니다.
+   - 결과 보정으로 버전(`revision`)이 증가한 경우 기존 확인자라도 "결과가 수정됐어요" 상태로 전이되어 재확인 대상이 됩니다.
+2. **축하 효과 제어 및 접근성 존중 (5.5, 6)**:
+   - 결과 보정으로 인한 재확인 시에는 축하 효과(애니메이션) 중복 재생을 방지합니다.
+   - OS `prefers-reduced-motion` 동작 줄이기 설정이 활성화된 경우 축하 효과를 비활성화합니다.
 
 ---
 
 ## 📌 미션 목록 및 대상 파일
 
-### 1️⃣ [사용자 미션 1] 소식 생명주기 전이 및 안내 기간 vs 게시 종료 분리 판정
-- **대상 파일**: `backend/src/main/kotlin/com/dayuse/domain/announcement/Announcement.kt`
-- **구현 대상 메서드**:
-  1. `resolveDisplayPhase(now: LocalDateTime): AnnouncementDisplayPhase` (`TODO [사용자 미션 1-1]`)
-     - 저장된 `status`(`DRAFT`, `PUBLISHED`, `ENDED`)와 서버 KST 시각(`now`, `publishAt`, `noticeEndsAt`)을 조합하여 파생 노출 단계를 반환합니다.
-     - `PUBLISHED` 상태일 때:
-       - `publishAt == null` 또는 `now < publishAt` → `SCHEDULED` (예약 대기)
-       - `publishAt <= now < noticeEndsAt` → `ACTIVE_NOTICE` (안내 기간 중: 홈 카드·인라인·미확인 점 + 목록·상세 모두 활성)
-       - `now >= noticeEndsAt` → `NOTICE_EXPIRED` (**안내 기간 종료**: 홈 카드·인라인·미확인 점은 중단하되, **목록·상세 조회는 유지**)
-  2. `publish(...)` (`TODO [사용자 미션 1-2]`)
-     - 이미 `ENDED`(게시 종료) 상태인 소식은 재게시할 수 없도록 `BadRequestException`으로 차단합니다.
-     - `requestedNoticeEndsAt`이 생략된 경우 기본값으로 `effectivePublishAt.plusDays(DEFAULT_NOTICE_DURATION_DAYS)`(14일)을 적용하고, `validateScheduleWindow(effectivePublishAt, effectiveNoticeEndsAt)`로 `noticeEndsAt > publishAt`을 검증합니다.
-  3. `end(...)` (`TODO [사용자 미션 1-3]`)
-     - `DRAFT` 상태이거나 이미 `ENDED` 상태이면 `BadRequestException`을 던집니다.
-     - `PUBLISHED` 상태일 때만 `ENDED`로 전이하고 `endedAt`, `endedBy`, `updatedBy`, `updatedAt`을 기록합니다.
+### 1️⃣ [사용자 미션 1] 결과 확인 상태(`acknowledged`) 전이 및 잠정 결과 유보 (백엔드)
+- **대상 파일**: `backend/src/main/kotlin/com/dayuse/domain/challenge/result/service/ChallengeResultService.kt`
+- **대상 메서드**: `acknowledgeResult(...)`
+- **요구사항**:
+  1. 조회된 `challengeResult.status`가 잠정 결과(`PROVISIONAL`)인 경우:
+     - 확인 완료 처리를 유보하고 `BadRequestException("잠정 결과는 확정 전까지 확인 완료 처리할 수 없습니다.")`를 던집니다.
+  2. 확정(`CONFIRMED`) 또는 중단(`ABORTED`) 상태인 경우:
+     - `participantResult.acknowledge(challengeResult.revision, now)`를 호출하여 현재 revision과 확인 시각을 기록합니다.
 
 ---
 
-### 2️⃣ [사용자 미션 2] 계정×소식 단위 읽음(`readAt`)과 닫기(`dismissedAt`) 분리 및 멱등 처리 (F05)
-- **대상 파일**: `backend/src/main/kotlin/com/dayuse/domain/announcement/AnnouncementUserState.kt`
-- **구현 대상 메서드**:
-  1. `markRead(now: LocalDateTime)` (`TODO [사용자 미션 2-1]`)
-     - `readAt == null`일 때만 `readAt = now`, `updatedAt = now`로 기록합니다 (중복 호출 시 최초 시각 유지).
-     - 기존 `dismissedAt` 값은 건드리지 않습니다.
-  2. `markDismissed(now: LocalDateTime)` (`TODO [사용자 미션 2-2]`)
-     - `dismissedAt == null`일 때만 `dismissedAt = now`, `updatedAt = now`로 기록합니다.
-     - **중요**: 홈/인라인에서 닫더라도 목록에서는 `읽지 않은 소식`으로 남아야 하므로 `readAt`은 절대 변경하지 않습니다.
-
----
-
-### 3️⃣ [사용자 미션 3] 기능 제공 조건(Fail-Safe) 및 위치별 적격 소식 최대 1건 판정 (F06)
-- **대상 파일 1**: `backend/src/main/kotlin/com/dayuse/domain/announcement/service/AnnouncementFeatureEligibilityEvaluator.kt`
-  - `isEligible(userId, conditionType, featureKey)` (`TODO [사용자 미션 3-1]`)
-    - `ALL_USERS`이면 `true`를 반환합니다.
-    - 조건부 소식(`EXPERIMENT_PARTICIPANT`, `EXPERIMENT_VARIANT_B`)이면 `experimentService.assignVariant(cleanedKey, userId)`를 호출해 판정을 위임합니다.
-    - `assignment.isFallback || !assignment.participating`이거나 판정 중 예외가 발생하면 예외를 전파하지 않고 `false`를 반환(Fail-Safe)합니다.
-- **대상 파일 2**: `backend/src/main/kotlin/com/dayuse/domain/announcement/service/AnnouncementService.kt`
-  - `getUnreadDotStatus(userId, now)` (`TODO [사용자 미션 3-2]`)
-    - 현재 안내 기간 내(`isWithinActiveNoticeWindow(now)`) + 기능 조건 충족 + 미열람(`!isRead`) + 미닫기(`!isDismissed`) 소식 개수를 집계합니다.
-  - `getActiveNoticeForPlacement(userId, placement, now)` (`TODO [사용자 미션 3-3]`)
-    - 요청한 화면 위치(`HOME` 또는 `CERT_CREATE`)에 대해 안내 기간 내 + 위치 활성(`isActiveForPlacement`) + 기능 조건 충족 + 미열람 + 미닫기 소식 중 최신 `publishAt`(동일 시각 시 `id` 역순) 기준 **최대 1건**을 선택합니다.
+### 2️⃣ [사용자 미션 2] 확정 결과 열람 시 확인 상태 기록 훅 및 축하 효과 제어 (프론트엔드)
+- **대상 파일**: `frontend/src/hooks/useChallengeResultAcknowledgment.ts`
+- **구현 대상**:
+  1. **`shouldCelebrate` 조건 판정 (`TODO [사용자 미션 2-1]`)**:
+     - 결과가 확정(`CONFIRMED`) 상태여야 합니다.
+     - 목표를 달성(`isSuccess || (targetCount > 0 && completedCount >= targetCount)`)해야 합니다.
+     - 결과 보정으로 인한 재확인 건이 아니어야 합니다(`!isRevised`).
+     - OS 동작 줄이기 설정이 켜져 있지 않아야 합니다(`!prefersReduced`).
+     - 위 조건을 모두 만족할 때만 `true`를 반환합니다.
+  2. **`useEffect` 확인 상태 기록 트리거 (`TODO [사용자 미션 2-2]`)**:
+     - `result` 또는 `myParticipantResult`가 없으면 바로 리턴합니다.
+     - 잠정 결과(`PROVISIONAL`)이거나 확정/중단 상태가 아닌 경우 API 호출을 유보합니다.
+     - 이미 확인 완료되었고 수정되지 않은 경우(`isAlreadyAck && !isRevised`) API 호출을 건너뜁니다.
+     - 중복 호출 방지(`hasCalledRef.current`)를 확인 및 설정하고, `challengeResultApi.acknowledgeResult(groupId, challengeId)`를 호출합니다.
+     - 성공 시 `onAcknowledged?.(updated)` 콜백을 호출합니다.
 
 ---
 
 ## 🧪 테스트 실행 및 검증 명령어
 
+### 백엔드 테스트 (미션 1)
 ```bash
-cd backend
-./gradlew test --tests "com.dayuse.domain.announcement.*" --console=plain
+./backend/gradlew -p backend test --tests "com.dayuse.domain.challenge.result.ChallengeResultAcknowledgmentTest"
 ```
 
-모든 빈칸을 올바르게 구현하면 `AnnouncementTest`와 `AnnouncementIntegrationTest`가 모두 **GREEN(통과)**으로 전환됩니다!
+### 프론트엔드 테스트 (미션 2)
+```bash
+npm --prefix frontend test -- src/hooks/useChallengeResultAcknowledgment.test.ts
+```
 
 ---
 
-## 💬 구현 후 스스로 답해볼 핵심 질문
-1. 안내 기간 종료(`noticeEndsAt` 경과)와 게시 종료(`ENDED`)를 단일 상태나 단일 시각으로 합치지 않고 분리해야 하는 이유는 무엇이며, 각각 홈/인라인 노출·미확인 점·목록/상세 조회에 어떻게 다르게 작용하는가?
-2. 사용자의 '읽음(`readAt`)'과 '안내 닫기(`dismissedAt`)'를 하나의 불리언 플래그로 합치지 않고 별도로 저장해야 하는 이유는 무엇이며, 게시 중 소식 내용이 수정될 때 기존 상태를 초기화하지 않아야 하는 이유는 무엇인가?
-3. 점진 배포나 실험(v0.10) 대상 기능에 연결된 조건부 소식을 조회할 때, 공지 도메인이 자체적으로 기능을 활성화하지 않고 기존 기능 제공 판정을 그대로 위임·검증하며 판정 실패 시 어떻게 안전하게 처리(Fail-Safe)해야 하는가?
+## 🏁 풀이 완료 후 레퍼런스 정답 확인
+
+모든 테스트가 통과(`GREEN`)하면 아래 명령어로 Step 1의 완성 커밋과 비교해보세요:
+```bash
+git diff HEAD~1
+```

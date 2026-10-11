@@ -287,17 +287,15 @@ class ChallengeResultService(
             ResourceNotFoundException("챌린지 결과를 찾을 수 없습니다.")
         }
 
-        if (challengeResult.status == ChallengeResultStatus.PROVISIONAL) {
-            throw BadRequestException("잠정 결과는 확정 전까지 확인 완료 처리할 수 없습니다.")
-        }
-
         val participantResult = challengeParticipantResultRepository
             .findByChallengeIdAndUserId(challengeId, userId)
             .orElseThrow {
                 ResourceNotFoundException("챌린지 참여 결과를 찾을 수 없습니다.")
             }
 
-        participantResult.acknowledge(challengeResult.revision, now)
+        // TODO [사용자 미션 1]: 결과 확인 상태(acknowledged) 전이 및 잠정 결과 유보 로직 구현
+        // 1. 잠정 결과(PROVISIONAL) 상태일 때는 확인 완료 처리를 유보하고 BadRequestException("잠정 결과는 확정 전까지 확인 완료 처리할 수 없습니다.") 발생
+        // 2. 확정(CONFIRMED) 또는 중단(ABORTED) 상태인 경우 participantResult.acknowledge(challengeResult.revision, now) 호출하여 확인 상태 전이
 
         val verifications = verificationRepository.findAllByChallengeId(challengeId)
         val lateCount = verifications.count { it.userId == userId && it.isLate }

@@ -1,77 +1,72 @@
-# 🎓 사용자 핵심 학습 미션: 기간·수행 주기 설정과 집계 (Issue #24, F03–F04)
+# 🎯 사용자 핵심 학습 미션 가이드 (#149: 종료 안내·결과 화면·다음 행동)
 
-본 이슈(GitHub Issue #24)는 **"챌린지의 가변 기간(1일~365일)과 참여자별 개별 시작일이 주어졌을 때, 7일 단위 구간 분할 및 짧은 마지막 구간의 목표(`min(N, 남은 일수)`)를 순수 도메인 로직으로 어떻게 우아하게 모델링하고, 초과 인증의 차기 구간 이월 방지 규칙을 완료율 산출에서 어떻게 정합성 있게 보장할 것인가?"**를 직접 고민하고 구현해보는 핵심 학습 단계입니다.
+이 문서는 **[v0.13] 04. 종료 안내·결과 화면·다음 행동 (F02~F04·F08, 모바일·접근성)** 이슈의 핵심 학습 포인트를 직접 구현하고 검증하기 위한 가이드입니다.
 
-AI Agent가 인프라, Flyway DB 마이그레이션(`V5__add_challenge_period_and_frequency.sql`), `Challenge` 엔티티 및 DTO 확장, 서비스 레이어 연동, 프론트엔드 기간 직접 선택기 및 주 N회 선택/구간 분할 실시간 미리보기 UI, 통합 테스트를 모두 완성해 두었습니다.  
-이제 아래의 3가지 핵심 미션을 직접 완성하여 **RED 상태인 7개의 단위 테스트를 GREEN으로 전환**해보세요!
-
----
-
-## 🎯 핵심 학습 질문 (미션을 완료하고 나면 답할 수 있게 됩니다)
-1. **"챌린지의 전체 기간과 참여자의 개별 시작일이 주어졌을 때, 7일 단위의 구간(Period Interval)과 짧은 마지막 구간의 목표(`min(N, 남은 일수)`)를 순수 도메인 로직으로 어떻게 우아하게 모델링했나요?"**
-2. **"하루 최대 1회 인증 제한과 구간 초과 달성분의 차기 구간 이월 방지 규칙을 완료율 산출 로직에서 어떻게 정합성 있게 보장했나요?"**
-3. **"기존의 14일 매일형 챌린지 및 과거 일일 기록(DailyRecord)과의 하위 호환성을 깨뜨리지 않고 스키마와 계산 파이프라인을 확장한 전략은 무엇인가요?"**
+> 💡 **빠른 빈칸 위치 및 정답 비교 확인**:
+> 터미널에서 `git diff HEAD~1`을 실행하면 어떤 파일의 어느 라인을 채워 넣어야 하는지(그리고 이전 커밋의 레퍼런스 구현은 무엇인지) 한눈에 확인할 수 있습니다.
 
 ---
 
-## 🧭 미션 목록 및 구현 가이드
+## 📌 핵심 학습 목표 및 배경
 
-### 📍 [미션 1] `ChallengePeriodInterval.kt` 값 객체 계산 속성 구현
-- **파일**: [`ChallengePeriodInterval.kt`](src/main/kotlin/com/dayuse/domain/challenge/period/ChallengePeriodInterval.kt)
-- **목표**: 구간 내 달성 여부(`isAchieved`), 잔여 목표 횟수(`remainingTarget`), 초과 달성 이월 방지용 유효 인증 횟수(`effectiveCompletedCount`)를 구현합니다.
-- **구현 항목**:
-  1. `isAchieved`: 구간 내 실제 유효 인증 횟수가 구간 목표치 이상인지 여부 (`completedCount >= targetCount`)
-  2. `remainingTarget`: 달성까지 남은 목표 횟수 (음수가 되지 않도록 최소 0: `maxOf(0, targetCount - completedCount)`)
-  3. `effectiveCompletedCount`: 한 구간에서 목표치를 초과하여 인증하더라도 다음 구간으로 이월되지 않도록 목표치까지만 인정 (`minOf(completedCount, targetCount)`)
-
----
-
-### 📍 [미션 2] `ChallengePeriodCalculator.kt` 주기별 구간 목표 횟수 산출 알고리즘
-- **파일**: [`ChallengePeriodCalculator.kt`](src/main/kotlin/com/dayuse/domain/challenge/period/ChallengePeriodCalculator.kt)
-- **목표**: 주기 유형(`DAILY` vs `WEEKLY_N`)에 따라 구간의 목표 횟수(`targetCount`)를 계산합니다.
-- **구현 항목**:
-  1. `periodType == PeriodType.DAILY` (매일형):
-     - 구간의 일수(`daysInInterval`)만큼 매일 인증하는 것이 목표입니다.
-  2. `periodType == PeriodType.WEEKLY_N` (주 N회):
-     - 기본적으로 주당 설정한 목표 횟수(`targetFrequency ?: 1`)가 목표입니다.
-     - 단, 마지막 구간이 7일 미만으로 짧게 남은 경우(예: 남은 일수 3일인데 주 5회 설정 시), 비율 계산이 아닌 **`minOf(targetFrequency ?: 1, daysInInterval)`**로 계산하여 남은 일수를 초과하지 않도록 보정합니다.
+1. **결과 확인 상태(`acknowledged`) 전이 모델**:
+   - 운영 기간 종료 직후의 잠정 결과(`PROVISIONAL`)를 열람했을 때는 확인 처리를 유보해야 합니다.
+   - 확정 결과(`CONFIRMED`) 또는 중단 결과(`ABORTED`) 상세를 정상 열람했을 때만 계정별 확인 상태(`acknowledged`)를 기록합니다.
+   - 결과 보정으로 버전(`revision`)이 증가한 경우 기존 확인자라도 "결과가 수정됐어요" 상태로 전이되어 재확인 대상이 됩니다.
+2. **축하 효과 제어 및 접근성 존중 (5.5, 6)**:
+   - 결과 보정으로 인한 재확인 시에는 축하 효과(애니메이션) 중복 재생을 방지합니다.
+   - OS `prefers-reduced-motion` 동작 줄이기 설정이 활성화된 경우 축하 효과를 비활성화합니다.
 
 ---
 
-### 📍 [미션 3] `ChallengePeriodCalculator.kt` 차기 구간 이월 방지 및 전체 완료율 계산
-- **파일**: [`ChallengePeriodCalculator.kt`](src/main/kotlin/com/dayuse/domain/challenge/period/ChallengePeriodCalculator.kt)
-- **목표**: 구간 초과 인증이 다음 구간으로 이월되지 않도록 전체 완료 횟수를 집계하고, 전체 완료율을 산출합니다.
-- **구현 항목**:
-  1. `totalCompleted`:
-     - 모든 구간의 단순 `completedCount` 합이 아니라, 미션 1에서 구현한 **`effectiveCompletedCount`의 합**으로 집계합니다. (초과 인증 이월 원천 방지)
-  2. `progressRate`:
-     - `totalTarget > 0`일 때: `((totalCompleted.toDouble() / totalTarget) * 100).toInt()`
-     - 최대 100%를 초과하지 않도록 제한합니다 (`minOf(100, ...)`).
+## 📌 미션 목록 및 대상 파일
+
+### 1️⃣ [사용자 미션 1] 결과 확인 상태(`acknowledged`) 전이 및 잠정 결과 유보 (백엔드)
+- **대상 파일**: `backend/src/main/kotlin/com/dayuse/domain/challenge/result/service/ChallengeResultService.kt`
+- **대상 메서드**: `acknowledgeResult(...)`
+- **요구사항**:
+  1. 조회된 `challengeResult.status`가 잠정 결과(`PROVISIONAL`)인 경우:
+     - 확인 완료 처리를 유보하고 `BadRequestException("잠정 결과는 확정 전까지 확인 완료 처리할 수 없습니다.")`를 던집니다.
+  2. 확정(`CONFIRMED`) 또는 중단(`ABORTED`) 상태인 경우:
+     - `participantResult.acknowledge(challengeResult.revision, now)`를 호출하여 현재 revision과 확인 시각을 기록합니다.
+
+---
+
+### 2️⃣ [사용자 미션 2] 확정 결과 열람 시 확인 상태 기록 훅 및 축하 효과 제어 (프론트엔드)
+- **대상 파일**: `frontend/src/hooks/useChallengeResultAcknowledgment.ts`
+- **구현 대상**:
+  1. **`shouldCelebrate` 조건 판정 (`TODO [사용자 미션 2-1]`)**:
+     - 결과가 확정(`CONFIRMED`) 상태여야 합니다.
+     - 목표를 달성(`isSuccess || (targetCount > 0 && completedCount >= targetCount)`)해야 합니다.
+     - 결과 보정으로 인한 재확인 건이 아니어야 합니다(`!isRevised`).
+     - OS 동작 줄이기 설정이 켜져 있지 않아야 합니다(`!prefersReduced`).
+     - 위 조건을 모두 만족할 때만 `true`를 반환합니다.
+  2. **`useEffect` 확인 상태 기록 트리거 (`TODO [사용자 미션 2-2]`)**:
+     - `result` 또는 `myParticipantResult`가 없으면 바로 리턴합니다.
+     - 잠정 결과(`PROVISIONAL`)이거나 확정/중단 상태가 아닌 경우 API 호출을 유보합니다.
+     - 이미 확인 완료되었고 수정되지 않은 경우(`isAlreadyAck && !isRevised`) API 호출을 건너뜁니다.
+     - 중복 호출 방지(`hasCalledRef.current`)를 확인 및 설정하고, `challengeResultApi.acknowledgeResult(groupId, challengeId)`를 호출합니다.
+     - 성공 시 `onAcknowledged?.(updated)` 콜백을 호출합니다.
 
 ---
 
 ## 🧪 테스트 실행 및 검증 명령어
 
-아래 Gradle 테스트 명령어를 실행하여 작성한 코드의 통과 여부를 검증하세요:
-
+### 백엔드 테스트 (미션 1)
 ```bash
-# 1. 사용자 미션 단위 테스트 검증 (7개 테스트 GREEN 전환 목표)
-./gradlew test --tests "com.dayuse.domain.challenge.period.ChallengePeriodCalculatorTest"
+./backend/gradlew -p backend test --tests "com.dayuse.domain.challenge.result.ChallengeResultAcknowledgmentTest"
+```
 
-# 2. 챌린지 도메인 통합 테스트 검증
-./gradlew test --tests "com.dayuse.domain.challenge.ChallengeIntegrationTest"
-
-# 3. 전체 프로젝트 회귀 테스트
-./gradlew test
+### 프론트엔드 테스트 (미션 2)
+```bash
+npm --prefix frontend test -- src/hooks/useChallengeResultAcknowledgment.test.ts
 ```
 
 ---
 
-## 💡 정답 비교 및 힌트 확인 방법
+## 🏁 풀이 완료 후 레퍼런스 정답 확인
 
-작업을 완료하여 테스트를 모두 `GREEN`으로 만드신 후(또는 풀이 도중 막힐 때), 아래 명령어를 통해 Agent가 미리 작성해 둔 모범 답안과 손쉽게 비교해 볼 수 있습니다:
-
+모든 테스트가 통과(`GREEN`)하면 아래 명령어로 Step 1의 완성 커밋과 비교해보세요:
 ```bash
-# 직전 완성본 커밋(feat: ...)과 현재 작성 코드의 차이점 한눈에 보기
 git diff HEAD~1
 ```
