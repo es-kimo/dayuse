@@ -85,10 +85,14 @@ export const ChallengeResultModal: React.FC<ChallengeResultModalProps> = ({
     : pending ? '보상이 확정되면 여기서 알려드릴게요.'
     : granted ? '꾸준히 쌓은 노력이 보상이 되었어요.'
     : '이번에는 코인 보상이 없어요. 가볍게 다시 시작해요.';
-  const go = (path: string) => { onClose(); navigate(path); };
+  const close = () => {
+    window.dispatchEvent(new Event('dayu:coin-balance-changed'));
+    onClose();
+  };
+  const go = (path: string) => { close(); navigate(path); };
 
   return (
-    <BottomSheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <BottomSheet open={isOpen} onOpenChange={(open) => !open && close()}>
       <div className="relative shrink-0 px-5 pt-2.5">
         <SheetGrab />
         <BottomSheetClose aria-label="닫기" className="focus-ring absolute right-3 top-5 grid size-11 cursor-pointer place-items-center rounded-xl text-slate-400 hover:bg-slate-100">
@@ -113,9 +117,7 @@ export const ChallengeResultModal: React.FC<ChallengeResultModalProps> = ({
           <Button type="button" className="focus-ring w-full" onClick={() => go(`/groups/${groupId}/challenges/new`)}>
             다음 챌린지 시작하기 <ArrowRight className="size-4" />
           </Button>
-          <Button type="button" variant="ghost" className="focus-ring w-full" onClick={() => go(granted ? '/profile' : `/groups/${groupId}`)}>
-            {granted ? '내 코인 보러 가기' : '모임으로 돌아가기'}
-          </Button>
+
         </div>
       )}
     </BottomSheet>
