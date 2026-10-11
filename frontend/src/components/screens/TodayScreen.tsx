@@ -20,6 +20,11 @@ import {
   dismissPwaBanner,
   isPwaBannerDismissed,
 } from '../../utils/pwaAnalytics';
+import { HomeUnconfirmedCard } from '../challenge/HomeUnconfirmedCard';
+import { EndedChallengesModal } from '../challenge/EndedChallengesModal';
+import { ChallengeResultModal } from '../challenge/ChallengeResultModal';
+import { useEndedChallengesSummary } from '../../hooks/useEndedChallengesSummary';
+import type { EndedChallengeSummaryItem } from '../../types';
 
 /** 섹션 제목 줄. 인증 대기(amber)와 완료(emerald)는 글자색까지 상태를 따른다. */
 function StatusHead({ tone, icon, title, count }: { tone: 'warn' | 'ok'; icon: React.ReactNode; title: string; count: number }) {
@@ -57,6 +62,10 @@ export function TodayScreen({
 
   const [showInstallGuide, setShowInstallGuide] = useState<boolean>(false);
   const [isBannerDismissed, setIsBannerDismissed] = useState<boolean>(() => isPwaBannerDismissed());
+
+  const { unacknowledgedCount, items: endedItems, acknowledgeLocal } = useEndedChallengesSummary();
+  const [showEndedModal, setShowEndedModal] = useState<boolean>(false);
+  const [selectedEndedChallenge, setSelectedEndedChallenge] = useState<EndedChallengeSummaryItem | null>(null);
 
   const canShowBanner = !isStandalone() && !isBannerDismissed;
 
@@ -137,6 +146,13 @@ export function TodayScreen({
             timeZone: 'Asia/Seoul',
           })}
         </p>
+
+        {unacknowledgedCount > 0 && (
+          <HomeUnconfirmedCard
+            unacknowledgedCount={unacknowledgedCount}
+            onClick={() => setShowEndedModal(true)}
+          />
+        )}
 
         <NoticeTransition noticeKey={`announcement:${homeNotice?.id ?? 'empty'}`}>
           {homeNotice && (
@@ -261,6 +277,27 @@ export function TodayScreen({
         onClose={() => setShowInstallGuide(false)}
         initialPlatform={isIos() ? 'ios' : 'android'}
       />
+
+      <EndedChallengesModal
+        isOpen={showEndedModal}
+        onClose={() => setShowEndedModal(false)}
+        items={endedItems}
+        onSelectChallenge={(item) => {
+          setSelectedEndedChallenge(item);
+        }}
+      />
+
+      {selectedEndedChallenge && (
+        <ChallengeResultModal
+          isOpen={!!selectedEndedChallenge}
+          onClose={() => setSelectedEndedChallenge(null)}
+          groupId={selectedEndedChallenge.groupId}
+          challengeId={selectedEndedChallenge.challengeId}
+          onAcknowledged={() => {
+            acknowledgeLocal(selectedEndedChallenge.challengeId);
+          }}
+        />
+      )}
     </Screen>
   );
 }

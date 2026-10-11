@@ -14,6 +14,13 @@ import com.dayuse.domain.group.GroupMemberRepository
 import com.dayuse.domain.verification.VerificationRepository
 import com.dayuse.domain.coin.service.CoinEligibilityService
 import com.dayuse.domain.coin.service.CoinTransactionService
+import com.dayuse.domain.group.GroupRepository
+import com.dayuse.domain.coin.CoinTransactionRepository
+import com.dayuse.domain.coin.CoinTransactionType
+import com.dayuse.domain.coin.CoinTransactionStatus
+import com.dayuse.domain.challenge.result.dto.ChallengeParticipantResultResponse
+import com.dayuse.domain.challenge.result.dto.EndedChallengesSummaryResponse
+import com.dayuse.domain.challenge.result.dto.EndedChallengeSummaryItem
 import com.dayuse.global.exception.BadRequestException
 import com.dayuse.global.exception.ForbiddenException
 import com.dayuse.global.exception.ResourceNotFoundException
@@ -33,6 +40,8 @@ class ChallengeResultService(
     private val verificationRepository: VerificationRepository,
     private val dailyRecordRepository: DailyRecordRepository,
     private val groupMemberRepository: GroupMemberRepository,
+    private val groupRepository: GroupRepository? = null,
+    private val coinTransactionRepository: CoinTransactionRepository? = null,
     private val coinEligibilityService: CoinEligibilityService? = null,
     private val coinTransactionService: CoinTransactionService? = null
 ) {
@@ -214,18 +223,178 @@ class ChallengeResultService(
         }
 
         val resultOpt = challengeResultRepository.findByChallengeId(challengeId)
-        if (resultOpt.isPresent) {
-            val result = resultOpt.get()
-            val participants = challengeParticipantResultRepository.findAllByChallengeId(challengeId)
-            return ChallengeResultResponse.of(result, participants)
+        val result = if (resultOpt.isPresent) {
+            resultOpt.get()
+        } else {
+            // 결과가 아직 없지만 종료 시점에 도달했거나 중단된 경우 온디맨드 집계
+            val operationEnd = challenge.endDate.plusDays(1).atStartOfDay()
+            if (challenge.isAborted() || now >= operationEnd) {
+                return aggregateAndSave(challengeId, now)
+            }
+            throw ResourceNotFoundException("아직 집계된 챌린지 결과가 없습니다.")
         }
 
-        // 결과가 아직 없지만 종료 시점에 도달했거나 중단된 경우 온디맨드 집계
-        val operationEnd = challenge.endDate.plusDays(1).atStartOfDay()
-        if (challenge.isAborted() || now >= operationEnd) {
-            return aggregateAndSave(challengeId, now)
+        val participants = challengeParticipantResultRepository.findAllByChallengeId(challengeId)
+        val verifications = verificationRepository.findAllByChallengeId(challengeId)
+        val lateCountMap = verifications.filter { it.isLate }.groupBy { it.userId }.mapValues { it.value.size }
+
+        val coinTxs = coinTransactionRepository?.findAllByChallengeId(challengeId) ?: emptyList()
+        val coinTxsByUser = coinTxs.groupBy { it.userId }
+        val coinRewardMap = coinTxsByUser.mapValues { (_, txs) ->
+            txs.filter { it.type in listOf(CoinTransactionType.GRANT, CoinTransactionType.ADJUSTMENT_ADD) && it.status == CoinTransactionStatus.COMPLETED }
+                .sumOf { it.amount }
+        }
+        val coinStatusMap = coinTxsByUser.mapValues { (_, txs) ->
+            when {
+                txs.any { it.status == CoinTransactionStatus.HELD } -> "PENDING"
+                txs.any { it.status == CoinTransactionStatus.COMPLETED } -> "GRANTED"
+                else -> "NONE"
+            }
         }
 
-        throw ResourceNotFoundException("아직 집계된 챌린지 결과가 없습니다.")
+        return ChallengeResultResponse.of(
+            result = result,
+            participants = participants,
+            lateCountMap = lateCountMap,
+            coinRewardMap = coinRewardMap,
+            coinStatusMap = coinStatusMap
+        )
+    }
+
+    /**
+     * 확정 결과 열람 시 계정별 확인 상태(acknowledged) 기록 (F02, 5.5)
+     * - 잠정 결과(PROVISIONAL)는 확인 완료 처리를 유보하고 BadRequestException 발생
+     * - 확정(CONFIRMED) 또는 중단(ABORTED) 상태인 경우 현재 revision으로 확인 상태 기록
+     */
+    fun acknowledgeResult(
+        groupId: Long,
+        challengeId: Long,
+        userId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): ChallengeParticipantResultResponse {
+        groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+            ?: throw ForbiddenException("해당 모임의 멤버만 결과를 확인할 수 있습니다.")
+
+        val challenge = challengeRepository.findById(challengeId).orElseThrow {
+            ResourceNotFoundException("챌린지를 찾을 수 없습니다. (ID: $challengeId)")
+        }
+
+        if (challenge.groupId != groupId) {
+            throw BadRequestException("해당 모임의 챌린지가 아닙니다.")
+        }
+
+        val challengeResult = challengeResultRepository.findByChallengeId(challengeId).orElseThrow {
+            ResourceNotFoundException("챌린지 결과를 찾을 수 없습니다.")
+        }
+
+        if (challengeResult.status == ChallengeResultStatus.PROVISIONAL) {
+            throw BadRequestException("잠정 결과는 확정 전까지 확인 완료 처리할 수 없습니다.")
+        }
+
+        val participantResult = challengeParticipantResultRepository
+            .findByChallengeIdAndUserId(challengeId, userId)
+            .orElseThrow {
+                ResourceNotFoundException("챌린지 참여 결과를 찾을 수 없습니다.")
+            }
+
+        participantResult.acknowledge(challengeResult.revision, now)
+
+        val verifications = verificationRepository.findAllByChallengeId(challengeId)
+        val lateCount = verifications.count { it.userId == userId && it.isLate }
+        val coinTxs = coinTransactionRepository?.findAllByUserIdAndChallengeId(userId, challengeId) ?: emptyList()
+        val coinReward = coinTxs.filter { it.type in listOf(CoinTransactionType.GRANT, CoinTransactionType.ADJUSTMENT_ADD) && it.status == CoinTransactionStatus.COMPLETED }.sumOf { it.amount }
+        val coinStatus = when {
+            coinTxs.any { it.status == CoinTransactionStatus.HELD } -> "PENDING"
+            coinReward > 0 -> "GRANTED"
+            else -> "NONE"
+        }
+
+        return ChallengeParticipantResultResponse.from(
+            entity = participantResult,
+            currentRevision = challengeResult.revision,
+            lateCount = lateCount,
+            coinRewardCount = coinReward,
+            coinGrantStatus = coinStatus
+        )
+    }
+
+    /**
+     * 로그인한 사용자의 모든 종료 챌린지 결과 요약 및 홈 미확인 건수 집계 (F02, F04)
+     */
+    @Transactional(readOnly = true)
+    fun getEndedChallengesSummary(
+        userId: Long,
+        now: LocalDateTime = DateTimeUtils.nowKst()
+    ): EndedChallengesSummaryResponse {
+        val participantResults = challengeParticipantResultRepository.findAllByUserId(userId)
+        if (participantResults.isEmpty()) {
+            return EndedChallengesSummaryResponse(unacknowledgedCount = 0, items = emptyList())
+        }
+
+        val challengeIds = participantResults.map { it.challengeId }
+        val challenges = challengeRepository.findAllById(challengeIds).associateBy { it.id }
+        val challengeResults = challengeResultRepository.findAll().filter { it.challengeId in challengeIds }.associateBy { it.challengeId }
+        val groupIds = challenges.values.map { it.groupId }.distinct()
+        val groups = groupRepository?.findAllById(groupIds)?.associateBy { it.id } ?: emptyMap()
+        val coinTxs = coinTransactionRepository?.findAllByUserId(userId)?.filter { it.challengeId in challengeIds } ?: emptyList()
+        val coinTxsByChallenge = coinTxs.groupBy { it.challengeId }
+
+        var unacknowledgedCount = 0
+        val items = mutableListOf<EndedChallengeSummaryItem>()
+
+        for (partResult in participantResults) {
+            val challenge = challenges[partResult.challengeId] ?: continue
+            val result = challengeResults[partResult.challengeId]
+            val group = groups[challenge.groupId]
+
+            val resultStatus = result?.status ?: if (challenge.isAborted()) ChallengeResultStatus.ABORTED else ChallengeResultStatus.PROVISIONAL
+            val currentRev = result?.revision ?: 1
+            val isAck = partResult.isAcknowledged(currentRev)
+            val isRev = partResult.isRevised(currentRev)
+
+            // 확정/중단 상태이며, 아직 미확인이거나 결과가 수정된 경우 미확인 카운트에 반영
+            val isUnacknowledged = (resultStatus == ChallengeResultStatus.CONFIRMED || resultStatus == ChallengeResultStatus.ABORTED) && (!isAck || isRev)
+            if (isUnacknowledged) {
+                unacknowledgedCount++
+            }
+
+            val txs = coinTxsByChallenge[challenge.id] ?: emptyList()
+            val coinReward = txs.filter { it.type in listOf(CoinTransactionType.GRANT, CoinTransactionType.ADJUSTMENT_ADD) && it.status == CoinTransactionStatus.COMPLETED }.sumOf { it.amount }
+            val coinStatus = when {
+                txs.any { it.status == CoinTransactionStatus.HELD } -> "PENDING"
+                coinReward > 0 -> "GRANTED"
+                else -> "NONE"
+            }
+
+            items.add(
+                EndedChallengeSummaryItem(
+                    challengeId = challenge.id,
+                    groupId = challenge.groupId,
+                    groupName = group?.name ?: "",
+                    challengeTitle = challenge.title,
+                    status = resultStatus,
+                    executionType = challenge.executionType,
+                    periodType = challenge.periodType,
+                    startDate = challenge.startDate,
+                    endDate = challenge.endDate,
+                    targetCount = partResult.targetCount,
+                    completedCount = partResult.completedCount,
+                    achievementRate = partResult.achievementRate,
+                    isSuccess = partResult.isSuccess,
+                    isAcknowledged = isAck,
+                    isRevised = isRev,
+                    acknowledgedAt = partResult.acknowledgedAt,
+                    abortedAt = challenge.abortedAt ?: result?.abortedAt,
+                    abortReason = challenge.abortReason ?: result?.abortReason,
+                    coinRewardCount = coinReward,
+                    coinGrantStatus = coinStatus
+                )
+            )
+        }
+
+        return EndedChallengesSummaryResponse(
+            unacknowledgedCount = unacknowledgedCount,
+            items = items.sortedByDescending { it.endDate }
+        )
     }
 }

@@ -10,6 +10,7 @@ import jakarta.persistence.Index
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Entity
 @Table(
@@ -64,12 +65,31 @@ class ChallengeParticipantResult(
     var achievementRate: Double? = null,
 
     @Column(nullable = false)
-    var isSuccess: Boolean = false
+    var isSuccess: Boolean = false,
+
+    @Column(nullable = true)
+    var acknowledgedAt: LocalDateTime? = null,
+
+    @Column(nullable = false)
+    var acknowledgedRevision: Int = 0
 ) : BaseTimeEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = id
         protected set
+
+    fun acknowledge(currentRevision: Int, now: LocalDateTime) {
+        this.acknowledgedAt = now
+        this.acknowledgedRevision = currentRevision
+    }
+
+    fun isAcknowledged(currentRevision: Int): Boolean {
+        return acknowledgedAt != null && acknowledgedRevision >= currentRevision
+    }
+
+    fun isRevised(currentRevision: Int): Boolean {
+        return acknowledgedAt != null && acknowledgedRevision < currentRevision
+    }
 
     fun updateMetrics(
         targetCount: Int,

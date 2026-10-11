@@ -32,8 +32,31 @@ class ChallengeResultController(
         @PathVariable challengeId: Long,
         @CurrentUserId userId: Long
     ): ResponseEntity<ChallengeResultResponse> {
-        // 결과 조회 시 내부적으로 온디맨드 집계가 가능하거나 즉시 집계 수행
         val result = challengeResultService.aggregateAndSave(challengeId)
         return ResponseEntity.ok(result)
+    }
+
+    @PostMapping("/acknowledge")
+    fun acknowledgeResult(
+        @PathVariable groupId: Long,
+        @PathVariable challengeId: Long,
+        @CurrentUserId userId: Long
+    ): ResponseEntity<com.dayuse.domain.challenge.result.dto.ChallengeParticipantResultResponse> {
+        val result = challengeResultService.acknowledgeResult(groupId, challengeId, userId)
+        return ResponseEntity.ok(result)
+    }
+}
+
+@RestController
+@RequestMapping("/api/v1/challenges")
+class EndedChallengeController(
+    private val challengeResultService: ChallengeResultService
+) {
+    @GetMapping("/ended-summary")
+    fun getEndedChallengesSummary(
+        @CurrentUserId userId: Long
+    ): ResponseEntity<com.dayuse.domain.challenge.result.dto.EndedChallengesSummaryResponse> {
+        val response = challengeResultService.getEndedChallengesSummary(userId)
+        return ResponseEntity.ok(response)
     }
 }

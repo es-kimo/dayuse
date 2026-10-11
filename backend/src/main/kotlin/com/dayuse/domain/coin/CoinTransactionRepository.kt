@@ -20,4 +20,8 @@ interface CoinTransactionRepository : JpaRepository<CoinTransaction, Long> {
     fun findAllByUserIdAndTargetDate(userId: Long, targetDate: LocalDate): List<CoinTransaction>
 
     fun findAllByUserId(userId: Long): List<CoinTransaction>
+
+    fun findAllByChallengeId(challengeId: Long): List<CoinTransaction>
+
+    fun findAllByUserIdAndChallengeId(userId: Long, challengeId: Long): List<CoinTransaction>
 }
