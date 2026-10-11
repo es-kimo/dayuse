@@ -37,7 +37,14 @@ export type EventName =
   | 'announcement_impression'
   | 'announcement_opened'
   | 'announcement_dismissed'
-  | 'announcement_cta_clicked';
+  | 'announcement_cta_clicked'
+  // v0.13 F09: 종료 결과 및 코인 분석 이벤트
+  | 'challenge_result_notice_viewed'
+  | 'challenge_result_viewed'
+  | 'challenge_result_acknowledged'
+  | 'challenge_coin_granted'
+  | 'challenge_coin_adjusted'
+  | 'challenge_result_action_clicked';
 
 /**
  * 전환 및 행동 이벤트 `properties`에 연결되는 Experiment Context 구조 (v0.10 F06)

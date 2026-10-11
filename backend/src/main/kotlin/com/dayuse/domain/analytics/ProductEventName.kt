@@ -78,7 +78,27 @@ enum class ProductEventName(val value: String) {
     ANNOUNCEMENT_DISMISSED("announcement_dismissed"),
 
     /** 사용자가 안내 내 실행(CTA) 버튼을 눌렀을 때 기록. */
-    ANNOUNCEMENT_CTA_CLICKED("announcement_cta_clicked");
+    ANNOUNCEMENT_CTA_CLICKED("announcement_cta_clicked"),
+
+    // ── v0.13 F09: 종료 결과 및 코인 분석 이벤트 ─────────────────────────
+
+    /** 홈 화면의 결과 안내 카드 실제 노출 (동일 화면 방문 내 중복 방지). */
+    CHALLENGE_RESULT_NOTICE_VIEWED("challenge_result_notice_viewed"),
+
+    /** 잠정 또는 확정 챌린지 결과 모달 정상 표시. */
+    CHALLENGE_RESULT_VIEWED("challenge_result_viewed"),
+
+    /** 확정 결과 확인 상태 저장 성공. 서버 또는 클라이언트 확정 기록. */
+    CHALLENGE_RESULT_ACKNOWLEDGED("challenge_result_acknowledged"),
+
+    /** 최초 코인 적립 성공 (서버 자동 지급 기준). */
+    CHALLENGE_COIN_GRANTED("challenge_coin_granted"),
+
+    /** 결과 변경에 따른 코인 차액 보정 성공 (서버). */
+    CHALLENGE_COIN_ADJUSTED("challenge_coin_adjusted"),
+
+    /** 코인 확인, 새 챌린지 생성, 정산 확인 등 결과 화면 내 후속 행동 버튼 클릭. */
+    CHALLENGE_RESULT_ACTION_CLICKED("challenge_result_action_clicked");
 
     companion object {
         private val SNAKE_CASE_REGEX = Regex("^[a-z][a-z0-9_]*$")

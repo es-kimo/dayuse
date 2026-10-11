@@ -24,8 +24,8 @@ import { HomeUnconfirmedCard } from '../challenge/HomeUnconfirmedCard';
 import { EndedChallengesModal } from '../challenge/EndedChallengesModal';
 import { ChallengeResultModal } from '../challenge/ChallengeResultModal';
 import { useEndedChallengesSummary } from '../../hooks/useEndedChallengesSummary';
-import { challengeResultApi } from '../../api/challengeResult';
 import type { EndedChallengeSummaryItem } from '../../types';
+import { track } from '../../utils/tracker';
 
 /** 섹션 제목 줄. 인증 대기(amber)와 완료(emerald)는 글자색까지 상태를 따른다. */
 function StatusHead({ tone, icon, title, count }: { tone: 'warn' | 'ok'; icon: React.ReactNode; title: string; count: number }) {
@@ -64,18 +64,9 @@ export function TodayScreen({
   const [showInstallGuide, setShowInstallGuide] = useState<boolean>(false);
   const [isBannerDismissed, setIsBannerDismissed] = useState<boolean>(() => isPwaBannerDismissed());
 
-  const { unacknowledgedCount, items: endedItems, acknowledgeLocal, refresh: refreshEnded } = useEndedChallengesSummary();
+  const { unacknowledgedCount, items: endedItems, acknowledgeLocal } = useEndedChallengesSummary();
   const [showEndedModal, setShowEndedModal] = useState<boolean>(false);
   const [selectedEndedChallenge, setSelectedEndedChallenge] = useState<EndedChallengeSummaryItem | null>(null);
-
-  // 브라우저 개발자 도구 콘솔에서 바로 seedEndedChallenges()를 호출할 수 있도록 편의 제공
-  useEffect(() => {
-    (window as unknown as { seedEndedChallenges?: () => Promise<void> }).seedEndedChallenges = async () => {
-      await challengeResultApi.seedEndedSamples();
-      await refreshEnded();
-      showToast('테스트용 종료 챌린지 4건이 생성되었습니다!');
-    };
-  }, [refreshEnded, showToast]);
 
   const canShowBanner = !isStandalone() && !isBannerDismissed;
 
@@ -84,6 +75,14 @@ export function TodayScreen({
       logPwaImpression('today_banner');
     }
   }, [canShowBanner]);
+
+  useEffect(() => {
+    if (unacknowledgedCount > 0) {
+      track('challenge_result_notice_viewed', {
+        unacknowledgedCount,
+      });
+    }
+  }, [unacknowledgedCount]);
 
   return (
     <Screen>
@@ -294,11 +293,6 @@ export function TodayScreen({
         items={endedItems}
         onSelectChallenge={(item) => {
           setSelectedEndedChallenge(item);
-        }}
-        onSeedSamples={async () => {
-          await challengeResultApi.seedEndedSamples();
-          await refreshEnded();
-          showToast('테스트용 종료 챌린지 4건이 생성되었습니다!');
         }}
       />
 

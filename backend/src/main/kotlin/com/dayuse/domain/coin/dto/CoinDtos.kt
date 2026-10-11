@@ -101,3 +101,19 @@ data class LedgerConsistencyResponse(
     val calculatedHeldFromLedger: Int,
     val transactionCount: Int
 )
+
+data class CoinLedgerMetricsResponse(
+    val totalGranted: Long,
+    val totalAdjustedAdd: Long,
+    val totalAdjustedSub: Long,
+    val totalSpent: Long = 0L,
+    val totalAvailableBalance: Long,
+    val totalHeldBalance: Long,
+    val isLedgerConsistent: Boolean,
+    val totalAccounts: Long,
+    val tshirtGoalTarget: Int = 3600,
+    val tshirtGoalReachedUsers: Long,
+    val hoodieGoalTarget: Int = 7200,
+    val hoodieGoalReachedUsers: Long
+)
+

@@ -10,7 +10,7 @@ import { IosInstallGuideModal } from '../components/IosInstallGuideModal';
 import { isStandalone, isIos } from '../utils/webPush';
 import { logPwaImpression, logPwaGuideOpen } from '../utils/pwaAnalytics';
 import { useAnnouncementNotification } from '../context/AnnouncementNotificationContext';
-import { LogOut, Check, Loader2, Info, Bell, FileText, Shield, ChevronRight, Smartphone, Megaphone } from 'lucide-react';
+import { LogOut, Check, Loader2, Info, Bell, FileText, Shield, ChevronRight, Smartphone, Megaphone, Coins } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateUserNickname, logout } = useAuth();
@@ -55,7 +55,7 @@ export const ProfilePage: React.FC = () => {
   return (
     <div className="relative mx-auto flex min-h-dvh max-w-app flex-col bg-slate-50 font-sans text-slate-800">
       {/* 상단 바 */}
-      <AppMainHeader title="내 정보" />
+      <AppMainHeader title="내 정보" border={false} />
 
       <main className="flex flex-1 flex-col gap-[14px] px-4 pt-1 pb-screen-nav">
         {/* 프로필 아바타 영역 (ProfileHeader) */}
@@ -127,6 +127,23 @@ export const ProfilePage: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => navigate('/rewards')}
+            className="flex w-full cursor-pointer items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-amber-50 text-amber-600">
+                <Coins className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[15px] font-semibold text-slate-800">내 보상</span>
+                <p className="text-[12.5px] text-slate-500">코인과 리데이 티켓 확인하기</p>
+              </div>
+            </div>
+            <ChevronRight className="size-4 shrink-0 text-slate-400" />
+          </button>
+
+          <button
+            type="button"
             onClick={() => navigate('/announcements')}
             className="flex w-full cursor-pointer items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50"
           >
@@ -178,7 +195,7 @@ export const ProfilePage: React.FC = () => {
               <div className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-indigo-50 text-indigo-600">
                 <Info className="w-4 h-4" />
               </div>
-              <span className="text-[15px] font-semibold text-slate-800">dayuse 소개</span>
+              <span className="text-[15px] font-semibold text-slate-800">데이유즈 소개</span>
             </div>
             <ChevronRight className="size-4 shrink-0 text-slate-400" />
           </button>

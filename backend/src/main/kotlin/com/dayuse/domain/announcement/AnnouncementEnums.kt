@@ -78,11 +78,15 @@ enum class AnnouncementActionTarget(
     REDAY_HISTORY("/reday/history", "리데이 내역 화면으로 이동"),
     GROUP_CREATE("/groups/create", "모임 생성 화면으로 이동"),
     ANNOUNCEMENT_LIST("/announcements", "새로운 소식 목록으로 이동"),
-    MY_PAGE("/mypage", "마이페이지로 이동");
+    MY_PAGE("/mypage", "마이페이지로 이동"),
+    COIN_BALANCE("/coins", "내 코인 화면으로 이동");
 
     companion object {
         fun fromCodeOrPath(raw: String?): AnnouncementActionTarget? {
             val trimmed = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+            if (trimmed.equals("COIN", ignoreCase = true) || trimmed == "/coins/me") {
+                return COIN_BALANCE
+            }
             return entries.firstOrNull {
                 it.name.equals(trimmed, ignoreCase = true) || it.internalPath == trimmed
             }

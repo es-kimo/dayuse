@@ -1,7 +1,9 @@
 package com.dayuse.domain.coin.service
 
+import com.dayuse.domain.analytics.service.ChallengeAnalyticsRecorder
 import com.dayuse.domain.coin.*
 import com.dayuse.domain.coin.dto.CoinBalanceResponse
+import com.dayuse.domain.coin.dto.CoinLedgerMetricsResponse
 import com.dayuse.domain.coin.dto.CoinTransactionResponse
 import com.dayuse.domain.coin.dto.LedgerConsistencyResponse
 import com.dayuse.global.exception.BadRequestException
@@ -54,6 +56,8 @@ interface CoinTransactionService {
     ): CoinTransaction
 
     fun verifyLedgerConsistency(userId: Long): LedgerConsistencyResponse
+
+    fun getLedgerMetrics(): CoinLedgerMetricsResponse
 }
 
 @Service
@@ -61,7 +65,8 @@ interface CoinTransactionService {
 class CoinTransactionServiceImpl(
     private val coinBalanceRepository: CoinBalanceRepository,
     private val coinTransactionRepository: CoinTransactionRepository,
-    private val coinEmergencyControlService: CoinEmergencyControlService
+    private val coinEmergencyControlService: CoinEmergencyControlService,
+    private val challengeAnalyticsRecorder: ChallengeAnalyticsRecorder? = null
 ) : CoinTransactionService {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -150,6 +155,14 @@ class CoinTransactionServiceImpl(
             try {
                 val savedTx = coinTransactionRepository.save(tx)
                 grantedList.add(savedTx)
+                if (savedTx.status == CoinTransactionStatus.COMPLETED) {
+                    challengeAnalyticsRecorder?.challengeCoinGranted(
+                        userId = userId,
+                        challengeId = challengeId,
+                        amount = savedTx.amount,
+                        targetDate = targetDate
+                    )
+                }
             } catch (e: DataIntegrityViolationException) {
                 log.warn("[grantCoins] Concurrent duplicate grant blocked by DB unique constraint: {}", idempotencyKey)
             }
@@ -211,6 +224,17 @@ class CoinTransactionServiceImpl(
 
         val savedTx = coinTransactionRepository.save(tx)
         coinBalanceRepository.save(balance)
+        if (savedTx.status == CoinTransactionStatus.COMPLETED) {
+            challengeAnalyticsRecorder?.challengeCoinAdjusted(
+                userId = userId,
+                challengeId = challengeId,
+                transactionId = savedTx.id,
+                amount = savedTx.amount,
+                targetDate = targetDate,
+                type = txType.name,
+                balanceAfter = savedTx.balanceAfter
+            )
+        }
         return savedTx
     }
 
@@ -355,6 +379,53 @@ class CoinTransactionServiceImpl(
             heldBalance = currentHeld,
             calculatedHeldFromLedger = calculatedHeld,
             transactionCount = transactions.size
+        )
+    }
+
+    /**
+     * 관리자/내부 점검용 원장 지표 집계 (F09, 5.3.6)
+     * - 총 발행량 (I), 보정 추가, 차감 (R), 소비 (S=0), 미사용 잔액 (M)
+     * - M_end = M_start + I - S - R 검증
+     * - 상품별(티셔츠 3,600코인, 후디 7,200코인) 가격 도달 계정 수 집계
+     */
+    @Transactional(readOnly = true)
+    override fun getLedgerMetrics(): CoinLedgerMetricsResponse {
+        val totalGranted = coinTransactionRepository.sumAmountByTypeAndStatus(
+            CoinTransactionType.GRANT,
+            CoinTransactionStatus.COMPLETED
+        )
+        val totalAdjustedAdd = coinTransactionRepository.sumAmountByTypeAndStatus(
+            CoinTransactionType.ADJUSTMENT_ADD,
+            CoinTransactionStatus.COMPLETED
+        )
+        val totalAdjustedSub = coinTransactionRepository.sumAmountByTypeAndStatus(
+            CoinTransactionType.ADJUSTMENT_SUB,
+            CoinTransactionStatus.COMPLETED
+        )
+        val totalSpent = 0L
+        val totalAvailableBalance = coinBalanceRepository.sumTotalAvailableBalance()
+        val totalHeldBalance = coinBalanceRepository.sumTotalHeldBalance()
+
+        val expectedAvailable = totalGranted + totalAdjustedAdd - totalAdjustedSub - totalSpent
+        val isConsistent = (expectedAvailable == totalAvailableBalance)
+
+        val totalAccounts = coinBalanceRepository.count()
+        val tshirtGoalReachedUsers = coinBalanceRepository.countUsersWithAvailableBalanceAtLeast(3600)
+        val hoodieGoalReachedUsers = coinBalanceRepository.countUsersWithAvailableBalanceAtLeast(7200)
+
+        return CoinLedgerMetricsResponse(
+            totalGranted = totalGranted,
+            totalAdjustedAdd = totalAdjustedAdd,
+            totalAdjustedSub = totalAdjustedSub,
+            totalSpent = totalSpent,
+            totalAvailableBalance = totalAvailableBalance,
+            totalHeldBalance = totalHeldBalance,
+            isLedgerConsistent = isConsistent,
+            totalAccounts = totalAccounts,
+            tshirtGoalTarget = 3600,
+            tshirtGoalReachedUsers = tshirtGoalReachedUsers,
+            hoodieGoalTarget = 7200,
+            hoodieGoalReachedUsers = hoodieGoalReachedUsers
         )
     }
 

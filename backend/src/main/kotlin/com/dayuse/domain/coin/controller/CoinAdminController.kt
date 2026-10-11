@@ -96,4 +96,14 @@ class CoinAdminController(
         )
         return ResponseEntity.ok(status)
     }
+
+    /**
+     * 관리자 원장 지표 및 목표액 도달자 수 집계 조회 (F09, 5.3.6)
+     */
+    @GetMapping("/metrics", "/ledger-metrics")
+    fun getLedgerMetrics(): ResponseEntity<CoinLedgerMetricsResponse> {
+        val metrics = coinTransactionService.getLedgerMetrics()
+        return ResponseEntity.ok(metrics)
+    }
 }
+

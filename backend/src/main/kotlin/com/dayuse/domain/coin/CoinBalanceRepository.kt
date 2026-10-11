@@ -13,4 +13,14 @@ interface CoinBalanceRepository : JpaRepository<CoinBalance, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT cb FROM CoinBalance cb WHERE cb.userId = :userId")
     fun findByUserIdForUpdate(@Param("userId") userId: Long): Optional<CoinBalance>
+
+    @Query("SELECT COALESCE(SUM(cb.availableBalance), 0L) FROM CoinBalance cb")
+    fun sumTotalAvailableBalance(): Long
+
+    @Query("SELECT COALESCE(SUM(cb.heldBalance), 0L) FROM CoinBalance cb")
+    fun sumTotalHeldBalance(): Long
+
+    @Query("SELECT COUNT(cb) FROM CoinBalance cb WHERE cb.availableBalance >= :threshold")
+    fun countUsersWithAvailableBalanceAtLeast(@Param("threshold") threshold: Int): Long
 }
+
