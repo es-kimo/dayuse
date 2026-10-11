@@ -91,31 +91,72 @@ class CoinTransactionServiceImpl(
      * - 중복 지급 방지: idempotencyKey 기반 사전 검사 + DB 유니크 제약
      * - 비상 킬스위치/이상 패턴 감지 시 HOLD로 격리
      */
-    /**
-     * 챌린지 결과 확정 시 백그라운드 멱등적 자동 지급
-     * - 날짜당 10코인 지급 (단일 챌린지 적격 기준)
-     * - 중복 지급 방지: idempotencyKey 기반 사전 검사 + DB 유니크 제약
-     * - 비상 킬스위치/이상 패턴 감지 시 HOLD로 격리
-     */
     override fun grantCoins(
         userId: Long,
         challengeId: Long,
         eligibleDates: Set<LocalDate>,
         now: LocalDateTime
     ): List<CoinTransaction> {
-        // TODO [사용자 미션 1]: 멱등성을 보장하는 백그라운드 자동 코인 지급 엔진
-        // 1. eligibleDates가 비어있으면 emptyList() 반환
-        // 2. userId에 대한 CoinBalance를 getOrCreateBalanceForUpdate(userId)로 비관적 락 조회
-        // 3. eligibleDates의 각 날짜(sorted)에 대해:
-        //    - 멱등키 생성: "GRANT:CHALLENGE:${challengeId}:USER:${userId}:DATE:${targetDate}"
-        //    - coinTransactionRepository.existsByIdempotencyKey(key) 검사 -> 존재 시 중복 지급 건너뜀(continue)
-        //    - 지급 수량은 CoinPolicy.DAILY_COIN_CAP(10코인)
-        //    - coinEmergencyControlService.shouldHold(userId, amount) 검사:
-        //      * true(보류): balance.addHeld, type=CoinTransactionType.HOLD, status=CoinTransactionStatus.HELD
-        //      * false(정상): balance.addAvailable, type=CoinTransactionType.GRANT, status=CoinTransactionStatus.COMPLETED
-        //    - DataIntegrityViolationException 예외 대비(try-catch)하며 트랜잭션 저장 및 반환 목록 누적
-        // 4. balance 저장 후 지급된 트랜잭션 목록 반환
-        return emptyList()
+        if (eligibleDates.isEmpty()) {
+            return emptyList()
+        }
+
+        val grantedList = mutableListOf<CoinTransaction>()
+        val balance = getOrCreateBalanceForUpdate(userId)
+
+        for (targetDate in eligibleDates.sorted()) {
+            val idempotencyKey = "GRANT:CHALLENGE:${challengeId}:USER:${userId}:DATE:${targetDate}"
+
+            if (coinTransactionRepository.existsByIdempotencyKey(idempotencyKey)) {
+                log.info("[grantCoins] IdempotencyKey already exists, skipping: {}", idempotencyKey)
+                continue
+            }
+
+            val amount = CoinPolicy.DAILY_COIN_CAP
+            val shouldHold = coinEmergencyControlService.shouldHold(userId, amount)
+
+            val tx = if (shouldHold) {
+                balance.addHeld(amount, now)
+                CoinTransaction(
+                    userId = userId,
+                    type = CoinTransactionType.HOLD,
+                    amount = amount,
+                    balanceAfter = balance.availableBalance,
+                    heldBalanceAfter = balance.heldBalance,
+                    targetDate = targetDate,
+                    challengeId = challengeId,
+                    idempotencyKey = idempotencyKey,
+                    status = CoinTransactionStatus.HELD,
+                    reason = "비상 킬스위치 또는 이상 패턴에 의한 자동 보류 격리",
+                    createdAt = now
+                )
+            } else {
+                balance.addAvailable(amount, now)
+                CoinTransaction(
+                    userId = userId,
+                    type = CoinTransactionType.GRANT,
+                    amount = amount,
+                    balanceAfter = balance.availableBalance,
+                    heldBalanceAfter = balance.heldBalance,
+                    targetDate = targetDate,
+                    challengeId = challengeId,
+                    idempotencyKey = idempotencyKey,
+                    status = CoinTransactionStatus.COMPLETED,
+                    reason = "챌린지(#${challengeId}) 적격 달성 자동 지급",
+                    createdAt = now
+                )
+            }
+
+            try {
+                val savedTx = coinTransactionRepository.save(tx)
+                grantedList.add(savedTx)
+            } catch (e: DataIntegrityViolationException) {
+                log.warn("[grantCoins] Concurrent duplicate grant blocked by DB unique constraint: {}", idempotencyKey)
+            }
+        }
+
+        coinBalanceRepository.save(balance)
+        return grantedList
     }
 
     /**
@@ -132,16 +173,45 @@ class CoinTransactionServiceImpl(
         idempotencyKey: String?,
         now: LocalDateTime
     ): CoinTransaction {
-        // TODO [사용자 미션 2]: 원장 불변성 기반 차액 보정 엔진 (Append-Only)
-        // 1. adjustmentAmount == 0 이면 BadRequestException("보정 금액은 0일 수 없습니다.") 던짐
-        // 2. getOrCreateBalanceForUpdate(userId)로 락 획득
-        // 3. idempotencyKey 검사 (null이면 "ADJUST:USER:${userId}:DATE:${targetDate}:AMT:${adjustmentAmount}:TIME:${now}" 기본 키 생성)
-        //    - 이미 동일 멱등키가 존재하면 findByIdempotencyKey로 기존 트랜잭션 반환
-        // 4. adjustmentAmount 부호에 따른 분기:
-        //    - adjustmentAmount > 0: type=ADJUSTMENT_ADD, balance.addAvailable(absAmount, now)
-        //    - adjustmentAmount < 0: type=ADJUSTMENT_SUB, balance.subtractAvailable(absAmount, now) (잔액 부족 시 방어)
-        // 5. 새 CoinTransaction 행 생성(balanceAfter, heldBalanceAfter 스냅샷 포함) 및 저장 후 반환
-        throw NotImplementedError("사용자 미션 2 구현 대상입니다.")
+        if (adjustmentAmount == 0) {
+            throw BadRequestException("보정 금액은 0일 수 없습니다.")
+        }
+
+        val balance = getOrCreateBalanceForUpdate(userId)
+        val finalKey = idempotencyKey ?: "ADJUST:USER:${userId}:DATE:${targetDate}:AMT:${adjustmentAmount}:TIME:${now}"
+
+        if (coinTransactionRepository.existsByIdempotencyKey(finalKey)) {
+            return coinTransactionRepository.findByIdempotencyKey(finalKey).get()
+        }
+
+        val txType: CoinTransactionType
+        val absAmount = Math.abs(adjustmentAmount)
+
+        if (adjustmentAmount > 0) {
+            txType = CoinTransactionType.ADJUSTMENT_ADD
+            balance.addAvailable(absAmount, now)
+        } else {
+            txType = CoinTransactionType.ADJUSTMENT_SUB
+            balance.subtractAvailable(absAmount, now)
+        }
+
+        val tx = CoinTransaction(
+            userId = userId,
+            type = txType,
+            amount = absAmount,
+            balanceAfter = balance.availableBalance,
+            heldBalanceAfter = balance.heldBalance,
+            targetDate = targetDate,
+            challengeId = challengeId,
+            idempotencyKey = finalKey,
+            status = CoinTransactionStatus.COMPLETED,
+            reason = reason ?: "인증 변경에 따른 차액 보정",
+            createdAt = now
+        )
+
+        val savedTx = coinTransactionRepository.save(tx)
+        coinBalanceRepository.save(balance)
+        return savedTx
     }
 
     /**
@@ -152,12 +222,38 @@ class CoinTransactionServiceImpl(
         adminUserId: Long,
         now: LocalDateTime
     ): CoinTransaction {
-        // TODO [사용자 미션 3-1]: 관리자 보류 승인 및 RELEASE 원장 기록
-        // 1. transactionId 조회, 거래 상태가 HELD가 아니면 BadRequestException("보류(HELD) 상태의 거래만 승인할 수 있습니다...") 던짐
-        // 2. getOrCreateBalanceForUpdate로 락 획득 후 balance.releaseHeld(heldTx.amount, now)
-        // 3. heldTx.markReleased(adminUserId, now)
-        // 4. type=RELEASE, status=COMPLETED인 신규 원장 행 생성 및 저장 후 반환
-        throw NotImplementedError("사용자 미션 3-1 구현 대상입니다.")
+        val heldTx = coinTransactionRepository.findById(transactionId).orElseThrow {
+            ResourceNotFoundException("거래 내역을 찾을 수 없습니다. (ID: $transactionId)")
+        }
+
+        if (heldTx.status != CoinTransactionStatus.HELD) {
+            throw BadRequestException("보류(HELD) 상태의 거래만 승인할 수 있습니다. (현재: ${heldTx.status})")
+        }
+
+        val balance = getOrCreateBalanceForUpdate(heldTx.userId)
+        balance.releaseHeld(heldTx.amount, now)
+        heldTx.markReleased(adminUserId, now)
+
+        // 원장에 명시적인 RELEASE 기록 생성
+        val releaseTx = CoinTransaction(
+            userId = heldTx.userId,
+            type = CoinTransactionType.RELEASE,
+            amount = heldTx.amount,
+            balanceAfter = balance.availableBalance,
+            heldBalanceAfter = balance.heldBalance,
+            targetDate = heldTx.targetDate,
+            challengeId = heldTx.challengeId,
+            verificationId = heldTx.verificationId,
+            idempotencyKey = "RELEASE:TX:${heldTx.id}",
+            status = CoinTransactionStatus.COMPLETED,
+            reason = "관리자(ID: $adminUserId) 검토 승인 및 보류 해제",
+            reviewedBy = adminUserId,
+            reviewedAt = now,
+            createdAt = now
+        )
+
+        coinBalanceRepository.save(balance)
+        return coinTransactionRepository.save(releaseTx)
     }
 
     /**
@@ -169,12 +265,37 @@ class CoinTransactionServiceImpl(
         reason: String?,
         now: LocalDateTime
     ): CoinTransaction {
-        // TODO [사용자 미션 3-2]: 관리자 보류 반려 및 REJECT 원장 기록
-        // 1. transactionId 조회, 거래 상태가 HELD가 아니면 BadRequestException("보류(HELD) 상태의 거래만 반려할 수 있습니다...") 던짐
-        // 2. getOrCreateBalanceForUpdate로 락 획득 후 balance.rejectHeld(heldTx.amount, now)
-        // 3. heldTx.markRejected(adminUserId, reason, now)
-        // 4. type=REJECT, status=REJECTED인 신규 원장 행 생성 및 저장 후 반환
-        throw NotImplementedError("사용자 미션 3-2 구현 대상입니다.")
+        val heldTx = coinTransactionRepository.findById(transactionId).orElseThrow {
+            ResourceNotFoundException("거래 내역을 찾을 수 없습니다. (ID: $transactionId)")
+        }
+
+        if (heldTx.status != CoinTransactionStatus.HELD) {
+            throw BadRequestException("보류(HELD) 상태의 거래만 반려할 수 있습니다. (현재: ${heldTx.status})")
+        }
+
+        val balance = getOrCreateBalanceForUpdate(heldTx.userId)
+        balance.rejectHeld(heldTx.amount, now)
+        heldTx.markRejected(adminUserId, reason, now)
+
+        val rejectTx = CoinTransaction(
+            userId = heldTx.userId,
+            type = CoinTransactionType.REJECT,
+            amount = heldTx.amount,
+            balanceAfter = balance.availableBalance,
+            heldBalanceAfter = balance.heldBalance,
+            targetDate = heldTx.targetDate,
+            challengeId = heldTx.challengeId,
+            verificationId = heldTx.verificationId,
+            idempotencyKey = "REJECT:TX:${heldTx.id}",
+            status = CoinTransactionStatus.REJECTED,
+            reason = reason ?: "관리자(ID: $adminUserId) 검토 반려",
+            reviewedBy = adminUserId,
+            reviewedAt = now,
+            createdAt = now
+        )
+
+        coinBalanceRepository.save(balance)
+        return coinTransactionRepository.save(rejectTx)
     }
 
     /**
@@ -182,25 +303,58 @@ class CoinTransactionServiceImpl(
      */
     @Transactional(readOnly = true)
     override fun verifyLedgerConsistency(userId: Long): LedgerConsistencyResponse {
-        // TODO [사용자 미션 3-3]: 원장 합계 공식(M_end = M_start + I - S - R) 일치성 검증
-        // 1. CoinBalance에서 현재 availableBalance, heldBalance 조회 (없으면 0)
-        // 2. coinTransactionRepository.findAllByUserId(userId)로 전체 원장 순회하며 계산:
-        //    - GRANT: COMPLETED 시 calculatedAvailable += tx.amount
-        //    - ADJUSTMENT_ADD: COMPLETED 시 calculatedAvailable += tx.amount
-        //    - ADJUSTMENT_SUB: COMPLETED 시 calculatedAvailable -= tx.amount
-        //    - HOLD: calculatedHeld += tx.amount
-        //    - RELEASE: COMPLETED 시 calculatedHeld -= tx.amount, calculatedAvailable += tx.amount
-        //    - REJECT: calculatedHeld -= tx.amount
-        // 3. isConsistent = (currentAvailable == calculatedAvailable) && (currentHeld == calculatedHeld)
-        // 4. LedgerConsistencyResponse 반환
+        val balance = coinBalanceRepository.findByUserId(userId).orElse(null)
+        val currentAvailable = balance?.availableBalance ?: 0
+        val currentHeld = balance?.heldBalance ?: 0
+
+        val transactions = coinTransactionRepository.findAllByUserId(userId)
+
+        var calculatedAvailable = 0
+        var calculatedHeld = 0
+
+        for (tx in transactions) {
+            when (tx.type) {
+                CoinTransactionType.GRANT -> {
+                    if (tx.status == CoinTransactionStatus.COMPLETED) {
+                        calculatedAvailable += tx.amount
+                    }
+                }
+                CoinTransactionType.ADJUSTMENT_ADD -> {
+                    if (tx.status == CoinTransactionStatus.COMPLETED) {
+                        calculatedAvailable += tx.amount
+                    }
+                }
+                CoinTransactionType.ADJUSTMENT_SUB -> {
+                    if (tx.status == CoinTransactionStatus.COMPLETED) {
+                        calculatedAvailable -= tx.amount
+                    }
+                }
+                CoinTransactionType.HOLD -> {
+                    // 최초 HOLD 발생 시 heldBalance 증가
+                    calculatedHeld += tx.amount
+                }
+                CoinTransactionType.RELEASE -> {
+                    if (tx.status == CoinTransactionStatus.COMPLETED) {
+                        calculatedHeld -= tx.amount
+                        calculatedAvailable += tx.amount
+                    }
+                }
+                CoinTransactionType.REJECT -> {
+                    calculatedHeld -= tx.amount
+                }
+            }
+        }
+
+        val isConsistent = (currentAvailable == calculatedAvailable) && (currentHeld == calculatedHeld)
+
         return LedgerConsistencyResponse(
             userId = userId,
-            isConsistent = false,
-            availableBalance = 0,
-            calculatedAvailableFromLedger = 0,
-            heldBalance = 0,
-            calculatedHeldFromLedger = 0,
-            transactionCount = 0
+            isConsistent = isConsistent,
+            availableBalance = currentAvailable,
+            calculatedAvailableFromLedger = calculatedAvailable,
+            heldBalance = currentHeld,
+            calculatedHeldFromLedger = calculatedHeld,
+            transactionCount = transactions.size
         )
     }
 
