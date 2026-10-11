@@ -1,6 +1,6 @@
 export type CoinMotion = 'still' | 'tilt' | 'reveal';
 
-export const COIN_MOTION_DURATION = { still: 0, tilt: 720, reveal: 2200 } as const;
+export const COIN_MOTION_DURATION = { still: 0, tilt: 720, reveal: 3000 } as const;
 
 /** Absolute time keeps the same trajectory across frame rates and background pauses. */
 export function sampleCoinMotion(motion: CoinMotion, elapsed: number) {
@@ -15,9 +15,8 @@ export function sampleCoinMotion(motion: CoinMotion, elapsed: number) {
     height = pulse * 0.015;
     angle = pulse * Math.PI / 10;
   }
-  if (motion === 'reveal' && progress < 1) {
-    height = 0.18 * (1 - ease);
-    angle = -0.9 * (1 - ease);
+  if (motion === 'reveal') {
+    angle = Math.PI * 2 * ease;
   }
   return {
     height,

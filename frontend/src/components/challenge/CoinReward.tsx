@@ -14,7 +14,7 @@ export function CoinReward({ amount, animate }: { amount: number; animate: boole
       setDisplayAmount(amount);
     };
     const tick = (now: number) => {
-      const progress = Math.max(0, Math.min(1, (now - start - 900) / 1300));
+      const progress = Math.max(0, Math.min(1, (now - start - 1300) / 1700));
       setDisplayAmount(Math.round(amount * (1 - (1 - progress) ** 3)));
       if (progress < 1) frame = requestAnimationFrame(tick);
     };

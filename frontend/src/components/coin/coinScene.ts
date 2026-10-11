@@ -33,7 +33,7 @@ export function createCoinScene(host: HTMLElement, variant: 'header' | 'reward',
   fill.position.set(3, 1, 5);
   scene.add(key, fill, new THREE.AmbientLight(0xffffff, 0.35));
 
-  const rest = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.04, -0.1, 0));
+  const rest = new THREE.Quaternion().setFromEuler(new THREE.Euler(variant === 'reward' ? 0 : 0.04, -0.1, 0));
   const axis = new THREE.Vector3(0, 1, 0);
   const turn = new THREE.Quaternion();
   let model: THREE.Group | null = null;
