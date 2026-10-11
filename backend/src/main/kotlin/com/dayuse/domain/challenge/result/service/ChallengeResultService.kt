@@ -87,7 +87,7 @@ class ChallengeResultService(
                 isSuccess = calculation.isSuccess,
                 now = now
             )
-            existingResult
+            challengeResultRepository.save(existingResult)
         } else {
             val newResult = ChallengeResult(
                 challengeId = challenge.id,

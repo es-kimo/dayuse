@@ -117,6 +117,18 @@ class CoinTransactionServiceImpl(
                 continue
             }
 
+            // [F05, F11, 5.4] 계정 전체 인정 날짜당 최대 10코인 캡 불변성 보장 (병행/분할 챌린지 동시 지급 방어)
+            val existingTxsOnDate = coinTransactionRepository.findAllByUserIdAndTargetDate(userId, targetDate)
+            val alreadyAwardedOnDate = existingTxsOnDate
+                .filter { (it.type == CoinTransactionType.GRANT || it.type == CoinTransactionType.ADJUSTMENT_ADD) &&
+                          (it.status == CoinTransactionStatus.COMPLETED || it.status == CoinTransactionStatus.HELD) }
+                .sumOf { it.amount }
+
+            if (alreadyAwardedOnDate >= CoinPolicy.DAILY_COIN_CAP) {
+                log.info("[grantCoins] Daily coin cap already reached for date {}, skipping: userId={}, challengeId={}", targetDate, userId, challengeId)
+                continue
+            }
+
             val amount = CoinPolicy.DAILY_COIN_CAP
             val shouldHold = coinEmergencyControlService.shouldHold(userId, amount)
 
