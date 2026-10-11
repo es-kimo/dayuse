@@ -90,7 +90,7 @@ describe('executeAnnouncementCta (F08)', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('COIN_BALANCE 대상이면 /coins로 안전하게 이동한다 (F10)', async () => {
+  it('COIN_BALANCE 대상이면 /rewards?tab=coins로 안전하게 이동한다 (F10)', async () => {
     const success = await executeAnnouncementCta({
       target: 'COIN_BALANCE',
       announcementId: 88,
@@ -99,10 +99,10 @@ describe('executeAnnouncementCta (F08)', () => {
     });
 
     expect(success).toBe(true);
-    expect(navigate).toHaveBeenCalledWith('/coins');
+    expect(navigate).toHaveBeenCalledWith('/rewards?tab=coins');
   });
 
-  it('COIN 별칭 대상이면 /coins로 안전하게 이동한다', async () => {
+  it('COIN 별칭 대상이면 /rewards?tab=coins로 안전하게 이동한다', async () => {
     const success = await executeAnnouncementCta({
       target: 'COIN',
       navigate,
@@ -110,7 +110,7 @@ describe('executeAnnouncementCta (F08)', () => {
     });
 
     expect(success).toBe(true);
-    expect(navigate).toHaveBeenCalledWith('/coins');
+    expect(navigate).toHaveBeenCalledWith('/rewards?tab=coins');
   });
 });
 

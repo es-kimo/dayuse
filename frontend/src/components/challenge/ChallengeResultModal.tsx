@@ -138,7 +138,7 @@ export const ChallengeResultModal: React.FC<ChallengeResultModalProps> = ({
             다음 챌린지 시작하기 <ArrowRight className="size-4" />
           </Button>
           {granted && (
-            <Button type="button" variant="ghost" className="focus-ring w-full text-amber-700 hover:text-amber-800" onClick={() => handleAction('VIEW_COIN', '/coins')}>
+            <Button type="button" variant="ghost" className="focus-ring w-full text-amber-700 hover:text-amber-800" onClick={() => handleAction('VIEW_COIN', '/rewards?tab=coins')}>
               내 코인 보기
             </Button>
           )}

@@ -127,7 +127,7 @@ export const ProfilePage: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => navigate('/coins')}
+            onClick={() => navigate('/rewards')}
             className="flex w-full cursor-pointer items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50"
           >
             <div className="flex items-center gap-3">
@@ -135,8 +135,8 @@ export const ProfilePage: React.FC = () => {
                 <Coins className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[15px] font-semibold text-slate-800">내 코인</span>
-                <p className="text-[12.5px] text-slate-500">보유 코인 잔액 및 적립 내역</p>
+                <span className="text-[15px] font-semibold text-slate-800">내 보상</span>
+                <p className="text-[12.5px] text-slate-500">코인과 리데이 티켓 확인하기</p>
               </div>
             </div>
             <ChevronRight className="size-4 shrink-0 text-slate-400" />

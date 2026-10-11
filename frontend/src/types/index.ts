@@ -379,6 +379,21 @@ export interface RedayTicketBalance {
   totalCount: number;
 }
 
+export interface RedayTicketHistoryItem {
+  id: number;
+  status: RedayTicketStatus;
+  source: RedayTicketSource;
+  sourceReference: string | null;
+  usedDailyRecordId: number | null;
+  usedAt: string | null;
+  createdAt: string;
+}
+
+export interface RedayTicketHistoryResponse {
+  userId: number;
+  tickets: RedayTicketHistoryItem[];
+}
+
 export interface ApplyRedayPayload {
   dailyRecordId: number;
   ticketId?: number;

@@ -8,6 +8,7 @@ import type {
   CompleteAdSessionResponse,
   RedayCandidate,
   RedayTicketBalance,
+  RedayTicketHistoryResponse,
 } from '../types';
 
 /**
@@ -28,6 +29,11 @@ export const redayApi = {
 
   getTicketBalance: async (): Promise<RedayTicketBalance> => {
     const res = await apiClient.get<RedayTicketBalance>('/reday-tickets/balance');
+    return res.data;
+  },
+
+  getTicketHistory: async (): Promise<RedayTicketHistoryResponse> => {
+    const res = await apiClient.get<RedayTicketHistoryResponse>('/reday-tickets/history');
     return res.data;
   },
 

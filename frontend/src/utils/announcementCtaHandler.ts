@@ -79,7 +79,7 @@ export async function executeAnnouncementCta(ctx: AnnouncementCtaContext): Promi
 
     case 'COIN_BALANCE':
     case 'COIN':
-      destinationPath = '/coins';
+      destinationPath = '/rewards?tab=coins';
       break;
 
     default:

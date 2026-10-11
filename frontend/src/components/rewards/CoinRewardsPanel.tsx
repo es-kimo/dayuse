@@ -1,72 +1,42 @@
-import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Shirt, AlertCircle, Plus, Minus, Clock, Check, ChevronRight } from 'lucide-react';
-import { AppHeader } from '../components/layout/AppHeader';
-import { useBackNavigation } from '../hooks/useBackNavigation';
-import { useAuth } from '../context/AuthContext';
-import { DayuseCoin } from '../components/coin/DayuseCoin';
-import { getMyCoinBalance, getMyCoinTransactions } from '../api/coin';
-import type { CoinBalanceResponse, CoinTransactionResponse } from '../api/coin';
-import { ProgressBar, Chip, Card, Button } from '../components/dayu/ui';
+import { DayuseCoin } from '../../components/coin/DayuseCoin';
+import { getMyCoinBalance, getMyCoinTransactions } from '../../api/coin';
+import { ProgressBar, Chip, Card, Button } from '../../components/dayu/ui';
 
-export const CoinPage: React.FC = () => {
+export const CoinRewardsPanel = () => {
   const navigate = useNavigate();
-  const handleBack = useBackNavigation('/today');
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  const [wallet, setWallet] = useState<CoinBalanceResponse | null>(null);
-  const [transactions, setTransactions] = useState<CoinTransactionResponse[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/login?redirect=/coins');
-      return;
-    }
-    if (isAuthenticated) {
-      void fetchCoinData();
-    }
-  }, [authLoading, isAuthenticated]);
-
-  const fetchCoinData = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const [walletData, txPage] = await Promise.all([
-        getMyCoinBalance(),
-        getMyCoinTransactions(0, 30),
-      ]);
-      setWallet(walletData);
-      setTransactions(txPage.content);
-    } catch {
-      setError('코인 정보를 불러오지 못했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { user } = useAuth();
+  const { data, isPending: loading, isError: error, refetch } = useQuery({
+    queryKey: ['reward-coins', user?.id],
+    queryFn: async () => {
+      const [wallet, txPage] = await Promise.all([getMyCoinBalance(), getMyCoinTransactions(0, 30)]);
+      return { wallet, transactions: txPage.content };
+    },
+  });
+  const wallet = data?.wallet;
+  const transactions = data?.transactions ?? [];
 
   const available = wallet?.availableBalance ?? 0;
-  const ready = !loading && !error && wallet !== null;
+  const ready = !loading && !error && wallet != null;
 
   return (
-    <div className="relative mx-auto flex min-h-dvh max-w-app flex-col bg-slate-50 font-sans text-slate-800">
-      <AppHeader variant="sub" title="내 코인" onBack={handleBack} />
-
-      <main className="flex flex-1 flex-col gap-[14px] px-4 pt-1 pb-12" aria-busy={loading}>
+    <div className="flex flex-col gap-[14px]" aria-busy={loading}>
         <Card tone="hero">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-slate-500">차곡차곡 모은 내 코인</p>
+              <p className="text-[13px] font-semibold text-slate-500">데이유즈 코인</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <DayuseCoin variant="reward" className="size-8 shrink-0" />
                 <span className="break-all text-[32px] font-extrabold leading-tight tracking-tight tabular-nums">
                   {ready ? available.toLocaleString() : '—'}
                 </span>
                 <span className="text-[15px] font-bold text-slate-500">코인</span>
               </div>
             </div>
-            <img src="/assets/brand/expressions/dayu-cheer-blue.svg" alt="" className="size-16 shrink-0" />
+            <DayuseCoin className="text-[72px]" />
           </div>
           <p className="mt-4 text-[13px] leading-relaxed text-slate-600">
             하루하루 실천이 코인으로 쌓여요.<br />
@@ -86,7 +56,7 @@ export const CoinPage: React.FC = () => {
           <Card className="flex flex-col items-center gap-3 py-8 text-center" role="alert">
             <AlertCircle className="size-6 text-slate-400" />
             <p className="text-[14px] text-slate-600">코인 정보를 불러오지 못했어요.</p>
-            <Button variant="line" size="sm" onClick={() => void fetchCoinData()}>다시 불러오기</Button>
+            <Button variant="line" size="sm" onClick={() => void refetch()}>다시 불러오기</Button>
           </Card>
         ) : (
           <>
@@ -130,7 +100,7 @@ export const CoinPage: React.FC = () => {
               </div>
               {transactions.length === 0 ? (
                 <div className="flex flex-col items-center py-6 text-center">
-                  <DayuseCoin className="mb-3 size-10" />
+                  <DayuseCoin className="mb-3 text-[40px]" />
                   <p className="text-[14px] font-bold text-slate-700">첫 코인을 모아볼까요?</p>
                   <p className="mt-1 text-[12.5px] leading-relaxed text-slate-500">오늘의 작은 실천부터 시작해 보세요.</p>
                   <Button variant="line" size="sm" className="mt-4" onClick={() => navigate('/today')}>
@@ -166,7 +136,6 @@ export const CoinPage: React.FC = () => {
             </Card>
           </>
         )}
-      </main>
     </div>
   );
 };

@@ -58,14 +58,14 @@ function WalletBalance() {
     };
   }, []);
 
-  const label = unavailable ? '코인 잔액을 확인하지 못했어요. 눌러서 다시 확인'
-    : balance === null ? '보유 코인 불러오는 중' : `사용 가능한 코인 ${balance.toLocaleString()}개${tickets === null ? '' : `, 리데이 티켓 ${tickets}장`}. 눌러서 새로고침`;
+  const label = unavailable ? '코인 잔액을 확인하지 못했어요. 내 보상에서 다시 확인'
+    : balance === null ? '보유 코인 불러오는 중' : `사용 가능한 코인 ${balance.toLocaleString()}개${tickets === null ? '' : `, 리데이 티켓 ${tickets}장`}. 내 보상 보기`;
   const amount = balance === null ? '···' : balance < 10_000 ? balance.toLocaleString()
     : new Intl.NumberFormat('ko-KR', { notation: 'compact', maximumFractionDigits: 1 }).format(balance);
 
   return (
     <button type="button" className="coin-wallet focus-ring inline-flex h-9 min-w-16 shrink-0 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-0 transition-[background] duration-180 ease-[ease] hover:bg-slate-50 active:bg-slate-100 motion-reduce:transition-none motion-reduce:[&_*]:animate-none! motion-reduce:[&_*]:transition-none!" aria-label={label} title={label}
-      onClick={() => { setBump((value) => value + 1); refreshRef.current(); navigate('/coins'); }}>
+      onClick={() => { setBump((value) => value + 1); refreshRef.current(); navigate('/rewards'); }}>
       <span className="coin-wallet__content inline-flex items-center gap-0.5">
         <DayuseCoin variant="header" motion={bump ? 'tilt' : 'still'} trigger={bump} />
         <span key={amount} aria-hidden="true" className="coin-wallet__amount min-w-[3ch] animate-[dayu-wallet-update_220ms_ease-out] text-right text-sm leading-none font-bold tracking-[-0.02em] whitespace-nowrap text-[#475569] tabular-nums">{unavailable ? '—' : amount}</span>
