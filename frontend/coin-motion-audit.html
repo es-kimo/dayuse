@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko">
-  <meta charset="utf-8" /><link rel="stylesheet" href="/src/components/challenge/coinReward.css" /><style>
+  <meta charset="utf-8" /><style>
     body {
       font: 16px sans-serif;
       margin: 32px;
@@ -14,6 +14,22 @@
     }
     pre {
       white-space: pre-wrap;
+    }
+    .coin-reward {
+      text-align: center;
+    }
+    .coin-reward__stage {
+      position: relative;
+      height: 240px;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+    }
+    @media (max-height: 650px) {
+      .coin-reward__stage { height: 180px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .coin-reward--animated *, .coin-reward--animated *::before { animation: none !important; }
     }
   </style>
   <h1>코인 모션 진단</h1>
